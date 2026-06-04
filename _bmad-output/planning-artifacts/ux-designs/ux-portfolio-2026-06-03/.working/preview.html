@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portfolio — UX preview</title>
+<style>
+  :root{ --paper:#F6F0E6; --raised:#FBF7EF; --ink:#211B14; --ink2:#6B5D4A; --hair:#D8CAB3; --grid:#ECE3D3; --navy:#1E3A5F; --navy2:#162B47; }
+  *{box-sizing:border-box}
+  body{ margin:0; background:var(--paper); color:var(--ink);
+        font-family:'Iowan Old Style','Palatino Linotype','Palatino','Georgia',serif;
+        line-height:1.5; padding:48px 24px 96px; }
+  .wrap{ max-width:760px; margin:0 auto; }
+  .kicker{ font-family:ui-sans-serif,system-ui,sans-serif; font-size:12px; letter-spacing:.14em;
+           text-transform:uppercase; color:var(--ink2); }
+  h1{ font-size:40px; line-height:1.1; margin:.2em 0 .1em; font-weight:600; }
+  .lede{ color:var(--ink2); font-size:18px; margin:0 0 28px; }
+  hr{ border:0; border-top:1px solid var(--hair); margin:32px 0; }
+  h2{ font-size:13px; font-family:ui-sans-serif,system-ui,sans-serif; letter-spacing:.12em;
+      text-transform:uppercase; color:var(--ink2); margin:0 0 12px; }
+  ul{ list-style:none; padding:0; margin:0; }
+  li{ padding:14px 16px; border:1px solid var(--hair); border-radius:8px; background:var(--raised);
+      margin-bottom:10px; }
+  a{ color:var(--navy); text-decoration:none; font-weight:600; font-size:18px; }
+  a:hover{ color:var(--navy2); text-decoration:underline; }
+  .desc{ display:block; color:var(--ink2); font-size:15px; margin-top:3px; font-weight:400; }
+  .chosen{ color:var(--navy); font-family:ui-sans-serif,system-ui,sans-serif; font-size:11px;
+           letter-spacing:.08em; text-transform:uppercase; font-weight:700; margin-left:8px; }
+  .decide{ border-color:var(--navy); border-width:2px; }
+  .status{ background:#EFEADD; border:1px solid var(--hair); border-radius:8px; padding:14px 16px;
+           font-size:15px; color:var(--ink2); margin-bottom:28px; }
+  .status b{ color:var(--ink); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Josh Brandt — Portfolio · UX run 2026-06-03</div>
+  <h1>Visual identity preview</h1>
+  <p class="lede">Working mocks for the "warm, structured, editorial Gallery" identity. These illustrate; the spines (<i>DESIGN.md</i> / <i>EXPERIENCE.md</i>) win on conflict.</p>
+
+  <div class="status">
+    <b>Locked:</b> Gallery direction · warm cream + Prussian-navy · <b>Source Serif 4</b> · name "Joshua R. Brandt, MSE".
+    <b>Now →</b> information architecture (⑤), then signature surfaces.
+  </div>
+
+  <h2>⑩ Hero — final canonical entry</h2>
+  <ul>
+    <li class="decide"><a href="mock-hero-final.html">Hero (Scene 1) — desktop + mobile, above the fold</a>
+      <span class="desc">"Seasoned, building at the frontier" · the fork (Explore / book a talk) · Guide entry + dock · scene-rail · Joshua R. Brandt, MSE. Supersedes the type-comparison hero.</span></li>
+  </ul>
+
+  <h2>⑨ Speaker Surface — /speaking</h2>
+  <ul>
+    <li class="decide"><a href="mock-speaking.html">Speaker Surface — mobile-first conversion path (desktop + mobile)</a>
+      <span class="desc">Header+invite → reel → credibility (metrics / social proof) → signature talks → copy-paste bios → invite. Placeholders flagged; JSON-LD noted.</span></li>
+  </ul>
+
+  <h2>⑧ Master Timeline — /timeline</h2>
+  <ul>
+    <li class="decide"><a href="mock-timeline.html">Master Timeline — horizontal craft-arc (desktop) + vertical (mobile)</a>
+      <span class="desc">"Seasoned, Not Stuck" arc: quiet 30-yr runway → agentic turn · 2 flagship nodes + BMAD Method Dots → readers · home teaser strip · S2 zoom preview.</span></li>
+  </ul>
+
+  <h2>⑦ Glass Box — index (build-story)</h2>
+  <ul>
+    <li class="decide"><a href="mock-glassbox-index.html">Glass Box /glass-box — chronological build-story (desktop + mobile)</a>
+      <span class="desc">Dated timeline spine of the real BMAD Method artifacts · the recursion beat · curated allowlist · cross-link to the Master Timeline. Reader = the approved Source Serif long-form.</span></li>
+  </ul>
+
+  <h2>⑥ The Guide (agent) — states + floating behavior</h2>
+  <ul>
+    <li class="decide"><a href="mock-agent.html">Advocate Agent — 5 states + in-context (desktop + mobile)</a>
+      <span class="desc">Floating non-modal panel: collapsed · empty/starters · designed thinking · answer + citations · "not documented". Plus routing behavior + accessibility floor.</span></li>
+  </ul>
+
+  <h2>⑤ Information architecture — home wireframe</h2>
+  <ul>
+    <li class="decide"><a href="wireframe-home-arc.html">Home Scene Arc — scroll model + scene-rail (desktop + mobile)</a>
+      <span class="desc">Two-layer IA, structural: scroll-native arc · scene-rail / skip · hero fork (explore vs book-a-talk) · agent dock · static fallback.</span></li>
+  </ul>
+
+  <h2>④ Type decision <span class="chosen">Source Serif 4 ✓</span></h2>
+  <ul>
+    <li class="decide"><a href="mock-hero-types.html">Hero — Fraunces vs Source Serif</a>
+      <span class="desc">The headline face, full-width. Judge display character.</span></li>
+    <li class="decide"><a href="mock-glassbox-types.html">Glass Box long-form — all-Fraunces / all-Source / pairing</a>
+      <span class="desc">A wall of real text. Judge sustained readability — and whether the pairing wins.</span></li>
+  </ul>
+
+  <hr>
+
+  <h2>③ Typography specimens</h2>
+  <ul>
+    <li><a href="typography-1.html">Five editorial serifs on the palette</a>
+      <span class="desc">Fraunces · Newsreader · Source Serif 4 · EB Garamond · system serif. Finalists: Fraunces + Source.</span></li>
+  </ul>
+
+  <h2>② Palette options</h2>
+  <ul>
+    <li><a href="color-themes-1.html">Six warm-paper accents</a>
+      <span class="desc">Oxblood · Terracotta · Petrol · Prussian · Forest · Ochre. <span class="chosen">Prussian ✓</span></span></li>
+  </ul>
+
+  <h2>① Design directions</h2>
+  <ul>
+    <li><a href="direction-gallery-light.html">Gallery (light)</a><span class="chosen">Chosen ✓</span>
+      <span class="desc">Austere museum wall — the base direction.</span></li>
+    <li><a href="direction-literary-light.html">Literary (light)</a>
+      <span class="desc">Warm publication. (Lent its warmth + editorial devices.)</span></li>
+    <li><a href="direction-cinematic-dark.html">Cinematic (dark)</a>
+      <span class="desc">A film you can talk to. (Reserved for a later dark showpiece moment.)</span></li>
+    <li><a href="direction-architect-dark.html">Architect (dark)</a>
+      <span class="desc">Engineer's drafting table. (Lent its faint structural grid.)</span></li>
+  </ul>
+</div>
+</body>
+</html>

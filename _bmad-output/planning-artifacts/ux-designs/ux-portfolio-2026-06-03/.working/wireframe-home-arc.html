@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wireframe — Home Scene Arc (/) · Joshua R. Brandt, MSE</title>
+
+<!-- Source Serif 4 ONLY (scene headings). Network allowed for this wireframe. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+
+<style>
+/* ============================================================
+   WIREFRAME — HOME SCENE ARC (/)
+   THIS WIREFRAME GOVERNS:
+     • EXPERIENCE.md → Information Architecture (the two-layer IA:
+       the home Scene Arc + its scene order + Mirror-route "one
+       click in" targets + the static fallback footer).
+     • EXPERIENCE.md → Interaction Primitives — the SCROLL-NATIVE
+       navigation model: the persistent scene-rail (progress +
+       jump + the FR-2 Skip affordance) and its mobile collapse
+       (top progress bar + "Jump to section" menu).
+     • EXPERIENCE.md → the Hero Key Flow (FR-1) — the calm credible
+       hero and THE FORK: "Explore" (enter the arc) vs
+       "I'm here to book a talk" (jump to /speaking, bypass chat).
+   FIDELITY: low-fidelity STRUCTURAL wireframe. Hairline boxes,
+   gray placeholder blocks for media, short real labels, and navy
+   annotation callouts with leader lines + a numbered legend. NOT
+   a polished mock — it validates IA + the scroll nav model.
+   Spines (DESIGN.md / EXPERIENCE.md) win on conflict.
+
+   ---- LOCKED IDENTITY (applied LIGHTLY — structural, not polished) ----
+   #F6F0E6  surface-base     warm cream paper (page)
+   #FBF7EF  surface-raised   raised plane (rail, cards)
+   #211B14  ink-primary      warm near-black text
+   #6B5D4A  ink-secondary    muted secondary / labels
+   #D8CAB3  border-hairline   hairline boxes + rules
+   #1E3A5F  accent (navy)    interactive elements + ALL annotations
+   Scene headings: Source Serif 4. Body/labels/annotations: system sans.
+   ============================================================ */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --surface-base: #F6F0E6;
+  --surface-raised: #FBF7EF;
+  --ink-primary: #211B14;
+  --ink-secondary: #6B5D4A;
+  --border-hairline: #D8CAB3;
+  --grid-line: #ECE3D3;
+  --accent: #1E3A5F;
+  --accent-hover: #162B47;
+  --placeholder: #E4DBC9;     /* gray-ish placeholder block fill */
+  --placeholder-line: #CFC3AC; /* placeholder cross-hatch */
+
+  --serif: 'Source Serif 4', 'Georgia', 'Times New Roman', serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  background: #DCD4C3; /* neutral stage behind the device frames */
+  font-family: var(--sans);
+  color: var(--ink-primary);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+  padding: 36px 22px 90px;
+}
+
+/* ---------- page intro / legend banner ---------- */
+.intro {
+  max-width: 1320px;
+  margin: 0 auto 30px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  padding: 22px 28px;
+}
+.intro .tag {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 9px;
+}
+.intro h1 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 23px;
+  letter-spacing: 0.005em;
+  margin-bottom: 8px;
+}
+.intro p {
+  font-size: 13.5px;
+  color: var(--ink-secondary);
+  max-width: 96ch;
+  line-height: 1.6;
+}
+.intro p .em { color: var(--ink-primary); font-weight: 600; }
+
+/* shared numbered annotation legend */
+.legend {
+  max-width: 1320px;
+  margin: 0 auto 34px;
+  background: var(--surface-base);
+  border: 1px dashed var(--accent);
+  padding: 16px 22px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 34px;
+}
+.legend h2 {
+  grid-column: 1 / -1;
+  font-family: var(--sans);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+.legend .item {
+  font-size: 12px;
+  color: var(--ink-primary);
+  line-height: 1.5;
+  display: flex;
+  gap: 9px;
+  align-items: baseline;
+}
+.legend .num {
+  flex: 0 0 auto;
+  width: 19px; height: 19px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.legend .item b { color: var(--accent); }
+
+/* ---------- the two-frame stage ---------- */
+.frames {
+  max-width: 1320px;
+  margin: 0 auto;
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.frame-col { flex: 1 1 640px; min-width: 320px; }
+.frame-col.mobile-col { flex: 0 0 388px; }
+
+.frame-cap {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #6f6759;
+  margin: 0 0 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.frame-cap .sub {
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: none;
+  font-style: italic;
+  color: #8a8273;
+  font-size: 12px;
+}
+
+/* browser / device chrome */
+.device {
+  background: var(--surface-base);
+  border: 1px solid #c4bba8;
+  border-radius: 10px;
+  box-shadow: 0 22px 50px -30px rgba(33,27,20,0.55);
+  overflow: hidden;
+}
+.bar {
+  background: #E7DECE;
+  border-bottom: 1px solid var(--border-hairline);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+}
+.dot { width: 10px; height: 10px; border-radius: 50%; background: #cfc5b1; }
+.url {
+  margin-left: 12px;
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--ink-secondary);
+  letter-spacing: 0.01em;
+}
+
+/* the scrolled viewport — fixed height so "scroll" + fold are legible */
+.viewport {
+  position: relative;
+  height: 760px;
+  overflow-y: auto;
+  background: var(--surface-base);
+}
+.viewport::-webkit-scrollbar { width: 10px; }
+.viewport::-webkit-scrollbar-thumb { background: #cabfa8; border-radius: 6px; }
+
+/* ============================================================
+   SCENE-RAIL (DESKTOP) — slim vertical rail pinned to right edge
+   Lists scenes, highlights current, carries progress + Skip.
+   ============================================================ */
+.with-rail { position: relative; }
+.scene-rail {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 196px;
+  background: var(--surface-raised);
+  border-left: 1px solid var(--border-hairline);
+  padding: 20px 16px;
+  z-index: 5;
+}
+.scene-rail.sticky-note { position: sticky; }
+.rail-head {
+  font-family: var(--sans);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-hairline);
+}
+.rail-list { list-style: none; }
+.rail-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  color: var(--ink-secondary);
+  position: relative;
+}
+.rail-tick {
+  flex: 0 0 auto;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  border: 1px solid var(--accent);
+  background: transparent;
+}
+.rail-list li.done .rail-tick { background: var(--accent); }
+.rail-list li.current { color: var(--accent); font-weight: 700; }
+.rail-list li.current .rail-tick {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(30,58,95,0.22);
+}
+.rail-list li.current::before {
+  /* current-scene progress bar marker on the rail spine */
+  content: "";
+  position: absolute;
+  left: -16px; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--accent);
+}
+.rail-progress {
+  margin: 16px 0 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-hairline);
+}
+.rail-progress .meter {
+  height: 5px;
+  background: var(--grid-line);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.rail-progress .meter span {
+  display: block; height: 100%; width: 14%;
+  background: var(--accent);
+}
+.rail-progress .lab {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+.rail-skip {
+  display: block;
+  text-align: center;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 9px 8px;
+  text-decoration: none;
+}
+.rail-skip.ghost {
+  color: var(--accent);
+  background: transparent;
+  margin-top: 8px;
+  padding: 7px 8px;
+}
+
+/* the scrolling content column sits left of the rail */
+.scroll-body { padding-right: 196px; }
+
+/* ============================================================
+   SCENE blocks — hairline boxes, real short labels
+   ============================================================ */
+.scene {
+  position: relative;
+  border-bottom: 1px dashed var(--border-hairline);
+  padding: 26px 30px 30px;
+}
+.scene.faint-grid {
+  background:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px) 0 0 / 64px 100%,
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px) 0 0 / 100% 64px,
+    var(--surface-base);
+}
+.scene-no {
+  position: absolute;
+  top: 14px; left: 12px;
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.kicker {
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+  margin: 4px 0 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.kicker::before {
+  content: ""; width: 20px; height: 1px; background: var(--accent);
+}
+.scene h3 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 26px;
+  line-height: 1.08;
+  letter-spacing: -0.005em;
+  color: var(--ink-primary);
+  margin-bottom: 10px;
+}
+.scene h3 small {
+  display: inline-block;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-secondary);
+  vertical-align: middle;
+  margin-left: 8px;
+}
+.scene p.lede {
+  font-size: 13.5px;
+  color: var(--ink-secondary);
+  max-width: 58ch;
+  line-height: 1.6;
+}
+
+/* placeholder media blocks (gray, cross-hatched, labeled) */
+.ph {
+  background:
+    repeating-linear-gradient(135deg, transparent 0 9px, var(--placeholder-line) 9px 10px),
+    var(--placeholder);
+  border: 1px solid var(--border-hairline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--sans);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+  text-align: center;
+  padding: 8px;
+}
+.ph.portrait { aspect-ratio: 4/5; }
+.ph.reel { aspect-ratio: 16/9; }
+
+/* wireframe buttons */
+.btn {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 10px 18px;
+  border: 1px solid var(--ink-primary);
+  background: transparent;
+  color: var(--ink-primary);
+  text-decoration: none;
+  display: inline-block;
+  border-radius: 6px;
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.link {
+  border: none; border-bottom: 1px solid var(--accent);
+  border-radius: 0; padding: 2px 0; color: var(--accent);
+  letter-spacing: 0.1em; text-transform: uppercase; font-size: 11px;
+}
+
+/* "one click in →" deep-link annotation chip */
+.deeplink {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  border: 1px dashed var(--accent);
+  border-radius: 5px;
+  padding: 4px 9px;
+  margin-top: 12px;
+}
+.deeplink .route {
+  font-weight: 400; font-style: italic; color: var(--ink-secondary);
+}
+
+/* annotation callout — navy note with leader line, anchored to a scene */
+.callout {
+  position: relative;
+  margin-top: 12px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.45;
+  padding: 8px 11px;
+  border-radius: 5px;
+  max-width: 46ch;
+}
+.callout .n {
+  display: inline-flex;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #fff; color: var(--accent);
+  font-weight: 700; font-size: 10px;
+  align-items: center; justify-content: center;
+  margin-right: 6px;
+  vertical-align: text-bottom;
+}
+.callout::before {
+  /* thin leader line up into the scene */
+  content: "";
+  position: absolute;
+  left: 18px; top: -12px;
+  width: 1px; height: 12px;
+  background: var(--accent);
+}
+
+/* hero-specific layout */
+.hero-top {
+  display: flex; justify-content: space-between; align-items: baseline;
+  border-bottom: 1px solid var(--border-hairline);
+  padding-bottom: 12px; margin-bottom: 18px;
+}
+.wordmark {
+  font-family: var(--sans);
+  font-size: 12px; font-weight: 700; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-primary);
+}
+.nav-meta {
+  font-family: var(--sans);
+  font-size: 9.5px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 168px;
+  gap: 26px;
+  align-items: start;
+}
+.fork {
+  display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  margin: 16px 0 6px;
+  padding: 12px;
+  border: 1px solid var(--accent);
+  border-radius: 7px;
+  background: var(--surface-raised);
+}
+.fork .sep {
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+.fork-tag {
+  width: 100%;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 2px;
+}
+
+/* timeline teaser dots */
+.dots-row {
+  display: flex; align-items: center; gap: 0;
+  margin: 10px 0 4px; padding: 14px 4px;
+  border-top: 1px solid var(--border-hairline);
+  border-bottom: 1px solid var(--border-hairline);
+  overflow: hidden;
+}
+.dots-row .seg { flex: 1 1 auto; height: 1px; background: var(--border-hairline); }
+.bmad-dot {
+  flex: 0 0 auto;
+  width: 13px; height: 13px; border-radius: 50%;
+  background: var(--surface-raised);
+  border: 1.5px solid var(--accent);
+  position: relative;
+}
+.bmad-dot.fill { background: var(--accent); }
+.dots-cap {
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-secondary); margin-top: 6px;
+}
+
+/* glass-box artifact card row */
+.cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-top: 10px; }
+.card {
+  border: 1px solid var(--border-hairline);
+  background: var(--surface-raised);
+  border-radius: 6px;
+  padding: 10px;
+}
+.card .thumb {
+  height: 52px; margin-bottom: 8px;
+  background:
+    repeating-linear-gradient(135deg, transparent 0 8px, var(--placeholder-line) 8px 9px),
+    var(--placeholder);
+  border: 1px solid var(--border-hairline);
+}
+.card .ctitle { font-size: 11.5px; font-weight: 700; color: var(--ink-primary); }
+.card .cmeta { font-size: 10px; color: var(--ink-secondary); margin-top: 2px; }
+
+/* signature-talk list + bio block (speaker scene) */
+.two-col { display: grid; grid-template-columns: 1.1fr 1fr; gap: 18px; margin-top: 10px; }
+.talk-list { list-style: none; }
+.talk-list li {
+  font-size: 12px; color: var(--ink-primary);
+  padding: 7px 0; border-bottom: 1px solid var(--border-hairline);
+  display: flex; justify-content: space-between; gap: 10px;
+}
+.talk-list li span { color: var(--ink-secondary); font-size: 10.5px; }
+.bio-block {
+  border: 1px solid var(--border-hairline);
+  background: var(--surface-raised);
+  border-radius: 6px; padding: 12px;
+}
+.bio-block .blab {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--accent);
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.bio-block .copybtn {
+  font-size: 9.5px; border: 1px solid var(--accent); color: var(--accent);
+  border-radius: 4px; padding: 2px 7px; text-transform: none; letter-spacing: 0.04em;
+}
+.bio-block p { font-size: 11px; color: var(--ink-secondary); line-height: 1.55; }
+
+/* close / invite scene */
+.cta-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0 14px; }
+.contact-form {
+  border: 1px solid var(--border-hairline);
+  background: var(--surface-raised);
+  border-radius: 6px; padding: 12px; margin-top: 6px; max-width: 420px;
+}
+.field {
+  height: 30px; border: 1px solid var(--border-hairline);
+  background: var(--surface-base); border-radius: 5px; margin-bottom: 8px;
+  display: flex; align-items: center; padding: 0 10px;
+  font-size: 11px; color: var(--ink-secondary);
+}
+.field.area { height: 56px; align-items: flex-start; padding-top: 7px; }
+
+/* ============================================================
+   ADVOCATE AGENT dock (persistent) — desktop bottom-right
+   ============================================================ */
+.agent-dock {
+  position: absolute;
+  right: 212px; bottom: 16px;
+  z-index: 6;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 24px;
+  padding: 10px 16px;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.03em;
+  box-shadow: 0 10px 24px -10px rgba(30,58,95,0.7);
+  display: flex; align-items: center; gap: 9px;
+}
+.agent-dock .glyph {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid #fff;
+}
+.agent-note {
+  position: absolute;
+  right: 212px; bottom: 56px;
+  z-index: 6;
+  background: var(--surface-raised);
+  border: 1px dashed var(--accent);
+  color: var(--accent);
+  font-size: 10px; font-weight: 700; line-height: 1.4;
+  padding: 6px 9px; border-radius: 5px; max-width: 210px;
+}
+
+/* ============================================================
+   FOOTER — static fallback nav (Mirror routes)
+   ============================================================ */
+.fallback {
+  background: var(--surface-raised);
+  border-top: 2px solid var(--accent);
+  padding: 18px 30px 22px;
+}
+.fallback .flab {
+  font-family: var(--sans);
+  font-size: 10px; font-weight: 700; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 4px;
+}
+.fallback .fnote {
+  font-size: 11px; color: var(--ink-secondary); margin-bottom: 10px; font-style: italic;
+}
+.fallback ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.fallback li a {
+  font-size: 12px; color: var(--accent); text-decoration: none;
+  border-bottom: 1px solid var(--border-hairline); padding-bottom: 2px;
+}
+.fallback .wm {
+  font-family: var(--sans); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-primary);
+  margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-hairline);
+}
+
+/* ============================================================
+   MOBILE FRAME specifics
+   ============================================================ */
+.phone {
+  background: var(--surface-base);
+  border: 10px solid #2a241c;
+  border-radius: 34px;
+  overflow: hidden;
+  box-shadow: 0 22px 50px -28px rgba(33,27,20,0.6);
+}
+.phone .status {
+  background: #2a241c; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+}
+.phone .status::after {
+  content: ""; width: 80px; height: 7px; background: #4a4236; border-radius: 5px;
+}
+/* mobile sticky top: progress bar + Jump menu button */
+.m-topnav {
+  position: sticky; top: 0; z-index: 8;
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--border-hairline);
+}
+.m-progress { height: 4px; background: var(--grid-line); }
+.m-progress span { display: block; height: 100%; width: 14%; background: var(--accent); }
+.m-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px;
+}
+.m-wm {
+  font-family: var(--sans); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-primary);
+}
+.m-jump {
+  font-family: var(--sans); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.03em; color: #fff; background: var(--accent);
+  border: 1px solid var(--accent); border-radius: 6px; padding: 6px 11px;
+}
+.m-viewport {
+  position: relative;
+  height: 660px; overflow-y: auto;
+}
+.m-viewport::-webkit-scrollbar { width: 7px; }
+.m-viewport::-webkit-scrollbar-thumb { background: #cfc3ac; border-radius: 5px; }
+
+/* fold marker line */
+.fold {
+  position: relative;
+  border-top: 1.5px dashed var(--accent);
+  margin: 0;
+}
+.fold span {
+  position: absolute; right: 8px; top: -8px;
+  background: var(--accent); color: #fff;
+  font-size: 8.5px; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; padding: 1px 7px; border-radius: 8px;
+}
+
+.m-scene { padding: 16px 14px; border-bottom: 1px dashed var(--border-hairline); position: relative; }
+.m-scene .scene-no { top: 8px; left: 8px; }
+.m-scene h3 { font-family: var(--serif); font-weight: 600; font-size: 20px; line-height: 1.1; margin-bottom: 7px; }
+.m-scene p.lede { font-size: 12px; max-width: none; }
+.m-hero-fork { flex-direction: column; align-items: stretch; }
+.m-hero-fork .btn { text-align: center; }
+
+/* mobile agent button (persistent, docked) */
+.m-agent {
+  position: sticky; bottom: 0; z-index: 8;
+  background: var(--accent); color: #fff;
+  text-align: center; font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+  padding: 11px; border-top: 1px solid var(--accent-hover);
+}
+
+/* small floating annotation tags on the device chrome */
+.edge-note {
+  font-family: var(--sans);
+  font-size: 10.5px; font-weight: 700; line-height: 1.4;
+  color: var(--accent);
+  border: 1px dashed var(--accent);
+  background: var(--surface-base);
+  border-radius: 6px;
+  padding: 7px 10px;
+  margin: 10px 0 0;
+}
+.edge-note b { text-decoration: underline; }
+
+.foot-note {
+  max-width: 1320px; margin: 30px auto 0;
+  font-family: var(--sans); font-size: 11.5px; color: #6f6759;
+  text-align: center; letter-spacing: 0.02em; line-height: 1.6;
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== INTRO + LEGEND ===================== -->
+<div class="intro">
+  <div class="tag">Wireframe · Home Scene Arc (/) · low-fidelity / structural</div>
+  <h1>One scrolled page of discrete Scenes — validating the IA + the scroll-native navigation model.</h1>
+  <p>This is a <span class="em">structural wireframe</span>, not a polished mock: hairline boxes, gray placeholders, real short labels. It shows the Stage-1 scene order, the persistent <span class="em">scene-rail</span> (progress + jump + the FR-2 <span class="em">Skip</span> affordance) on desktop and its mobile collapse (<span class="em">top progress bar + "Jump to section" menu</span>), the hero <span class="em">fork</span> (Explore vs book a talk), the persistent <span class="em">Advocate Agent</span> entry, and the <span class="em">static fallback footer</span> to every Mirror route. Identity (cream / ink / navy / hairlines, Source Serif 4 headings) is applied lightly so it reads as ours but stays structural.</p>
+</div>
+
+<div class="legend">
+  <h2>Annotation legend — flow + interaction notes (navy = our annotations)</h2>
+  <div class="item"><span class="num">1</span><div><b>THE FORK (FR-1):</b> hero offers two paths — <b>Explore</b> (enter the arc) vs <b>I'm here to book a talk</b> → jumps to <i>/speaking</i>, bypassing chat + the cinematic layer (protects organizer counter-metric).</div></div>
+  <div class="item"><span class="num">2</span><div><b>SCENE-RAIL (FR-2):</b> persistent right-edge rail — scene list + progress indicator (current highlighted) + an always-visible <b>Skip</b> / jump affordance. This IS the skip/progress requirement.</div></div>
+  <div class="item"><span class="num">3</span><div><b>"One click in →":</b> each teaser scene deep-links to its Mirror route (<i>/timeline</i>, <i>/work/loandemo</i>, <i>/glass-box</i>). The arc teases; the route holds the full content.</div></div>
+  <div class="item"><span class="num">4</span><div><b>ADVOCATE AGENT entry:</b> persistent docked "Ask my Advocate" (bottom-right desktop / button mobile). <b>Agent overlay — form factor TBD (next pass).</b> Panel NOT designed here.</div></div>
+  <div class="item"><span class="num">5</span><div><b>SPEAKER SURFACE:</b> the organizer deep-link target — reel + signature-talk list + copy-paste bio. Also lives at <i>/speaking</i> (where the fork jumps).</div></div>
+  <div class="item"><span class="num">6</span><div><b>STATIC FALLBACK FOOTER:</b> links to every Mirror route. <b>JS-off / screen-reader fallback; reaches 100% of content.</b> Mobile rail collapses to top bar + Jump menu.</div></div>
+</div>
+
+<!-- ===================== TWO FRAMES ===================== -->
+<div class="frames">
+
+  <!-- ============ DESKTOP FRAME ============ -->
+  <div class="frame-col">
+    <div class="frame-cap">Desktop <span class="sub">scroll-native arc + persistent right scene-rail</span></div>
+    <div class="device">
+      <div class="bar">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="url">joshuabrandt.abacusai.cloud / &nbsp;·&nbsp; the home Scene Arc</span>
+      </div>
+
+      <div class="viewport">
+        <div class="with-rail">
+
+          <!-- persistent scene-rail (right) -->
+          <aside class="scene-rail" aria-label="Scene navigation (progress + skip)">
+            <div class="rail-head">Scenes · progress</div>
+            <ul class="rail-list">
+              <li class="current"><span class="rail-tick"></span>1 · Hero</li>
+              <li><span class="rail-tick"></span>2 · Thesis</li>
+              <li><span class="rail-tick"></span>3 · Timeline</li>
+              <li><span class="rail-tick"></span>4 · Speaking</li>
+              <li><span class="rail-tick"></span>5 · Loandemo</li>
+              <li><span class="rail-tick"></span>6 · Glass Box</li>
+              <li><span class="rail-tick"></span>7 · Invite</li>
+            </ul>
+            <div class="rail-progress">
+              <div class="meter"><span></span></div>
+              <div class="lab">Scene 1 of 7</div>
+            </div>
+            <a class="rail-skip" href="#d-invite">Skip to the end &darr;</a>
+            <a class="rail-skip ghost" href="#d-speaking">Jump: book a talk</a>
+          </aside>
+
+          <!-- scrolling content -->
+          <div class="scroll-body">
+
+            <!-- SCENE 1 — HERO -->
+            <section class="scene faint-grid" id="d-hero">
+              <span class="scene-no">SCENE 1</span>
+              <div class="hero-top">
+                <div class="wordmark">Joshua R. Brandt, MSE</div>
+                <div class="nav-meta">Built in the open · a BMAD project</div>
+              </div>
+              <div class="hero-grid">
+                <div>
+                  <div class="kicker">Positioning line</div>
+                  <h3>Seasoned, Not Stuck.</h3>
+                  <p class="lede">Thirty years shipping software, now all-in on agentic engineering. This site does not describe the work — it is the work.</p>
+
+                  <div class="fork">
+                    <div class="fork-tag">The fork — two paths</div>
+                    <a class="btn primary" href="#d-thesis">Explore</a>
+                    <span class="sep">or</span>
+                    <a class="btn" href="#d-speaking">I'm here to book a talk</a>
+                  </div>
+                  <a class="btn link" href="#" style="margin-top:10px;">Ask my Advocate</a>
+                  <div class="callout"><span class="n">1</span>THE FORK: "Explore" enters the arc; "book a talk" jumps to /speaking, bypassing chat + the cinematic layer.</div>
+                </div>
+                <div>
+                  <div class="ph portrait">Portrait / headshot</div>
+                  <div class="callout"><span class="n">4</span>Advocate entry also docked site-wide (see bottom-right). Calm hero — no spectacle.</div>
+                </div>
+              </div>
+            </section>
+
+            <!-- SCENE 2 — THESIS -->
+            <section class="scene" id="d-thesis">
+              <span class="scene-no">SCENE 2</span>
+              <div class="kicker">Thesis beat</div>
+              <h3>The medium is the message.</h3>
+              <p class="lede">Proof-as-process: the site is built as a public BMAD project, so it stands as its own evidence. One line, then the arc continues.</p>
+            </section>
+
+            <!-- SCENE 3 — MASTER TIMELINE (teaser) -->
+            <section class="scene" id="d-timeline">
+              <span class="scene-no">SCENE 3</span>
+              <div class="kicker">Master Timeline · teaser</div>
+              <h3>A career, in BMAD dots.</h3>
+              <div class="dots-row">
+                <span class="bmad-dot fill"></span><span class="seg"></span>
+                <span class="bmad-dot fill"></span><span class="seg"></span>
+                <span class="bmad-dot fill"></span><span class="seg"></span>
+                <span class="bmad-dot"></span><span class="seg"></span>
+                <span class="bmad-dot"></span><span class="seg"></span>
+                <span class="bmad-dot"></span><span class="seg"></span>
+                <span class="bmad-dot"></span>
+              </div>
+              <div class="dots-cap">Lightweight horizontal row — milestones as dots</div>
+              <div class="deeplink">one click in <span aria-hidden="true">&rarr;</span> <span class="route">/timeline</span></div>
+              <div class="callout"><span class="n">3</span>Teaser only. The full zoomable timeline lives at its Mirror route.</div>
+            </section>
+
+            <!-- SCENE 4 — SPEAKER SURFACE -->
+            <section class="scene" id="d-speaking">
+              <span class="scene-no">SCENE 4</span>
+              <div class="kicker">Speaker Surface · organizer deep-link target</div>
+              <h3>Speaking <small>also at /speaking — where the fork jumps</small></h3>
+              <div class="two-col">
+                <div>
+                  <div class="ph reel">Speaker reel (video placeholder)</div>
+                  <ul class="talk-list">
+                    <li>Seasoned, Not Stuck — keynote <span>45 min</span></li>
+                    <li>Building in the open with BMAD <span>conf talk</span></li>
+                    <li>Agentic engineering for veterans <span>workshop</span></li>
+                  </ul>
+                </div>
+                <div class="bio-block">
+                  <div class="blab">Copy-paste bio <span class="copybtn">Copy</span></div>
+                  <p>Joshua R. Brandt, MSE — software engineer of 30 years, now focused on agentic engineering. [short / long bio variants]</p>
+                </div>
+              </div>
+              <div class="callout"><span class="n">5</span>The organizer's destination: reel + signature-talk list + copy-paste bio. Reachable directly via the hero fork.</div>
+            </section>
+
+            <!-- SCENE 5 — FLAGSHIP CASE STUDY (teaser) -->
+            <section class="scene" id="d-loandemo">
+              <span class="scene-no">SCENE 5</span>
+              <div class="kicker">Flagship case study · teaser</div>
+              <h3>loandemo.</h3>
+              <div class="ph reel" style="aspect-ratio:21/9;">Case-study hero (image placeholder)</div>
+              <p class="lede" style="margin-top:10px;">The flagship build — problem, process, outcome. Teased here; the full case study opens one click in.</p>
+              <div class="deeplink">one click in <span aria-hidden="true">&rarr;</span> <span class="route">/work/loandemo</span></div>
+            </section>
+
+            <!-- SCENE 6 — GLASS BOX (teaser) -->
+            <section class="scene" id="d-glassbox">
+              <span class="scene-no">SCENE 6</span>
+              <div class="kicker">Glass Box · teaser</div>
+              <h3>Nothing hidden behind the magic.</h3>
+              <div class="cards">
+                <div class="card"><div class="thumb"></div><div class="ctitle">Prompt log</div><div class="cmeta">artifact</div></div>
+                <div class="card"><div class="thumb"></div><div class="ctitle">Decision log</div><div class="cmeta">artifact</div></div>
+                <div class="card"><div class="thumb"></div><div class="ctitle">Spec → ship</div><div class="cmeta">artifact</div></div>
+              </div>
+              <div class="deeplink">one click in <span aria-hidden="true">&rarr;</span> <span class="route">/glass-box</span></div>
+            </section>
+
+            <!-- SCENE 7 — CLOSE / INVITE-ME -->
+            <section class="scene" id="d-invite" style="border-bottom:none;">
+              <span class="scene-no">SCENE 7</span>
+              <div class="kicker">Close · Invite-Me</div>
+              <h3>Let's build something in the open.</h3>
+              <div class="cta-row">
+                <a class="btn primary" href="#">Invite me to speak</a>
+                <a class="btn" href="#">Follow</a>
+                <a class="btn" href="#">Subscribe</a>
+              </div>
+              <div class="contact-form">
+                <div class="field">Name</div>
+                <div class="field">Email</div>
+                <div class="field area">Message</div>
+                <a class="btn primary" href="#" style="font-size:11px;">Send</a>
+              </div>
+            </section>
+
+          </div><!-- /scroll-body -->
+
+          <!-- persistent Advocate dock + its TBD note -->
+          <div class="agent-note"><span style="text-decoration:underline;">Agent overlay — form factor TBD (next pass).</span> Panel not designed here.</div>
+          <div class="agent-dock"><span class="glyph"></span>Ask my Advocate</div>
+
+        </div><!-- /with-rail -->
+
+        <!-- FOOTER — static fallback nav -->
+        <footer class="fallback">
+          <div class="flab">Static fallback navigation — Mirror routes</div>
+          <div class="fnote">JS-off / screen-reader fallback; reaches 100% of content.</div>
+          <ul>
+            <li><a href="#">/ (home)</a></li>
+            <li><a href="#">/timeline</a></li>
+            <li><a href="#">/speaking</a></li>
+            <li><a href="#">/work/loandemo</a></li>
+            <li><a href="#">/glass-box</a></li>
+            <li><a href="#">/invite</a></li>
+            <li><a href="#">/browse</a></li>
+          </ul>
+          <div class="wm">Joshua R. Brandt, MSE</div>
+        </footer>
+      </div><!-- /viewport -->
+    </div><!-- /device -->
+
+    <div class="edge-note"><b>Desktop nav model:</b> slim vertical scene-rail pinned to the right edge — 7-scene list + progress meter ("Scene 1 of 7", current highlighted) + a visible <b>Skip to the end</b> and a <b>Jump: book a talk</b> affordance (annotation 2). The Advocate dock floats bottom-right (annotation 4). Scroll the frame to walk the arc.</div>
+  </div>
+
+  <!-- ============ MOBILE FRAME ============ -->
+  <div class="frame-col mobile-col">
+    <div class="frame-cap">Mobile <span class="sub">top progress bar + "Jump to section" menu</span></div>
+    <div class="phone">
+      <div class="status"></div>
+
+      <!-- sticky top: progress bar + Jump menu (rail collapsed) -->
+      <div class="m-topnav">
+        <div class="m-progress"><span></span></div>
+        <div class="m-topbar">
+          <span class="m-wm">J. R. Brandt, MSE</span>
+          <button class="m-jump" type="button">Jump to section &#9662;</button>
+        </div>
+      </div>
+
+      <div class="m-viewport">
+
+        <!-- SCENE 1 — HERO (must fit above the fold) -->
+        <section class="m-scene faint-grid" id="m-hero">
+          <span class="scene-no">SCENE 1</span>
+          <div style="margin-top:6px;" class="wordmark">Joshua R. Brandt, MSE</div>
+          <div class="ph portrait" style="width:88px; aspect-ratio:1/1; margin:8px 0;">Headshot</div>
+          <div class="kicker">Positioning</div>
+          <h3>Seasoned, Not Stuck.</h3>
+          <p class="lede">30 years shipping software, now all-in on agentic engineering.</p>
+          <div class="fork m-hero-fork">
+            <div class="fork-tag">The fork — two paths</div>
+            <a class="btn primary" href="#m-thesis">Explore</a>
+            <a class="btn" href="#m-speaking">I'm here to book a talk</a>
+          </div>
+          <a class="btn link" href="#" style="margin-top:8px;">Ask my Advocate</a>
+        </section>
+
+        <!-- ABOVE-THE-FOLD MARKER (hero fits above it) -->
+        <div class="fold"><span>Mobile fold — hero fits above</span></div>
+
+        <!-- SCENE 2 — THESIS -->
+        <section class="m-scene" id="m-thesis">
+          <span class="scene-no">SCENE 2</span>
+          <div class="kicker">Thesis</div>
+          <h3>The medium is the message.</h3>
+          <p class="lede">Proof-as-process: built in the open as a BMAD project.</p>
+        </section>
+
+        <!-- SCENE 3 — TIMELINE teaser -->
+        <section class="m-scene" id="m-timeline">
+          <span class="scene-no">SCENE 3</span>
+          <div class="kicker">Master Timeline · teaser</div>
+          <h3>BMAD dots.</h3>
+          <div class="dots-row">
+            <span class="bmad-dot fill"></span><span class="seg"></span>
+            <span class="bmad-dot fill"></span><span class="seg"></span>
+            <span class="bmad-dot"></span><span class="seg"></span>
+            <span class="bmad-dot"></span><span class="seg"></span>
+            <span class="bmad-dot"></span>
+          </div>
+          <div class="deeplink">one click in <span aria-hidden="true">&rarr;</span> <span class="route">/timeline</span></div>
+        </section>
+
+        <!-- SCENE 4 — SPEAKER SURFACE -->
+        <section class="m-scene" id="m-speaking">
+          <span class="scene-no">SCENE 4</span>
+          <div class="kicker">Speaker Surface · /speaking</div>
+          <h3>Speaking.</h3>
+          <div class="ph reel">Reel</div>
+          <ul class="talk-list" style="margin-top:8px;">
+            <li>Seasoned, Not Stuck — keynote <span>45 min</span></li>
+            <li>Building in the open with BMAD <span>talk</span></li>
+          </ul>
+          <div class="bio-block" style="margin-top:8px;">
+            <div class="blab">Copy-paste bio <span class="copybtn">Copy</span></div>
+            <p>Joshua R. Brandt, MSE — 30 years in software; agentic engineering.</p>
+          </div>
+        </section>
+
+        <!-- SCENE 5 — LOANDEMO teaser -->
+        <section class="m-scene" id="m-loandemo">
+          <span class="scene-no">SCENE 5</span>
+          <div class="kicker">Flagship case study · teaser</div>
+          <h3>loandemo.</h3>
+          <div class="ph reel">Case-study hero</div>
+          <div class="deeplink">one click in <span aria-hidden="true">&rarr;</span> <span class="route">/work/loandemo</span></div>
+        </section>
+
+        <!-- SCENE 6 — GLASS BOX teaser -->
+        <section class="m-scene" id="m-glassbox">
+          <span class="scene-no">SCENE 6</span>
+          <div class="kicker">Glass Box · teaser</div>
+          <h3>Glass Box.</h3>
+          <div class="cards" style="grid-template-columns:repeat(2,1fr);">
+            <div class="card"><div class="thumb"></div><div class="ctitle">Prompt log</div></div>
+            <div class="card"><div class="thumb"></div><div class="ctitle">Decision log</div></div>
+          </div>
+          <div class="deeplink">one click in <span aria-hidden="true">&rarr;</span> <span class="route">/glass-box</span></div>
+        </section>
+
+        <!-- SCENE 7 — CLOSE / INVITE -->
+        <section class="m-scene" id="m-invite">
+          <span class="scene-no">SCENE 7</span>
+          <div class="kicker">Close · Invite-Me</div>
+          <h3>Build in the open.</h3>
+          <div class="cta-row">
+            <a class="btn primary" href="#">Invite me to speak</a>
+            <a class="btn" href="#">Follow</a>
+            <a class="btn" href="#">Subscribe</a>
+          </div>
+          <div class="contact-form">
+            <div class="field">Name</div>
+            <div class="field">Email</div>
+            <div class="field area">Message</div>
+            <a class="btn primary" href="#" style="font-size:11px;">Send</a>
+          </div>
+        </section>
+
+        <!-- FOOTER — static fallback nav (mobile) -->
+        <footer class="fallback">
+          <div class="flab">Static fallback nav — Mirror routes</div>
+          <div class="fnote">JS-off / screen-reader fallback; 100% of content.</div>
+          <ul>
+            <li><a href="#">/</a></li>
+            <li><a href="#">/timeline</a></li>
+            <li><a href="#">/speaking</a></li>
+            <li><a href="#">/work/loandemo</a></li>
+            <li><a href="#">/glass-box</a></li>
+            <li><a href="#">/invite</a></li>
+            <li><a href="#">/browse</a></li>
+          </ul>
+        </footer>
+      </div><!-- /m-viewport -->
+
+      <!-- persistent Advocate agent button (mobile) -->
+      <div class="m-agent">Ask my Advocate</div>
+    </div><!-- /phone -->
+
+    <div class="edge-note"><b>Mobile nav model:</b> the rail collapses to a sticky <b>top progress bar</b> + a <b>"Jump to section &#9662;"</b> menu button (annotation 2). The Advocate entry is a persistent docked button at the bottom (annotation 4). The dashed line marks the fold — Scene 1 (hero: wordmark, headshot, positioning, fork, Advocate) sits entirely above it.</div>
+  </div>
+
+</div>
+
+<p class="foot-note">Low-fidelity structural wireframe · inline CSS · no JavaScript · no images (gray placeholders only) · Source Serif 4 loaded via Google Fonts for scene headings. Governs EXPERIENCE.md → Information Architecture + Interaction Primitives (scroll / scene-rail) + the hero Key Flow. Spines win on conflict.</p>
+
+</body>
+</html>

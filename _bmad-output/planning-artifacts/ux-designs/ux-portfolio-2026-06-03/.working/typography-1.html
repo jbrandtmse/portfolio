@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typography Specimens — Editorial Serifs · Josh Brandt</title>
+
+<!-- ============================================================
+     TYPOGRAPHY SPECIMEN SHEET — 5 editorial serifs, same content,
+     same LOCKED palette. The user judges the true face here, so
+     real web fonts are loaded (network allowed for THIS file only).
+     Four web-font specimens via Google Fonts <link>; one baseline
+     specimen uses a pure system serif stack (zero font payload).
+
+     ---- LOCKED PALETTE (applied to EVERY specimen) ----
+     #F6F0E6  surface-base    — warm cream page
+     #FBF7EF  surface-raised  — lifted cream plane (pull-quote, panels)
+     #211B14  ink-primary     — warm near-black, headlines + body
+     #6B5D4A  ink-secondary   — meta, captions, labels
+     #D8CAB3  border-hairline — rules, button outline
+     #ECE3D3  grid-line       — faint drafting grid
+     #1E3A5F  accent          — Prussian navy, links + primary button
+     #162B47  accent-hover    — deeper navy on hover/active
+     ============================================================ -->
+
+<!-- Google Fonts — loaded ONLY for the four web-font specimens below.
+     Preconnect for the fetch, then one css2 call per family.
+     Fraunces       : optical (opsz 9..144) + weight 400/600/900 + italics
+     Newsreader     : opsz 6..72, weight 400/500/600 + italics
+     Source Serif 4 : weight 400/600/700 (roman only — no italics requested)
+     EB Garamond    : weight 400/500 + italics (served as static styles) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,400;1,9..144,600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Source+Serif+4:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ---- LOCKED PALETTE TOKENS ---- */
+:root {
+  --surface-base:    #F6F0E6;
+  --surface-raised:  #FBF7EF;
+  --ink:             #211B14;
+  --ink-2:           #6B5D4A;
+  --hairline:        #D8CAB3;
+  --grid:            #ECE3D3;
+  --accent:          #1E3A5F;
+  --accent-hover:    #162B47;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  background: var(--surface-base);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* page chrome (labels, payload notes) uses a quiet system sans so it
+     never competes with the serif being judged */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   QUIET PAGE CHROME
+   ============================================================ */
+.sheet-head {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 56px 32px 8px;
+}
+.sheet-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+.sheet-head h1 {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+.sheet-head p {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  max-width: 64ch;
+}
+.sheet-head p code {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  background: var(--surface-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: var(--ink);
+}
+
+/* ============================================================
+   SPECIMEN SHELL — repeated 5×, quiet & identical
+   ============================================================ */
+.specimen {
+  position: relative;
+  border-top: 1px solid var(--hairline);
+  /* faint drafting grid: a barely-there column ruling on the page */
+  background-image:
+    repeating-linear-gradient(to right, transparent, transparent 71px, var(--grid) 71px, var(--grid) 72px);
+  background-position: center top;
+}
+.specimen-inner {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+/* specimen masthead — number + machine-readable label/weights/payload */
+.spec-bar {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 34px 0 30px;
+}
+.spec-num {
+  flex: 0 0 auto;
+  width: 44px; height: 44px;
+  border: 1px solid var(--hairline);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--accent);
+  background: var(--surface-raised);
+}
+.spec-meta { flex: 1 1 auto; }
+.spec-name {
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  margin-bottom: 5px;
+}
+.spec-char {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  margin-bottom: 9px;
+  max-width: 62ch;
+}
+.spec-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+}
+.spec-specs .chip {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  letter-spacing: 0.01em;
+  color: var(--ink-2);
+  background: var(--surface-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 4px;
+  padding: 3px 8px;
+}
+.spec-specs .chip b { color: var(--ink); font-weight: 600; }
+.spec-specs .chip.payload { color: var(--accent); }
+.spec-specs .chip.payload b { color: var(--accent); }
+
+/* ---- the live specimen content area ---- */
+.spec-body { padding-bottom: 56px; }
+
+/* kicker (small-caps) */
+.kicker {
+  font-variant: small-caps;
+  letter-spacing: 0.14em;
+  font-size: 15px;
+  color: var(--ink-2);
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 16px;
+}
+.kicker::after {
+  content: ""; flex: 1; height: 1px; max-width: 140px;
+  background: var(--hairline);
+}
+
+/* big display headline */
+.display {
+  color: var(--ink);
+  font-size: clamp(46px, 8vw, 88px);
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+  margin-bottom: 18px;
+}
+
+/* deck / subhead */
+.deck {
+  color: var(--ink);
+  font-size: clamp(18px, 2.2vw, 23px);
+  line-height: 1.5;
+  max-width: 30ch;
+  margin-bottom: 34px;
+}
+
+/* long-form passage — realistic ~680px reading measure */
+.longform {
+  max-width: 680px;
+  margin: 0 auto;
+  border-top: 1px solid var(--hairline);
+  padding-top: 30px;
+}
+.longform p {
+  color: var(--ink);
+  font-size: 18px;
+  line-height: 1.62;
+  margin-bottom: 1.05em;
+}
+.longform p:last-of-type { margin-bottom: 0; }
+.longform .dropcap {
+  float: left;
+  font-size: 3.5em;
+  line-height: 0.78;
+  font-weight: 600;
+  color: var(--ink);
+  padding: 0.06em 0.1em 0 0;
+}
+.longform a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid var(--hairline);
+  padding-bottom: 1px;
+  transition: border-color 120ms ease, color 120ms ease;
+}
+.longform a:hover { color: var(--accent-hover); border-bottom-color: var(--accent); }
+.longform em { font-style: italic; }
+
+/* pull-quote */
+.pullquote {
+  max-width: 680px;
+  margin: 30px auto;
+  background: var(--surface-raised);
+  border-left: 3px solid var(--accent);
+  padding: 22px 26px;
+}
+.pullquote p {
+  font-style: italic;
+  font-size: clamp(20px, 2.4vw, 25px);
+  line-height: 1.4;
+  color: var(--ink);
+}
+.pullquote .attr {
+  display: block;
+  font-style: normal;
+  font-variant: small-caps;
+  letter-spacing: 0.1em;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  margin-top: 12px;
+}
+
+/* hairline rule + actions */
+.spec-rule {
+  max-width: 680px;
+  margin: 30px auto 24px;
+  height: 1px;
+  background: var(--hairline);
+}
+.actions {
+  max-width: 680px;
+  margin: 0 auto;
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+.btn {
+  font: inherit;
+  font-size: 16px;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  display: inline-block;
+  padding: 12px 26px;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.btn-primary { background: var(--accent); color: var(--surface-base); }
+.btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn-secondary { background: transparent; color: var(--accent); }
+.btn-secondary:hover { background: var(--surface-raised); border-color: var(--accent-hover); color: var(--accent-hover); }
+.ask-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 16px;
+  border-bottom: 1px solid var(--hairline);
+  padding-bottom: 2px;
+  transition: border-color 120ms ease, color 120ms ease;
+}
+.ask-link:hover { color: var(--accent-hover); border-bottom-color: var(--accent); }
+
+.sheet-foot {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 30px 32px 72px;
+  border-top: 1px solid var(--hairline);
+  font-size: 12.5px;
+  font-style: italic;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+
+/* ============================================================
+   PER-SPECIMEN TYPE ASSIGNMENTS
+   Each block documents font-family + weights it actually uses.
+   ============================================================ */
+
+/* --- Specimen 1: FRAUNCES ---
+   family: 'Fraunces', serif  (variable: opsz 9..144, wght 400/600/900 + italic 400/600)
+   display headline uses opsz 144 (display optical) at 900; body 400/600. */
+.s-fraunces .display      { font-family: 'Fraunces', Georgia, serif; font-weight: 900; font-variation-settings: "opsz" 144, "SOFT" 0, "WONK" 0; letter-spacing: -0.025em; }
+.s-fraunces .kicker       { font-family: 'Fraunces', Georgia, serif; font-weight: 600; }
+.s-fraunces .deck         { font-family: 'Fraunces', Georgia, serif; font-weight: 400; font-variation-settings: "opsz" 60; }
+.s-fraunces .longform     { font-family: 'Fraunces', Georgia, serif; }
+.s-fraunces .longform p   { font-variation-settings: "opsz" 28; }
+.s-fraunces .longform .dropcap { font-weight: 900; font-variation-settings: "opsz" 144; }
+.s-fraunces .pullquote p  { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-style: italic; }
+.s-fraunces .btn          { font-family: 'Fraunces', Georgia, serif; font-weight: 600; }
+
+/* --- Specimen 2: NEWSREADER ---
+   family: 'Newsreader', serif  (variable: opsz 6..72, wght 400/500/600 + italic 400/500)
+   serious-publication editorial; beautiful italics for the pull-quote. */
+.s-newsreader .display      { font-family: 'Newsreader', Georgia, serif; font-weight: 600; font-variation-settings: "opsz" 72; }
+.s-newsreader .kicker       { font-family: 'Newsreader', Georgia, serif; font-weight: 500; }
+.s-newsreader .deck         { font-family: 'Newsreader', Georgia, serif; font-weight: 400; font-style: italic; font-variation-settings: "opsz" 50; }
+.s-newsreader .longform     { font-family: 'Newsreader', Georgia, serif; }
+.s-newsreader .longform p   { font-variation-settings: "opsz" 18; }
+.s-newsreader .longform .dropcap { font-weight: 600; font-variation-settings: "opsz" 72; }
+.s-newsreader .pullquote p  { font-family: 'Newsreader', Georgia, serif; font-weight: 500; font-style: italic; }
+.s-newsreader .btn          { font-family: 'Newsreader', Georgia, serif; font-weight: 600; }
+
+/* --- Specimen 3: SOURCE SERIF 4 ---
+   family: 'Source Serif 4', serif  (weights 400/600/700, roman only)
+   clean, neutral, versatile long-form workhorse. */
+.s-source .display      { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; letter-spacing: -0.022em; }
+.s-source .kicker       { font-family: 'Source Serif 4', Georgia, serif; font-weight: 600; }
+.s-source .deck         { font-family: 'Source Serif 4', Georgia, serif; font-weight: 400; }
+.s-source .longform     { font-family: 'Source Serif 4', Georgia, serif; }
+.s-source .longform .dropcap { font-weight: 700; }
+.s-source .pullquote p  { font-family: 'Source Serif 4', Georgia, serif; font-weight: 600; font-style: italic; } /* synthesized italic — no italic file loaded */
+.s-source .btn          { font-family: 'Source Serif 4', Georgia, serif; font-weight: 600; }
+
+/* --- Specimen 4: EB GARAMOND ---
+   family: 'EB Garamond', serif  (weights 400/500 + italic 400/500, static styles)
+   timeless humanist classic — "old soul, current craft". */
+.s-garamond .display      { font-family: 'EB Garamond', Georgia, serif; font-weight: 500; letter-spacing: -0.012em; }
+.s-garamond .kicker       { font-family: 'EB Garamond', Georgia, serif; font-weight: 500; }
+.s-garamond .deck         { font-family: 'EB Garamond', Georgia, serif; font-weight: 400; font-style: italic; }
+.s-garamond .longform     { font-family: 'EB Garamond', Georgia, serif; }
+.s-garamond .longform p   { font-size: 19.5px; } /* Garamond runs small; bump the measure size */
+.s-garamond .longform .dropcap { font-weight: 500; }
+.s-garamond .pullquote p  { font-family: 'EB Garamond', Georgia, serif; font-weight: 400; font-style: italic; }
+.s-garamond .btn          { font-family: 'EB Garamond', Georgia, serif; font-weight: 500; }
+
+/* --- Specimen 5: SYSTEM SERIF BASELINE ---
+   family: 'Iowan Old Style','Palatino Linotype','Palatino','Georgia','Times New Roman',serif
+   NO web font — zero payload, instant. Renders as a generic fallback on
+   Linux screenshots; on macOS/Windows it is Iowan / Palatino / Georgia. */
+.s-system .display      { font-family: 'Iowan Old Style','Palatino Linotype','Palatino','Georgia','Times New Roman',serif; font-weight: 700; letter-spacing: -0.02em; }
+.s-system .kicker       { font-family: 'Iowan Old Style','Palatino Linotype','Palatino','Georgia','Times New Roman',serif; font-weight: 600; }
+.s-system .deck         { font-family: 'Iowan Old Style','Palatino Linotype','Palatino','Georgia','Times New Roman',serif; font-weight: 400; }
+.s-system .longform     { font-family: 'Iowan Old Style','Palatino Linotype','Palatino','Georgia','Times New Roman',serif; }
+.s-system .longform .dropcap { font-weight: 700; }
+.s-system .pullquote p  { font-family: 'Iowan Old Style','Palatino Linotype','Palatino','Georgia','Times New Roman',serif; font-weight: 400; font-style: italic; }
+.s-system .btn          { font-family: 'Iowan Old Style','Palatino Linotype','Palatino','Georgia','Times New Roman',serif; font-weight: 600; }
+
+@media (max-width: 720px) {
+  .sheet-head, .specimen-inner, .sheet-foot { padding-left: 22px; padding-right: 22px; }
+  .longform p { font-size: 17px; }
+  .s-garamond .longform p { font-size: 18.5px; }
+}
+</style>
+</head>
+<body>
+
+<header class="sheet-head">
+  <div class="sheet-eyebrow">Typography specimens · editorial serifs</div>
+  <h1>One voice, five faces.</h1>
+  <p>The same real content, set five ways on the locked portfolio palette &mdash; warm cream paper <code>#F6F0E6</code>, near-black ink <code>#211B14</code>, Prussian-navy accent <code>#1E3A5F</code>. Four specimens load their true web font; one is a pure system-serif baseline with zero font payload. The page chrome below (labels, weight chips, payload estimates) stays in a quiet sans so it never competes with the face you are judging. Payload figures are approximate latin-subset woff2 for the loaded weights, for weighing against the perf budget.</p>
+</header>
+
+<!-- ======================== SPECIMEN 1 — FRAUNCES ======================== -->
+<section class="specimen s-fraunces">
+  <div class="specimen-inner">
+    <div class="spec-bar">
+      <div class="spec-num">1</div>
+      <div class="spec-meta">
+        <div class="spec-name">Fraunces</div>
+        <p class="spec-char">Characterful modern old-style with a display optical axis &mdash; warm, a little soft, unmistakably &ldquo;designed.&rdquo; The headline rides the display optical size; the italic carries personality.</p>
+        <div class="spec-specs">
+          <span class="chip"><b>family:</b> 'Fraunces', serif</span>
+          <span class="chip"><b>weights:</b> 400 / 600 / 900</span>
+          <span class="chip"><b>styles:</b> roman + italic (400/600)</span>
+          <span class="chip"><b>axis:</b> opsz 9&ndash;144</span>
+          <span class="chip payload"><b>approx woff2:</b> ~140KB roman VF + ~140KB italic VF (latin)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec-body">
+      <div class="kicker">Software Engineer · 30 Years</div>
+      <h2 class="display">Seasoned, Not Stuck.</h2>
+      <p class="deck">Thirty years of shipping software, now built in the open as its own evidence.</p>
+
+      <div class="longform">
+        <p><span class="dropcap">T</span>his site does not describe the work. It is the work &mdash; assembled in the open so it stands as its own evidence rather than a claim you are asked to take on faith. Every case study links back to the artifacts that produced it, and every artifact is reachable from the record.</p>
+        <p>That is the wager of a <em>Glass Box</em>: show the seams, the prompts, and the dead ends alongside the result. A reader who wants the headline gets it in one line; a reader who wants proof can follow the thread all the way down. The <a href="#">loandemo case study</a> is where I would start a skeptic, because it was built live and narrated from first prompt to shipped result.</p>
+      </div>
+
+      <blockquote class="pullquote">
+        <p>The skeptic gets sold, and gets the receipts.</p>
+        <span class="attr">On the Advocate Agent</span>
+      </blockquote>
+
+      <div class="spec-rule"></div>
+      <div class="actions">
+        <a class="btn btn-primary" href="#">Invite me to speak</a>
+        <a class="btn btn-secondary" href="#">Explore the work</a>
+        <a class="ask-link" href="#">Ask the Advocate &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== SPECIMEN 2 — NEWSREADER ======================== -->
+<section class="specimen s-newsreader">
+  <div class="specimen-inner">
+    <div class="spec-bar">
+      <div class="spec-num">2</div>
+      <div class="spec-meta">
+        <div class="spec-name">Newsreader</div>
+        <p class="spec-char">Digital editorial with a serious-publication feel and genuinely beautiful italics. Set for the screen across optical sizes; the deck and pull-quote lean on its italic.</p>
+        <div class="spec-specs">
+          <span class="chip"><b>family:</b> 'Newsreader', serif</span>
+          <span class="chip"><b>weights:</b> 400 / 500 / 600</span>
+          <span class="chip"><b>styles:</b> roman + italic (400/500)</span>
+          <span class="chip"><b>axis:</b> opsz 6&ndash;72</span>
+          <span class="chip payload"><b>approx woff2:</b> ~110KB roman VF + ~110KB italic VF (latin)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec-body">
+      <div class="kicker">Software Engineer · 30 Years</div>
+      <h2 class="display">Seasoned, Not Stuck.</h2>
+      <p class="deck">Thirty years of shipping software, now built in the open as its own evidence.</p>
+
+      <div class="longform">
+        <p><span class="dropcap">T</span>his site does not describe the work. It is the work &mdash; assembled in the open so it stands as its own evidence rather than a claim you are asked to take on faith. Every case study links back to the artifacts that produced it, and every artifact is reachable from the record.</p>
+        <p>That is the wager of a <em>Glass Box</em>: show the seams, the prompts, and the dead ends alongside the result. A reader who wants the headline gets it in one line; a reader who wants proof can follow the thread all the way down. The <a href="#">loandemo case study</a> is where I would start a skeptic, because it was built live and narrated from first prompt to shipped result.</p>
+      </div>
+
+      <blockquote class="pullquote">
+        <p>The skeptic gets sold, and gets the receipts.</p>
+        <span class="attr">On the Advocate Agent</span>
+      </blockquote>
+
+      <div class="spec-rule"></div>
+      <div class="actions">
+        <a class="btn btn-primary" href="#">Invite me to speak</a>
+        <a class="btn btn-secondary" href="#">Explore the work</a>
+        <a class="ask-link" href="#">Ask the Advocate &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== SPECIMEN 3 — SOURCE SERIF 4 ======================== -->
+<section class="specimen s-source">
+  <div class="specimen-inner">
+    <div class="spec-bar">
+      <div class="spec-num">3</div>
+      <div class="spec-meta">
+        <div class="spec-name">Source Serif 4</div>
+        <p class="spec-char">Clean, neutral, versatile &mdash; understated craft that disappears into long-form reading. Roman only here; the pull-quote italic is synthesized, so a true italic file would be an added cost.</p>
+        <div class="spec-specs">
+          <span class="chip"><b>family:</b> 'Source Serif 4', serif</span>
+          <span class="chip"><b>weights:</b> 400 / 600 / 700</span>
+          <span class="chip"><b>styles:</b> roman only</span>
+          <span class="chip payload"><b>approx woff2:</b> ~190KB roman VF (latin); +~190KB if italic added</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec-body">
+      <div class="kicker">Software Engineer · 30 Years</div>
+      <h2 class="display">Seasoned, Not Stuck.</h2>
+      <p class="deck">Thirty years of shipping software, now built in the open as its own evidence.</p>
+
+      <div class="longform">
+        <p><span class="dropcap">T</span>his site does not describe the work. It is the work &mdash; assembled in the open so it stands as its own evidence rather than a claim you are asked to take on faith. Every case study links back to the artifacts that produced it, and every artifact is reachable from the record.</p>
+        <p>That is the wager of a <em>Glass Box</em>: show the seams, the prompts, and the dead ends alongside the result. A reader who wants the headline gets it in one line; a reader who wants proof can follow the thread all the way down. The <a href="#">loandemo case study</a> is where I would start a skeptic, because it was built live and narrated from first prompt to shipped result.</p>
+      </div>
+
+      <blockquote class="pullquote">
+        <p>The skeptic gets sold, and gets the receipts.</p>
+        <span class="attr">On the Advocate Agent</span>
+      </blockquote>
+
+      <div class="spec-rule"></div>
+      <div class="actions">
+        <a class="btn btn-primary" href="#">Invite me to speak</a>
+        <a class="btn btn-secondary" href="#">Explore the work</a>
+        <a class="ask-link" href="#">Ask the Advocate &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== SPECIMEN 4 — EB GARAMOND ======================== -->
+<section class="specimen s-garamond">
+  <div class="specimen-inner">
+    <div class="spec-bar">
+      <div class="spec-num">4</div>
+      <div class="spec-meta">
+        <div class="spec-name">EB Garamond</div>
+        <p class="spec-char">A timeless humanist classic &mdash; an &ldquo;old soul, current craft&rdquo; face that sits naturally with <em>Seasoned</em>. It runs small, so its long-form is set a touch larger to hold the measure.</p>
+        <div class="spec-specs">
+          <span class="chip"><b>family:</b> 'EB Garamond', serif</span>
+          <span class="chip"><b>weights:</b> 400 / 500</span>
+          <span class="chip"><b>styles:</b> roman + italic (400/500)</span>
+          <span class="chip payload"><b>approx woff2:</b> ~4 static styles &times; ~35KB &asymp; 140KB (latin)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec-body">
+      <div class="kicker">Software Engineer · 30 Years</div>
+      <h2 class="display">Seasoned, Not Stuck.</h2>
+      <p class="deck">Thirty years of shipping software, now built in the open as its own evidence.</p>
+
+      <div class="longform">
+        <p><span class="dropcap">T</span>his site does not describe the work. It is the work &mdash; assembled in the open so it stands as its own evidence rather than a claim you are asked to take on faith. Every case study links back to the artifacts that produced it, and every artifact is reachable from the record.</p>
+        <p>That is the wager of a <em>Glass Box</em>: show the seams, the prompts, and the dead ends alongside the result. A reader who wants the headline gets it in one line; a reader who wants proof can follow the thread all the way down. The <a href="#">loandemo case study</a> is where I would start a skeptic, because it was built live and narrated from first prompt to shipped result.</p>
+      </div>
+
+      <blockquote class="pullquote">
+        <p>The skeptic gets sold, and gets the receipts.</p>
+        <span class="attr">On the Advocate Agent</span>
+      </blockquote>
+
+      <div class="spec-rule"></div>
+      <div class="actions">
+        <a class="btn btn-primary" href="#">Invite me to speak</a>
+        <a class="btn btn-secondary" href="#">Explore the work</a>
+        <a class="ask-link" href="#">Ask the Advocate &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================== SPECIMEN 5 — SYSTEM SERIF BASELINE ======================== -->
+<section class="specimen s-system">
+  <div class="specimen-inner">
+    <div class="spec-bar">
+      <div class="spec-num">5</div>
+      <div class="spec-meta">
+        <div class="spec-name">System serif baseline &mdash; no web font</div>
+        <p class="spec-char">A pure system-serif stack: zero font payload, instant first paint. Renders as a generic serif fallback on Linux screenshots; on macOS / Windows it resolves to Iowan Old Style / Palatino / Georgia.</p>
+        <div class="spec-specs">
+          <span class="chip"><b>stack:</b> 'Iowan Old Style', 'Palatino Linotype', 'Palatino', 'Georgia', 'Times New Roman', serif</span>
+          <span class="chip"><b>weights:</b> 400 / 600 / 700 (system)</span>
+          <span class="chip payload"><b>approx woff2:</b> 0KB &mdash; no network font</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec-body">
+      <div class="kicker">Software Engineer · 30 Years</div>
+      <h2 class="display">Seasoned, Not Stuck.</h2>
+      <p class="deck">Thirty years of shipping software, now built in the open as its own evidence.</p>
+
+      <div class="longform">
+        <p><span class="dropcap">T</span>his site does not describe the work. It is the work &mdash; assembled in the open so it stands as its own evidence rather than a claim you are asked to take on faith. Every case study links back to the artifacts that produced it, and every artifact is reachable from the record.</p>
+        <p>That is the wager of a <em>Glass Box</em>: show the seams, the prompts, and the dead ends alongside the result. A reader who wants the headline gets it in one line; a reader who wants proof can follow the thread all the way down. The <a href="#">loandemo case study</a> is where I would start a skeptic, because it was built live and narrated from first prompt to shipped result.</p>
+      </div>
+
+      <blockquote class="pullquote">
+        <p>The skeptic gets sold, and gets the receipts.</p>
+        <span class="attr">On the Advocate Agent</span>
+      </blockquote>
+
+      <div class="spec-rule"></div>
+      <div class="actions">
+        <a class="btn btn-primary" href="#">Invite me to speak</a>
+        <a class="btn btn-secondary" href="#">Explore the work</a>
+        <a class="ask-link" href="#">Ask the Advocate &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="sheet-foot">
+  Self-contained HTML &middot; inline CSS only &middot; no JavaScript &middot; no images. Google Fonts loaded via &lt;link&gt; for specimens 1&ndash;4 only; specimen 5 uses a system serif stack with no network font. All five specimens share the locked palette. Payload figures are approximate latin-subset woff2 for the loaded weights and will vary with subsetting; profile in devtools for exact numbers.
+</footer>
+
+</body>
+</html>

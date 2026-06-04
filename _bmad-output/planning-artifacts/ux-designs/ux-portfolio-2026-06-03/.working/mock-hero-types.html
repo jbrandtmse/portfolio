@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Type decision — Hero (display test) · Josh Brandt</title>
+
+<!-- REAL WEB FONTS (network allowed for this type-decision mock only) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Fraunces: optical-size display axis (opsz 9..144) + wght 400/600/900 + italics; SOFT/WONK available -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400,0..100,0..1;0,9..144,600,0..100,0..1;0,9..144,900,0..100,0..1;1,9..144,400,0..100,0..1;1,9..144,600,0..100,0..1;1,9..144,900,0..100,0..1&display=swap">
+<!-- Source Serif 4: wght 400/600/700 + italics -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap">
+
+<style>
+/* ============================================================
+   MOCK — HERO TYPE DECISION (display test)
+   Governs (when chosen) these spine sections:
+     • DESIGN.md → typography (display face + scale) and the
+       hero component tokens (kicker, display, sub-line, buttons,
+       agent link, hairline rule, drafting grid).
+     • EXPERIENCE.md → the EXPERIENCE hero flow (FR-1 calm
+       credible hero: identity + Invite-Me-or-explore choice +
+       Advocate entry above the fold).
+   Purpose: render the SAME locked Gallery hero twice, changing
+   ONLY the display/headline face, so the display face can be
+   chosen on a real screen.
+     Variant A — Headline: Fraunces (optical display axis)
+     Variant B — Headline: Source Serif 4
+   Body/UI text is held constant in Source Serif 4 in BOTH
+   variants so the comparison isolates the DISPLAY face. Labels
+   call this out explicitly.
+
+   ---- TYPE / FONT-FAMILY CHOICES (documented) ----
+   --serif-fraunces : 'Fraunces', <transitional fallbacks>, serif
+        Display-optical variable serif. We push opsz toward its
+        144 maximum and a heavier wght (~900 for the big display,
+        600 for the kicker tick) so the "Soft/Wonk" warmth shows
+        at size — characterful, the "not stuck" candidate.
+   --serif-source : 'Source Serif 4', <transitional fallbacks>, serif
+        Calm transitional workhorse. Used as the constant
+        body/UI face AND as Variant B's display face so a
+        single-family system can be judged too.
+
+   ---- LOCKED PALETTE (from .decision-log.md — every hex documented) ----
+   #F6F0E6  surface-base     warm cream paper (page + hero base)
+   #FBF7EF  surface-raised   raised warm plane (portrait mat, raised cards)
+   #211B14  ink-primary      warm near-black text (15:1 on paper)
+   #6B5D4A  ink-secondary    muted secondary text / metadata (5.6:1)
+   #D8CAB3  border-hairline  hairline rules / borders
+   #ECE3D3  grid-line        faint drafting-grid line
+   #1E3A5F  accent           Prussian navy — primary action + accent tick
+   #162B47  accent-hover     deeper navy — hover/pressed
+   ============================================================ */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --surface-base: #F6F0E6;
+  --surface-raised: #FBF7EF;
+  --ink-primary: #211B14;
+  --ink-secondary: #6B5D4A;
+  --border-hairline: #D8CAB3;
+  --grid-line: #ECE3D3;
+  --accent: #1E3A5F;
+  --accent-hover: #162B47;
+
+  /* The two candidate faces. Roman + italic, weight axis exercised. */
+  --serif-fraunces: 'Fraunces', 'Spectral', 'Georgia', 'Times New Roman', serif;
+  --serif-source: 'Source Serif 4', 'Spectral', 'Georgia', 'Times New Roman', serif;
+}
+
+body {
+  background: #E4DECF; /* neutral stage behind the device frames */
+  font-family: var(--serif-source); /* constant UI/body face */
+  color: var(--ink-primary);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  line-height: 1.5;
+  padding: 40px 24px 90px;
+}
+
+/* ---- page intro banner ---- */
+.intro {
+  max-width: 1180px;
+  margin: 0 auto 40px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  padding: 26px 34px;
+}
+.intro .tag {
+  font-family: var(--serif-source);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 11px;
+}
+.intro h1 {
+  font-family: var(--serif-fraunces);
+  font-variation-settings: 'opsz' 144, 'SOFT' 0, 'WONK' 0;
+  font-weight: 600;
+  font-size: 27px;
+  letter-spacing: 0.005em;
+  margin-bottom: 10px;
+}
+.intro p {
+  font-size: 15.5px;
+  color: var(--ink-secondary);
+  max-width: 84ch;
+  line-height: 1.62;
+}
+.intro p .em { color: var(--ink-primary); font-weight: 600; }
+
+/* ---- shared device frame scaffolding ---- */
+.stage { max-width: 1180px; margin: 0 auto; }
+.frame-label {
+  font-family: var(--serif-source);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: #6f6759;
+  margin: 44px 0 13px;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.frame-label .which {
+  color: var(--accent);
+}
+.frame-label .const {
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  color: #8a8273;
+  text-transform: none;
+  font-style: italic;
+}
+.browser {
+  background: var(--surface-base);
+  border: 1px solid #cbc3b2;
+  border-radius: 10px;
+  box-shadow: 0 24px 54px -30px rgba(33,27,20,0.5);
+  overflow: hidden;
+}
+.browser-bar {
+  background: #EBE3D3;
+  border-bottom: 1px solid var(--border-hairline);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 16px;
+}
+.dot { width: 11px; height: 11px; border-radius: 50%; background: #d2c8b4; }
+.url {
+  margin-left: 14px;
+  font-family: var(--serif-source);
+  font-size: 12.5px;
+  color: var(--ink-secondary);
+  letter-spacing: 0.02em;
+}
+
+/* ============================================================
+   HERO — locked Gallery composition (warm, structured, editorial)
+   Faint drafting grid + hairline rules carried from the direction.
+   ============================================================ */
+.hero {
+  position: relative;
+  background:
+    /* faint drafting grid — structure under the calm */
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px) 0 0 / 96px 100%,
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px) 0 0 / 100% 96px,
+    var(--surface-base);
+  padding: clamp(54px, 6.4vw, 96px) clamp(40px, 6.4vw, 104px);
+}
+
+.hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1px solid var(--border-hairline);
+  padding-bottom: 22px;
+  margin-bottom: clamp(46px, 5.4vw, 80px);
+}
+.wordmark {
+  font-family: var(--serif-source);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--ink-primary);
+}
+.nav-meta {
+  font-family: var(--serif-source);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr minmax(220px, 300px);
+  gap: clamp(40px, 6vw, 88px);
+  align-items: center;
+}
+
+/* small-caps kicker with the single navy accent tick */
+.kicker {
+  font-family: var(--serif-source);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.kicker::before {
+  content: "";
+  width: 26px;
+  height: 1px;
+  background: var(--accent); /* the single accent tick */
+}
+
+/* THE DISPLAY — the only element whose FACE changes between variants */
+.display {
+  font-size: clamp(52px, 8.2vw, 122px);
+  line-height: 0.97;
+  letter-spacing: -0.012em;
+  margin-bottom: 34px;
+  color: var(--ink-primary);
+}
+.display .line2 { display: block; }
+
+.subline {
+  font-size: clamp(17px, 1.45vw, 20.5px);
+  line-height: 1.62;
+  color: var(--ink-secondary);
+  max-width: 47ch;
+  margin-bottom: 44px;
+}
+.subline .em { color: var(--ink-primary); }
+
+.paths {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.btn {
+  font-family: var(--serif-source);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 14px 28px;
+  border: 1px solid var(--ink-primary);
+  background: transparent;
+  color: var(--ink-primary);
+  text-decoration: none;
+  display: inline-block;
+}
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--surface-base);
+}
+.path-sep {
+  font-family: var(--serif-source);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+
+/* portrait — a refined placeholder mat with a museum label */
+.portrait { display: flex; flex-direction: column; }
+.portrait-mat {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  aspect-ratio: 4 / 5;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.portrait-mat::before { /* faint corner registration ticks */
+  content: "";
+  position: absolute; inset: 12px;
+  background:
+    linear-gradient(var(--border-hairline),var(--border-hairline)) left 0 top 0/14px 1px no-repeat,
+    linear-gradient(var(--border-hairline),var(--border-hairline)) left 0 top 0/1px 14px no-repeat,
+    linear-gradient(var(--border-hairline),var(--border-hairline)) right 0 bottom 0/14px 1px no-repeat,
+    linear-gradient(var(--border-hairline),var(--border-hairline)) right 0 bottom 0/1px 14px no-repeat;
+}
+.portrait-mat::after {
+  content: "PORTRAIT";
+  font-family: var(--serif-source);
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  color: var(--ink-secondary);
+}
+.portrait-label {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--border-hairline);
+  padding-top: 10px;
+  font-family: var(--serif-source);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+
+/* Advocate entry strip beneath the hero */
+.agent-entry {
+  position: relative;
+  margin-top: clamp(42px, 4.8vw, 70px);
+  border-top: 1px solid var(--border-hairline);
+  padding-top: 26px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.agent-entry .lede {
+  font-size: 17px;
+  color: var(--ink-secondary);
+  max-width: 56ch;
+  line-height: 1.6;
+}
+.agent-entry .lede strong { color: var(--ink-primary); font-weight: 600; }
+.agent-cta {
+  font-family: var(--serif-source);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--accent);
+  padding-bottom: 3px;
+}
+
+/* ------------------------------------------------------------
+   VARIANT FACE BINDINGS
+   Variant A: display set in Fraunces (optical display axis).
+   Variant B: display set in Source Serif 4 (single-family system).
+   Everything else identical + held in Source Serif 4.
+   ------------------------------------------------------------ */
+.v-fraunces .display {
+  font-family: var(--serif-fraunces);
+  /* push the optical axis large + heavy so display character shows */
+  font-variation-settings: 'opsz' 144, 'SOFT' 0, 'WONK' 0;
+  font-weight: 900;
+  letter-spacing: -0.018em;
+}
+.v-fraunces .kicker {
+  font-family: var(--serif-source); /* kicker stays constant */
+}
+
+.v-source .display {
+  font-family: var(--serif-source);
+  font-weight: 700;
+}
+
+.note {
+  max-width: 1180px;
+  margin: 34px auto 0;
+  font-family: var(--serif-source);
+  font-size: 12.5px;
+  color: #6f6759;
+  text-align: center;
+  letter-spacing: 0.03em;
+  line-height: 1.6;
+}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="tag">Type decision · Hero · display test</div>
+  <h1>One hero, two display faces.</h1>
+  <p>The same locked Gallery hero, rendered twice. The <span class="em">only</span> thing that changes is the headline / display face: Variant A sets it in <span class="em">Fraunces</span> (optical display axis), Variant B in <span class="em">Source Serif 4</span>. Kicker, sub-line, buttons, and the Advocate link are held constant in Source Serif 4 across both, so the comparison isolates the display face on a real screen. Warm cream paper, ink text, Prussian-navy action, hairline rules, and a faint drafting grid are locked.</p>
+</div>
+
+<div class="stage">
+
+  <!-- ============ VARIANT A — HEADLINE: FRAUNCES ============ -->
+  <div class="frame-label">
+    <span class="which">Variant A — Headline: Fraunces</span>
+    <span class="const">display only; body &amp; UI held in Source Serif 4</span>
+  </div>
+  <div class="browser">
+    <div class="browser-bar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="url">joshuabrandt.abacusai.cloud</span>
+    </div>
+    <div class="hero v-fraunces">
+      <div class="hero-top">
+        <div class="wordmark">Josh Brandt</div>
+        <div class="nav-meta">Built in the open · a BMAD project</div>
+      </div>
+
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <div class="kicker">Software engineer · 30 years</div>
+          <h2 class="display">Seasoned,<span class="line2">Not Stuck.</span></h2>
+          <p class="subline">Thirty years shipping software, now all-in on agentic engineering. <span class="em">This site does not describe the work. It is the work, built in the open, so it stands as its own proof.</span></p>
+          <div class="paths">
+            <a class="btn btn-primary" href="#">Invite me to speak</a>
+            <span class="path-sep">or</span>
+            <a class="btn" href="#">Explore the work</a>
+          </div>
+        </div>
+
+        <div class="portrait">
+          <div class="portrait-mat"></div>
+          <div class="portrait-label"><span>Josh Brandt</span><span>Portrait</span></div>
+        </div>
+      </div>
+
+      <div class="agent-entry">
+        <p class="lede"><strong>Ask the Advocate.</strong> A grounded assistant that speaks for Josh and cites its sources. The skeptic gets sold, and gets the receipts.</p>
+        <a class="agent-cta" href="#">Ask the Advocate &rarr;</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ VARIANT B — HEADLINE: SOURCE SERIF 4 ============ -->
+  <div class="frame-label">
+    <span class="which">Variant B — Headline: Source Serif 4</span>
+    <span class="const">single-family system; everything in Source Serif 4</span>
+  </div>
+  <div class="browser">
+    <div class="browser-bar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="url">joshuabrandt.abacusai.cloud</span>
+    </div>
+    <div class="hero v-source">
+      <div class="hero-top">
+        <div class="wordmark">Josh Brandt</div>
+        <div class="nav-meta">Built in the open · a BMAD project</div>
+      </div>
+
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <div class="kicker">Software engineer · 30 years</div>
+          <h2 class="display">Seasoned,<span class="line2">Not Stuck.</span></h2>
+          <p class="subline">Thirty years shipping software, now all-in on agentic engineering. <span class="em">This site does not describe the work. It is the work, built in the open, so it stands as its own proof.</span></p>
+          <div class="paths">
+            <a class="btn btn-primary" href="#">Invite me to speak</a>
+            <span class="path-sep">or</span>
+            <a class="btn" href="#">Explore the work</a>
+          </div>
+        </div>
+
+        <div class="portrait">
+          <div class="portrait-mat"></div>
+          <div class="portrait-label"><span>Josh Brandt</span><span>Portrait</span></div>
+        </div>
+      </div>
+
+      <div class="agent-entry">
+        <p class="lede"><strong>Ask the Advocate.</strong> A grounded assistant that speaks for Josh and cites its sources. The skeptic gets sold, and gets the receipts.</p>
+        <a class="agent-cta" href="#">Ask the Advocate &rarr;</a>
+      </div>
+    </div>
+  </div>
+
+  <p class="note">Real web fonts loaded via Google Fonts (Fraunces optical display axis + Source Serif 4). Locked warm palette + hairline rules + faint drafting grid applied. Inline CSS only · no JavaScript · no images. The display face is the single variable between Variant A and Variant B.</p>
+
+</div>
+</body>
+</html>

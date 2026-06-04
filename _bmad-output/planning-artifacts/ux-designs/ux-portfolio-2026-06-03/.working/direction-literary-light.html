@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Direction 2 — Literary (Light) · Josh Brandt</title>
+<style>
+/* ============================================================
+   DIRECTION 2 — LITERARY (LIGHT)
+   Personality: a warm publication / literary review. Warmer
+   paper, higher-contrast serif, classic editorial devices — a
+   kicker rule, a small-caps label, a pull-quote with drop-cap
+   energy. A touch denser than Gallery. Register: humane, warm,
+   considered — the feel of a well-set essay you trust.
+
+   Typeface character (intended): a warm, high-contrast old-style
+   serif — Georgia / Hoefler Text energy — with strong thick/thin
+   modulation, generous x-height for readability, and a true
+   editorial drop-cap. Headlines carry weight (semibold) where
+   Gallery stayed light; this direction has ink in its veins.
+   System serif stack only (no web fonts, no network).
+
+   ---- PALETTE (every hex documented) ----
+   #F6F0E6  paper       — warm ivory / book-stock cream
+   #EFE6D8  paper-2     — deeper cream plane (pull-quote, panel insets)
+   #E7DCC9  paper-3     — warmest recessed tone (drop-cap field)
+   #211B14  ink         — warm near-black (sepia-black) body text
+   #5C5040  ink-soft    — muted brown-grey secondary text
+   #8C7C64  ink-faint   — captions, metadata, placeholder
+   #C9B89A  rule        — warm tan hairline rules
+   #8C2A1E  accent      — terracotta / brick — kicker rule, drop-cap, primary action
+   #B5481C  accent-2    — lighter clay, used for the small live status dot
+   #FFFFFF  white       — device chrome backdrop only
+   ============================================================ */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --paper: #F6F0E6;
+  --paper-2: #EFE6D8;
+  --paper-3: #E7DCC9;
+  --ink: #211B14;
+  --ink-soft: #5C5040;
+  --ink-faint: #8C7C64;
+  --rule: #C9B89A;
+  --accent: #8C2A1E;
+  --accent-2: #B5481C;
+  --serif: 'Hoefler Text', 'Georgia', 'Times New Roman', serif;
+}
+
+body {
+  background: #E3D8C4; /* warm stage behind device frames */
+  font-family: var(--serif);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.55;
+  padding: 40px 24px 80px;
+}
+
+.rationale {
+  max-width: 1180px;
+  margin: 0 auto 44px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--accent);
+  padding: 26px 34px;
+}
+.rationale .tag {
+  font-variant: small-caps;
+  letter-spacing: 0.18em;
+  font-size: 15px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.rationale h1 { font-weight: 600; font-size: 28px; letter-spacing: -0.01em; margin-bottom: 10px; }
+.rationale p { font-size: 16px; color: var(--ink-soft); max-width: 80ch; line-height: 1.7; }
+
+.stage { max-width: 1180px; margin: 0 auto; }
+.frame-label {
+  font-variant: small-caps; letter-spacing: 0.14em; font-size: 15px;
+  color: #6e6049; margin: 40px 0 12px;
+}
+.browser, .phone {
+  background: #FFFFFF; border: 1px solid #d4c4a8; border-radius: 10px;
+  box-shadow: 0 22px 50px -28px rgba(33,27,20,0.45); overflow: hidden;
+}
+.browser-bar, .phone-notch {
+  background: #ECE2D0; border-bottom: 1px solid #d8c9ad;
+  display: flex; align-items: center; gap: 7px; padding: 11px 16px;
+}
+.dot { width: 11px; height: 11px; border-radius: 50%; background: #d3c3a6; }
+.url { margin-left: 14px; font-size: 12.5px; color: var(--ink-faint); letter-spacing: 0.02em; }
+
+/* ============================================================
+   HERO — literary
+   ============================================================ */
+.hero {
+  background: var(--paper);
+  padding: clamp(46px, 5.5vw, 80px) clamp(40px, 6vw, 88px);
+}
+.masthead {
+  display: flex; justify-content: space-between; align-items: baseline;
+  border-bottom: 2px solid var(--ink); padding-bottom: 14px; margin-bottom: 8px;
+}
+.masthead .name { font-variant: small-caps; letter-spacing: 0.1em; font-size: 19px; font-weight: 600; }
+.masthead .folio { font-size: 13px; color: var(--ink-faint); letter-spacing: 0.04em; font-style: italic; }
+.subrule { border-bottom: 1px solid var(--rule); margin-bottom: clamp(36px, 4.5vw, 60px); height: 4px; }
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: clamp(40px, 5vw, 72px);
+  align-items: start;
+}
+
+.kicker {
+  font-variant: small-caps; letter-spacing: 0.14em; font-size: 16px;
+  color: var(--accent); margin-bottom: 18px;
+  display: flex; align-items: center; gap: 14px;
+}
+.kicker::after { content:""; flex:1; height:1px; background: var(--accent); max-width: 120px; }
+
+.display {
+  font-weight: 600;
+  font-size: clamp(48px, 7vw, 96px);
+  line-height: 1.0;
+  letter-spacing: -0.018em;
+  margin-bottom: 26px;
+}
+
+/* essay lede with drop-cap energy */
+.lede {
+  font-size: clamp(17px, 1.5vw, 20px);
+  line-height: 1.66;
+  color: var(--ink);
+  max-width: 50ch;
+  margin-bottom: 30px;
+}
+.lede .dropcap {
+  float: left;
+  font-size: 76px;
+  line-height: 0.74;
+  font-weight: 600;
+  color: var(--accent);
+  padding: 8px 14px 0 0;
+  font-family: var(--serif);
+}
+
+.paths { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+.btn {
+  font-family: var(--serif); font-size: 16px; letter-spacing: 0.01em;
+  padding: 13px 28px; text-decoration: none; display: inline-block;
+  border: 1px solid var(--ink); color: var(--ink); background: transparent;
+}
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+.path-sep { font-style: italic; color: var(--ink-faint); font-size: 15px; }
+
+/* right column: portrait + pull-quote */
+.aside { display: flex; flex-direction: column; gap: 24px; }
+.portrait-mat {
+  background: var(--paper-3); border: 1px solid var(--rule);
+  aspect-ratio: 4/5; display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.portrait-mat::after { content: "PORTRAIT"; font-variant: small-caps; letter-spacing: 0.2em; font-size: 13px; color: var(--ink-faint); }
+.portrait-cap { font-style: italic; font-size: 13.5px; color: var(--ink-soft); border-top: 1px solid var(--rule); padding-top: 9px; margin-top: -10px; }
+
+.pullquote {
+  background: var(--paper-2);
+  border-left: 3px solid var(--accent);
+  padding: 20px 22px;
+}
+.pullquote p { font-style: italic; font-size: 18px; line-height: 1.5; color: var(--ink); }
+.pullquote .attr { font-style: normal; font-variant: small-caps; letter-spacing: 0.1em; font-size: 12.5px; color: var(--ink-faint); margin-top: 12px; display: block; }
+
+/* agent entry — runs as a footnote rule under the spread */
+.agent-entry {
+  margin-top: clamp(34px, 4vw, 56px);
+  border-top: 1px solid var(--rule); padding-top: 22px;
+  display: flex; justify-content: space-between; align-items: baseline; gap: 22px; flex-wrap: wrap;
+}
+.agent-entry .txt { font-size: 16px; color: var(--ink-soft); max-width: 56ch; line-height: 1.6; }
+.agent-entry .txt b { font-weight: 600; color: var(--ink); }
+.agent-cta { font-variant: small-caps; letter-spacing: 0.08em; font-size: 16px; color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent); padding-bottom: 2px; white-space: nowrap; }
+
+/* ============================================================
+   PHONE hero
+   ============================================================ */
+.phone { width: 390px; margin: 0 auto; }
+.phone-notch { justify-content: center; }
+.phone-notch .bar-pill { width: 120px; height: 7px; border-radius: 4px; background: #d3c3a6; }
+.phone-screen { background: var(--paper); }
+
+.m-hero { padding: 24px 22px 28px; }
+.m-mast { display:flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid var(--ink); padding-bottom: 10px; margin-bottom: 18px; }
+.m-name { font-variant: small-caps; letter-spacing: 0.08em; font-size: 15px; font-weight: 600; }
+.m-folio { font-style: italic; font-size: 11px; color: var(--ink-faint); }
+.m-portrait { background: var(--paper-3); border: 1px solid var(--rule); aspect-ratio: 16/10; display:flex; align-items:center; justify-content:center; margin-bottom: 18px; }
+.m-portrait::after { content:"PORTRAIT — JOSH BRANDT"; font-variant: small-caps; letter-spacing: 0.16em; font-size: 11px; color: var(--ink-faint); }
+.m-kicker { font-variant: small-caps; letter-spacing: 0.12em; font-size: 14px; color: var(--accent); margin-bottom: 10px; }
+.m-display { font-weight: 600; font-size: 40px; line-height: 1.0; letter-spacing: -0.015em; margin-bottom: 14px; }
+.m-lede { font-size: 15px; line-height: 1.6; color: var(--ink); margin-bottom: 20px; }
+.m-lede .dc { float:left; font-size: 50px; line-height: 0.72; font-weight: 600; color: var(--accent); padding: 6px 10px 0 0; }
+.m-paths { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+.m-btn { font-family: var(--serif); font-size: 15px; text-align: center; padding: 12px; text-decoration: none; border: 1px solid var(--ink); color: var(--ink); }
+.m-btn-primary { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+.m-agent { border-top: 1px solid var(--rule); padding-top: 15px; display:flex; justify-content: space-between; align-items:center; }
+.m-agent span { font-size: 13.5px; color: var(--ink-soft); }
+.m-agent a { font-variant: small-caps; letter-spacing: 0.06em; font-size: 14px; color: var(--accent); text-decoration:none; border-bottom: 1px solid var(--accent); padding-bottom: 2px; }
+
+/* ============================================================
+   AGENT PANEL + thinking state
+   ============================================================ */
+.panel-row { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+@media (max-width: 900px){ .panel-row { grid-template-columns: 1fr; } }
+
+.agent-panel { background: var(--paper); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.panel-head { display:flex; align-items:center; justify-content: space-between; padding: 16px 22px; border-bottom: 2px solid var(--ink); }
+.panel-head .title { font-variant: small-caps; letter-spacing: 0.1em; font-size: 17px; font-weight: 600; }
+.panel-head .status { font-style: italic; font-size: 13px; color: var(--ink-faint); display:flex; align-items:center; gap: 8px; }
+.panel-head .status::before { content:""; width:8px; height:8px; border-radius:50%; background: var(--accent-2); }
+.panel-body { padding: 22px; }
+.panel-caption { font-variant: small-caps; letter-spacing: 0.12em; font-size: 13px; color: var(--ink-faint); margin-bottom: 18px; }
+
+.msg { margin-bottom: 18px; }
+.msg .who { font-variant: small-caps; letter-spacing: 0.1em; font-size: 12.5px; color: var(--ink-faint); margin-bottom: 6px; }
+.msg.visitor .bubble { font-size: 17px; font-style: italic; color: var(--ink); line-height: 1.5; padding-left: 16px; border-left: 2px solid var(--rule); }
+.msg.agent .bubble { font-size: 16.5px; color: var(--ink); line-height: 1.66; }
+.msg.agent .bubble .cite { display:inline-block; margin-top: 6px; color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent); font-variant: small-caps; letter-spacing: 0.04em; }
+
+.composer { margin-top: 20px; border-top: 1px solid var(--rule); padding-top: 14px; display:flex; justify-content: space-between; align-items: center; }
+.composer .ph { font-style: italic; font-size: 15px; color: var(--ink-faint); }
+.composer .send { font-variant: small-caps; letter-spacing: 0.08em; font-size: 14px; color: var(--paper); background: var(--accent); padding: 8px 18px; }
+
+/* thinking state — a marginalia / running-footnote reveal */
+.thinking-head .status::before { background: var(--ink-faint); }
+.thinking-intro { font-size: 16px; color: var(--ink); line-height: 1.6; margin-bottom: 20px; }
+.thinking-intro em { color: var(--accent); font-style: italic; }
+.retrieval { border-top: 1px solid var(--rule); padding-top: 16px; }
+.retr-item { display: flex; align-items: baseline; gap: 12px; padding: 9px 0; font-size: 15.5px; color: var(--ink-soft); }
+.retr-num { font-variant: small-caps; letter-spacing: 0.06em; font-size: 12px; color: var(--ink-faint); min-width: 24px; }
+.retr-text { flex: 1; }
+.retr-item.active .retr-text { color: var(--ink); }
+.retr-item.active .retr-num { color: var(--accent); }
+.retr-item.queued { color: var(--ink-faint); font-style: italic; }
+.retr-state { font-variant: small-caps; letter-spacing: 0.08em; font-size: 12px; }
+.retr-item.done .retr-state { color: var(--ink-faint); }
+.retr-item.active .retr-state { color: var(--accent); }
+.dotrule { flex: 1; border-bottom: 1px dotted var(--rule); transform: translateY(-4px); }
+
+.note { max-width: 1180px; margin: 30px auto 0; font-size: 13px; font-style: italic; color: #6e6049; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="rationale">
+  <div class="tag">Direction 2 — Literary · Light</div>
+  <h1>The warm publication.</h1>
+  <p>A literary-review register: warm book-stock cream, a high-contrast serif with real ink in its veins, and classic editorial devices — kicker rule, small-caps labels, a drop-cap lede, a pull-quote. A touch denser and more humane than the gallery, it reads like a considered essay you already trust.</p>
+</div>
+
+<div class="stage">
+
+  <!-- ============ DESKTOP FRAME ============ -->
+  <div class="frame-label">Desktop · hero (above the fold)</div>
+  <div class="browser">
+    <div class="browser-bar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="url">joshuabrandt.abacusai.cloud</span>
+    </div>
+    <div class="hero">
+      <div class="masthead">
+        <span class="name">Josh Brandt</span>
+        <span class="folio">Built in the open, as a BMAD project</span>
+      </div>
+      <div class="subrule"></div>
+
+      <div class="hero-grid">
+        <div class="hero-main">
+          <div class="kicker">Software engineer · thirty years</div>
+          <h2 class="display">Seasoned, Not Stuck.</h2>
+          <p class="lede"><span class="dropcap">T</span>hirty years of shipping software, now all-in on agentic engineering. This site does not describe the work. It is the work — assembled in the open, so it stands as its own evidence rather than a claim you are asked to take on faith.</p>
+          <div class="paths">
+            <a class="btn" href="#">Explore the work</a>
+            <span class="path-sep">or</span>
+            <a class="btn btn-primary" href="#">Invite me to speak</a>
+          </div>
+        </div>
+
+        <div class="aside">
+          <div>
+            <div class="portrait-mat"></div>
+            <p class="portrait-cap">Josh Brandt — portrait.</p>
+          </div>
+          <div class="pullquote">
+            <p>The skeptic gets sold, and gets the receipts.</p>
+            <span class="attr">On the Advocate Agent</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="agent-entry">
+        <p class="txt"><b>Ask the Advocate.</b> A grounded assistant that makes the case for Josh and cites every source it draws on. Confident, never hype.</p>
+        <a class="agent-cta" href="#">Open the Advocate Agent →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PHONE FRAME ============ -->
+  <div class="frame-label">Mobile · same hero (~390px, above the fold)</div>
+  <div class="phone">
+    <div class="phone-notch"><span class="bar-pill"></span></div>
+    <div class="phone-screen">
+      <div class="m-hero">
+        <div class="m-mast">
+          <span class="m-name">Josh Brandt</span>
+          <span class="m-folio">a BMAD project</span>
+        </div>
+        <div class="m-portrait"></div>
+        <div class="m-kicker">Software engineer · 30 years</div>
+        <h2 class="m-display">Seasoned, Not Stuck.</h2>
+        <p class="m-lede"><span class="dc">T</span>hirty years of shipping software, now all-in on agentic engineering. Built in the open, as its own evidence.</p>
+        <div class="m-paths">
+          <a class="m-btn m-btn-primary" href="#">Invite me to speak</a>
+          <a class="m-btn" href="#">Explore the work</a>
+        </div>
+        <div class="m-agent">
+          <span>Ask the Advocate Agent.</span>
+          <a href="#">Open →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ AGENT PANEL + THINKING STATE ============ -->
+  <div class="frame-label">Advocate Agent · exchange (left) and the thinking state variant (right)</div>
+  <div class="panel-row">
+
+    <div class="agent-panel">
+      <div class="panel-head">
+        <span class="title">The Advocate</span>
+        <span class="status">grounded &amp; cited</span>
+      </div>
+      <div class="panel-body">
+        <div class="panel-caption">One exchange</div>
+        <div class="msg visitor">
+          <div class="who">Visitor</div>
+          <div class="bubble">What's the most impressive thing he's built?</div>
+        </div>
+        <div class="msg agent">
+          <div class="who">The Advocate</div>
+          <div class="bubble">The clearest answer is <em>loandemo</em>. Josh built it as a live, on-stage proof: a working agentic system, narrated from first prompt to result. It is the piece I would hand a skeptic first.<br>
+          <a class="cite" href="#">Read the loandemo case study →</a></div>
+        </div>
+        <div class="composer">
+          <span class="ph">Ask about the work…</span>
+          <span class="send">Send</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="agent-panel">
+      <div class="panel-head thinking-head">
+        <span class="title">The Advocate</span>
+        <span class="status">thinking</span>
+      </div>
+      <div class="panel-body">
+        <div class="panel-caption">State variant — reading the record</div>
+        <p class="thinking-intro">Before I answer, I am <em>reading the record</em> — pulling only what is documented, so the claim and its source arrive together.</p>
+        <div class="retrieval">
+          <div class="retr-item done">
+            <span class="retr-num">i.</span>
+            <span class="retr-text">loandemo case study</span>
+            <span class="dotrule"></span>
+            <span class="retr-state">read</span>
+          </div>
+          <div class="retr-item active">
+            <span class="retr-num">ii.</span>
+            <span class="retr-text">Glass Box artifacts</span>
+            <span class="dotrule"></span>
+            <span class="retr-state">reading</span>
+          </div>
+          <div class="retr-item queued">
+            <span class="retr-num">iii.</span>
+            <span class="retr-text">Master Timeline · build history</span>
+            <span class="dotrule"></span>
+            <span class="retr-state">next</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="note">Self-contained · inline CSS only · system serif stack · no JavaScript · no network requests. The thinking indicator is rendered statically as a designed surface, not a spinner.</p>
+
+</div>
+</body>
+</html>

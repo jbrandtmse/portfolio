@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Glass Box — the build story (/glass-box) · Joshua R. Brandt, MSE</title>
+
+<!-- Source Serif 4 ONLY — display + headings + body + meta (type system LOCKED). Network allowed for this mock. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,600&display=swap">
+
+<style>
+/* ============================================================
+   KEY-SCREEN MOCK — GLASS BOX INDEX (/glass-box)
+   The site's designated day-one "remarkable" element, rendered
+   1:1 on the LOCKED identity. Full fidelity.
+
+   THIS MOCK GOVERNS:
+     • EXPERIENCE.md → Information Architecture (Glass Box): the
+       /glass-box index as a CURATED, CHRONOLOGICAL BUILD-STORY
+       over the project's real _bmad-output/ artifacts (FR-13/
+       FR-14) — "polished glass, not raw guts" — with the
+       publish allowlist shown as a visible act of taste, and the
+       cross-link clarifying that the Master Timeline (/timeline)
+       spans projects while this is THIS project's build history.
+     • EXPERIENCE.md → Component Patterns: the ARTIFACT CARD and
+       the BUILD-STORY TIMELINE (hairline spine + navy nodes that
+       foreshadow the Master Timeline's "BMAD Method Dots").
+     • EXPERIENCE.md → the RECURSION Key-Flow beat (the UJ-1 Devon
+       climax): "you're reading the build history of the site you're
+       reading it on" — rendered restrained, no AI/Matrix cliché.
+     • DESIGN.md → Components: artifact card + timeline node (their
+       resting + live + ghosted/upcoming states), echoing the
+       small-caps chip, hairline rules, and faint drafting grid.
+
+   FIDELITY: full polish on the locked identity. NOT a wireframe.
+   Spines (DESIGN.md / EXPERIENCE.md) win on conflict.
+
+   ---- LOCKED IDENTITY (applied at full fidelity) ----
+   Type: ALL Source Serif 4 (display + headings + body + meta).
+         Small-caps kickers. No exclamation marks. No drop-cap here
+         (that device is reserved for the artifact READER, not this
+         index). font-display: swap to protect the perf budget.
+   #F6F0E6  surface-base     warm cream paper (the page / stage)
+   #FBF7EF  surface-raised   raised warm plane (cards, header sheet)
+   #211B14  ink-primary      warm near-black body text (15:1)
+   #6B5D4A  ink-secondary    metadata, curator notes, captions (5.6:1)
+   #D8CAB3  border-hairline   hairline rules / card borders / the spine
+   #ECE3D3  grid-line         faint drafting-grid line
+   #1E3A5F  accent (navy)    nodes, chips, "Read" links, rule ticks (10.15:1)
+   #162B47  accent-hover     deeper navy — hover / pressed
+   Style: austere, warm, editorial; hairline rules; faint drafting
+   grid; FLAT — NO shadows (the Guide panel is the only elevated
+   surface site-wide, and it is not on this screen).
+   ============================================================ */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --surface-base: #F6F0E6;
+  --surface-raised: #FBF7EF;
+  --ink-primary: #211B14;
+  --ink-secondary: #6B5D4A;
+  --border-hairline: #D8CAB3;
+  --grid-line: #ECE3D3;
+  --accent: #1E3A5F;
+  --accent-hover: #162B47;
+
+  --serif: 'Source Serif 4', 'Spectral', 'Georgia', 'Times New Roman', serif;
+
+  --measure: 720px;     /* the reading measure of the build story */
+  --spine-x: 26px;      /* where the spine sits inside the timeline column */
+}
+
+/* ============================================================
+   PAGE STAGE — neutral backdrop behind the two device frames.
+   (Frames are a presentation device for review; the real page is
+   simply the cream surface-base edge to edge.)
+   ============================================================ */
+body {
+  background: #DCD4C3;
+  font-family: var(--serif);
+  color: var(--ink-primary);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  line-height: 1.6;
+  padding: 38px 22px 88px;
+}
+
+/* ---------- review intro banner (frame for the reviewer; not part of the page) ---------- */
+.intro {
+  max-width: 1320px;
+  margin: 0 auto 30px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  padding: 24px 30px;
+}
+.intro .tag {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.3em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 10px;
+}
+.intro h1 {
+  font-weight: 600; font-size: 24px; letter-spacing: 0.005em; margin-bottom: 9px;
+}
+.intro p {
+  font-size: 14px; color: var(--ink-secondary); max-width: 100ch; line-height: 1.62;
+}
+.intro p .em { color: var(--ink-primary); font-weight: 600; }
+
+.frame-cap {
+  max-width: 1320px; margin: 40px auto 12px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.24em;
+  text-transform: uppercase; color: #6f6759;
+  display: flex; align-items: baseline; gap: 12px;
+}
+.frame-cap .sub {
+  font-weight: 400; letter-spacing: 0.08em; text-transform: none;
+  font-style: italic; color: #8a8273; font-size: 12.5px;
+}
+
+/* ============================================================
+   DEVICE FRAMES (review chrome). The browser bar / phone shell is
+   presentation only — the page art inside is the real mock.
+   ============================================================ */
+.device {
+  max-width: 1320px; margin: 0 auto;
+  background: var(--surface-base);
+  border: 1px solid #c4bba8;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.bar {
+  background: #E7DECE;
+  border-bottom: 1px solid var(--border-hairline);
+  display: flex; align-items: center; gap: 7px; padding: 9px 14px;
+}
+.dot { width: 10px; height: 10px; border-radius: 50%; background: #cfc5b1; }
+.url {
+  margin-left: 12px; font-size: 12.5px; color: var(--ink-secondary); letter-spacing: 0.01em;
+}
+
+/* ============================================================
+   THE PAGE — cream surface, faint drafting grid, centered column.
+   ============================================================ */
+.page {
+  background:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px) 0 0 / 112px 100%,
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px) 0 0 / 100% 112px,
+    var(--surface-base);
+  padding: clamp(34px, 4vw, 64px) clamp(20px, 4vw, 56px) clamp(48px, 5vw, 80px);
+}
+
+/* quiet page top — wordmark + "built in the open" meta + return to home arc */
+.page-top {
+  max-width: 1040px; margin: 0 auto 30px;
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 18px; flex-wrap: wrap;
+  padding-bottom: 14px; border-bottom: 1px solid var(--border-hairline);
+}
+.page-top .wm { font-size: 13px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-primary); }
+.page-top .home {
+  font-size: 12.5px; font-weight: 600; letter-spacing: 0.04em; color: var(--accent); text-decoration: none;
+}
+.page-top .home:hover { color: var(--accent-hover); }
+
+/* ---------- HEADER / framing (calm, confident, in voice) ---------- */
+.gb-header { max-width: 1040px; margin: 0 auto 8px; }
+.kicker {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--ink-secondary); margin-bottom: 16px;
+  display: inline-flex; align-items: center; gap: 12px;
+}
+.kicker::before { content: ""; width: 26px; height: 1px; background: var(--accent); }
+.gb-title {
+  font-weight: 700; font-size: clamp(34px, 4.4vw, 52px);
+  line-height: 1.05; letter-spacing: -0.012em; color: var(--ink-primary);
+  margin-bottom: 18px; max-width: 18ch;
+}
+.gb-lede {
+  font-size: clamp(17px, 1.5vw, 19px); line-height: 1.6; color: var(--ink-primary);
+  max-width: 64ch; margin-bottom: 12px;
+}
+.gb-lede .em { font-style: italic; }
+.gb-subnote {
+  font-size: 14.5px; color: var(--ink-secondary); max-width: 64ch; line-height: 1.6;
+}
+
+/* curation / allowlist line — a visible act of taste, just under the lede */
+.curation {
+  max-width: 1040px; margin: 26px auto 0;
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 18px;
+  border: 1px solid var(--border-hairline);
+  border-left: 2px solid var(--accent);
+  background: var(--surface-raised);
+}
+.curation .ic {
+  flex: 0 0 auto; width: 16px; height: 16px; margin-top: 2px;
+  border: 1px solid var(--accent); border-radius: 3px;
+  position: relative;
+}
+.curation .ic::after {
+  content: ""; position: absolute; left: 3px; top: 6px;
+  width: 5px; height: 2px; background: var(--accent);
+  box-shadow: 7px -2px 0 0 var(--accent);
+}
+.curation p { font-size: 13.5px; color: var(--ink-secondary); line-height: 1.55; max-width: 92ch; }
+.curation p .em { color: var(--ink-primary); font-style: italic; }
+
+/* the cross-link to the Master Timeline (quiet, set apart) */
+.crosslink {
+  max-width: 1040px; margin: 16px auto 0;
+  font-size: 13.5px; color: var(--ink-secondary); line-height: 1.55;
+}
+.crosslink a {
+  color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--border-hairline);
+  padding-bottom: 1px;
+}
+.crosslink a:hover { color: var(--accent-hover); border-bottom-color: var(--accent); }
+
+/* a hairline section rule between framing and the spine */
+.spine-rule {
+  max-width: 1040px; margin: 38px auto 6px;
+  display: flex; align-items: center; gap: 14px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.26em; text-transform: uppercase;
+  color: var(--ink-secondary);
+}
+.spine-rule::before { content: ""; width: 26px; height: 1px; background: var(--accent); }
+.spine-rule::after { content: ""; flex: 1 1 auto; height: 1px; background: var(--border-hairline); }
+
+/* ============================================================
+   THE BUILD-STORY TIMELINE
+   Real, semantic <ol>. Each <li> is a node. The spine (hairline
+   line + navy nodes) is decorative and drawn with ::before/::after
+   + absolutely-positioned node marks; with CSS/JS stripped, the
+   <ol> degrades to a plain numbered list of artifact links.
+   The nodes echo the Master Timeline's "BMAD Method Dots".
+   ============================================================ */
+.story {
+  max-width: 1040px; margin: 0 auto;
+  list-style: none;
+  position: relative;
+  padding-left: 0;
+}
+
+/* node row: [ spine gutter ] [ artifact card ] */
+.node {
+  position: relative;
+  padding: 18px 0 18px calc(var(--spine-x) * 2 + 22px);
+  /* the vertical spine line, drawn segment-by-segment so it spans the column */
+}
+/* the continuous hairline spine — one line behind all nodes */
+.story::before {
+  content: "";
+  position: absolute;
+  left: var(--spine-x); top: 14px; bottom: 30px;
+  width: 1px; background: var(--border-hairline);
+}
+/* the node mark (a BMAD Method Dot) on the spine */
+.node::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--spine-x) - 6px); top: 30px;
+  width: 13px; height: 13px; border-radius: 50%;
+  background: var(--surface-raised);
+  border: 1.5px solid var(--accent);
+  z-index: 2;
+}
+/* a short leader from the spine to the card */
+.node::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--spine-x) + 8px); top: 36px;
+  width: calc(var(--spine-x) + 12px); height: 1px;
+  background: var(--border-hairline);
+  z-index: 1;
+}
+/* filled-dot variant for shipped nodes */
+.node.done::before { background: var(--accent); }
+/* the LIVE node — a slightly larger filled dot with a soft halo ring (static, no animation) */
+.node.live::before {
+  background: var(--accent);
+  box-shadow: 0 0 0 4px rgba(30,58,95,0.16);
+}
+/* the date label sitting just under the dot, against the spine */
+.node .when {
+  position: absolute;
+  left: calc(var(--spine-x) - 30px); top: 50px;
+  width: 78px; text-align: right;
+  font-size: 11px; letter-spacing: 0.06em; color: var(--ink-secondary);
+  line-height: 1.35;
+}
+/* node sequence number (the real <ol> marker, restyled small under the date) */
+.node .seq {
+  position: absolute;
+  left: calc(var(--spine-x) - 30px); top: 30px;
+  width: 78px; text-align: right;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.12em; color: var(--accent);
+}
+
+/* ============================================================
+   ARTIFACT CARD — the curated node payload.
+   Flat, hairline-bordered raised plane: type chip · title ·
+   date · one-line curator note · "Read →".
+   ============================================================ */
+.card {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  border-radius: 8px;
+  padding: 20px 24px;
+  position: relative;
+  transition: border-color 120ms ease;
+}
+.card:hover { border-color: #c6b89e; }
+
+.card-head {
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  margin-bottom: 11px;
+}
+/* small-caps type chip (the locked artifact-card device) */
+.chip {
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--accent); border: 1px solid var(--accent); border-radius: 2px;
+  padding: 4px 10px; white-space: nowrap;
+}
+.card-date {
+  font-size: 11.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-secondary);
+  white-space: nowrap;
+}
+/* the live status pill */
+.live-pill {
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+  color: #fff; background: var(--accent); border-radius: 2px; padding: 4px 10px;
+  display: inline-flex; align-items: center; gap: 7px; white-space: nowrap;
+}
+.live-pill .blip {
+  width: 6px; height: 6px; border-radius: 50%; background: #fff;
+}
+
+.card h3 {
+  font-weight: 700; font-size: clamp(21px, 2vw, 26px); line-height: 1.14;
+  letter-spacing: -0.006em; color: var(--ink-primary); margin-bottom: 8px;
+}
+.card h3 .paren {
+  font-weight: 400; font-size: 0.62em; color: var(--ink-secondary); letter-spacing: 0;
+}
+.card .note {
+  font-size: 15px; color: var(--ink-secondary); line-height: 1.55; font-style: italic;
+  max-width: 60ch; margin-bottom: 16px;
+}
+.card .read {
+  font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: var(--accent);
+  text-decoration: none; display: inline-flex; align-items: center; gap: 7px;
+}
+.card .read:hover { color: var(--accent-hover); }
+.card .read .arr { transition: transform 120ms ease; }
+.card .read:hover .arr { transform: translateX(3px); }
+
+/* a faint annotation under each Read link (review note, not page copy) */
+.anno {
+  margin-top: 10px;
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.03em; line-height: 1.4;
+  color: var(--accent);
+  border: 1px dashed var(--accent);
+  border-radius: 5px; padding: 5px 9px;
+  display: inline-block;
+}
+.anno .route { font-weight: 400; font-style: italic; color: var(--ink-secondary); }
+
+/* ============================================================
+   THE RECURSION BEAT — the climax. Quiet, confident, set against
+   the live node. Restrained: a hairline-framed aside, italic
+   serif, navy left rule. NO Matrix/AI-cliché treatment.
+   ============================================================ */
+.recursion {
+  margin: 14px 0 4px;
+  border: 1px solid var(--border-hairline);
+  border-left: 2px solid var(--accent);
+  background: var(--surface-base);
+  border-radius: 0 8px 8px 0;
+  padding: 18px 24px;
+}
+.recursion .rk {
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.26em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 9px;
+}
+.recursion p {
+  font-size: clamp(17px, 1.8vw, 21px); line-height: 1.4; letter-spacing: -0.004em;
+  color: var(--ink-primary); font-style: italic; max-width: 52ch;
+}
+
+/* ============================================================
+   GHOSTED / UPCOMING NODES — lower emphasis. Dashed dot, dashed
+   card, muted ink. "Never finished, never stale."
+   ============================================================ */
+.node.upcoming::before {
+  background: var(--surface-base);
+  border: 1.5px dashed var(--accent);
+  opacity: 0.7;
+}
+.node.upcoming::after { border-top: 1px dashed var(--border-hairline); background: none; height: 0; }
+.node.upcoming .when { color: #9a8e79; }
+.node.upcoming .seq { color: #9a8e79; }
+
+.card.ghost {
+  background: transparent;
+  border: 1px dashed var(--border-hairline);
+}
+.card.ghost:hover { border-color: var(--border-hairline); }
+.card.ghost .chip {
+  color: #9a8e79; border-color: #cdbfa7; border-style: dashed;
+}
+.card.ghost h3 { color: var(--ink-secondary); font-weight: 600; }
+.card.ghost .note { color: #9a8e79; }
+.card.ghost .accrue {
+  font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #9a8e79;
+  display: inline-flex; align-items: center; gap: 9px; margin-top: 2px;
+}
+.card.ghost .accrue::before { content: ""; width: 16px; height: 1px; background: #cdbfa7; }
+
+/* a single label introducing the upcoming cluster */
+.upcoming-label {
+  position: relative;
+  margin: 26px 0 2px;
+  padding-left: calc(var(--spine-x) * 2 + 22px);
+  font-size: 11px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase;
+  color: #9a8e79;
+}
+
+/* ============================================================
+   PAGE FOOTER — static fallback nav (Mirror routes), echoing the
+   home arc footer so the index is reachable JS-off.
+   ============================================================ */
+.fallback {
+  max-width: 1040px; margin: 48px auto 0;
+  border-top: 2px solid var(--accent);
+  padding: 18px 2px 6px;
+}
+.fallback .flab {
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 4px;
+}
+.fallback .fnote { font-size: 11.5px; color: var(--ink-secondary); margin-bottom: 11px; font-style: italic; }
+.fallback ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.fallback li a {
+  font-size: 12.5px; color: var(--accent); text-decoration: none;
+  border-bottom: 1px solid var(--border-hairline); padding-bottom: 2px;
+}
+.fallback li a:hover { color: var(--accent-hover); border-bottom-color: var(--accent); }
+
+/* ============================================================
+   ACCESSIBILITY / FALLBACK ANNOTATION PANEL (review-only) — the
+   notes that feed EXPERIENCE.md. Sits between the two frames.
+   ============================================================ */
+.a11y {
+  max-width: 1320px; margin: 30px auto 0;
+  background: var(--surface-base);
+  border: 1px dashed var(--accent);
+  padding: 18px 24px;
+}
+.a11y h2 {
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 12px;
+}
+.a11y ul { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 30px; }
+.a11y li { font-size: 12.5px; color: var(--ink-primary); line-height: 1.5; display: flex; gap: 9px; align-items: baseline; }
+.a11y li::before { content: ""; flex: 0 0 auto; width: 11px; height: 1px; background: var(--accent); position: relative; top: 0.6em; }
+.a11y li b { color: var(--accent); }
+
+.foot-note {
+  max-width: 1320px; margin: 30px auto 0;
+  font-size: 11.5px; color: #6f6759; text-align: center; letter-spacing: 0.02em; line-height: 1.65;
+}
+
+/* ============================================================
+   MOBILE FRAME — the spine collapses to a slim left margin of
+   inline node markers; cards stack full-width.
+   ============================================================ */
+.phone {
+  max-width: 412px; margin: 0 auto;
+  background: var(--surface-base);
+  border: 10px solid #2a241c;
+  border-radius: 34px;
+  overflow: hidden;
+}
+.phone .status { background: #2a241c; height: 22px; display: flex; align-items: center; justify-content: center; }
+.phone .status::after { content: ""; width: 80px; height: 7px; background: #4a4236; border-radius: 5px; }
+
+.m-page {
+  background:
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px) 0 0 / 100% 80px,
+    var(--surface-base);
+  padding: 18px 16px 22px;
+}
+.m-top {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding-bottom: 11px; margin-bottom: 18px; border-bottom: 1px solid var(--border-hairline);
+}
+.m-top .wm { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+.m-top .home { font-size: 11.5px; font-weight: 600; color: var(--accent); text-decoration: none; }
+
+.m-kicker {
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.26em; text-transform: uppercase;
+  color: var(--ink-secondary); margin-bottom: 11px;
+  display: inline-flex; align-items: center; gap: 10px;
+}
+.m-kicker::before { content: ""; width: 20px; height: 1px; background: var(--accent); }
+.m-title { font-weight: 700; font-size: 27px; line-height: 1.08; letter-spacing: -0.01em; margin-bottom: 12px; }
+.m-lede { font-size: 15px; color: var(--ink-primary); line-height: 1.55; margin-bottom: 12px; }
+.m-lede .em { font-style: italic; }
+
+.m-curation {
+  display: flex; gap: 10px; align-items: flex-start;
+  border: 1px solid var(--border-hairline); border-left: 2px solid var(--accent);
+  background: var(--surface-raised); padding: 12px 14px; margin: 16px 0 0;
+}
+.m-curation .ic {
+  flex: 0 0 auto; width: 14px; height: 14px; margin-top: 2px;
+  border: 1px solid var(--accent); border-radius: 3px; position: relative;
+}
+.m-curation .ic::after {
+  content: ""; position: absolute; left: 2px; top: 5px; width: 4px; height: 2px;
+  background: var(--accent); box-shadow: 6px -2px 0 0 var(--accent);
+}
+.m-curation p { font-size: 12px; color: var(--ink-secondary); line-height: 1.5; }
+.m-curation p .em { color: var(--ink-primary); font-style: italic; }
+
+.m-crosslink { font-size: 12px; color: var(--ink-secondary); line-height: 1.5; margin: 14px 0 0; }
+.m-crosslink a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--border-hairline); }
+
+.m-spine-rule {
+  display: flex; align-items: center; gap: 12px; margin: 26px 0 4px;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-secondary);
+}
+.m-spine-rule::before { content: ""; width: 20px; height: 1px; background: var(--accent); }
+.m-spine-rule::after { content: ""; flex: 1 1 auto; height: 1px; background: var(--border-hairline); }
+
+/* mobile story: slim left margin of inline markers; cards stack */
+.m-story { list-style: none; position: relative; padding-left: 22px; }
+.m-story::before {
+  content: ""; position: absolute; left: 5px; top: 10px; bottom: 18px; width: 1px; background: var(--border-hairline);
+}
+.m-node { position: relative; padding: 12px 0; }
+.m-node::before {
+  content: ""; position: absolute; left: -22px; top: 16px;
+  width: 11px; height: 11px; border-radius: 50%;
+  background: var(--surface-raised); border: 1.5px solid var(--accent);
+}
+.m-node.done::before { background: var(--accent); }
+.m-node.live::before { background: var(--accent); box-shadow: 0 0 0 3px rgba(30,58,95,0.16); }
+.m-node.upcoming::before { background: var(--surface-base); border: 1.5px dashed var(--accent); opacity: 0.7; }
+
+.m-card {
+  background: var(--surface-raised); border: 1px solid var(--border-hairline);
+  border-radius: 8px; padding: 15px 16px;
+}
+.m-card.ghost { background: transparent; border: 1px dashed var(--border-hairline); }
+.m-chead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 9px; }
+.m-card .chip { font-size: 9.5px; padding: 3px 8px; letter-spacing: 0.2em; }
+.m-card .card-date { font-size: 10.5px; }
+.m-card .live-pill { font-size: 9.5px; padding: 3px 8px; }
+.m-card h3 { font-weight: 700; font-size: 19px; line-height: 1.14; letter-spacing: -0.006em; margin-bottom: 7px; }
+.m-card h3 .paren { font-weight: 400; font-size: 0.6em; color: var(--ink-secondary); }
+.m-card .note { font-size: 13px; color: var(--ink-secondary); font-style: italic; line-height: 1.5; margin-bottom: 12px; }
+.m-card .read { font-size: 12px; font-weight: 600; color: var(--accent); text-decoration: none; display: inline-flex; gap: 6px; align-items: center; }
+.m-card.ghost .chip { color: #9a8e79; border-color: #cdbfa7; border-style: dashed; }
+.m-card.ghost h3 { color: var(--ink-secondary); font-weight: 600; }
+.m-card.ghost .note { color: #9a8e79; }
+.m-card.ghost .accrue { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #9a8e79; }
+
+.m-recursion {
+  border: 1px solid var(--border-hairline); border-left: 2px solid var(--accent);
+  background: var(--surface-base); border-radius: 0 8px 8px 0; padding: 14px 16px; margin: 12px 0 2px;
+}
+.m-recursion .rk { font-size: 9.5px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; color: var(--accent); margin-bottom: 7px; }
+.m-recursion p { font-size: 16px; line-height: 1.38; color: var(--ink-primary); font-style: italic; }
+
+.m-upcoming-label {
+  margin: 22px 0 2px; font-size: 10px; font-weight: 600; letter-spacing: 0.2em;
+  text-transform: uppercase; color: #9a8e79;
+}
+
+.m-fallback { border-top: 2px solid var(--accent); padding: 16px 0 4px; margin-top: 26px; }
+.m-fallback .flab { font-size: 10px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+.m-fallback .fnote { font-size: 11px; color: var(--ink-secondary); font-style: italic; margin-bottom: 9px; }
+.m-fallback ul { list-style: none; display: flex; flex-wrap: wrap; gap: 7px 15px; }
+.m-fallback li a { font-size: 12px; color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--border-hairline); padding-bottom: 1px; }
+
+/* persistent Guide entry (mobile) — minimize-to-pill stand-in, consistent with the home arc */
+.m-guide {
+  background: var(--accent); color: #fff; text-align: center;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
+  padding: 11px; border-top: 1px solid var(--accent-hover);
+}
+
+/* desktop persistent Guide pill (bottom-right, minimized) — shown for parity; the panel itself is NOT on this screen */
+.guide-pill {
+  position: absolute; right: 26px; bottom: 22px;
+  background: var(--accent); color: #fff; border-radius: 24px;
+  padding: 10px 17px; font-size: 12.5px; font-weight: 600; letter-spacing: 0.03em;
+  display: inline-flex; align-items: center; gap: 9px;
+  /* NOTE: the Guide panel is the ONLY elevated surface site-wide; minimized to a pill here it is flat. */
+}
+.guide-pill .glyph { width: 15px; height: 15px; border-radius: 50%; border: 2px solid #fff; }
+
+.device.with-pill { position: relative; }
+
+@media (max-width: 700px) {
+  .a11y ul { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== REVIEW INTRO (frame for the reviewer; not page copy) ===================== -->
+<div class="intro">
+  <div class="tag">Key-screen mock · Glass Box index (/glass-box) · full fidelity · locked identity</div>
+  <h1>The Glass Box, as a curated chronological build-story.</h1>
+  <p>This is the site's designated day-one <span class="em">remarkable</span> element, rendered 1:1 on the locked identity (all <span class="em">Source Serif 4</span>, warm cream + Prussian navy, hairline rules, faint drafting grid, flat). The index is a curated <span class="em">vertical timeline spine</span> of the real BMAD&nbsp;Method artifacts behind this site — five shipped nodes plus three ghosted upcoming ones — climaxing in the recursion beat. The spine's navy nodes foreshadow the Master Timeline's <span class="em">BMAD Method Dots</span> and degrade to a plain ordered list with JS off. Desktop first, then mobile. Inline CSS · no JavaScript · no images.</p>
+</div>
+
+<!-- ===================== DESKTOP FRAME ===================== -->
+<div class="frame-cap">Desktop <span class="sub">timeline spine on the left, artifact cards to the right</span></div>
+
+<div class="device with-pill">
+  <div class="bar">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    <span class="url">joshuabrandt.abacusai.cloud/glass-box &nbsp;·&nbsp; the build story</span>
+  </div>
+
+  <div class="page">
+
+    <!-- quiet page top -->
+    <div class="page-top">
+      <span class="wm">Joshua R. Brandt, MSE</span>
+      <a class="home" href="/">&larr; Back to the home arc</a>
+    </div>
+
+    <!-- HEADER / framing — calm, confident, in voice -->
+    <header class="gb-header">
+      <div class="kicker">Glass Box · Proof-as-Process</div>
+      <h1 class="gb-title">The build story, in the open.</h1>
+      <p class="gb-lede">This is the real set of BMAD&nbsp;Method artifacts behind the site you are on — the brief, the brainstorm, the research, the spec, and the design, in the order they were made. The proof is the process. <span class="em">The medium is the message.</span></p>
+      <p class="gb-subnote">Read them as a story: where it started, what got tested, and what the build follows now.</p>
+    </header>
+
+    <!-- curation / allowlist line — a visible act of taste -->
+    <div class="curation">
+      <span class="ic" aria-hidden="true"></span>
+      <p>Curated &mdash; <span class="em">polished, not raw</span>. These are the artifacts worth reading. The decision logs, reviews, and reconciles stay backstage.</p>
+    </div>
+
+    <!-- cross-link to the Master Timeline -->
+    <p class="crosslink">This is <em>this project's</em> build history. The cross-project arc lives on the <a href="/timeline">Master Timeline &rarr;</a></p>
+
+    <!-- section rule into the spine -->
+    <div class="spine-rule">The timeline</div>
+
+    <!-- ===================== THE BUILD-STORY TIMELINE ===================== -->
+    <!-- Real semantic <ol> of artifact links. The spine + nodes are CSS-decorative;
+         with CSS/JS stripped this is a plain numbered list of "Read" links. -->
+    <ol class="story">
+
+      <!-- NODE 1 — PRODUCT BRIEF -->
+      <li class="node done">
+        <span class="seq">01</span>
+        <span class="when">2026<br>06 · 02</span>
+        <article class="card">
+          <div class="card-head">
+            <span class="chip">Planning</span>
+            <span class="card-date">2026 · 06 · 02</span>
+          </div>
+          <h3>Product brief</h3>
+          <p class="note">Where it started &mdash; the thesis and the bet.</p>
+          <a class="read" href="/glass-box/product-brief">Read <span class="arr" aria-hidden="true">&rarr;</span></a>
+          <div class="anno">opens the artifact reader <span class="route">/glass-box/product-brief</span></div>
+        </article>
+      </li>
+
+      <!-- NODE 2 — BRAINSTORM -->
+      <li class="node done">
+        <span class="seq">02</span>
+        <span class="when">2026<br>06 · 02</span>
+        <article class="card">
+          <div class="card-head">
+            <span class="chip">Planning</span>
+            <span class="card-date">2026 · 06 · 02</span>
+          </div>
+          <h3>Brainstorm <span class="paren">(47 ideas)</span></h3>
+          <p class="note">The raw idea space, before the edit.</p>
+          <a class="read" href="/glass-box/brainstorm">Read <span class="arr" aria-hidden="true">&rarr;</span></a>
+          <div class="anno">opens the artifact reader <span class="route">/glass-box/brainstorm</span></div>
+        </article>
+      </li>
+
+      <!-- NODE 3 — PRE-BRIEF RESEARCH -->
+      <li class="node done">
+        <span class="seq">03</span>
+        <span class="when">2026<br>06 · 02</span>
+        <article class="card">
+          <div class="card-head">
+            <span class="chip">Research</span>
+            <span class="card-date">2026 · 06 · 02</span>
+          </div>
+          <h3>Pre-brief research</h3>
+          <p class="note">Checking the thesis against the field.</p>
+          <a class="read" href="/glass-box/pre-brief-research">Read <span class="arr" aria-hidden="true">&rarr;</span></a>
+          <div class="anno">opens the artifact reader <span class="route">/glass-box/pre-brief-research</span></div>
+        </article>
+      </li>
+
+      <!-- NODE 4 — PRD -->
+      <li class="node done">
+        <span class="seq">04</span>
+        <span class="when">2026<br>06 · 02</span>
+        <article class="card">
+          <div class="card-head">
+            <span class="chip">Spec</span>
+            <span class="card-date">2026 · 06 · 02</span>
+          </div>
+          <h3>PRD</h3>
+          <p class="note">The spec the build follows.</p>
+          <a class="read" href="/glass-box/prd">Read <span class="arr" aria-hidden="true">&rarr;</span></a>
+          <div class="anno">opens the artifact reader <span class="route">/glass-box/prd</span></div>
+        </article>
+      </li>
+
+      <!-- NODE 5 — UX DESIGN · LIVE / IN PROGRESS + THE RECURSION BEAT -->
+      <li class="node live">
+        <span class="seq">05</span>
+        <span class="when">2026<br>06 · 03</span>
+        <article class="card">
+          <div class="card-head">
+            <span class="chip">Design</span>
+            <span class="card-date">2026 · 06 · 03</span>
+            <span class="live-pill"><span class="blip" aria-hidden="true"></span>Live · in progress</span>
+          </div>
+          <h3>UX design <span class="paren">(DESIGN.md + EXPERIENCE.md)</span></h3>
+          <p class="note">How it looks and works &mdash; being written right now.</p>
+          <a class="read" href="/glass-box/ux-design">Read <span class="arr" aria-hidden="true">&rarr;</span></a>
+          <div class="anno">opens the artifact reader <span class="route">/glass-box/ux-design</span></div>
+        </article>
+
+        <!-- THE RECURSION BEAT — the climax. Restrained; the realization does the work. -->
+        <aside class="recursion" aria-label="A note on what you are reading">
+          <div class="rk">A note</div>
+          <p>You're reading the build history of the site you're reading it on. It's being built in the open, right now.</p>
+        </aside>
+      </li>
+
+      <!-- ---- UPCOMING / PLACEHOLDER CLUSTER (ghosted, lower emphasis) ---- -->
+      <li class="upcoming-label" aria-hidden="true">Still to come</li>
+
+      <!-- NODE 6 — ARCHITECTURE (upcoming) -->
+      <li class="node upcoming">
+        <span class="seq">06</span>
+        <span class="when">soon</span>
+        <article class="card ghost">
+          <div class="card-head">
+            <span class="chip">Architecture</span>
+          </div>
+          <h3>Architecture</h3>
+          <p class="note">The technical design, once it's drawn.</p>
+          <span class="accrue">As it accrues</span>
+        </article>
+      </li>
+
+      <!-- NODE 7 — EPICS & STORIES (upcoming) -->
+      <li class="node upcoming">
+        <span class="seq">07</span>
+        <span class="when">soon</span>
+        <article class="card ghost">
+          <div class="card-head">
+            <span class="chip">Build</span>
+          </div>
+          <h3>Epics &amp; stories</h3>
+          <p class="note">The work, broken down as it ships.</p>
+          <span class="accrue">As it accrues</span>
+        </article>
+      </li>
+
+      <!-- NODE 8 — RETROSPECTIVES (upcoming) -->
+      <li class="node upcoming">
+        <span class="seq">08</span>
+        <span class="when">soon</span>
+        <article class="card ghost">
+          <div class="card-head">
+            <span class="chip">Retro</span>
+          </div>
+          <h3>Retrospectives</h3>
+          <p class="note">What we learned, after each epic.</p>
+          <span class="accrue">As it accrues</span>
+        </article>
+      </li>
+
+    </ol>
+
+    <!-- a quiet closing line on the "never finished" quality -->
+    <p class="crosslink" style="margin-top:30px;">Never finished, never stale &mdash; the story grows as the work does.</p>
+
+    <!-- static fallback footer -->
+    <footer class="fallback">
+      <div class="flab">Static fallback navigation — Mirror routes</div>
+      <div class="fnote">Every node above is a real link; this index works with JavaScript off and is screen-reader navigable.</div>
+      <ul>
+        <li><a href="/">/ (home)</a></li>
+        <li><a href="/timeline">/timeline</a></li>
+        <li><a href="/speaking">/speaking</a></li>
+        <li><a href="/work/loandemo">/work/loandemo</a></li>
+        <li><a href="/glass-box">/glass-box</a></li>
+        <li><a href="/invite">/invite</a></li>
+        <li><a href="/browse">/browse</a></li>
+      </ul>
+    </footer>
+
+  </div><!-- /page -->
+
+  <!-- persistent Guide pill (minimized). The panel is NOT on this screen. -->
+  <div class="guide-pill"><span class="glyph" aria-hidden="true"></span>Ask my Guide</div>
+</div><!-- /device -->
+
+<!-- ===================== ACCESSIBILITY / FALLBACK ANNOTATIONS (review-only; feeds EXPERIENCE.md) ===================== -->
+<div class="a11y">
+  <h2>Accessibility / fallback notes — feeds EXPERIENCE.md</h2>
+  <ul>
+    <li>The build-story is a real <b>&lt;ol&gt;</b> of artifact links — it works with <b>JS off</b> and degrades to a plain ordered list (the navy nodes/spine are pure CSS decoration drawn with pseudo-elements).</li>
+    <li>The <b>spine + nodes are decorative</b> (<code>aria-hidden</code> in spirit): no information lives only in the dots; the date, type, and "Read" link carry the meaning in the DOM.</li>
+    <li><b>Every card is a real link</b> to its <code>/glass-box/{artifact}</code> reader — keyboard-focusable, screen-reader navigable, no JS required to follow.</li>
+    <li>Headings form a clean hierarchy: page <b>h1</b> ("The build story") → each artifact <b>h3</b>. The recursion beat is a non-heading <b>&lt;aside&gt;</b>, so it never breaks the outline.</li>
+    <li>The <b>live</b> dot's halo and the <b>"Live · in progress"</b> pill are static (no animation) — reduced-motion safe; status is also stated in text.</li>
+    <li>The ghosted upcoming nodes are dashed + muted but remain <b>real list items</b> with text labels ("As it accrues"), not image-only states.</li>
+    <li>Color is never the sole signal: shipped vs live vs upcoming is also conveyed by the date, the pill text, and the dashed treatment.</li>
+    <li>Navy on cream meets AA (10.15:1); ink-secondary notes meet AA (5.6:1). The <b>cross-link</b> to <code>/timeline</code> and the static <b>fallback footer</b> keep the page reachable without the spine.</li>
+  </ul>
+</div>
+
+<!-- ===================== MOBILE FRAME ===================== -->
+<div class="frame-cap">Mobile <span class="sub">spine collapses to a slim left margin of inline node markers; cards stack full-width</span></div>
+
+<div class="phone">
+  <div class="status"></div>
+
+  <div class="m-page">
+
+    <div class="m-top">
+      <span class="wm">J. R. Brandt, MSE</span>
+      <a class="home" href="/">&larr; Home</a>
+    </div>
+
+    <div class="m-kicker">Glass Box · Proof-as-Process</div>
+    <h1 class="m-title">The build story, in the open.</h1>
+    <p class="m-lede">The real BMAD&nbsp;Method artifacts behind the site you are on, in the order they were made. <span class="em">The medium is the message.</span></p>
+
+    <div class="m-curation">
+      <span class="ic" aria-hidden="true"></span>
+      <p>Curated &mdash; <span class="em">polished, not raw</span>. The decision logs, reviews, and reconciles stay backstage.</p>
+    </div>
+
+    <p class="m-crosslink">This is <em>this project's</em> build history. The cross-project arc lives on the <a href="/timeline">Master Timeline &rarr;</a></p>
+
+    <div class="m-spine-rule">The timeline</div>
+
+    <!-- mobile build-story: slim left margin of markers; cards stack -->
+    <ol class="m-story">
+
+      <li class="m-node done">
+        <article class="m-card">
+          <div class="m-chead"><span class="chip">Planning</span><span class="card-date">06 · 02</span></div>
+          <h3>Product brief</h3>
+          <p class="note">Where it started &mdash; the thesis and the bet.</p>
+          <a class="read" href="/glass-box/product-brief">Read <span aria-hidden="true">&rarr;</span></a>
+        </article>
+      </li>
+
+      <li class="m-node done">
+        <article class="m-card">
+          <div class="m-chead"><span class="chip">Planning</span><span class="card-date">06 · 02</span></div>
+          <h3>Brainstorm <span class="paren">(47 ideas)</span></h3>
+          <p class="note">The raw idea space, before the edit.</p>
+          <a class="read" href="/glass-box/brainstorm">Read <span aria-hidden="true">&rarr;</span></a>
+        </article>
+      </li>
+
+      <li class="m-node done">
+        <article class="m-card">
+          <div class="m-chead"><span class="chip">Research</span><span class="card-date">06 · 02</span></div>
+          <h3>Pre-brief research</h3>
+          <p class="note">Checking the thesis against the field.</p>
+          <a class="read" href="/glass-box/pre-brief-research">Read <span aria-hidden="true">&rarr;</span></a>
+        </article>
+      </li>
+
+      <li class="m-node done">
+        <article class="m-card">
+          <div class="m-chead"><span class="chip">Spec</span><span class="card-date">06 · 02</span></div>
+          <h3>PRD</h3>
+          <p class="note">The spec the build follows.</p>
+          <a class="read" href="/glass-box/prd">Read <span aria-hidden="true">&rarr;</span></a>
+        </article>
+      </li>
+
+      <li class="m-node live">
+        <article class="m-card">
+          <div class="m-chead"><span class="chip">Design</span><span class="card-date">06 · 03</span><span class="live-pill"><span class="blip" aria-hidden="true"></span>Live · in progress</span></div>
+          <h3>UX design <span class="paren">(DESIGN.md + EXPERIENCE.md)</span></h3>
+          <p class="note">How it looks and works &mdash; being written right now.</p>
+          <a class="read" href="/glass-box/ux-design">Read <span aria-hidden="true">&rarr;</span></a>
+        </article>
+        <aside class="m-recursion" aria-label="A note on what you are reading">
+          <div class="rk">A note</div>
+          <p>You're reading the build history of the site you're reading it on. It's being built in the open, right now.</p>
+        </aside>
+      </li>
+
+      <li class="m-upcoming-label" aria-hidden="true">Still to come</li>
+
+      <li class="m-node upcoming">
+        <article class="m-card ghost">
+          <div class="m-chead"><span class="chip">Architecture</span></div>
+          <h3>Architecture</h3>
+          <p class="note">The technical design, once it's drawn.</p>
+          <span class="accrue">As it accrues</span>
+        </article>
+      </li>
+
+      <li class="m-node upcoming">
+        <article class="m-card ghost">
+          <div class="m-chead"><span class="chip">Build</span></div>
+          <h3>Epics &amp; stories</h3>
+          <p class="note">The work, broken down as it ships.</p>
+          <span class="accrue">As it accrues</span>
+        </article>
+      </li>
+
+      <li class="m-node upcoming">
+        <article class="m-card ghost">
+          <div class="m-chead"><span class="chip">Retro</span></div>
+          <h3>Retrospectives</h3>
+          <p class="note">What we learned, after each epic.</p>
+          <span class="accrue">As it accrues</span>
+        </article>
+      </li>
+
+    </ol>
+
+    <p class="m-crosslink" style="margin-top:24px;">Never finished, never stale &mdash; the story grows as the work does.</p>
+
+    <footer class="m-fallback">
+      <div class="flab">Static fallback — Mirror routes</div>
+      <div class="fnote">Every node is a real link; works with JS off.</div>
+      <ul>
+        <li><a href="/">/</a></li>
+        <li><a href="/timeline">/timeline</a></li>
+        <li><a href="/speaking">/speaking</a></li>
+        <li><a href="/work/loandemo">/work/loandemo</a></li>
+        <li><a href="/glass-box">/glass-box</a></li>
+        <li><a href="/invite">/invite</a></li>
+      </ul>
+    </footer>
+
+  </div><!-- /m-page -->
+
+  <!-- persistent Guide entry (mobile) -->
+  <div class="m-guide">Ask my Guide</div>
+</div><!-- /phone -->
+
+<p class="foot-note">
+  Full-fidelity key-screen mock · inline CSS · no JavaScript · no images (hairline / placeholder treatments only) · Source Serif 4 via Google Fonts (font-display: swap).
+  Locked palette (warm cream + Prussian navy #1E3A5F) + hairline rules + faint drafting grid + flat (no shadows). Terminology: "the BMAD Method" / the "Guide".
+  Governs EXPERIENCE.md → IA (Glass Box) + Component Patterns (artifact card, build-story timeline) + the recursion Key-Flow beat; DESIGN.md → Components (artifact card, timeline node).
+  Spines win on conflict.
+</p>
+
+</body>
+</html>

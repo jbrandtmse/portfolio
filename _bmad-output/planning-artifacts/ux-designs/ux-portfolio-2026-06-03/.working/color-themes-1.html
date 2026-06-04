@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color Themes · Warm Structured Editorial Gallery · Josh Brandt</title>
+<style>
+/* ================================================================
+   COLOR THEMES — "Warm, structured, editorial Gallery" (LIGHT only)
+   6 accent variations on ONE consistent warm base.
+   Ink-on-paper, hairline rules, faint drafting grid, single accent.
+   System serif (display/body) + system sans (tiny chip labels).
+   No JS, no web fonts, no images, no network. WCAG 2.1 AA.
+
+   ---- CONSISTENT WARM BASE (identical across all 6) ----
+   surface-base    #F6F0E6  warm ivory / cream paper
+   surface-raised  #FBF7EF  slightly lifted card surface (brighter cream)
+   ink-primary     #211B14  warm espresso near-black (headline/body)
+   ink-secondary   #6B5D4A  muted warm gray-brown (meta, captions)
+   border-hairline #D8CAB3  warm hairline rule
+   grid-line       #ECE3D3  very faint drafting-grid line
+
+   ---- BASE CONTRAST (computed sRGB, WCAG 2.1) ----
+   ink-primary   on surface-base : 15.04:1  AA PASS (>=4.5 text)
+   ink-secondary on surface-base :  5.63:1  AA PASS (>=4.5 text)
+   ================================================================ */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  /* consistent warm base — shared by every variation */
+  --surface-base:    #F6F0E6;
+  --surface-raised:  #FBF7EF;
+  --ink-primary:     #211B14;
+  --ink-secondary:   #6B5D4A;
+  --border-hairline: #D8CAB3;
+  --grid-line:       #ECE3D3;
+
+  /* system stacks — exact serif face decided in a later pass */
+  --serif: 'Iowan Old Style', 'Palatino Linotype', 'Palatino',
+           'Hoefler Text', 'Georgia', 'Times New Roman', serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          Helvetica, Arial, sans-serif;
+}
+
+/* ---------- neutral page chrome ---------- */
+html { background: #E4E2DC; }
+body {
+  font-family: var(--serif);
+  color: #2a2622;
+  background: #E4E2DC;            /* neutral stage, not part of any palette */
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  padding: 40px clamp(16px, 3vw, 40px) 80px;
+}
+
+.page-head {
+  max-width: 1320px;
+  margin: 0 auto 32px;
+}
+.page-head .eyebrow {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #7a756c;
+  margin-bottom: 10px;
+}
+.page-head h1 {
+  font-weight: 400;
+  font-size: clamp(24px, 3vw, 34px);
+  letter-spacing: 0.01em;
+  color: #211d18;
+  margin-bottom: 12px;
+}
+.page-head p {
+  font-size: 15.5px;
+  color: #5d584f;
+  max-width: 88ch;
+  line-height: 1.6;
+}
+.page-head .meta {
+  font-family: var(--sans);
+  font-size: 12px;
+  color: #837d73;
+  margin-top: 14px;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- responsive comparison grid ---------- */
+.grid {
+  max-width: 1320px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 26px;
+}
+@media (max-width: 1080px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 680px)  { .grid { grid-template-columns: 1fr; } }
+
+/* ================================================================
+   VARIATION CARD
+   Each card sets its own --accent / --accent-hover locally; all
+   other tokens inherit from the consistent warm base above.
+   ================================================================ */
+.variation {
+  background: var(--surface-base);
+  border: 1px solid var(--border-hairline);
+  border-radius: 4px;
+  box-shadow: 0 18px 40px -26px rgba(33,27,20,0.45);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* card header: name + register + accent tick */
+.v-head {
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--border-hairline);
+  position: relative;
+}
+.v-head::before {                 /* the single restrained accent tick */
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 44px; height: 3px;
+  background: var(--accent);
+}
+.v-head .num {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.v-head h2 {
+  font-weight: 400;
+  font-size: 22px;
+  letter-spacing: 0.01em;
+  color: var(--ink-primary);
+}
+.v-head .register {
+  font-size: 13.5px;
+  font-style: italic;
+  color: var(--ink-secondary);
+  margin-top: 3px;
+}
+
+/* ---------- token chips ---------- */
+.chips {
+  padding: 16px 22px 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 10px;
+  border-bottom: 1px solid var(--border-hairline);
+}
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.swatch {
+  width: 30px; height: 30px;
+  flex: 0 0 30px;
+  border-radius: 3px;
+  border: 1px solid rgba(33,27,20,0.18);
+}
+.chip .label {
+  font-family: var(--sans);
+  min-width: 0;
+  line-height: 1.25;
+}
+.chip .role {
+  display: block;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--ink-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chip .hex {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--ink-primary);
+  text-transform: uppercase;
+}
+
+/* ---------- live UI snippet on the actual paper ---------- */
+.snippet {
+  position: relative;
+  padding: 24px 22px 26px;
+  flex: 1 1 auto;
+  background: var(--surface-raised);
+  /* faint drafting grid behind the snippet */
+  background-image:
+    linear-gradient(to right,  var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-position: -1px -1px;
+}
+.snippet .kicker {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+  margin-bottom: 10px;
+}
+.snippet h3 {
+  font-weight: 400;
+  font-size: clamp(26px, 3.4vw, 32px);
+  line-height: 1.08;
+  letter-spacing: 0.005em;
+  color: var(--ink-primary);
+  margin-bottom: 10px;
+}
+.snippet .body {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--ink-primary);
+  max-width: 38ch;
+  margin-bottom: 16px;
+}
+.snippet .body .lede {     /* small drop-cap nod, editorial device */
+  float: left;
+  font-size: 38px;
+  line-height: 0.8;
+  padding: 4px 8px 0 0;
+  color: var(--accent);
+}
+
+/* CTAs */
+.ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.btn {
+  font-family: var(--serif);
+  font-size: 14px;
+  letter-spacing: 0.01em;
+  padding: 9px 16px;
+  border-radius: 3px;
+  text-decoration: none;
+  display: inline-block;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+.btn-primary {                       /* filled — uses --accent */
+  background: var(--accent);
+  color: var(--btn-text);
+  border: 1px solid var(--accent);
+}
+.btn-primary:hover,
+.btn-primary:focus-visible {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+.btn-secondary {                     /* outline */
+  background: transparent;
+  color: var(--ink-primary);
+  border: 1px solid var(--border-hairline);
+}
+.btn-secondary:hover,
+.btn-secondary:focus-visible {
+  border-color: var(--ink-secondary);
+}
+
+/* accent link on paper */
+.accent-link {
+  font-size: 14px;
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  padding-bottom: 1px;
+  display: inline-block;
+}
+.accent-link:hover,
+.accent-link:focus-visible {
+  color: var(--accent-hover);
+  border-bottom-color: var(--accent-hover);
+}
+
+/* hairline rule */
+.hairline {
+  border: 0;
+  border-top: 1px solid var(--border-hairline);
+  margin: 16px 0 12px;
+}
+.snippet .footnote {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-secondary);
+}
+
+/* per-variation contrast readout (also documented in CSS comments) */
+.aa {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--ink-secondary);
+  padding: 12px 22px 16px;
+  background: var(--surface-base);
+  border-top: 1px solid var(--border-hairline);
+  letter-spacing: 0.02em;
+}
+.aa b { color: var(--ink-primary); font-weight: 600; }
+.aa .pass { color: var(--accent); font-weight: 600; }
+
+/* keyboard focus visibility (a11y) */
+a:focus-visible, .btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ================================================================
+   PER-VARIATION ACCENT TOKENS + DOCUMENTED HEX & CONTRAST
+   Base tokens (paper/raised/ink/ink2/hairline/grid) are identical
+   everywhere; only --accent, --accent-hover, --btn-text change.
+   ================================================================ */
+
+/* --- 1 · OXBLOOD — literary, authoritative (dried-rose / wine red-brown)
+   accent        #7A1F12   accent-on-paper  9.12:1  AA PASS
+   accent-hover  #5E160B   hover-on-paper  11.61:1
+   btn-text      #F6F0E6   text-on-accent   9.12:1  AA PASS  */
+.v-oxblood    { --accent:#7A1F12; --accent-hover:#5E160B; --btn-text:#F6F0E6; }
+
+/* --- 2 · TERRACOTTA — warm, hand-crafted (burnt sienna / clay)
+   accent        #9B3D1E   accent-on-paper  6.01:1  AA PASS
+   accent-hover  #7C2E13   hover-on-paper   8.21:1
+   btn-text      #FBF7EF   text-on-accent   6.38:1  AA PASS  */
+.v-terracotta { --accent:#9B3D1E; --accent-hover:#7C2E13; --btn-text:#FBF7EF; }
+
+/* --- 3 · PETROL — modern, considered (deep teal-blue, cool counterpoint)
+   accent        #1A5560   accent-on-paper  7.37:1  AA PASS
+   accent-hover  #123E47   hover-on-paper  10.26:1
+   btn-text      #F6F0E6   text-on-accent   7.37:1  AA PASS  */
+.v-petrol     { --accent:#1A5560; --accent-hover:#123E47; --btn-text:#F6F0E6; }
+
+/* --- 4 · PRUSSIAN — classic, trusted (deep ink navy)
+   accent        #1E3A5F   accent-on-paper 10.15:1  AA PASS
+   accent-hover  #142A47   hover-on-paper  12.76:1
+   btn-text      #F6F0E6   text-on-accent  10.15:1  AA PASS  */
+.v-prussian   { --accent:#1E3A5F; --accent-hover:#142A47; --btn-text:#F6F0E6; }
+
+/* --- 5 · FOREST — grounded, natural (muted deep green / olive)
+   accent        #2F5036   accent-on-paper  7.98:1  AA PASS
+   accent-hover  #213A27   hover-on-paper  10.90:1
+   btn-text      #F6F0E6   text-on-accent   7.98:1  AA PASS  */
+.v-forest     { --accent:#2F5036; --accent-hover:#213A27; --btn-text:#F6F0E6; }
+
+/* --- 6 · OCHRE — archival, heritage (antique gold / mustard)
+   accent        #806310   accent-on-paper  4.99:1  AA PASS (intrinsically light gold; tuned just over 4.5)
+   accent-hover  #5F4A09   hover-on-paper   7.50:1
+   btn-text      #FBF7EF   text-on-accent   5.30:1  AA PASS  */
+.v-ochre      { --accent:#806310; --accent-hover:#5F4A09; --btn-text:#FBF7EF; }
+</style>
+</head>
+<body>
+
+<header class="page-head">
+  <div class="eyebrow">Visual Identity · Color Themes · Pass 1</div>
+  <h1>Warm, structured, editorial Gallery — accent options</h1>
+  <p>
+    One consistent warm base across all six: warm ivory paper, warm espresso ink, warm hairline
+    rules, a faint drafting grid. What changes per option is the single restrained accent (and its
+    deeper hover) plus the emotional register it lends. Each card shows the full semantic token set
+    with live hex, then the same hero snippet rendered on the actual paper so you can judge ink,
+    secondary, hairline, grid, and accent together. Light mode only — no dark variants here.
+  </p>
+  <div class="meta">
+    Shared base — surface-base #F6F0E6 · surface-raised #FBF7EF · ink-primary #211B14 (15.04:1) ·
+    ink-secondary #6B5D4A (5.63:1) · border-hairline #D8CAB3 · grid-line #ECE3D3 · WCAG 2.1 AA
+  </div>
+</header>
+
+<main class="grid">
+
+  <!-- ===== 1 · OXBLOOD ===== -->
+  <article class="variation v-oxblood">
+    <div class="v-head">
+      <div class="num">Variation 01</div>
+      <h2>Oxblood</h2>
+      <div class="register">Literary, authoritative — dried-rose, wine red-brown.</div>
+    </div>
+    <div class="chips">
+      <div class="chip"><span class="swatch" style="background:#F6F0E6"></span><span class="label"><span class="role">surface-base</span><span class="hex">#F6F0E6</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#FBF7EF"></span><span class="label"><span class="role">surface-raised</span><span class="hex">#FBF7EF</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#211B14"></span><span class="label"><span class="role">ink-primary</span><span class="hex">#211B14</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#6B5D4A"></span><span class="label"><span class="role">ink-secondary</span><span class="hex">#6B5D4A</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#D8CAB3"></span><span class="label"><span class="role">border-hairline</span><span class="hex">#D8CAB3</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#ECE3D3"></span><span class="label"><span class="role">grid-line</span><span class="hex">#ECE3D3</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#7A1F12"></span><span class="label"><span class="role">accent</span><span class="hex">#7A1F12</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#5E160B"></span><span class="label"><span class="role">accent-hover</span><span class="hex">#5E160B</span></span></div>
+    </div>
+    <div class="snippet">
+      <div class="kicker">Software Engineer · 30 Years</div>
+      <h3>Seasoned, Not Stuck.</h3>
+      <p class="body"><span class="lede">T</span>hree decades of shipping — and still rebuilding the way I build, in public, on this very site.</p>
+      <div class="ctas">
+        <a class="btn btn-primary" href="#">Invite me to speak</a>
+        <a class="btn btn-secondary" href="#">Explore the work</a>
+      </div>
+      <a class="accent-link" href="#">Ask the Advocate &rarr;</a>
+      <hr class="hairline">
+      <div class="footnote">Hairline rule · faint drafting grid behind · one restrained accent</div>
+    </div>
+    <div class="aa">
+      <b>AA</b> · accent-on-paper <span class="pass">9.12:1 PASS</span> · ink-on-paper <span class="pass">15.04:1 PASS</span> · btn text on accent <span class="pass">9.12:1 PASS</span>
+    </div>
+  </article>
+
+  <!-- ===== 2 · TERRACOTTA ===== -->
+  <article class="variation v-terracotta">
+    <div class="v-head">
+      <div class="num">Variation 02</div>
+      <h2>Terracotta</h2>
+      <div class="register">Warm, hand-crafted — burnt sienna, clay.</div>
+    </div>
+    <div class="chips">
+      <div class="chip"><span class="swatch" style="background:#F6F0E6"></span><span class="label"><span class="role">surface-base</span><span class="hex">#F6F0E6</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#FBF7EF"></span><span class="label"><span class="role">surface-raised</span><span class="hex">#FBF7EF</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#211B14"></span><span class="label"><span class="role">ink-primary</span><span class="hex">#211B14</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#6B5D4A"></span><span class="label"><span class="role">ink-secondary</span><span class="hex">#6B5D4A</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#D8CAB3"></span><span class="label"><span class="role">border-hairline</span><span class="hex">#D8CAB3</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#ECE3D3"></span><span class="label"><span class="role">grid-line</span><span class="hex">#ECE3D3</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#9B3D1E"></span><span class="label"><span class="role">accent</span><span class="hex">#9B3D1E</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#7C2E13"></span><span class="label"><span class="role">accent-hover</span><span class="hex">#7C2E13</span></span></div>
+    </div>
+    <div class="snippet">
+      <div class="kicker">Software Engineer · 30 Years</div>
+      <h3>Seasoned, Not Stuck.</h3>
+      <p class="body"><span class="lede">T</span>hree decades of shipping — and still rebuilding the way I build, in public, on this very site.</p>
+      <div class="ctas">
+        <a class="btn btn-primary" href="#">Invite me to speak</a>
+        <a class="btn btn-secondary" href="#">Explore the work</a>
+      </div>
+      <a class="accent-link" href="#">Ask the Advocate &rarr;</a>
+      <hr class="hairline">
+      <div class="footnote">Hairline rule · faint drafting grid behind · one restrained accent</div>
+    </div>
+    <div class="aa">
+      <b>AA</b> · accent-on-paper <span class="pass">6.01:1 PASS</span> · ink-on-paper <span class="pass">15.04:1 PASS</span> · btn text on accent <span class="pass">6.38:1 PASS</span>
+    </div>
+  </article>
+
+  <!-- ===== 3 · PETROL ===== -->
+  <article class="variation v-petrol">
+    <div class="v-head">
+      <div class="num">Variation 03</div>
+      <h2>Petrol</h2>
+      <div class="register">Modern, considered — deep teal-blue, a cool counterpoint.</div>
+    </div>
+    <div class="chips">
+      <div class="chip"><span class="swatch" style="background:#F6F0E6"></span><span class="label"><span class="role">surface-base</span><span class="hex">#F6F0E6</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#FBF7EF"></span><span class="label"><span class="role">surface-raised</span><span class="hex">#FBF7EF</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#211B14"></span><span class="label"><span class="role">ink-primary</span><span class="hex">#211B14</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#6B5D4A"></span><span class="label"><span class="role">ink-secondary</span><span class="hex">#6B5D4A</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#D8CAB3"></span><span class="label"><span class="role">border-hairline</span><span class="hex">#D8CAB3</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#ECE3D3"></span><span class="label"><span class="role">grid-line</span><span class="hex">#ECE3D3</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#1A5560"></span><span class="label"><span class="role">accent</span><span class="hex">#1A5560</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#123E47"></span><span class="label"><span class="role">accent-hover</span><span class="hex">#123E47</span></span></div>
+    </div>
+    <div class="snippet">
+      <div class="kicker">Software Engineer · 30 Years</div>
+      <h3>Seasoned, Not Stuck.</h3>
+      <p class="body"><span class="lede">T</span>hree decades of shipping — and still rebuilding the way I build, in public, on this very site.</p>
+      <div class="ctas">
+        <a class="btn btn-primary" href="#">Invite me to speak</a>
+        <a class="btn btn-secondary" href="#">Explore the work</a>
+      </div>
+      <a class="accent-link" href="#">Ask the Advocate &rarr;</a>
+      <hr class="hairline">
+      <div class="footnote">Hairline rule · faint drafting grid behind · one restrained accent</div>
+    </div>
+    <div class="aa">
+      <b>AA</b> · accent-on-paper <span class="pass">7.37:1 PASS</span> · ink-on-paper <span class="pass">15.04:1 PASS</span> · btn text on accent <span class="pass">7.37:1 PASS</span>
+    </div>
+  </article>
+
+  <!-- ===== 4 · PRUSSIAN ===== -->
+  <article class="variation v-prussian">
+    <div class="v-head">
+      <div class="num">Variation 04</div>
+      <h2>Prussian</h2>
+      <div class="register">Classic, trusted — deep ink navy.</div>
+    </div>
+    <div class="chips">
+      <div class="chip"><span class="swatch" style="background:#F6F0E6"></span><span class="label"><span class="role">surface-base</span><span class="hex">#F6F0E6</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#FBF7EF"></span><span class="label"><span class="role">surface-raised</span><span class="hex">#FBF7EF</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#211B14"></span><span class="label"><span class="role">ink-primary</span><span class="hex">#211B14</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#6B5D4A"></span><span class="label"><span class="role">ink-secondary</span><span class="hex">#6B5D4A</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#D8CAB3"></span><span class="label"><span class="role">border-hairline</span><span class="hex">#D8CAB3</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#ECE3D3"></span><span class="label"><span class="role">grid-line</span><span class="hex">#ECE3D3</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#1E3A5F"></span><span class="label"><span class="role">accent</span><span class="hex">#1E3A5F</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#142A47"></span><span class="label"><span class="role">accent-hover</span><span class="hex">#142A47</span></span></div>
+    </div>
+    <div class="snippet">
+      <div class="kicker">Software Engineer · 30 Years</div>
+      <h3>Seasoned, Not Stuck.</h3>
+      <p class="body"><span class="lede">T</span>hree decades of shipping — and still rebuilding the way I build, in public, on this very site.</p>
+      <div class="ctas">
+        <a class="btn btn-primary" href="#">Invite me to speak</a>
+        <a class="btn btn-secondary" href="#">Explore the work</a>
+      </div>
+      <a class="accent-link" href="#">Ask the Advocate &rarr;</a>
+      <hr class="hairline">
+      <div class="footnote">Hairline rule · faint drafting grid behind · one restrained accent</div>
+    </div>
+    <div class="aa">
+      <b>AA</b> · accent-on-paper <span class="pass">10.15:1 PASS</span> · ink-on-paper <span class="pass">15.04:1 PASS</span> · btn text on accent <span class="pass">10.15:1 PASS</span>
+    </div>
+  </article>
+
+  <!-- ===== 5 · FOREST ===== -->
+  <article class="variation v-forest">
+    <div class="v-head">
+      <div class="num">Variation 05</div>
+      <h2>Forest</h2>
+      <div class="register">Grounded, natural — muted deep green, olive.</div>
+    </div>
+    <div class="chips">
+      <div class="chip"><span class="swatch" style="background:#F6F0E6"></span><span class="label"><span class="role">surface-base</span><span class="hex">#F6F0E6</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#FBF7EF"></span><span class="label"><span class="role">surface-raised</span><span class="hex">#FBF7EF</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#211B14"></span><span class="label"><span class="role">ink-primary</span><span class="hex">#211B14</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#6B5D4A"></span><span class="label"><span class="role">ink-secondary</span><span class="hex">#6B5D4A</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#D8CAB3"></span><span class="label"><span class="role">border-hairline</span><span class="hex">#D8CAB3</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#ECE3D3"></span><span class="label"><span class="role">grid-line</span><span class="hex">#ECE3D3</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#2F5036"></span><span class="label"><span class="role">accent</span><span class="hex">#2F5036</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#213A27"></span><span class="label"><span class="role">accent-hover</span><span class="hex">#213A27</span></span></div>
+    </div>
+    <div class="snippet">
+      <div class="kicker">Software Engineer · 30 Years</div>
+      <h3>Seasoned, Not Stuck.</h3>
+      <p class="body"><span class="lede">T</span>hree decades of shipping — and still rebuilding the way I build, in public, on this very site.</p>
+      <div class="ctas">
+        <a class="btn btn-primary" href="#">Invite me to speak</a>
+        <a class="btn btn-secondary" href="#">Explore the work</a>
+      </div>
+      <a class="accent-link" href="#">Ask the Advocate &rarr;</a>
+      <hr class="hairline">
+      <div class="footnote">Hairline rule · faint drafting grid behind · one restrained accent</div>
+    </div>
+    <div class="aa">
+      <b>AA</b> · accent-on-paper <span class="pass">7.98:1 PASS</span> · ink-on-paper <span class="pass">15.04:1 PASS</span> · btn text on accent <span class="pass">7.98:1 PASS</span>
+    </div>
+  </article>
+
+  <!-- ===== 6 · OCHRE ===== -->
+  <article class="variation v-ochre">
+    <div class="v-head">
+      <div class="num">Variation 06</div>
+      <h2>Ochre</h2>
+      <div class="register">Archival, heritage — antique gold, mustard.</div>
+    </div>
+    <div class="chips">
+      <div class="chip"><span class="swatch" style="background:#F6F0E6"></span><span class="label"><span class="role">surface-base</span><span class="hex">#F6F0E6</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#FBF7EF"></span><span class="label"><span class="role">surface-raised</span><span class="hex">#FBF7EF</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#211B14"></span><span class="label"><span class="role">ink-primary</span><span class="hex">#211B14</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#6B5D4A"></span><span class="label"><span class="role">ink-secondary</span><span class="hex">#6B5D4A</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#D8CAB3"></span><span class="label"><span class="role">border-hairline</span><span class="hex">#D8CAB3</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#ECE3D3"></span><span class="label"><span class="role">grid-line</span><span class="hex">#ECE3D3</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#806310"></span><span class="label"><span class="role">accent</span><span class="hex">#806310</span></span></div>
+      <div class="chip"><span class="swatch" style="background:#5F4A09"></span><span class="label"><span class="role">accent-hover</span><span class="hex">#5F4A09</span></span></div>
+    </div>
+    <div class="snippet">
+      <div class="kicker">Software Engineer · 30 Years</div>
+      <h3>Seasoned, Not Stuck.</h3>
+      <p class="body"><span class="lede">T</span>hree decades of shipping — and still rebuilding the way I build, in public, on this very site.</p>
+      <div class="ctas">
+        <a class="btn btn-primary" href="#">Invite me to speak</a>
+        <a class="btn btn-secondary" href="#">Explore the work</a>
+      </div>
+      <a class="accent-link" href="#">Ask the Advocate &rarr;</a>
+      <hr class="hairline">
+      <div class="footnote">Hairline rule · faint drafting grid behind · one restrained accent</div>
+    </div>
+    <div class="aa">
+      <b>AA</b> · accent-on-paper <span class="pass">4.99:1 PASS</span> · ink-on-paper <span class="pass">15.04:1 PASS</span> · btn text on accent <span class="pass">5.30:1 PASS</span>
+    </div>
+  </article>
+
+</main>
+</body>
+</html>

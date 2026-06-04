@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hero Design Directions — Josh Brandt Portfolio</title>
+<style>
+/* Neutral index chrome — intentionally plain so it does not compete
+   with the four directions it frames. System UI sans for the shell;
+   the directions themselves carry the locked editorial-serif identity.
+   Palette: #FAFAF8 page · #FFFFFF cards · #1A1A18 ink · #6B6B66 muted
+   · #E2E1DB rule · #8C2A1E accent tick (shared warm editorial red). */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --page: #FAFAF8;
+  --card: #FFFFFF;
+  --ink: #1A1A18;
+  --muted: #6B6B66;
+  --rule: #E2E1DB;
+  --accent: #8C2A1E;
+}
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.55;
+  padding: 48px 24px 96px;
+}
+.wrap { max-width: 1120px; margin: 0 auto; }
+
+header { border-bottom: 1px solid var(--rule); padding-bottom: 28px; margin-bottom: 36px; }
+.kicker { font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+h1 { font-size: 30px; font-weight: 650; letter-spacing: -0.01em; margin-bottom: 12px; }
+header p { font-size: 16px; color: var(--muted); max-width: 78ch; }
+header .meta { font-size: 13px; color: var(--muted); margin-top: 14px; }
+header .meta code { background: #F0EFEA; padding: 2px 6px; border-radius: 4px; font-size: 12.5px; }
+
+/* directory list */
+.directory { margin-bottom: 48px; }
+.directory h2, .gallery h2 { font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 18px; }
+.dir-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+@media (max-width: 760px){ .dir-grid { grid-template-columns: 1fr; } }
+.dir-card {
+  display: block; text-decoration: none; color: inherit;
+  background: var(--card); border: 1px solid var(--rule); border-radius: 10px;
+  padding: 20px 22px; transition: none;
+}
+.dir-card:hover { border-color: var(--ink); }
+.dir-card .n { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.dir-card .num { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.dir-card .name { font-size: 19px; font-weight: 600; }
+.dir-card .mode {
+  margin-left: auto; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 999px; border: 1px solid var(--rule);
+}
+.dir-card .mode.light { color: #8a6b1a; background: #FBF6E8; border-color: #ECDFBC; }
+.dir-card .mode.dark { color: #cfd6da; background: #20262B; border-color: #2C353B; }
+.dir-card p { font-size: 14.5px; color: var(--muted); }
+.dir-card .open { font-size: 12.5px; color: var(--accent); margin-top: 12px; display: inline-block; }
+
+/* embedded preview stack */
+.gallery .hint { font-size: 14px; color: var(--muted); margin-bottom: 24px; max-width: 78ch; }
+.preview { margin-bottom: 40px; }
+.preview-bar {
+  display: flex; align-items: baseline; gap: 12px;
+  border-bottom: 1px solid var(--rule); padding-bottom: 12px; margin-bottom: 16px;
+}
+.preview-bar .num { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.preview-bar .name { font-size: 17px; font-weight: 600; }
+.preview-bar .mode { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.preview-bar a { margin-left: auto; font-size: 12.5px; color: var(--accent); text-decoration: none; }
+.preview-bar a:hover { text-decoration: underline; }
+.framebox {
+  border: 1px solid var(--rule); border-radius: 10px; overflow: hidden;
+  background: var(--card); box-shadow: 0 18px 44px -30px rgba(0,0,0,0.4);
+}
+.framebox iframe {
+  width: 100%; height: 1500px; border: 0; display: block;
+}
+footer { border-top: 1px solid var(--rule); padding-top: 22px; font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">UX Coaching · Hero Design Directions</div>
+    <h1>Josh Brandt — Portfolio Hero, four directions</h1>
+    <p>Four complete visual personalities for the hero of a personal portfolio that demonstrates rather than describes — built in the open as a BMAD project, so the site is its own proof. All four are editorial-serif-led, calm and credible, with generous whitespace and a restrained palette. Each shows the hero in a desktop frame and a phone frame, plus the Advocate Agent panel and its designed thinking state.</p>
+    <p class="meta">Positioning: <strong>Seasoned, Not Stuck.</strong> · Two light, two dark · self-contained HTML, no JavaScript, no network requests · system fonts only.</p>
+  </header>
+
+  <!-- (a) clickable directory -->
+  <section class="directory">
+    <h2>The four directions</h2>
+    <div class="dir-grid">
+
+      <a class="dir-card" href="direction-gallery-light.html">
+        <div class="n"><span class="num">01</span><span class="name">Gallery</span><span class="mode light">Light</span></div>
+        <p>Austere museum wall — maximal whitespace, very large light-weight serif, hairline rules, a single oxblood accent. Lowest density; the wow is the restraint.</p>
+        <span class="open">Open direction →</span>
+      </a>
+
+      <a class="dir-card" href="direction-literary-light.html">
+        <div class="n"><span class="num">02</span><span class="name">Literary</span><span class="mode light">Light</span></div>
+        <p>Warm literary review — book-stock cream, high-contrast serif, kicker rule, small-caps labels, a drop-cap lede and a pull-quote. Humane and considered.</p>
+        <span class="open">Open direction →</span>
+      </a>
+
+      <a class="dir-card" href="direction-cinematic-dark.html">
+        <div class="n"><span class="num">03</span><span class="name">Cinematic Studio</span><span class="mode dark">Dark</span></div>
+        <p>A film you can talk to — deep warm near-black, content lit out of the dark, title-card serif in dramatic negative space, one amber CTA glow.</p>
+        <span class="open">Open direction →</span>
+      </a>
+
+      <a class="dir-card" href="direction-architect-dark.html">
+        <div class="n"><span class="num">04</span><span class="name">Architect's Table</span><span class="mode dark">Dark</span></div>
+        <p>The drafting table of an engineer with taste — cool graphite, faint drafting grid, registration ticks, serif paired with small monospace metadata labels.</p>
+        <span class="open">Open direction →</span>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- (b) embedded preview stack for side-by-side flipping -->
+  <section class="gallery">
+    <h2>Side-by-side previews</h2>
+    <p class="hint">All four embedded below in a vertical stack — scroll to flip between registers (cool-austere · warm-literary · warm-cinematic · cool-architectural). Open any direction full-screen via its link for the cleanest read.</p>
+
+    <div class="preview">
+      <div class="preview-bar">
+        <span class="num">01</span><span class="name">Gallery</span><span class="mode">· Light</span>
+        <a href="direction-gallery-light.html" target="_blank" rel="noopener">Open full ↗</a>
+      </div>
+      <div class="framebox"><iframe src="direction-gallery-light.html" title="Direction 1 — Gallery (Light)" loading="lazy"></iframe></div>
+    </div>
+
+    <div class="preview">
+      <div class="preview-bar">
+        <span class="num">02</span><span class="name">Literary</span><span class="mode">· Light</span>
+        <a href="direction-literary-light.html" target="_blank" rel="noopener">Open full ↗</a>
+      </div>
+      <div class="framebox"><iframe src="direction-literary-light.html" title="Direction 2 — Literary (Light)" loading="lazy"></iframe></div>
+    </div>
+
+    <div class="preview">
+      <div class="preview-bar">
+        <span class="num">03</span><span class="name">Cinematic Studio</span><span class="mode">· Dark</span>
+        <a href="direction-cinematic-dark.html" target="_blank" rel="noopener">Open full ↗</a>
+      </div>
+      <div class="framebox"><iframe src="direction-cinematic-dark.html" title="Direction 3 — Cinematic Studio (Dark)" loading="lazy"></iframe></div>
+    </div>
+
+    <div class="preview">
+      <div class="preview-bar">
+        <span class="num">04</span><span class="name">Architect's Table</span><span class="mode">· Dark</span>
+        <a href="direction-architect-dark.html" target="_blank" rel="noopener">Open full ↗</a>
+      </div>
+      <div class="framebox"><iframe src="direction-architect-dark.html" title="Direction 4 — Architect's Table (Dark)" loading="lazy"></iframe></div>
+    </div>
+
+  </section>
+
+  <footer>
+    Each file depicts: a rationale banner, a desktop hero frame (primary), a ~390px phone hero frame, and the Advocate Agent panel with its thinking-state variant. Real content throughout — no lorem ipsum.
+  </footer>
+
+</div>
+</body>
+</html>

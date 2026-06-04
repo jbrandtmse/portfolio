@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Type decision — Glass Box long-form (reading test) · Josh Brandt</title>
+
+<!-- REAL WEB FONTS (network allowed for this type-decision mock only) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Fraunces: optical-size display axis (opsz 9..144) + wght 400/600/900 + italics; SOFT/WONK available -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,400,0..100,0..1;0,9..144,600,0..100,0..1;0,9..144,900,0..100,0..1;1,9..144,400,0..100,0..1;1,9..144,600,0..100,0..1;1,9..144,900,0..100,0..1&display=swap">
+<!-- Source Serif 4: wght 400/600/700 + italics -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap">
+
+<style>
+/* ============================================================
+   MOCK — GLASS BOX LONG-FORM TYPE DECISION (reading test)
+   Governs (when chosen) these spine sections:
+     • DESIGN.md → long-form Component Patterns (the curated
+       read-only artifact view: top bar, type chip, curator's
+       note, drop-cap lede, section headings, body measure,
+       bulleted list, inline link, pull-quote) and the reading
+       typography scale.
+     • EXPERIENCE.md → the long-form READING experience inside
+       Glass Box (FR-13 read-only rendering of real BMAD
+       artifacts — "polished glass, not raw guts").
+   Purpose: render the SAME long-form artifact view THREE times,
+   changing ONLY the type system, so the reading face(s) can be
+   chosen on real screens at real length.
+     Variant A — All Fraunces (headings + body)
+     Variant B — All Source Serif 4 (headings + body)
+     Variant C — Pairing: Fraunces headings + Source Serif 4 body
+   NOTE: the Glass Box IA / curation chrome is still OPEN. This
+   mock uses ONLY already-decided editorial devices (small-caps
+   chip, drop-cap, pull-quote, hairline rules) and keeps chrome
+   deliberately minimal — it is a TYPE test, not an IA proposal.
+
+   ---- TYPE / FONT-FAMILY CHOICES (documented) ----
+   --serif-fraunces : 'Fraunces', <transitional fallbacks>, serif
+        Optical variable serif. In body use we drop opsz toward
+        a text optical size (~28) and dial SOFT up slightly so
+        long reading stays warm rather than display-sharp; this
+        is exactly the all-Fraunces reading risk being judged.
+   --serif-source : 'Source Serif 4', <transitional fallbacks>, serif
+        Transitional text workhorse, designed for immersive
+        reading. The body candidate in Variants B and C.
+
+   ---- LOCKED PALETTE (from .decision-log.md — every hex documented) ----
+   #F6F0E6  surface-base     warm cream paper (stage)
+   #FBF7EF  surface-raised   raised warm plane (the reading sheet)
+   #211B14  ink-primary      warm near-black body text (15:1)
+   #6B5D4A  ink-secondary    metadata, curator note, captions (5.6:1)
+   #D8CAB3  border-hairline  hairline rules / borders
+   #ECE3D3  grid-line        faint drafting-grid line
+   #1E3A5F  accent           Prussian navy — inline link, chip, drop-cap, rule tick
+   #162B47  accent-hover     deeper navy — hover/pressed
+   ============================================================ */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --surface-base: #F6F0E6;
+  --surface-raised: #FBF7EF;
+  --ink-primary: #211B14;
+  --ink-secondary: #6B5D4A;
+  --border-hairline: #D8CAB3;
+  --grid-line: #ECE3D3;
+  --accent: #1E3A5F;
+  --accent-hover: #162B47;
+
+  --serif-fraunces: 'Fraunces', 'Spectral', 'Georgia', 'Times New Roman', serif;
+  --serif-source: 'Source Serif 4', 'Spectral', 'Georgia', 'Times New Roman', serif;
+
+  --measure: 680px; /* the reading measure */
+}
+
+body {
+  background: #E4DECF; /* neutral stage behind the framed reads */
+  font-family: var(--serif-source);
+  color: var(--ink-primary);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  line-height: 1.6;
+  padding: 40px 24px 90px;
+}
+
+/* ---- page intro banner ---- */
+.intro {
+  max-width: 920px;
+  margin: 0 auto 40px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  padding: 26px 34px;
+}
+.intro .tag {
+  font-family: var(--serif-source);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 11px;
+}
+.intro h1 {
+  font-family: var(--serif-fraunces);
+  font-variation-settings: 'opsz' 120, 'SOFT' 0, 'WONK' 0;
+  font-weight: 600;
+  font-size: 27px;
+  letter-spacing: 0.005em;
+  margin-bottom: 10px;
+}
+.intro p {
+  font-size: 15.5px;
+  color: var(--ink-secondary);
+  max-width: 84ch;
+  line-height: 1.62;
+}
+.intro p .em { color: var(--ink-primary); font-weight: 600; }
+
+/* ---- variant separator label ---- */
+.frame-label {
+  max-width: 920px;
+  margin: 48px auto 14px;
+  font-family: var(--serif-source);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: #6f6759;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.frame-label .which { color: var(--accent); }
+.frame-label .const {
+  font-weight: 400; letter-spacing: 0.16em; color: #8a8273;
+  text-transform: none; font-style: italic;
+}
+
+/* ============================================================
+   GLASS BOX FRAME — minimal chrome (type test, not IA)
+   A quiet top bar + the centered reading sheet on cream.
+   ============================================================ */
+.glass {
+  max-width: 920px;
+  margin: 0 auto;
+  background: var(--surface-base);
+  border: 1px solid #cbc3b2;
+  border-radius: 10px;
+  box-shadow: 0 24px 54px -30px rgba(33,27,20,0.5);
+  overflow: hidden;
+}
+
+/* quiet top bar: return + artifact chip + date + curator note */
+.gb-bar {
+  border-bottom: 1px solid var(--border-hairline);
+  padding: 16px 28px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  background: var(--surface-raised);
+}
+.gb-return {
+  font-family: var(--serif-source);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.gb-chip {
+  font-family: var(--serif-source);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+.gb-date {
+  font-family: var(--serif-source);
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+  white-space: nowrap;
+}
+.gb-note {
+  font-family: var(--serif-source);
+  font-size: 13px;
+  font-style: italic;
+  color: var(--ink-secondary);
+  margin-left: auto;
+  max-width: 42ch;
+  line-height: 1.45;
+}
+
+/* the reading sheet — faint drafting grid behind the centered measure */
+.gb-sheet {
+  background:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px) 0 0 / 96px 100%,
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px) 0 0 / 100% 96px,
+    var(--surface-base);
+  padding: clamp(40px, 5vw, 72px) 28px clamp(48px, 5vw, 76px);
+}
+.read {
+  max-width: var(--measure);
+  margin: 0 auto;
+}
+
+/* document title block */
+.doc-kicker {
+  font-family: var(--serif-source);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 12px;
+}
+.doc-kicker::before { content:""; width: 24px; height: 1px; background: var(--accent); }
+.doc-title {
+  font-size: clamp(30px, 3.4vw, 42px);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  margin-bottom: 14px;
+  color: var(--ink-primary);
+}
+.doc-sub {
+  font-size: 16px;
+  color: var(--ink-secondary);
+  line-height: 1.55;
+  margin-bottom: 30px;
+  padding-bottom: 26px;
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+/* body type */
+.read h3 {
+  font-size: clamp(20px, 2vw, 24px);
+  line-height: 1.2;
+  letter-spacing: -0.005em;
+  margin: 38px 0 14px;
+  color: var(--ink-primary);
+}
+.read p {
+  font-size: 18px;
+  line-height: 1.68;
+  color: var(--ink-primary);
+  margin-bottom: 18px;
+}
+.read p .em { font-style: italic; }
+.read a.inline {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid var(--accent);
+}
+
+/* drop-cap lede — an already-decided editorial device */
+.read .lede { margin-bottom: 22px; }
+.read .lede::first-letter {
+  font-family: var(--serif-fraunces);
+  font-variation-settings: 'opsz' 144, 'SOFT' 0, 'WONK' 0;
+  font-weight: 900;
+  float: left;
+  font-size: 4.1em;
+  line-height: 0.82;
+  padding: 6px 14px 0 0;
+  color: var(--accent);
+}
+
+/* bulleted list */
+.read ul {
+  list-style: none;
+  margin: 6px 0 24px;
+  padding: 0;
+}
+.read ul li {
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--ink-primary);
+  padding-left: 26px;
+  position: relative;
+  margin-bottom: 12px;
+}
+.read ul li::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0.62em;
+  width: 11px; height: 1px;
+  background: var(--accent); /* hairline tick bullet */
+}
+
+/* pull-quote — an already-decided editorial device */
+.read .pull {
+  margin: 34px 0;
+  padding: 6px 0 6px 28px;
+  border-left: 2px solid var(--accent);
+  font-size: clamp(23px, 2.6vw, 30px);
+  line-height: 1.28;
+  letter-spacing: -0.005em;
+  color: var(--ink-primary);
+  font-style: italic;
+}
+
+.colophon {
+  margin-top: 36px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-hairline);
+  font-family: var(--serif-source);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+}
+
+/* ------------------------------------------------------------
+   VARIANT TYPE-SYSTEM BINDINGS
+   ------------------------------------------------------------ */
+
+/* A — ALL FRAUNCES (headings + body). Body opsz dropped to a
+       text optical size and SOFT raised for warmth at length. */
+.v-fraunces .doc-title,
+.v-fraunces .read h3 {
+  font-family: var(--serif-fraunces);
+  font-variation-settings: 'opsz' 144, 'SOFT' 0, 'WONK' 0;
+  font-weight: 900;
+}
+.v-fraunces .read p,
+.v-fraunces .read ul li,
+.v-fraunces .doc-sub,
+.v-fraunces .read .pull {
+  font-family: var(--serif-fraunces);
+  font-variation-settings: 'opsz' 28, 'SOFT' 40, 'WONK' 0;
+  font-weight: 400;
+}
+.v-fraunces .read .pull { font-weight: 400; }
+
+/* B — ALL SOURCE SERIF 4 (headings + body) */
+.v-source .doc-title,
+.v-source .read h3 {
+  font-family: var(--serif-source);
+  font-weight: 700;
+}
+.v-source .read p,
+.v-source .read ul li,
+.v-source .doc-sub,
+.v-source .read .pull {
+  font-family: var(--serif-source);
+}
+
+/* C — PAIRING: Fraunces headings + Source Serif 4 body */
+.v-pair .doc-title,
+.v-pair .read h3 {
+  font-family: var(--serif-fraunces);
+  font-variation-settings: 'opsz' 144, 'SOFT' 0, 'WONK' 0;
+  font-weight: 900;
+}
+.v-pair .read p,
+.v-pair .read ul li,
+.v-pair .doc-sub,
+.v-pair .read .pull {
+  font-family: var(--serif-source);
+}
+
+.note {
+  max-width: 920px;
+  margin: 36px auto 0;
+  font-family: var(--serif-source);
+  font-size: 12.5px;
+  color: #6f6759;
+  text-align: center;
+  letter-spacing: 0.03em;
+  line-height: 1.6;
+}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div class="tag">Type decision · Glass Box · reading test</div>
+  <h1>One long-form read, three type systems.</h1>
+  <p>The same curated Glass Box artifact view, rendered three times. The <span class="em">only</span> thing that changes is the type system: Variant A is <span class="em">all Fraunces</span>, Variant B is <span class="em">all Source Serif 4</span>, Variant C is the <span class="em">pairing</span> (Fraunces headings, Source Serif 4 body). This is the surface that must read beautifully at length, so the body is real, dense, in-voice prose about this portfolio's own design thinking. Chrome is intentionally minimal; the full Glass Box IA is a separate pass.</p>
+</div>
+
+<!-- ============ VARIANT A — ALL FRAUNCES ============ -->
+<div class="frame-label">
+  <span class="which">Variant A — All Fraunces</span>
+  <span class="const">headings &amp; body both Fraunces (body at a text optical size)</span>
+</div>
+<div class="glass v-fraunces">
+  <div class="gb-bar">
+    <a class="gb-return" href="#">&larr; Glass Box</a>
+    <span class="gb-chip">PRD · Excerpt</span>
+    <span class="gb-date">2026 · 06 · 02</span>
+    <span class="gb-note">Curated from the live BMAD project — polished, not raw.</span>
+  </div>
+  <div class="gb-sheet">
+    <article class="read">
+      <div class="doc-kicker">Design thesis</div>
+      <h2 class="doc-title">The medium is the message.</h2>
+      <p class="doc-sub">Why this portfolio is built as a public BMAD project, why the Advocate Agent only ever routes to crawlable mirror pages, and how proof-as-process replaces the usual "trust me."</p>
+
+      <p class="lede">Most portfolios assert. They list roles, name technologies, and ask you to take the rest on faith. That posture fails the one reader who matters here: a skeptical peer who has seen a hundred sites claim depth and has learned to discount the claim. So this site does not argue that the work is good. It shows the work being made, in the open, and lets the record carry the weight. The thesis is narrow and the whole build commits to it: demonstrate the craft by exposing the disciplined process that produced it, rather than describing the outcome after the fact.</p>
+
+      <p>That choice has a structural consequence. If the process is the proof, the process has to be legible, and it has to be real. This site is itself a BMAD project, planned and shipped with the same artifacts you are reading now. The brief, the brainstorm, the research, the requirements, the retrospectives as they accrue, are not marketing about the work. They <span class="em">are</span> the work, rendered as a curated read. We call that surface the Glass Box, and its rule is simple: polished glass, not raw guts.</p>
+
+      <h3>Why the Advocate routes, never invents</h3>
+      <p>The Advocate Agent is the front door, but it is deliberately not the source of truth. Every substantive claim it makes is grounded in a build-time index of the project's own documents, and every claim names and links the real page behind it. Ask it what was hardest about the loandemo build and it answers in plain language, then hands you the retrospective. When the record is silent, it says so and stops; it does not reach for the model to fill the gap.</p>
+
+      <p>This is a design decision before it is a safety one. An agent that can route is an agent a reader can verify, and verifiability is the entire pitch. The skeptic does not have to believe the assistant. They can click through and read the artifact for themselves, in the initial HTML, with the script disabled if they like. Routing to <a class="inline" href="#">crawlable mirror pages</a> means the proof survives every degraded path: no JavaScript, reduced motion, or a search crawler that never runs the agent at all.</p>
+
+      <p class="pull">The skeptic gets sold, and gets the receipts.</p>
+
+      <h3>What the curation removes</h3>
+      <p>"Polished, not raw" is a content decision, and it has a default-deny shape. A publish allowlist decides what becomes a public read; everything else stays private by construction. The never-render set is explicit and includes the working scaffolding that would only add noise:</p>
+      <ul>
+        <li>Decision logs and internal addenda — the backstage record, not the exhibit.</li>
+        <li>Review and reconciliation notes — useful while building, distracting while reading.</li>
+        <li>Anything not on the allowlist, because the default is to withhold, not to ship.</li>
+      </ul>
+      <p>The result is a read that respects the visitor's attention. Process transparency stays honest about how the work was actually made, while the narrative around it is curated like a highlight reel rather than a confessional. Those two kinds of openness are kept distinct on purpose, and holding both at once is the editorial discipline this surface exists to demonstrate.</p>
+
+      <div class="colophon"><span>BMAD · Proof-as-Process</span><span>Source: PRD · §5</span></div>
+    </article>
+  </div>
+</div>
+
+<!-- ============ VARIANT B — ALL SOURCE SERIF 4 ============ -->
+<div class="frame-label">
+  <span class="which">Variant B — All Source Serif 4</span>
+  <span class="const">single-family system; headings &amp; body both Source Serif 4</span>
+</div>
+<div class="glass v-source">
+  <div class="gb-bar">
+    <a class="gb-return" href="#">&larr; Glass Box</a>
+    <span class="gb-chip">PRD · Excerpt</span>
+    <span class="gb-date">2026 · 06 · 02</span>
+    <span class="gb-note">Curated from the live BMAD project — polished, not raw.</span>
+  </div>
+  <div class="gb-sheet">
+    <article class="read">
+      <div class="doc-kicker">Design thesis</div>
+      <h2 class="doc-title">The medium is the message.</h2>
+      <p class="doc-sub">Why this portfolio is built as a public BMAD project, why the Advocate Agent only ever routes to crawlable mirror pages, and how proof-as-process replaces the usual "trust me."</p>
+
+      <p class="lede">Most portfolios assert. They list roles, name technologies, and ask you to take the rest on faith. That posture fails the one reader who matters here: a skeptical peer who has seen a hundred sites claim depth and has learned to discount the claim. So this site does not argue that the work is good. It shows the work being made, in the open, and lets the record carry the weight. The thesis is narrow and the whole build commits to it: demonstrate the craft by exposing the disciplined process that produced it, rather than describing the outcome after the fact.</p>
+
+      <p>That choice has a structural consequence. If the process is the proof, the process has to be legible, and it has to be real. This site is itself a BMAD project, planned and shipped with the same artifacts you are reading now. The brief, the brainstorm, the research, the requirements, the retrospectives as they accrue, are not marketing about the work. They <span class="em">are</span> the work, rendered as a curated read. We call that surface the Glass Box, and its rule is simple: polished glass, not raw guts.</p>
+
+      <h3>Why the Advocate routes, never invents</h3>
+      <p>The Advocate Agent is the front door, but it is deliberately not the source of truth. Every substantive claim it makes is grounded in a build-time index of the project's own documents, and every claim names and links the real page behind it. Ask it what was hardest about the loandemo build and it answers in plain language, then hands you the retrospective. When the record is silent, it says so and stops; it does not reach for the model to fill the gap.</p>
+
+      <p>This is a design decision before it is a safety one. An agent that can route is an agent a reader can verify, and verifiability is the entire pitch. The skeptic does not have to believe the assistant. They can click through and read the artifact for themselves, in the initial HTML, with the script disabled if they like. Routing to <a class="inline" href="#">crawlable mirror pages</a> means the proof survives every degraded path: no JavaScript, reduced motion, or a search crawler that never runs the agent at all.</p>
+
+      <p class="pull">The skeptic gets sold, and gets the receipts.</p>
+
+      <h3>What the curation removes</h3>
+      <p>"Polished, not raw" is a content decision, and it has a default-deny shape. A publish allowlist decides what becomes a public read; everything else stays private by construction. The never-render set is explicit and includes the working scaffolding that would only add noise:</p>
+      <ul>
+        <li>Decision logs and internal addenda — the backstage record, not the exhibit.</li>
+        <li>Review and reconciliation notes — useful while building, distracting while reading.</li>
+        <li>Anything not on the allowlist, because the default is to withhold, not to ship.</li>
+      </ul>
+      <p>The result is a read that respects the visitor's attention. Process transparency stays honest about how the work was actually made, while the narrative around it is curated like a highlight reel rather than a confessional. Those two kinds of openness are kept distinct on purpose, and holding both at once is the editorial discipline this surface exists to demonstrate.</p>
+
+      <div class="colophon"><span>BMAD · Proof-as-Process</span><span>Source: PRD · §5</span></div>
+    </article>
+  </div>
+</div>
+
+<!-- ============ VARIANT C — PAIRING ============ -->
+<div class="frame-label">
+  <span class="which">Variant C — Pairing</span>
+  <span class="const">Fraunces headings + Source Serif 4 body</span>
+</div>
+<div class="glass v-pair">
+  <div class="gb-bar">
+    <a class="gb-return" href="#">&larr; Glass Box</a>
+    <span class="gb-chip">PRD · Excerpt</span>
+    <span class="gb-date">2026 · 06 · 02</span>
+    <span class="gb-note">Curated from the live BMAD project — polished, not raw.</span>
+  </div>
+  <div class="gb-sheet">
+    <article class="read">
+      <div class="doc-kicker">Design thesis</div>
+      <h2 class="doc-title">The medium is the message.</h2>
+      <p class="doc-sub">Why this portfolio is built as a public BMAD project, why the Advocate Agent only ever routes to crawlable mirror pages, and how proof-as-process replaces the usual "trust me."</p>
+
+      <p class="lede">Most portfolios assert. They list roles, name technologies, and ask you to take the rest on faith. That posture fails the one reader who matters here: a skeptical peer who has seen a hundred sites claim depth and has learned to discount the claim. So this site does not argue that the work is good. It shows the work being made, in the open, and lets the record carry the weight. The thesis is narrow and the whole build commits to it: demonstrate the craft by exposing the disciplined process that produced it, rather than describing the outcome after the fact.</p>
+
+      <p>That choice has a structural consequence. If the process is the proof, the process has to be legible, and it has to be real. This site is itself a BMAD project, planned and shipped with the same artifacts you are reading now. The brief, the brainstorm, the research, the requirements, the retrospectives as they accrue, are not marketing about the work. They <span class="em">are</span> the work, rendered as a curated read. We call that surface the Glass Box, and its rule is simple: polished glass, not raw guts.</p>
+
+      <h3>Why the Advocate routes, never invents</h3>
+      <p>The Advocate Agent is the front door, but it is deliberately not the source of truth. Every substantive claim it makes is grounded in a build-time index of the project's own documents, and every claim names and links the real page behind it. Ask it what was hardest about the loandemo build and it answers in plain language, then hands you the retrospective. When the record is silent, it says so and stops; it does not reach for the model to fill the gap.</p>
+
+      <p>This is a design decision before it is a safety one. An agent that can route is an agent a reader can verify, and verifiability is the entire pitch. The skeptic does not have to believe the assistant. They can click through and read the artifact for themselves, in the initial HTML, with the script disabled if they like. Routing to <a class="inline" href="#">crawlable mirror pages</a> means the proof survives every degraded path: no JavaScript, reduced motion, or a search crawler that never runs the agent at all.</p>
+
+      <p class="pull">The skeptic gets sold, and gets the receipts.</p>
+
+      <h3>What the curation removes</h3>
+      <p>"Polished, not raw" is a content decision, and it has a default-deny shape. A publish allowlist decides what becomes a public read; everything else stays private by construction. The never-render set is explicit and includes the working scaffolding that would only add noise:</p>
+      <ul>
+        <li>Decision logs and internal addenda — the backstage record, not the exhibit.</li>
+        <li>Review and reconciliation notes — useful while building, distracting while reading.</li>
+        <li>Anything not on the allowlist, because the default is to withhold, not to ship.</li>
+      </ul>
+      <p>The result is a read that respects the visitor's attention. Process transparency stays honest about how the work was actually made, while the narrative around it is curated like a highlight reel rather than a confessional. Those two kinds of openness are kept distinct on purpose, and holding both at once is the editorial discipline this surface exists to demonstrate.</p>
+
+      <div class="colophon"><span>BMAD · Proof-as-Process</span><span>Source: PRD · §5</span></div>
+    </article>
+  </div>
+</div>
+
+<p class="note">Real web fonts loaded via Google Fonts (Fraunces optical axis + Source Serif 4). Locked warm palette + hairline rules + faint drafting grid + decided editorial devices (small-caps chip, drop-cap, pull-quote) applied. Inline CSS only · no JavaScript · no images. The type system is the single variable across Variants A, B, and C. Reading measure ~680px.</p>
+
+</body>
+</html>

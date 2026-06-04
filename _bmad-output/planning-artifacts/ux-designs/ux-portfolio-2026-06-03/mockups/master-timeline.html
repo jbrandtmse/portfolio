@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master Timeline (/timeline) · Joshua R. Brandt, MSE</title>
+
+<!-- Source Serif 4 ONLY — display + headings + body + meta (type system LOCKED). Network allowed for this mock. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,600&display=swap">
+
+<style>
+/* ============================================================
+   KEY-SCREEN MOCK — MASTER TIMELINE (/timeline)
+   The site's ORGANIZING SPINE + a key showpiece ("one click in,
+   not the front door"), rendered 1:1 on the LOCKED identity.
+   Full fidelity. NOT a wireframe.
+
+   THIS MOCK GOVERNS:
+     • EXPERIENCE.md → Information Architecture (Master Timeline):
+       /timeline as a responsive reflow of ONE semantic ordered
+       list of dated entries — HORIZONTAL craft-arc on desktop,
+       VERTICAL on mobile — embodying the positioning "Seasoned,
+       Not Stuck": a long, confident, intentionally-quiet ~30-year
+       runway building to the dense, recent "agentic-engineering
+       turn" where the two hand-curated S1 flagships (the portfolio
+       itself + loandemo) and their BMAD Method Dots cluster
+       (FR-16). The cross-project arc; the Glass Box is THIS
+       project's build history (the cross-link reconciles them).
+     • EXPERIENCE.md → Component Patterns: the TIMELINE ARC (era
+       bands on a hairline spine), the BMAD METHOD DOT (the same
+       navy node the Glass Box uses — resting / link / cluster),
+       and the FLAGSHIP NODE (a milestone that expands to a small
+       cluster of its Dots, each Dot a real link to an artifact
+       reader; the portfolio node's Dots cross-link to the Glass
+       Box).
+     • EXPERIENCE.md → the CRAFT-ARC Key-Flow ("vibe-coding →
+       agentic engineering" / seasoned → not stuck), read
+       left→right on desktop, top→bottom on mobile.
+     • EXPERIENCE.md → the Home Scene-3 TIMELINE TEASER (FR-14):
+       a condensed strip on / that deep-links here and degrades
+       to an ordered list.
+     • DESIGN.md → Components: the Dot (resting / filled / live /
+       cluster states) and the ERA BAND, echoing the small-caps
+       kicker, hairline rules, and faint drafting grid.
+
+   S1 = hand-curated seed (2 flagships, no auto-harvest).
+   S2 = semantic ZOOM (out → career milestones, in → a project's
+   Dots, "a single shareable gesture") + auto-harvest — PREVIEWED
+   and ANNOTATED here, NOT built (no real zoom; no JavaScript).
+
+   FIDELITY: full polish on the locked identity. Spines
+   (DESIGN.md / EXPERIENCE.md) win on conflict.
+
+   ---- LOCKED IDENTITY (applied at full fidelity) ----
+   Type: ALL Source Serif 4 (display + headings + body + meta).
+         Small-caps kickers / era labels. No exclamation marks.
+         No drop-cap here (reserved for the artifact reader).
+         font-display: swap to protect the perf budget.
+   #F6F0E6  surface-base     warm cream paper (the page / stage)
+   #FBF7EF  surface-raised   raised warm plane (cards, header sheet)
+   #211B14  ink-primary      warm near-black body text (15:1)
+   #6B5D4A  ink-secondary    metadata, era labels, captions (5.6:1)
+   #D8CAB3  border-hairline   hairline rules / card borders / the spine
+   #ECE3D3  grid-line         faint drafting-grid line
+   #1E3A5F  accent (navy)    Dots, chips, "Read"/drill links, ticks (10.15:1)
+   #162B47  accent-hover     deeper navy — hover / pressed
+   Style: austere, warm, editorial; hairline rules; faint drafting
+   grid; FLAT — NO shadows on this screen (the Guide panel is the
+   only elevated surface site-wide, and it is not on this screen).
+   The Dot is consistent with the Glass Box (small navy nodes).
+   ============================================================ */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --surface-base: #F6F0E6;
+  --surface-raised: #FBF7EF;
+  --ink-primary: #211B14;
+  --ink-secondary: #6B5D4A;
+  --border-hairline: #D8CAB3;
+  --grid-line: #ECE3D3;
+  --accent: #1E3A5F;
+  --accent-hover: #162B47;
+  --muted: #9a8e79;            /* the quiet-runway / ghost ink */
+
+  --serif: 'Source Serif 4', 'Spectral', 'Georgia', 'Times New Roman', serif;
+}
+
+/* ============================================================
+   PAGE STAGE — neutral backdrop behind the device frames.
+   (Frames are a presentation device for review; the real page is
+   simply the cream surface-base edge to edge.)
+   ============================================================ */
+body {
+  background: #DCD4C3;
+  font-family: var(--serif);
+  color: var(--ink-primary);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  line-height: 1.6;
+  padding: 38px 22px 88px;
+}
+
+/* ---------- review intro banner (frame for the reviewer; not part of the page) ---------- */
+.intro {
+  max-width: 1320px;
+  margin: 0 auto 30px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  padding: 24px 30px;
+}
+.intro .tag {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.3em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 10px;
+}
+.intro h1 {
+  font-weight: 600; font-size: 24px; letter-spacing: 0.005em; margin-bottom: 9px;
+}
+.intro p {
+  font-size: 14px; color: var(--ink-secondary); max-width: 104ch; line-height: 1.62;
+}
+.intro p .em { color: var(--ink-primary); font-weight: 600; }
+
+.frame-cap {
+  max-width: 1320px; margin: 44px auto 12px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.24em;
+  text-transform: uppercase; color: #6f6759;
+  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+}
+.frame-cap .sub {
+  font-weight: 400; letter-spacing: 0.08em; text-transform: none;
+  font-style: italic; color: #8a8273; font-size: 12.5px;
+}
+
+/* ============================================================
+   DEVICE FRAMES (review chrome). The browser bar / phone shell is
+   presentation only — the page art inside is the real mock.
+   ============================================================ */
+.device {
+  max-width: 1320px; margin: 0 auto;
+  background: var(--surface-base);
+  border: 1px solid #c4bba8;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.bar {
+  background: #E7DECE;
+  border-bottom: 1px solid var(--border-hairline);
+  display: flex; align-items: center; gap: 7px; padding: 9px 14px;
+}
+.dot { width: 10px; height: 10px; border-radius: 50%; background: #cfc5b1; }
+.url {
+  margin-left: 12px; font-size: 12.5px; color: var(--ink-secondary); letter-spacing: 0.01em;
+}
+
+/* ============================================================
+   SHARED PAGE CHROME — cream surface, faint drafting grid.
+   ============================================================ */
+.page {
+  background:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px) 0 0 / 112px 100%,
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px) 0 0 / 100% 112px,
+    var(--surface-base);
+  padding: clamp(30px, 3.4vw, 56px) clamp(20px, 3.4vw, 52px) clamp(44px, 5vw, 76px);
+}
+.page-top {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 18px; flex-wrap: wrap;
+  padding-bottom: 14px; margin-bottom: 26px; border-bottom: 1px solid var(--border-hairline);
+}
+.page-top .wm { font-size: 13px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-primary); }
+.page-top .home {
+  font-size: 12.5px; font-weight: 600; letter-spacing: 0.04em; color: var(--accent); text-decoration: none;
+}
+.page-top .home:hover { color: var(--accent-hover); }
+
+.kicker {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase;
+  color: var(--ink-secondary); margin-bottom: 16px;
+  display: inline-flex; align-items: center; gap: 12px;
+}
+.kicker::before { content: ""; width: 26px; height: 1px; background: var(--accent); }
+
+/* ============================================================
+   ===== PART A — HOME TEASER STRIP (Scene 3 on /) =============
+   A compact, calm horizontal strip as it appears in the home arc:
+   a one-line label, a slim arc with a few dots, and a "See the
+   full timeline →" deep-link. A teaser — not the full thing.
+   ============================================================ */
+.teaser-scene {
+  border: 1px solid var(--border-hairline);
+  background: var(--surface-base);
+  padding: clamp(22px, 2.6vw, 34px) clamp(20px, 3vw, 44px);
+  position: relative;
+}
+.teaser-scene .scene-no {
+  position: absolute; top: 16px; right: 20px;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted);
+}
+.teaser-label {
+  font-size: clamp(20px, 2.2vw, 27px); font-weight: 700; line-height: 1.12;
+  letter-spacing: -0.008em; color: var(--ink-primary); margin-bottom: 4px; max-width: 30ch;
+}
+.teaser-sub {
+  font-size: 13.5px; color: var(--ink-secondary); font-style: italic; margin-bottom: 6px;
+}
+
+/* the slim teaser arc — a hairline rule with a few dots (matches the wireframe dots-row) */
+.dots-row {
+  display: flex; align-items: center; gap: 0;
+  margin: 14px 0 4px; padding: 16px 4px;
+  border-top: 1px solid var(--border-hairline);
+  border-bottom: 1px solid var(--border-hairline);
+  overflow: hidden;
+}
+.dots-row .seg { flex: 1 1 auto; height: 1px; background: var(--border-hairline); }
+/* the BMAD Method Dot — IDENTICAL to the Glass Box node visual */
+.bmad-dot {
+  flex: 0 0 auto;
+  width: 13px; height: 13px; border-radius: 50%;
+  background: var(--surface-raised);
+  border: 1.5px solid var(--accent);
+  position: relative;
+}
+.bmad-dot.fill { background: var(--accent); }                 /* a shipped / curated milestone */
+.bmad-dot.faint { border-color: #c0b49b; opacity: 0.6; }      /* the quiet 30-yr runway ticks */
+.dots-cap {
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-secondary); margin-top: 8px;
+  display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.dots-cap .right { color: var(--muted); font-style: italic; text-transform: none; letter-spacing: 0.02em; }
+
+.deeplink {
+  margin-top: 14px;
+  font-size: 13px; font-weight: 600; letter-spacing: 0.03em; color: var(--accent);
+  text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+}
+.deeplink:hover { color: var(--accent-hover); }
+.deeplink .arr { transition: transform 120ms ease; }
+.deeplink:hover .arr { transform: translateX(3px); }
+
+/* ============================================================
+   ===== PARTS B & C — THE /timeline PAGE HEADER ==============
+   Shared framing for the full view (used above the desktop arc;
+   a condensed echo sits in the phone frame).
+   ============================================================ */
+.tl-title {
+  font-weight: 700; font-size: clamp(34px, 4.2vw, 50px);
+  line-height: 1.05; letter-spacing: -0.012em; color: var(--ink-primary);
+  margin-bottom: 16px; max-width: 20ch;
+}
+.tl-lede {
+  font-size: clamp(16px, 1.4vw, 18.5px); line-height: 1.6; color: var(--ink-primary);
+  max-width: 70ch; margin-bottom: 12px;
+}
+.tl-lede .em { font-style: italic; }
+.tl-subnote { font-size: 14px; color: var(--ink-secondary); max-width: 70ch; line-height: 1.6; }
+
+/* cross-link reconciling the Glass Box (this project) vs the timeline (cross-project) */
+.crosslink {
+  font-size: 13.5px; color: var(--ink-secondary); line-height: 1.55; margin-top: 16px; max-width: 74ch;
+}
+.crosslink a {
+  color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--border-hairline); padding-bottom: 1px;
+}
+.crosslink a:hover { color: var(--accent-hover); border-bottom-color: var(--accent); }
+
+/* the S2 semantic-zoom AFFORDANCE (previewed, NOT interactive in S1) */
+.zoom-affordance {
+  display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap;
+  margin: 26px 0 6px;
+  border: 1px dashed var(--accent);
+  background: var(--surface-raised);
+  padding: 13px 16px;
+}
+.zoom-control {
+  flex: 0 0 auto; display: inline-flex; align-items: stretch;
+  border: 1px solid var(--border-hairline); border-radius: 6px; overflow: hidden;
+  opacity: 0.85;
+}
+.zoom-control span {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 12px; font-size: 12.5px; font-weight: 600; color: var(--accent);
+  background: var(--surface-base);
+}
+.zoom-control span + span { border-left: 1px solid var(--border-hairline); }
+.zoom-control .glyph {
+  width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--accent); position: relative;
+}
+.zoom-control .glyph::before, .zoom-control .glyph::after {
+  content: ""; position: absolute; background: var(--accent);
+}
+.zoom-control .glyph::before { left: 3px; top: 6px; width: 6px; height: 1.5px; }
+.zoom-control .plus .glyph::after { left: 6px; top: 3px; width: 1.5px; height: 6px; }
+.zoom-note { font-size: 12.5px; color: var(--ink-secondary); line-height: 1.5; max-width: 84ch; }
+.zoom-note b { color: var(--accent); }
+.zoom-note .s1 { color: var(--muted); font-style: italic; }
+
+/* a hairline section rule introducing the arc */
+.arc-rule {
+  display: flex; align-items: center; gap: 14px; margin: 30px 0 10px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.26em; text-transform: uppercase; color: var(--ink-secondary);
+}
+.arc-rule::before { content: ""; width: 26px; height: 1px; background: var(--accent); }
+.arc-rule::after { content: ""; flex: 1 1 auto; height: 1px; background: var(--border-hairline); }
+
+/* ============================================================
+   ===== PART B — THE HORIZONTAL CRAFT-ARC (DESKTOP) ==========
+   A real semantic <ol> of dated entries, PRESENTED as a left→right
+   arc. The spine (a hairline rule) + the era bands + the Dots are
+   CSS-decorative; with CSS/JS stripped the <ol> degrades to a
+   plain numbered list of dated artifact/milestone links. Laid out
+   statically with CSS only — no JS. It is fine that this reads as
+   a wide horizontal band the viewer takes in left-to-right.
+   ============================================================ */
+.arc-wrap {
+  border: 1px solid var(--border-hairline);
+  background: var(--surface-base);
+  /* the band can be wider than the column; the viewer reads it left→right */
+  overflow-x: auto;
+}
+.arc-scroll-cap {
+  font-size: 10.5px; letter-spacing: 0.04em; color: var(--muted); font-style: italic;
+  padding: 8px 18px 0; text-align: right;
+}
+
+/* the arc is a horizontal flex of era bands sharing one spine line */
+.arc {
+  list-style: none;
+  display: flex; align-items: stretch;
+  min-width: 1180px;                 /* keeps the runway long + confident on desktop */
+  padding: 30px 26px 26px;
+  position: relative;
+}
+/* THE SPINE — one continuous hairline rule running the full width, behind the bands */
+.arc::before {
+  content: "";
+  position: absolute;
+  left: 26px; right: 26px;
+  top: 168px;                        /* vertical centre of the dot lane */
+  height: 1px; background: var(--border-hairline);
+  z-index: 0;
+}
+
+/* an ERA BAND — a labeled region along the spine */
+.era {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  padding: 0 18px;
+}
+.era.runway { flex: 1.15 1 0; }       /* the long, intentionally-quiet 30-yr runway */
+.era.turn   { flex: 1.45 1 0; border-left: 1px dashed var(--border-hairline); }  /* the dense recent era */
+
+/* the era label (small-caps, top of the band) */
+.era-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--ink-secondary); margin-bottom: 4px; min-height: 28px;
+}
+.era.turn .era-label { color: var(--accent); }
+.era-span { font-size: 11.5px; color: var(--muted); font-style: italic; margin-bottom: 6px; letter-spacing: 0.02em; }
+
+/* the runway gets a small confident "condensed" note so it reads deliberate, not empty */
+.runway-note {
+  font-size: 12.5px; color: var(--ink-secondary); line-height: 1.5; max-width: 30ch;
+  margin-top: 4px;
+}
+.runway-note b { color: var(--ink-primary); }
+
+/* a band header for the dense era */
+.turn-note {
+  font-size: 12.5px; color: var(--ink-primary); line-height: 1.5; max-width: 40ch; margin-top: 4px;
+}
+
+/* the DOT LANE inside a band — where the dots sit on the spine */
+.lane {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex; align-items: flex-start;
+  margin-top: 18px;
+}
+
+/* ---- a sparse RUNWAY TICK: a faint milestone on the quiet era ---- */
+.tick {
+  position: relative;
+  flex: 1 1 0;
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center;
+  /* push content down so the dot lands on the shared spine (top:168px overall) */
+  padding-top: 92px;
+}
+.tick .mark {
+  width: 11px; height: 11px; border-radius: 50%;
+  background: var(--surface-base);
+  border: 1.5px solid #c0b49b;       /* faint navy-grey — quiet by design */
+  position: relative; z-index: 2;
+}
+.tick .tlabel {
+  margin-top: 12px;
+  font-size: 11px; color: var(--muted); line-height: 1.4; max-width: 16ch;
+}
+.tick .tyear { font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; color: var(--ink-secondary); margin-top: 3px; }
+
+/* ============================================================
+   THE FLAGSHIP NODE — a milestone on the dense era that expands
+   to a small cluster of its BMAD Method Dots. Each Dot is a real
+   link into an artifact reader. (S1: the cluster is shown
+   expanded statically; S2 = a zoom gesture toggles it.)
+   ============================================================ */
+.flagship {
+  position: relative;
+  flex: 1.1 1 0;
+  display: flex; flex-direction: column; align-items: center;
+  padding-top: 0;
+}
+/* the milestone Dot — a larger filled navy node on the spine (the "career milestone" the S2 zoom shows) */
+.flagship .node-dot {
+  position: absolute; top: 92px; left: 50%; transform: translateX(-50%);
+  width: 17px; height: 17px; border-radius: 50%;
+  background: var(--accent); border: 1.5px solid var(--accent);
+  z-index: 3;
+}
+/* the "you're on it" live flagship gets a static halo ring (no animation) */
+.flagship.live .node-dot { box-shadow: 0 0 0 4px rgba(30,58,95,0.16); }
+/* a hairline leader connecting the milestone dot up to its title card */
+.flagship .leader {
+  position: absolute; top: 60px; left: 50%; width: 1px; height: 32px;
+  background: var(--border-hairline); z-index: 1;
+}
+
+/* the flagship title card (above the spine) */
+.flag-card {
+  width: 100%; max-width: 280px; margin: 0 auto;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  border-radius: 8px;
+  padding: 13px 15px 14px;
+  position: relative; z-index: 2;
+  text-align: left;
+}
+.flag-card .fhead { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 7px; }
+.chip {
+  font-size: 9.5px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--accent); border: 1px solid var(--accent); border-radius: 2px;
+  padding: 3px 8px; white-space: nowrap;
+}
+.live-pill {
+  font-size: 9.5px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+  color: #fff; background: var(--accent); border-radius: 2px; padding: 3px 8px;
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+}
+.live-pill .blip { width: 5px; height: 5px; border-radius: 50%; background: #fff; }
+.flag-card h3 {
+  font-weight: 700; font-size: 19px; line-height: 1.12; letter-spacing: -0.006em;
+  color: var(--ink-primary); margin-bottom: 5px;
+}
+.flag-card .fnote { font-size: 12.5px; color: var(--ink-secondary); font-style: italic; line-height: 1.45; }
+
+/* the DOT CLUSTER (below the spine) — this project's BMAD Method Dots */
+.cluster {
+  margin-top: 116px;                 /* clears the spine + milestone dot */
+  width: 100%; max-width: 286px;
+  display: flex; flex-direction: column; gap: 7px;
+  position: relative; z-index: 2;
+}
+.cluster-lab {
+  font-size: 9.5px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted);
+  display: flex; align-items: center; gap: 8px; margin-bottom: 2px;
+}
+.cluster-lab::before { content: ""; width: 14px; height: 1px; background: #cdbfa7; }
+
+/* a single Dot row inside the cluster — the SAME Dot visual, now as a link */
+.cdot-row {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none;
+  border: 1px solid var(--border-hairline); border-radius: 6px;
+  background: var(--surface-base);
+  padding: 8px 11px;
+  transition: border-color 120ms ease;
+}
+.cdot-row:hover { border-color: #c6b89e; }
+.cdot-row .bmad-dot { width: 12px; height: 12px; background: var(--accent); }  /* filled = a real curated artifact */
+.cdot-row .cd-main { flex: 1 1 auto; min-width: 0; }
+.cdot-row .cd-title {
+  font-size: 13px; font-weight: 600; color: var(--ink-primary); letter-spacing: 0.005em; line-height: 1.25;
+}
+.cdot-row .cd-sub { font-size: 11px; color: var(--ink-secondary); line-height: 1.35; }
+.cdot-row .cd-go { flex: 0 0 auto; font-size: 11px; font-weight: 600; color: var(--accent); display: inline-flex; gap: 5px; align-items: center; }
+.cdot-row:hover .cd-go { color: var(--accent-hover); }
+/* a Dot that cross-links to the Glass Box gets a hairline navy left edge to mark the link target */
+.cdot-row.to-gb { border-left: 2px solid var(--accent); }
+
+/* the per-Dot drill annotation (review note, not page copy) */
+.cdot-anno {
+  font-size: 9.5px; font-weight: 600; letter-spacing: 0.02em; line-height: 1.35;
+  color: var(--accent); border: 1px dashed var(--accent); border-radius: 4px;
+  padding: 3px 7px; margin-left: 22px;
+}
+.cdot-anno .route { font-weight: 400; font-style: italic; color: var(--ink-secondary); }
+
+/* the arc terminus — a small "now / live" cap on the right edge */
+.arc-now {
+  position: relative; z-index: 1;
+  flex: 0 0 auto; align-self: stretch;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  padding: 0 6px 0 14px;
+}
+.arc-now .now-dot {
+  position: absolute; top: 161px; left: 50%; transform: translateX(-50%);
+  width: 9px; height: 9px; border-radius: 50%; background: var(--accent);
+}
+.arc-now .now-dot::after {
+  content: ""; position: absolute; left: 3.5px; top: 9px; width: 1px; height: 26px; background: var(--border-hairline);
+}
+.arc-now .now-lab {
+  margin-top: 196px; font-size: 10px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent);
+}
+
+/* ============================================================
+   THE ARC LEGEND + the "Seasoned, Not Stuck" caption beneath it.
+   ============================================================ */
+.arc-legend {
+  display: flex; align-items: center; gap: 22px 28px; flex-wrap: wrap;
+  margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border-hairline);
+  font-size: 12px; color: var(--ink-secondary);
+}
+.arc-legend .li { display: inline-flex; align-items: center; gap: 8px; }
+.arc-legend .swatch { width: 12px; height: 12px; border-radius: 50%; flex: 0 0 auto; }
+.arc-legend .sw-faint { background: var(--surface-base); border: 1.5px solid #c0b49b; }
+.arc-legend .sw-fill { background: var(--accent); border: 1.5px solid var(--accent); }
+.arc-legend .sw-cluster { background: var(--accent); border: 1.5px solid var(--accent); width: 9px; height: 9px; }
+.arc-caption {
+  margin-top: 16px; font-size: clamp(15px, 1.4vw, 17px); color: var(--ink-primary);
+  font-style: italic; line-height: 1.5; max-width: 78ch;
+}
+.arc-caption b { font-style: normal; font-weight: 700; }
+
+/* ============================================================
+   PAGE FOOTER — static fallback nav (Mirror routes), echoing the
+   Glass Box / home arc footer so /timeline is reachable JS-off.
+   ============================================================ */
+.fallback {
+  margin: 44px 0 0;
+  border-top: 2px solid var(--accent);
+  padding: 18px 2px 6px;
+}
+.fallback .flab {
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 4px;
+}
+.fallback .fnote { font-size: 11.5px; color: var(--ink-secondary); margin-bottom: 11px; font-style: italic; }
+.fallback ul { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.fallback li a {
+  font-size: 12.5px; color: var(--accent); text-decoration: none;
+  border-bottom: 1px solid var(--border-hairline); padding-bottom: 2px;
+}
+.fallback li a:hover { color: var(--accent-hover); border-bottom-color: var(--accent); }
+
+/* desktop persistent Guide pill (bottom-right, minimized) — shown for parity; the panel itself is NOT on this screen */
+.guide-pill {
+  position: absolute; right: 26px; bottom: 22px;
+  background: var(--accent); color: #fff; border-radius: 24px;
+  padding: 10px 17px; font-size: 12.5px; font-weight: 600; letter-spacing: 0.03em;
+  display: inline-flex; align-items: center; gap: 9px;
+  /* NOTE: the Guide panel is the ONLY elevated surface site-wide; minimized to a pill here it is flat. */
+}
+.guide-pill .glyph { width: 15px; height: 15px; border-radius: 50%; border: 2px solid #fff; }
+.device.with-pill { position: relative; }
+
+/* ============================================================
+   ACCESSIBILITY / FALLBACK ANNOTATION PANEL (review-only) — the
+   notes that feed EXPERIENCE.md. Sits between the frames.
+   ============================================================ */
+.a11y {
+  max-width: 1320px; margin: 30px auto 0;
+  background: var(--surface-base);
+  border: 1px dashed var(--accent);
+  padding: 18px 24px;
+}
+.a11y h2 {
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 12px;
+}
+.a11y ul { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 30px; }
+.a11y li { font-size: 12.5px; color: var(--ink-primary); line-height: 1.5; display: flex; gap: 9px; align-items: baseline; }
+.a11y li::before { content: ""; flex: 0 0 auto; width: 11px; height: 1px; background: var(--accent); position: relative; top: 0.6em; }
+.a11y li b { color: var(--accent); }
+
+.foot-note {
+  max-width: 1320px; margin: 30px auto 0;
+  font-size: 11.5px; color: #6f6759; text-align: center; letter-spacing: 0.02em; line-height: 1.65;
+}
+
+/* ============================================================
+   ===== PART C — THE VERTICAL REFLOW (MOBILE) ================
+   The SAME content as a vertical timeline: era labels become
+   section headers, the quiet 30-yr runway sits up top (sparse),
+   the agentic-turn era below with the two flagship nodes and their
+   Dots stacked. Same ordered list, just reflowed. The slim spine
+   collapses to a left margin of inline node markers (matching the
+   Glass Box mobile pattern).
+   ============================================================ */
+.phone {
+  max-width: 412px; margin: 0 auto;
+  background: var(--surface-base);
+  border: 10px solid #2a241c;
+  border-radius: 34px;
+  overflow: hidden;
+}
+.phone .status { background: #2a241c; height: 22px; display: flex; align-items: center; justify-content: center; }
+.phone .status::after { content: ""; width: 80px; height: 7px; background: #4a4236; border-radius: 5px; }
+
+.m-page {
+  background:
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px) 0 0 / 100% 80px,
+    var(--surface-base);
+  padding: 18px 16px 22px;
+}
+.m-top {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding-bottom: 11px; margin-bottom: 18px; border-bottom: 1px solid var(--border-hairline);
+}
+.m-top .wm { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+.m-top .home { font-size: 11.5px; font-weight: 600; color: var(--accent); text-decoration: none; }
+
+.m-kicker {
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.26em; text-transform: uppercase;
+  color: var(--ink-secondary); margin-bottom: 11px;
+  display: inline-flex; align-items: center; gap: 10px;
+}
+.m-kicker::before { content: ""; width: 20px; height: 1px; background: var(--accent); }
+.m-title { font-weight: 700; font-size: 26px; line-height: 1.08; letter-spacing: -0.01em; margin-bottom: 11px; }
+.m-lede { font-size: 14.5px; color: var(--ink-primary); line-height: 1.55; margin-bottom: 12px; }
+.m-lede .em { font-style: italic; }
+.m-crosslink { font-size: 12px; color: var(--ink-secondary); line-height: 1.5; margin: 12px 0 0; }
+.m-crosslink a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--border-hairline); }
+
+/* mobile S2 zoom affordance (previewed) */
+.m-zoom {
+  display: flex; gap: 10px; align-items: flex-start;
+  border: 1px dashed var(--accent); background: var(--surface-raised);
+  padding: 11px 13px; margin: 16px 0 0;
+}
+.m-zoom .zc {
+  flex: 0 0 auto; display: inline-flex; border: 1px solid var(--border-hairline); border-radius: 5px; overflow: hidden; opacity: 0.85;
+}
+.m-zoom .zc span { padding: 6px 9px; font-size: 11px; font-weight: 600; color: var(--accent); background: var(--surface-base); display: inline-flex; align-items: center; gap: 5px; }
+.m-zoom .zc span + span { border-left: 1px solid var(--border-hairline); }
+.m-zoom .zc .g { width: 11px; height: 11px; border-radius: 50%; border: 1.5px solid var(--accent); }
+.m-zoom p { font-size: 11px; color: var(--ink-secondary); line-height: 1.45; }
+.m-zoom p b { color: var(--accent); }
+.m-zoom p .s1 { color: var(--muted); font-style: italic; }
+
+/* a mobile era section header */
+.m-era {
+  margin: 24px 0 2px; padding-top: 12px; border-top: 1px solid var(--border-hairline);
+}
+.m-era .lab {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-secondary);
+  display: flex; align-items: center; gap: 10px;
+}
+.m-era.turn .lab { color: var(--accent); }
+.m-era .lab::before { content: ""; width: 18px; height: 1px; background: var(--accent); }
+.m-era .span { font-size: 11px; color: var(--muted); font-style: italic; margin-top: 4px; }
+.m-era .note { font-size: 12.5px; color: var(--ink-secondary); line-height: 1.5; margin-top: 6px; }
+.m-era .note b { color: var(--ink-primary); }
+
+/* mobile vertical list: slim left margin of markers; rows stack (matches Glass Box mobile) */
+.m-list { list-style: none; position: relative; padding-left: 22px; margin-top: 12px; }
+.m-list::before {
+  content: ""; position: absolute; left: 5px; top: 8px; bottom: 12px; width: 1px; background: var(--border-hairline);
+}
+.m-row { position: relative; padding: 9px 0; }
+.m-row::before {
+  content: ""; position: absolute; left: -22px; top: 15px;
+  width: 11px; height: 11px; border-radius: 50%;
+  background: var(--surface-raised); border: 1.5px solid var(--accent);
+}
+/* a faint runway tick marker */
+.m-row.runway-tick::before { background: var(--surface-base); border-color: #c0b49b; opacity: 0.7; }
+/* a flagship milestone marker (larger, filled) */
+.m-row.flag::before { width: 14px; height: 14px; left: -23.5px; top: 14px; background: var(--accent); }
+.m-row.flag.live::before { box-shadow: 0 0 0 3px rgba(30,58,95,0.16); }
+
+/* a runway tick row — quiet, single line */
+.m-tick { display: flex; align-items: baseline; gap: 10px; }
+.m-tick .ty { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; color: var(--ink-secondary); flex: 0 0 auto; }
+.m-tick .tl { font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+
+/* a mobile flagship card */
+.m-flag {
+  background: var(--surface-raised); border: 1px solid var(--border-hairline);
+  border-radius: 8px; padding: 13px 14px;
+}
+.m-flag .fhead { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 7px; }
+.m-flag .chip { font-size: 9px; padding: 3px 7px; letter-spacing: 0.18em; }
+.m-flag .live-pill { font-size: 9px; padding: 3px 7px; }
+.m-flag h3 { font-weight: 700; font-size: 18px; line-height: 1.12; letter-spacing: -0.006em; margin-bottom: 5px; }
+.m-flag .fnote { font-size: 12px; color: var(--ink-secondary); font-style: italic; line-height: 1.45; margin-bottom: 11px; }
+
+/* the mobile Dot cluster — stacked rows under the flagship card */
+.m-cluster { display: flex; flex-direction: column; gap: 6px; margin-top: 2px; }
+.m-cluster .clab {
+  font-size: 9px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted);
+  display: flex; align-items: center; gap: 7px; margin-bottom: 1px;
+}
+.m-cluster .clab::before { content: ""; width: 12px; height: 1px; background: #cdbfa7; }
+.m-cdot {
+  display: flex; align-items: center; gap: 9px; text-decoration: none;
+  border: 1px solid var(--border-hairline); border-radius: 6px; background: var(--surface-base); padding: 8px 10px;
+}
+.m-cdot.to-gb { border-left: 2px solid var(--accent); }
+.m-cdot .bmad-dot { width: 11px; height: 11px; background: var(--accent); }
+.m-cdot .cd-main { flex: 1 1 auto; min-width: 0; }
+.m-cdot .cd-title { font-size: 12.5px; font-weight: 600; color: var(--ink-primary); line-height: 1.2; }
+.m-cdot .cd-sub { font-size: 10.5px; color: var(--ink-secondary); line-height: 1.3; }
+.m-cdot .cd-go { flex: 0 0 auto; font-size: 10.5px; font-weight: 600; color: var(--accent); }
+
+.m-caption {
+  margin-top: 18px; font-size: 14px; color: var(--ink-primary); font-style: italic; line-height: 1.5;
+  border-left: 2px solid var(--accent); padding-left: 12px;
+}
+.m-caption b { font-style: normal; font-weight: 700; }
+
+.m-fallback { border-top: 2px solid var(--accent); padding: 16px 0 4px; margin-top: 26px; }
+.m-fallback .flab { font-size: 10px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+.m-fallback .fnote { font-size: 11px; color: var(--ink-secondary); font-style: italic; margin-bottom: 9px; }
+.m-fallback ul { list-style: none; display: flex; flex-wrap: wrap; gap: 7px 15px; }
+.m-fallback li a { font-size: 12px; color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--border-hairline); padding-bottom: 1px; }
+
+/* persistent Guide entry (mobile) — minimize-to-pill stand-in, consistent with the home arc */
+.m-guide {
+  background: var(--accent); color: #fff; text-align: center;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.04em;
+  padding: 11px; border-top: 1px solid var(--accent-hover);
+}
+
+@media (max-width: 700px) {
+  .a11y ul { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== REVIEW INTRO (frame for the reviewer; not page copy) ===================== -->
+<div class="intro">
+  <div class="tag">Key-screen mock · Master Timeline (/timeline) · full fidelity · locked identity</div>
+  <h1>The Master Timeline — the organizing spine, as a craft-arc.</h1>
+  <p>The site's <span class="em">organizing spine</span> and a key showpiece ("one click in, not the front door"), rendered 1:1 on the locked identity (all <span class="em">Source Serif 4</span>, warm cream + Prussian navy, hairline rules, faint drafting grid, flat). It is ONE semantic ordered list of dated entries, reflowed responsively: a <span class="em">horizontal</span> left&rarr;right craft-arc on desktop, <span class="em">vertical</span> on mobile. The arc embodies <span class="em">"Seasoned, Not Stuck"</span> — a long, confident, intentionally-quiet ~30-year runway building to the dense, recent <span class="em">agentic-engineering turn</span>, where the two hand-curated S1 flagships (the portfolio itself + loandemo) expand into clusters of their <span class="em">BMAD&nbsp;Method Dots</span> — the same Dot visual as the Glass Box. Three parts below: <span class="em">A.</span> the home teaser strip, <span class="em">B.</span> the desktop arc, <span class="em">C.</span> the mobile reflow. Inline CSS · no JavaScript · no images.</p>
+</div>
+
+
+<!-- ============================================================
+     PART A — HOME TEASER STRIP (Scene 3 on /)
+     ============================================================ -->
+<div class="frame-cap">Part A · Home teaser strip <span class="sub">Scene 3 on / — a calm teaser that deep-links here; not the full thing</span></div>
+
+<div class="device">
+  <div class="bar">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    <span class="url">joshuabrandt.abacusai.cloud/ &nbsp;·&nbsp; Scene 3 — Master Timeline (teaser)</span>
+  </div>
+
+  <div class="page" style="padding-top:clamp(26px,3vw,40px); padding-bottom:clamp(26px,3vw,40px);">
+    <section class="teaser-scene" aria-label="Master Timeline teaser">
+      <span class="scene-no">Scene 3</span>
+      <div class="kicker">Master Timeline · teaser</div>
+      <h2 class="teaser-label">A career, in BMAD&nbsp;Method Dots.</h2>
+      <p class="teaser-sub">Thirty years of shipping, condensed &mdash; then the recent, detailed turn.</p>
+
+      <!-- the slim teaser arc: faint runway ticks on the left, two filled flagships on the right -->
+      <div class="dots-row" aria-hidden="true">
+        <span class="bmad-dot faint"></span><span class="seg"></span>
+        <span class="bmad-dot faint"></span><span class="seg"></span>
+        <span class="bmad-dot faint"></span><span class="seg"></span>
+        <span class="bmad-dot faint"></span><span class="seg"></span>
+        <span class="bmad-dot fill"></span><span class="seg"></span>
+        <span class="bmad-dot fill"></span>
+      </div>
+      <div class="dots-cap">
+        <span>Seasoned &middot; the long craft</span>
+        <span class="right">&hellip; the agentic-engineering turn</span>
+      </div>
+
+      <a class="deeplink" href="/timeline">See the full timeline <span class="arr" aria-hidden="true">&rarr;</span></a>
+
+      <!-- review annotation: the teaser's JS-off behaviour -->
+      <p class="m-crosslink" style="margin-top:14px; font-style:italic; color:#8a8273;">Annotation — degrades to an ordered list with JS off (the dots/arc are decorative; the label + "See the full timeline" link carry it).</p>
+    </section>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     PART B — THE /timeline DESKTOP (HORIZONTAL CRAFT-ARC)
+     ============================================================ -->
+<div class="frame-cap">Part B · /timeline desktop <span class="sub">the main view — a horizontal, left&rarr;right craft-arc: quiet 30-yr runway &rarr; the agentic turn</span></div>
+
+<div class="device with-pill">
+  <div class="bar">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    <span class="url">joshuabrandt.abacusai.cloud/timeline &nbsp;·&nbsp; the craft, end to end</span>
+  </div>
+
+  <div class="page">
+
+    <!-- quiet page top -->
+    <div class="page-top">
+      <span class="wm">Joshua R. Brandt, MSE</span>
+      <a class="home" href="/">&larr; Back to the home arc</a>
+    </div>
+
+    <!-- HEADER / framing — calm, confident, in voice -->
+    <header>
+      <div class="kicker">Master Timeline · the craft arc</div>
+      <h1 class="tl-title">Seasoned, not stuck.</h1>
+      <p class="tl-lede">Thirty years of shipping software, then a recent, deliberate turn into agentic engineering. Read it left to right: a long, quiet runway of craft &mdash; then the turn, in detail. <span class="em">The work is the proof.</span></p>
+      <p class="tl-subnote">The left is sparse on purpose. Thirty years, condensed to its through-line; the recent era is where the receipts are.</p>
+
+      <!-- cross-link reconciling Glass Box (this project) vs the timeline (cross-project) -->
+      <p class="crosslink">This is the <em>cross-project</em> arc. The build history of <em>this</em> site lives in the <a href="/glass-box">Glass Box &rarr;</a> &mdash; same Dots, one project, in depth.</p>
+
+      <!-- the S2 semantic-zoom AFFORDANCE — previewed, NOT interactive in S1 -->
+      <div class="zoom-affordance">
+        <div class="zoom-control" aria-hidden="true">
+          <span class="plus"><span class="glyph"></span>Zoom in</span>
+          <span class="minus"><span class="glyph"></span>Zoom out</span>
+        </div>
+        <p class="zoom-note"><b>S2: semantic zoom</b> &mdash; out to career milestones, in to a project's Dots; a single shareable gesture. <span class="s1">(Not interactive in S1 &mdash; previewed here. The S1 arc shows both levels at once: milestones on the spine, Dots clustered beneath the flagships.)</span></p>
+      </div>
+    </header>
+
+    <div class="arc-rule">The arc · 1996 &rarr; now</div>
+
+    <!-- ===================== THE HORIZONTAL CRAFT-ARC ===================== -->
+    <!-- Real semantic <ol> of dated entries, presented as a left→right arc.
+         The spine, era bands, and Dots are CSS-decorative; with CSS/JS
+         stripped this is a plain numbered list of dated links. -->
+    <div class="arc-wrap">
+      <div class="arc-scroll-cap" aria-hidden="true">a wide horizontal band &mdash; read left&rarr;right &mdash;&rsaquo;</div>
+      <ol class="arc">
+
+        <!-- ===== ERA 1 — THE QUIET ~30-YEAR RUNWAY (sparse by design) ===== -->
+        <li class="era runway" aria-label="Era: shipping software, the long craft (about 30 years)">
+          <div class="era-label">Shipping software · the long craft</div>
+          <div class="era-span">c. 1996 &ndash; 2023 &middot; ~30 years</div>
+          <p class="runway-note"><b>30 years, condensed.</b> Sparse on purpose &mdash; the through-line, not a r&eacute;sum&eacute;. Decades of shipping, distilled to a few marks.</p>
+
+          <!-- the dot lane: a few faint milestone ticks on the shared spine -->
+          <ol class="lane" style="list-style:none;">
+            <li class="tick">
+              <span class="mark" aria-hidden="true"></span>
+              <span class="tlabel">First production systems &mdash; the long apprenticeship</span>
+              <span class="tyear">c. 1996</span>
+            </li>
+            <li class="tick">
+              <span class="mark" aria-hidden="true"></span>
+              <span class="tlabel">Patterns that survive hype cycles</span>
+              <span class="tyear">2000s</span>
+            </li>
+            <li class="tick">
+              <span class="mark" aria-hidden="true"></span>
+              <span class="tlabel">Shipping at scale &mdash; teams &amp; systems</span>
+              <span class="tyear">2010s</span>
+            </li>
+            <li class="tick">
+              <span class="mark" aria-hidden="true"></span>
+              <span class="tlabel">First agentic experiments &mdash; vibe-coding</span>
+              <span class="tyear">~2023</span>
+            </li>
+          </ol>
+        </li>
+
+        <!-- ===== ERA 2 — THE AGENTIC-ENGINEERING TURN (dense, vivid, recent) ===== -->
+        <li class="era turn" aria-label="Era: the agentic-engineering turn (recent)">
+          <div class="era-label">The agentic-engineering turn</div>
+          <div class="era-span">2024 &rarr; now &middot; recent &amp; detailed</div>
+          <p class="turn-note">From vibe-coding to disciplined, agent-driven engineering. The two flagships &mdash; each expands to its BMAD&nbsp;Method Dots.</p>
+
+          <div class="lane">
+
+            <!-- FLAGSHIP A — loandemo (live-on-stage proof) -->
+            <div class="flagship" role="group" aria-label="Flagship: loandemo">
+              <div class="flag-card">
+                <div class="fhead">
+                  <span class="chip">Flagship</span>
+                  <span class="chip" style="color:var(--ink-secondary); border-color:var(--border-hairline);">2025</span>
+                </div>
+                <h3>loandemo</h3>
+                <p class="fnote">Live-on-stage proof &mdash; built and shown in front of a room.</p>
+              </div>
+              <span class="leader" aria-hidden="true"></span>
+              <span class="node-dot" aria-hidden="true"></span>
+
+              <!-- the BMAD Method Dot cluster — each Dot a real link into an artifact reader -->
+              <ol class="cluster" style="list-style:none;">
+                <li class="cluster-lab">Its BMAD&nbsp;Method Dots</li>
+                <li><a class="cdot-row" href="/work/loandemo#brief">
+                  <span class="bmad-dot" aria-hidden="true"></span>
+                  <span class="cd-main"><span class="cd-title">Brief</span><span class="cd-sub">the bet, stated</span></span>
+                  <span class="cd-go">Read <span aria-hidden="true">&rarr;</span></span>
+                </a><span class="cdot-anno">drills to the artifact reader <span class="route">/work/loandemo#brief</span></span></li>
+                <li><a class="cdot-row" href="/work/loandemo#prd">
+                  <span class="bmad-dot" aria-hidden="true"></span>
+                  <span class="cd-main"><span class="cd-title">PRD</span><span class="cd-sub">the spec it followed</span></span>
+                  <span class="cd-go">Read <span aria-hidden="true">&rarr;</span></span>
+                </a><span class="cdot-anno">drills to <span class="route">/work/loandemo#prd</span></span></li>
+                <li><a class="cdot-row" href="/work/loandemo#build">
+                  <span class="bmad-dot" aria-hidden="true"></span>
+                  <span class="cd-main"><span class="cd-title">Build</span><span class="cd-sub">the case study + repo</span></span>
+                  <span class="cd-go">Read <span aria-hidden="true">&rarr;</span></span>
+                </a><span class="cdot-anno">drills to <span class="route">/work/loandemo#build</span></span></li>
+                <li><a class="cdot-row" href="/work/loandemo#retro">
+                  <span class="bmad-dot" aria-hidden="true"></span>
+                  <span class="cd-main"><span class="cd-title">Retro</span><span class="cd-sub">what the stage taught</span></span>
+                  <span class="cd-go">Read <span aria-hidden="true">&rarr;</span></span>
+                </a><span class="cdot-anno">drills to <span class="route">/work/loandemo#retro</span></span></li>
+              </ol>
+            </div>
+
+            <!-- FLAGSHIP B — the portfolio itself (built in the open; live) -->
+            <div class="flagship live" role="group" aria-label="Flagship: this portfolio, live">
+              <div class="flag-card">
+                <div class="fhead">
+                  <span class="chip">Flagship</span>
+                  <span class="live-pill"><span class="blip" aria-hidden="true"></span>Live</span>
+                </div>
+                <h3>This portfolio</h3>
+                <p class="fnote">Built in the open &mdash; you're on it. Exhibit&nbsp;A.</p>
+              </div>
+              <span class="leader" aria-hidden="true"></span>
+              <span class="node-dot" aria-hidden="true"></span>
+
+              <!-- the portfolio's Dots — these cross-link INTO the Glass Box (this project's build history) -->
+              <ol class="cluster" style="list-style:none;">
+                <li class="cluster-lab">Its Dots &rarr; the Glass Box</li>
+                <li><a class="cdot-row to-gb" href="/glass-box/product-brief">
+                  <span class="bmad-dot" aria-hidden="true"></span>
+                  <span class="cd-main"><span class="cd-title">Brief</span><span class="cd-sub">where it started</span></span>
+                  <span class="cd-go">Read <span aria-hidden="true">&rarr;</span></span>
+                </a><span class="cdot-anno">cross-links into the Glass Box <span class="route">/glass-box/product-brief</span></span></li>
+                <li><a class="cdot-row to-gb" href="/glass-box/prd">
+                  <span class="bmad-dot" aria-hidden="true"></span>
+                  <span class="cd-main"><span class="cd-title">PRD</span><span class="cd-sub">the spec the build follows</span></span>
+                  <span class="cd-go">Read <span aria-hidden="true">&rarr;</span></span>
+                </a><span class="cdot-anno">cross-links into the Glass Box <span class="route">/glass-box/prd</span></span></li>
+                <li><a class="cdot-row to-gb" href="/glass-box/ux-design">
+                  <span class="bmad-dot" aria-hidden="true"></span>
+                  <span class="cd-main"><span class="cd-title">Build</span><span class="cd-sub">UX &amp; design &mdash; live now</span></span>
+                  <span class="cd-go">Read <span aria-hidden="true">&rarr;</span></span>
+                </a><span class="cdot-anno">cross-links into the Glass Box <span class="route">/glass-box/ux-design</span></span></li>
+                <li><a class="cdot-row to-gb" href="/glass-box">
+                  <span class="bmad-dot" aria-hidden="true"></span>
+                  <span class="cd-main"><span class="cd-title">Retro</span><span class="cd-sub">as each epic closes</span></span>
+                  <span class="cd-go">Read <span aria-hidden="true">&rarr;</span></span>
+                </a><span class="cdot-anno">cross-links into the Glass Box <span class="route">/glass-box</span></span></li>
+              </ol>
+            </div>
+
+          </div><!-- /lane -->
+        </li>
+
+        <!-- the arc terminus — "now / live" cap on the right edge -->
+        <li class="arc-now" aria-label="Now">
+          <span class="now-dot" aria-hidden="true"></span>
+          <span class="now-lab">Now</span>
+        </li>
+
+      </ol>
+
+      <!-- legend + the positioning caption -->
+      <div style="padding:0 26px 26px;">
+        <div class="arc-legend">
+          <span class="li"><span class="swatch sw-faint" aria-hidden="true"></span> Faint tick &mdash; a quiet-runway milestone</span>
+          <span class="li"><span class="swatch sw-fill" aria-hidden="true"></span> Filled node &mdash; a flagship milestone</span>
+          <span class="li"><span class="swatch sw-cluster" aria-hidden="true"></span> Small Dot &mdash; a BMAD&nbsp;Method artifact (a link)</span>
+        </div>
+        <p class="arc-caption">The left is quiet by design and the right is dense by earning it: <b>seasoned</b> in the long runway, <b>not stuck</b> in the agentic turn. Same person, both at once.</p>
+      </div>
+    </div><!-- /arc-wrap -->
+
+    <!-- static fallback footer -->
+    <footer class="fallback">
+      <div class="flab">Static fallback navigation — Mirror routes</div>
+      <div class="fnote">The arc is a real ordered list of dated entries; every Dot is a real link. Works with JavaScript off and is screen-reader navigable.</div>
+      <ul>
+        <li><a href="/">/ (home)</a></li>
+        <li><a href="/timeline">/timeline</a></li>
+        <li><a href="/speaking">/speaking</a></li>
+        <li><a href="/work/loandemo">/work/loandemo</a></li>
+        <li><a href="/glass-box">/glass-box</a></li>
+        <li><a href="/invite">/invite</a></li>
+        <li><a href="/browse">/browse</a></li>
+      </ul>
+    </footer>
+
+  </div><!-- /page -->
+
+  <!-- persistent Guide pill (minimized). The panel is NOT on this screen. -->
+  <div class="guide-pill"><span class="glyph" aria-hidden="true"></span>Ask my Guide</div>
+</div><!-- /device -->
+
+
+<!-- ===================== ACCESSIBILITY / FALLBACK ANNOTATIONS (review-only; feeds EXPERIENCE.md) ===================== -->
+<div class="a11y">
+  <h2>Accessibility / fallback notes — feeds EXPERIENCE.md</h2>
+  <ul>
+    <li>The arc is a presentation of a real <b>&lt;ol&gt;</b> of dated entries (eras, ticks, flagships, Dots) &mdash; it works with <b>JS off</b> and degrades to a plain ordered list; the horizontal layout is CSS-only (no JavaScript).</li>
+    <li>The <b>spine, era bands, and connecting lines are decorative</b> (drawn with pseudo-elements / <code>aria-hidden</code>): no information lives only in the graphics &mdash; dates, era labels, and link text carry the meaning in the DOM.</li>
+    <li><b>Every Dot is a real link</b> &mdash; loandemo's Dots drill into <code>/work/loandemo#…</code> readers; the portfolio's Dots <b>cross-link into the Glass Box</b> (<code>/glass-box/…</code>). Keyboard-focusable, screen-reader navigable, no JS required to follow.</li>
+    <li><b>Era bands are labeled regions</b> (each <code>&lt;li&gt;</code> carries an <code>aria-label</code>) so the runway vs the agentic turn read as distinct sections to assistive tech.</li>
+    <li>Orientation is <b>presentation only</b>: the SAME ordered list reflows from a horizontal arc (desktop) to a vertical list (mobile). Reading order (oldest &rarr; newest) is preserved in the DOM either way.</li>
+    <li>The <b>live</b> flagship's halo ring is static (no animation) &mdash; reduced-motion safe; "Live" is also stated as text in the pill.</li>
+    <li>The <b>S2 semantic-zoom control is a non-interactive preview</b> in S1 (labeled as such); the S1 arc presents both zoom levels at once, so no information is gated behind a gesture.</li>
+    <li>Color is never the sole signal: runway vs turn vs flagship is also conveyed by era labels, dates, faint-vs-filled treatment, and link text. Navy on cream meets AA (10.15:1); secondary ink meets AA (5.6:1). The cross-link to <code>/glass-box</code> and the static fallback footer keep the page reachable without the arc.</li>
+  </ul>
+</div>
+
+
+<!-- ============================================================
+     PART C — THE /timeline MOBILE (VERTICAL REFLOW)
+     ============================================================ -->
+<div class="frame-cap">Part C · /timeline mobile <span class="sub">the SAME ordered list, reflowed vertical — era headers, runway up top, agentic turn below</span></div>
+
+<div class="phone">
+  <div class="status"></div>
+
+  <div class="m-page">
+
+    <div class="m-top">
+      <span class="wm">J. R. Brandt, MSE</span>
+      <a class="home" href="/">&larr; Home</a>
+    </div>
+
+    <div class="m-kicker">Master Timeline</div>
+    <h1 class="m-title">Seasoned, not stuck.</h1>
+    <p class="m-lede">Thirty years of shipping software, then a recent turn into agentic engineering. Top to bottom: a quiet runway of craft &mdash; then the turn, in detail. <span class="em">The work is the proof.</span></p>
+
+    <p class="m-crosslink">The <em>cross-project</em> arc. <em>This</em> site's build history lives in the <a href="/glass-box">Glass Box &rarr;</a></p>
+
+    <!-- mobile S2 zoom affordance (previewed) -->
+    <div class="m-zoom">
+      <div class="zc" aria-hidden="true"><span><span class="g"></span>In</span><span><span class="g"></span>Out</span></div>
+      <p><b>S2: semantic zoom</b> &mdash; out to milestones, in to a project's Dots; one shareable gesture. <span class="s1">(Not interactive in S1.)</span></p>
+    </div>
+
+    <!-- ===== ERA 1 — THE QUIET ~30-YEAR RUNWAY ===== -->
+    <div class="m-era" aria-hidden="true">
+      <div class="lab">Shipping software · the long craft</div>
+      <div class="span">c. 1996 &ndash; 2023 &middot; ~30 years</div>
+      <p class="note"><b>30 years, condensed.</b> Sparse on purpose &mdash; the through-line, not a r&eacute;sum&eacute;.</p>
+    </div>
+
+    <ol class="m-list">
+      <li class="m-row runway-tick">
+        <div class="m-tick"><span class="ty">c. 1996</span><span class="tl">First production systems &mdash; the long apprenticeship</span></div>
+      </li>
+      <li class="m-row runway-tick">
+        <div class="m-tick"><span class="ty">2000s</span><span class="tl">Patterns that survive hype cycles</span></div>
+      </li>
+      <li class="m-row runway-tick">
+        <div class="m-tick"><span class="ty">2010s</span><span class="tl">Shipping at scale &mdash; teams &amp; systems</span></div>
+      </li>
+      <li class="m-row runway-tick">
+        <div class="m-tick"><span class="ty">~2023</span><span class="tl">First agentic experiments &mdash; vibe-coding</span></div>
+      </li>
+    </ol>
+
+    <!-- ===== ERA 2 — THE AGENTIC-ENGINEERING TURN ===== -->
+    <div class="m-era turn">
+      <div class="lab">The agentic-engineering turn</div>
+      <div class="span">2024 &rarr; now &middot; recent &amp; detailed</div>
+      <p class="note">The two flagships &mdash; each expands to its BMAD&nbsp;Method Dots.</p>
+    </div>
+
+    <ol class="m-list">
+
+      <!-- FLAGSHIP A — loandemo -->
+      <li class="m-row flag">
+        <article class="m-flag">
+          <div class="fhead"><span class="chip">Flagship</span><span class="chip" style="color:var(--ink-secondary);border-color:var(--border-hairline);">2025</span></div>
+          <h3>loandemo</h3>
+          <p class="fnote">Live-on-stage proof &mdash; built and shown in front of a room.</p>
+          <ol class="m-cluster" style="list-style:none;">
+            <li class="clab">Its BMAD&nbsp;Method Dots</li>
+            <li><a class="m-cdot" href="/work/loandemo#brief"><span class="bmad-dot" aria-hidden="true"></span><span class="cd-main"><span class="cd-title">Brief</span><span class="cd-sub">the bet, stated</span></span><span class="cd-go">&rarr;</span></a></li>
+            <li><a class="m-cdot" href="/work/loandemo#prd"><span class="bmad-dot" aria-hidden="true"></span><span class="cd-main"><span class="cd-title">PRD</span><span class="cd-sub">the spec it followed</span></span><span class="cd-go">&rarr;</span></a></li>
+            <li><a class="m-cdot" href="/work/loandemo#build"><span class="bmad-dot" aria-hidden="true"></span><span class="cd-main"><span class="cd-title">Build</span><span class="cd-sub">case study + repo</span></span><span class="cd-go">&rarr;</span></a></li>
+            <li><a class="m-cdot" href="/work/loandemo#retro"><span class="bmad-dot" aria-hidden="true"></span><span class="cd-main"><span class="cd-title">Retro</span><span class="cd-sub">what the stage taught</span></span><span class="cd-go">&rarr;</span></a></li>
+          </ol>
+        </article>
+      </li>
+
+      <!-- FLAGSHIP B — this portfolio (live) -->
+      <li class="m-row flag live">
+        <article class="m-flag">
+          <div class="fhead"><span class="chip">Flagship</span><span class="live-pill"><span class="blip" aria-hidden="true"></span>Live</span></div>
+          <h3>This portfolio</h3>
+          <p class="fnote">Built in the open &mdash; you're on it. Exhibit&nbsp;A.</p>
+          <ol class="m-cluster" style="list-style:none;">
+            <li class="clab">Its Dots &rarr; the Glass Box</li>
+            <li><a class="m-cdot to-gb" href="/glass-box/product-brief"><span class="bmad-dot" aria-hidden="true"></span><span class="cd-main"><span class="cd-title">Brief</span><span class="cd-sub">where it started</span></span><span class="cd-go">&rarr;</span></a></li>
+            <li><a class="m-cdot to-gb" href="/glass-box/prd"><span class="bmad-dot" aria-hidden="true"></span><span class="cd-main"><span class="cd-title">PRD</span><span class="cd-sub">the spec the build follows</span></span><span class="cd-go">&rarr;</span></a></li>
+            <li><a class="m-cdot to-gb" href="/glass-box/ux-design"><span class="bmad-dot" aria-hidden="true"></span><span class="cd-main"><span class="cd-title">Build</span><span class="cd-sub">UX &amp; design &mdash; live now</span></span><span class="cd-go">&rarr;</span></a></li>
+            <li><a class="m-cdot to-gb" href="/glass-box"><span class="bmad-dot" aria-hidden="true"></span><span class="cd-main"><span class="cd-title">Retro</span><span class="cd-sub">as each epic closes</span></span><span class="cd-go">&rarr;</span></a></li>
+          </ol>
+        </article>
+      </li>
+
+    </ol>
+
+    <p class="m-caption">The top is quiet by design; the bottom is dense by earning it. <b>Seasoned</b>, <b>not stuck</b> &mdash; same person, both at once.</p>
+
+    <footer class="m-fallback">
+      <div class="flab">Static fallback — Mirror routes</div>
+      <div class="fnote">Same ordered list, reflowed; every Dot is a real link; works with JS off.</div>
+      <ul>
+        <li><a href="/">/</a></li>
+        <li><a href="/timeline">/timeline</a></li>
+        <li><a href="/speaking">/speaking</a></li>
+        <li><a href="/work/loandemo">/work/loandemo</a></li>
+        <li><a href="/glass-box">/glass-box</a></li>
+        <li><a href="/invite">/invite</a></li>
+      </ul>
+    </footer>
+
+  </div><!-- /m-page -->
+
+  <!-- persistent Guide entry (mobile) -->
+  <div class="m-guide">Ask my Guide</div>
+</div><!-- /phone -->
+
+
+<p class="foot-note">
+  Full-fidelity key-screen mock · inline CSS · no JavaScript · no images (hairline / placeholder treatments only) · Source Serif 4 via Google Fonts (font-display: swap).
+  Locked palette (warm cream + Prussian navy #1E3A5F) + hairline rules + faint drafting grid + flat (no shadows). Terminology: "the BMAD Method" / BMAD Method Dots / the "Guide".
+  Governs EXPERIENCE.md → IA (Master Timeline) + Component Patterns (timeline arc, BMAD Method Dot, flagship node) + the craft-arc Key-Flow; DESIGN.md → Components (Dot, era band).
+  Spines win on conflict.
+</p>
+
+</body>
+</html>

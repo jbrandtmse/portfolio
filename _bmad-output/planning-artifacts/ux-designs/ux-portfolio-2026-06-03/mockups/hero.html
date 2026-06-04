@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hero — Home Scene 1 (/) · Joshua R. Brandt, MSE</title>
+
+<!-- Source Serif 4 ONLY — display + headings + body + meta (type system LOCKED). Optical-size axis exercised for the display. Network allowed for this mock. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,600&display=swap">
+
+<style>
+/* ============================================================
+   CANONICAL KEY-SCREEN MOCK — HERO · HOME SCENE 1 (/)
+   The FINAL, full-fidelity 1:1 hero on the LOCKED identity. This
+   supersedes the earlier type-comparison hero (mock-hero-types.html)
+   and pulls together every locked decision: identity, palette,
+   Source Serif 4, the IA hero-fork, the scene-rail, the Guide, the
+   new positioning line, and the locked terminology. NOT a wireframe.
+   The "wow" BUILDS — this opening beat is calm and credible; no
+   spectacle is front-loaded here.
+
+   THIS MOCK GOVERNS:
+     • EXPERIENCE.md → the HERO Key-Flow (FR-1): the calm, credible
+       opening beat — identity (wordmark) + the small-caps kicker +
+       the positioning <h1> + a sub-line in voice + the portrait +
+       THE FORK + the quiet Guide entry, all above the fold on both
+       viewports.
+     • EXPERIENCE.md → Interaction Primitives:
+        – THE FORK (the first IA decision; serves the two primary
+          audiences): "Explore" enters the Scene Arc (Devon / peer);
+          "I'm here to book a talk" jumps to /speaking, bypassing the
+          Guide + the cinematic layer (Mara / organizer; protects the
+          counter-metric — never bury the organizer). Real <a>/<button>.
+        – the SCENE-RAIL in its Scene-1 state: desktop = a slim right
+          rail (7 ticks, Scene 1 lit, a progress meter "Scene 1 of 7",
+          a "Skip to the end" affordance + a "Jump: book a talk"
+          shortcut); mobile = a sticky top progress bar + a
+          "Jump to section" menu. This IS the FR-2 skip/progress
+          affordance.
+        – the persistent GUIDE entry: a quiet in-hero affordance
+          ("Or ask my Guide about the work") AND the persistent
+          bottom-right "Ask my Guide" dock pill.
+     • EXPERIENCE.md → Accessibility Floor: the fork + Guide entries
+       are real <a>/<button>; the portrait <img> carries alt; the
+       drafting grid + the scene-rail graphics are decorative
+       (aria-hidden); the positioning line is the page <h1>; under
+       prefers-reduced-motion / JS-off this renders as a static,
+       fully-styled hero — there is no spectacle to lose.
+     • DESIGN.md → Typography (the display ramp: massive Source Serif
+       display headline → kicker → sub-line → UI), Components
+       (button-primary / button-secondary, the wordmark, the
+       scene-rail, the Guide pill — the SOLE shadowed element), Layout
+       (the two-column desktop hero / the stacked mobile hero, the
+       hero-top bar, the faint drafting grid).
+
+   FIDELITY: full polish on the locked identity. Spines
+   (DESIGN.md / EXPERIENCE.md) win on conflict with this mock.
+
+   ---- LOCKED IDENTITY (applied at full fidelity) ----
+   Type: ALL Source Serif 4 (display + headings + body + meta).
+         Massive serif display for the positioning line; small-caps
+         kicker. NO exclamation marks. font-display: swap to protect
+         the perf budget.
+   #F6F0E6  surface-base     warm cream paper (the page / stage)
+   #FBF7EF  surface-raised   raised warm plane (portrait mat, rail, fork sheet)
+   #211B14  ink-primary      warm near-black text (15:1 on paper)
+   #6B5D4A  ink-secondary    sub-line, kicker, metadata (5.6:1)
+   #D8CAB3  border-hairline  hairline rules / borders / the rail edge
+   #ECE3D3  grid-line        faint drafting-grid line (decorative)
+   #1E3A5F  accent (navy)    primary action, ticks, Guide, links (10.15:1)
+   #162B47  accent-hover     deeper navy — hover / pressed
+   Style: austere, warm, editorial; generous whitespace; hairline
+   rules; faint drafting grid; FLAT — the ONLY soft shadow site-wide
+   is on the Guide pill. Calm and credible; the wow builds.
+   ============================================================ */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --surface-base: #F6F0E6;
+  --surface-raised: #FBF7EF;
+  --ink-primary: #211B14;
+  --ink-secondary: #6B5D4A;
+  --border-hairline: #D8CAB3;
+  --grid-line: #ECE3D3;
+  --accent: #1E3A5F;
+  --accent-hover: #162B47;
+  --muted: #9a8e79;
+
+  --serif: 'Source Serif 4', 'Spectral', 'Georgia', 'Times New Roman', serif;
+}
+
+/* ============================================================
+   PAGE STAGE — neutral backdrop behind the review device frames.
+   The frames are a presentation device; the real page is simply
+   the cream surface-base, edge to edge.
+   ============================================================ */
+body {
+  background: #DCD4C3;
+  font-family: var(--serif);
+  color: var(--ink-primary);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  line-height: 1.6;
+  padding: 38px 22px 96px;
+}
+
+/* ---------- review intro banner (frame for the reviewer; NOT page copy) ---------- */
+.intro {
+  max-width: 1320px;
+  margin: 0 auto 30px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  padding: 24px 30px;
+}
+.intro .tag {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.3em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 10px;
+}
+.intro h1 {
+  font-weight: 600; font-size: 24px; letter-spacing: 0.005em; margin-bottom: 9px;
+  line-height: 1.18;
+}
+.intro p {
+  font-size: 14.5px; color: var(--ink-secondary); max-width: 100ch; line-height: 1.62;
+}
+.intro p .em { color: var(--ink-primary); font-weight: 600; }
+
+.frame-cap {
+  max-width: 1320px; margin: 46px auto 12px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.24em;
+  text-transform: uppercase; color: #6f6759;
+  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+}
+.frame-cap .sub {
+  font-weight: 400; letter-spacing: 0.08em; text-transform: none;
+  font-style: italic; color: #8a8273; font-size: 12.5px;
+}
+
+/* ============================================================
+   DEVICE FRAMES (review chrome). The browser bar / phone shell is
+   presentation only — the page art inside is the real mock.
+   ============================================================ */
+.device {
+  max-width: 1320px; margin: 0 auto;
+  background: var(--surface-base);
+  border: 1px solid #c4bba8;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.device.with-pill { position: relative; }
+.bar {
+  background: #E7DECE;
+  border-bottom: 1px solid var(--border-hairline);
+  display: flex; align-items: center; gap: 7px; padding: 9px 14px;
+}
+.dot { width: 10px; height: 10px; border-radius: 50%; background: #cfc5b1; }
+.url {
+  margin-left: 12px; font-size: 12.5px; color: var(--ink-secondary); letter-spacing: 0.01em;
+}
+
+/* ============================================================
+   THE SCROLLED VIEWPORT — a fixed height so the fold is legible.
+   The hero must sit ENTIRELY above this fold; Scene 2 peeks below.
+   ============================================================ */
+.viewport {
+  position: relative;
+  height: 720px;
+  overflow: hidden;            /* the fold is the bottom edge of this box */
+  background: var(--surface-base);
+}
+.with-rail { position: relative; min-height: 100%; }
+
+/* ------------------------------------------------------------
+   SCENE-RAIL (DESKTOP) — slim vertical rail pinned to the right.
+   Scene list (current lit) + progress meter + Skip affordances.
+   Decorative chrome around real navigation links.
+   ------------------------------------------------------------ */
+.scene-rail {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 208px;
+  background: var(--surface-raised);
+  border-left: 1px solid var(--border-hairline);
+  padding: 26px 20px;
+  z-index: 5;
+  display: flex; flex-direction: column;
+}
+.rail-head {
+  font-size: 9.5px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--ink-secondary);
+  margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-hairline);
+}
+.rail-list { list-style: none; }
+.rail-list li {
+  display: flex; align-items: center; gap: 11px;
+  padding: 7px 0; font-size: 11.5px; color: var(--ink-secondary); position: relative;
+}
+.rail-tick {
+  flex: 0 0 auto; width: 9px; height: 9px; border-radius: 50%;
+  border: 1px solid var(--accent); background: transparent;
+}
+.rail-list li.current { color: var(--accent); font-weight: 700; }
+.rail-list li.current .rail-tick {
+  background: var(--accent); box-shadow: 0 0 0 3px rgba(30,58,95,0.20);
+}
+.rail-list li.current::before {
+  content: ""; position: absolute; left: -20px; top: 2px; bottom: 2px; width: 3px; background: var(--accent);
+}
+.rail-progress {
+  margin: 18px 0 16px; padding-top: 14px; border-top: 1px solid var(--border-hairline);
+}
+.rail-progress .meter {
+  height: 5px; background: var(--grid-line); border-radius: 3px; overflow: hidden; margin-bottom: 7px;
+}
+.rail-progress .meter span { display: block; height: 100%; width: 14.3%; background: var(--accent); }
+.rail-progress .lab {
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-secondary);
+}
+.rail-foot { margin-top: auto; }
+.rail-skip {
+  display: block; text-align: center;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--accent); background: transparent;
+  border: 1px solid var(--accent); border-radius: 7px; padding: 9px 8px; text-decoration: none;
+}
+.rail-jump {
+  display: block; text-align: center; margin-top: 9px;
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em;
+  color: var(--ink-secondary); text-decoration: none;
+}
+.rail-jump:hover, .rail-skip:hover { color: var(--accent-hover); border-color: var(--accent-hover); }
+
+/* the scrolling content column sits left of the rail */
+.scroll-body { padding-right: 208px; }
+
+/* ============================================================
+   THE HERO — locked Gallery composition (warm, structured,
+   editorial). Faint drafting grid + hairline rules under the calm.
+   ============================================================ */
+.hero {
+  position: relative;
+  background:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px) 0 0 / 104px 100%,
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px) 0 0 / 100% 104px,
+    var(--surface-base);
+  padding: clamp(30px, 4.0vw, 58px) clamp(34px, 4.6vw, 76px) clamp(34px, 4.4vw, 60px);
+}
+
+.hero-top {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 20px;
+  border-bottom: 1px solid var(--border-hairline);
+  padding-bottom: 18px; margin-bottom: clamp(30px, 3.6vw, 56px);
+}
+.wordmark {
+  font-size: 13px; font-weight: 600; letter-spacing: 0.30em; text-transform: uppercase;
+  color: var(--ink-primary);
+}
+.open-marker {
+  font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--ink-secondary); white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 9px;
+}
+.open-marker::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%;
+  border: 1px solid var(--accent); flex: 0 0 auto;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr minmax(212px, 286px);
+  gap: clamp(36px, 4.6vw, 72px);
+  align-items: center;
+}
+
+/* small-caps kicker with the single navy accent tick */
+.kicker {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.30em; text-transform: uppercase;
+  color: var(--ink-secondary);
+  margin-bottom: clamp(18px, 2.0vw, 26px);
+  display: flex; align-items: center; gap: 14px;
+}
+.kicker::before { content: ""; width: 26px; height: 1px; background: var(--accent); }
+
+/* THE DISPLAY — the focal element. Massive Source Serif, optical axis pushed. */
+.display {
+  font-family: var(--serif);
+  font-optical-sizing: auto;
+  font-variation-settings: 'opsz' 60;
+  font-weight: 700;
+  font-size: clamp(46px, 6.6vw, 96px);
+  line-height: 0.99;
+  letter-spacing: -0.014em;
+  color: var(--ink-primary);
+  margin-bottom: clamp(20px, 2.2vw, 30px);
+}
+.display .line2 { display: block; }
+
+.subline {
+  font-size: clamp(16px, 1.32vw, 19px);
+  line-height: 1.6;
+  color: var(--ink-secondary);
+  max-width: 49ch;
+  margin-bottom: clamp(26px, 3.0vw, 40px);
+}
+.subline .em { color: var(--ink-primary); }
+
+/* ------------------------------------------------------------
+   THE FORK — the two primary CTAs. Real links. The dual-audience
+   intent is made legible by the quiet tag + the "or".
+   ------------------------------------------------------------ */
+.fork { display: flex; flex-direction: column; gap: 10px; }
+.fork-tag {
+  font-size: 10px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--accent);
+  display: inline-flex; align-items: center; gap: 10px;
+}
+.fork-tag::before { content: ""; width: 16px; height: 1px; background: var(--accent); }
+.fork-row { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+.btn {
+  font-family: var(--serif);
+  font-size: 15px; font-weight: 600; letter-spacing: 0.03em;
+  padding: 14px 30px;
+  border: 1px solid var(--ink-primary);
+  background: transparent; color: var(--ink-primary);
+  text-decoration: none; display: inline-block; border-radius: 7px;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--surface-base); }
+.btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn-secondary:hover { background: rgba(30,58,95,0.06); border-color: var(--accent); color: var(--accent); }
+.fork-sep {
+  font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-secondary);
+}
+
+/* the quiet, understated Guide entry — distinct from the two fork buttons */
+.guide-entry {
+  margin-top: clamp(20px, 2.2vw, 28px);
+  padding-top: clamp(16px, 1.8vw, 22px);
+  border-top: 1px solid var(--border-hairline);
+}
+.guide-link {
+  font-size: 13.5px; font-weight: 600; letter-spacing: 0.02em;
+  color: var(--accent); text-decoration: none;
+  display: inline-flex; align-items: baseline; gap: 8px;
+}
+.guide-link .lead { color: var(--ink-secondary); font-weight: 400; }
+.guide-link u { text-decoration: none; border-bottom: 1px solid var(--accent); padding-bottom: 2px; }
+.guide-link:hover u { border-bottom-color: var(--accent-hover); }
+.guide-link .arr { color: var(--accent); }
+
+/* ------------------------------------------------------------
+   PORTRAIT — a refined styled placeholder mat with a museum
+   label. Faint corner registration ticks. NOT stock / AI imagery.
+   ------------------------------------------------------------ */
+.portrait { display: flex; flex-direction: column; }
+.portrait-mat {
+  background: var(--surface-raised);
+  border: 1px solid var(--border-hairline);
+  aspect-ratio: 4 / 5;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.portrait-mat::before {            /* faint corner registration ticks (decorative) */
+  content: "";
+  position: absolute; inset: 13px;
+  background:
+    linear-gradient(var(--border-hairline),var(--border-hairline)) left 0 top 0/15px 1px no-repeat,
+    linear-gradient(var(--border-hairline),var(--border-hairline)) left 0 top 0/1px 15px no-repeat,
+    linear-gradient(var(--border-hairline),var(--border-hairline)) right 0 bottom 0/15px 1px no-repeat,
+    linear-gradient(var(--border-hairline),var(--border-hairline)) right 0 bottom 0/1px 15px no-repeat;
+  pointer-events: none;
+}
+.portrait-mat .pglyph {            /* a quiet monogram, not a face — placeholder, no AI imagery */
+  font-size: clamp(40px, 4.4vw, 60px); font-weight: 400; letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.portrait-mat .pcap {
+  position: absolute; bottom: 16px; left: 0; right: 0; text-align: center;
+  font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted);
+}
+.portrait-label {
+  display: flex; justify-content: space-between; align-items: baseline;
+  border-top: 1px solid var(--border-hairline);
+  margin-top: 12px; padding-top: 11px;
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-secondary);
+}
+.portrait-label .pn { color: var(--ink-primary); font-weight: 600; letter-spacing: 0.10em; }
+
+/* ============================================================
+   SCENE 2 — the thesis beat, peeking just below the fold to imply
+   scrollability. (Not the focus; deliberately quiet.)
+   ============================================================ */
+.scene2 {
+  position: relative;
+  border-top: 1px dashed var(--border-hairline);
+  padding: clamp(28px, 3.4vw, 48px) clamp(34px, 4.6vw, 76px) 64px;
+}
+.scene-no {
+  position: absolute; top: 16px; left: clamp(20px, 3vw, 40px);
+  font-size: 10px; font-weight: 600; letter-spacing: 0.14em; color: var(--accent);
+  background: var(--surface-raised); border: 1px solid var(--border-hairline);
+  padding: 2px 9px; border-radius: 4px;
+}
+.scene2 h2 {
+  font-weight: 700; font-size: clamp(26px, 3.0vw, 40px); line-height: 1.06;
+  letter-spacing: -0.01em; margin: 20px 0 0; color: var(--ink-primary); max-width: 22ch;
+}
+
+/* ============================================================
+   THE GUIDE DOCK PILL (persistent, bottom-right) — minimized.
+   THE SOLE ELEVATED SURFACE site-wide: it carries the one soft
+   shadow. Everything else is flat / hairline.
+   ============================================================ */
+.guide-pill {
+  position: absolute; right: 26px; bottom: 24px; z-index: 8;
+  background: var(--accent); color: #fff; border-radius: 24px;
+  padding: 11px 18px; font-size: 12.5px; font-weight: 600; letter-spacing: 0.03em;
+  display: inline-flex; align-items: center; gap: 9px;
+  border: none; cursor: pointer; font-family: var(--serif);
+  box-shadow: 0 12px 30px -10px rgba(30,58,95,0.55), 0 3px 10px -4px rgba(33,27,20,0.3); /* the one soft shadow */
+}
+.guide-pill .glyph { width: 15px; height: 15px; border-radius: 50%; border: 2px solid #fff; }
+
+/* the fold marker (review aid; marks the bottom edge of the viewport) */
+.foldnote {
+  max-width: 1320px; margin: 9px auto 0;
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--accent); text-align: right;
+}
+.foldnote::before {
+  content: "↑ above the fold — the full hero · Scene 2 peeks below ↓";
+}
+
+/* ============================================================
+   ACCESSIBILITY / FALLBACK ANNOTATION PANEL (review-only) — the
+   notes that feed EXPERIENCE.md. Sits between the two frames.
+   ============================================================ */
+.a11y {
+  max-width: 1320px; margin: 30px auto 0;
+  background: var(--surface-base);
+  border: 1px dashed var(--accent);
+  padding: 18px 24px;
+}
+.a11y h2 {
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 12px;
+}
+.a11y ul { list-style: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 30px; }
+.a11y li { font-size: 12.5px; color: var(--ink-primary); line-height: 1.5; display: flex; gap: 9px; align-items: baseline; }
+.a11y li::before { content: ""; flex: 0 0 auto; width: 11px; height: 1px; background: var(--accent); position: relative; top: 0.6em; }
+.a11y li b { color: var(--accent); }
+.a11y code { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 11.5px; background: var(--surface-raised); border: 1px solid var(--border-hairline); border-radius: 3px; padding: 0 4px; }
+
+.foot-note {
+  max-width: 1320px; margin: 30px auto 0;
+  font-size: 11.5px; color: #6f6759; text-align: center; letter-spacing: 0.02em; line-height: 1.65;
+}
+
+/* ============================================================
+   ===== MOBILE FRAME (~390px) ===============================
+   The known hard part: name + headshot + positioning + fork +
+   Guide entry must ALL fit a small viewport above the fold. Solved
+   with a compact horizontal name+headshot lockup, a tightened
+   display scale, stacked fork buttons, and a one-line Guide entry.
+   ============================================================ */
+.phone {
+  max-width: 390px; margin: 0 auto;
+  background: var(--surface-base);
+  border: 10px solid #2a241c;
+  border-radius: 34px;
+  overflow: hidden;
+}
+.phone .status { background: #2a241c; height: 22px; display: flex; align-items: center; justify-content: center; }
+.phone .status::after { content: ""; width: 80px; height: 7px; background: #4a4236; border-radius: 5px; }
+
+/* sticky top: progress bar + "Jump to section" menu (the rail, collapsed) */
+.m-topnav {
+  position: sticky; top: 0; z-index: 9;
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--border-hairline);
+}
+.m-progress { height: 4px; background: var(--grid-line); }
+.m-progress span { display: block; height: 100%; width: 14.3%; background: var(--accent); }
+.m-topbar { display: flex; align-items: center; justify-content: space-between; padding: 8px 13px; }
+.m-progress-lab { font-size: 9px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-secondary); }
+.m-jump {
+  font-family: var(--serif);
+  font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
+  color: #fff; background: var(--accent); border: 1px solid var(--accent);
+  border-radius: 7px; padding: 6px 12px; cursor: pointer;
+}
+
+.m-viewport { position: relative; height: 650px; overflow: hidden; }
+
+.m-hero {
+  position: relative;
+  background:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px) 0 0 / 64px 100%,
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px) 0 0 / 100% 64px,
+    var(--surface-base);
+  padding: 14px 17px 18px;
+}
+/* compact hero-top: wordmark + a tiny open-marker */
+.m-hero-top {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--border-hairline); padding-bottom: 9px; margin-bottom: 14px;
+}
+.m-wm { font-size: 10.5px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-primary); }
+.m-open { font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-secondary); text-align: right; line-height: 1.3; max-width: 14ch; }
+
+/* the name + headshot lockup — horizontal to save vertical budget */
+.m-lockup { display: flex; align-items: center; gap: 13px; margin-bottom: 13px; }
+.m-portrait {
+  flex: 0 0 auto; width: 74px; aspect-ratio: 4/5;
+  background: var(--surface-raised); border: 1px solid var(--border-hairline);
+  position: relative; display: flex; align-items: center; justify-content: center;
+}
+.m-portrait::before {
+  content: ""; position: absolute; inset: 7px;
+  background:
+    linear-gradient(var(--border-hairline),var(--border-hairline)) left 0 top 0/9px 1px no-repeat,
+    linear-gradient(var(--border-hairline),var(--border-hairline)) left 0 top 0/1px 9px no-repeat,
+    linear-gradient(var(--border-hairline),var(--border-hairline)) right 0 bottom 0/9px 1px no-repeat,
+    linear-gradient(var(--border-hairline),var(--border-hairline)) right 0 bottom 0/1px 9px no-repeat;
+}
+.m-portrait .pg { font-size: 26px; color: var(--muted); }
+.m-lockup .m-id .m-kicker {
+  font-size: 9.5px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--ink-secondary); margin-bottom: 6px;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.m-lockup .m-id .m-kicker::before { content: ""; width: 16px; height: 1px; background: var(--accent); }
+.m-lockup .m-id .m-plabel { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+.m-lockup .m-id .m-pn { color: var(--ink-primary); font-weight: 600; }
+
+.m-display {
+  font-family: var(--serif);
+  font-optical-sizing: auto; font-variation-settings: 'opsz' 60;
+  font-weight: 700; font-size: 33px; line-height: 1.0; letter-spacing: -0.012em;
+  color: var(--ink-primary); margin-bottom: 11px;
+}
+.m-display .line2 { display: block; }
+.m-subline { font-size: 13px; line-height: 1.5; color: var(--ink-secondary); margin-bottom: 15px; }
+.m-subline .em { color: var(--ink-primary); }
+
+/* the fork — stacked full-width buttons on mobile */
+.m-fork { display: flex; flex-direction: column; gap: 9px; }
+.m-fork-tag {
+  font-size: 8.5px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent);
+  display: inline-flex; align-items: center; gap: 8px; margin-bottom: 1px;
+}
+.m-fork-tag::before { content: ""; width: 14px; height: 1px; background: var(--accent); }
+.m-btn {
+  font-family: var(--serif);
+  display: block; text-align: center;
+  font-size: 14px; font-weight: 600; letter-spacing: 0.03em;
+  padding: 12px 14px; border-radius: 7px; text-decoration: none; cursor: pointer;
+  border: 1px solid var(--ink-primary); background: transparent; color: var(--ink-primary);
+}
+.m-btn-primary { background: var(--accent); border-color: var(--accent); color: var(--surface-base); }
+
+/* quiet Guide entry — one line, distinct from the fork */
+.m-guide-entry { margin-top: 13px; padding-top: 11px; border-top: 1px solid var(--border-hairline); }
+.m-guide-link { font-size: 12px; color: var(--accent); text-decoration: none; display: inline-flex; align-items: baseline; gap: 6px; }
+.m-guide-link .lead { color: var(--ink-secondary); }
+.m-guide-link u { text-decoration: none; border-bottom: 1px solid var(--accent); padding-bottom: 1px; }
+
+/* fold marker line inside the phone */
+.m-fold { position: relative; border-top: 1.5px dashed var(--accent); margin: 0; }
+.m-fold span {
+  position: absolute; right: 9px; top: -8px;
+  background: var(--accent); color: #fff;
+  font-size: 8px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 1px 7px; border-radius: 8px;
+}
+
+/* Scene 2 peek (mobile) */
+.m-scene2 { position: relative; padding: 16px 17px 22px; }
+.m-scene2 .scene-no { position: static; display: inline-block; margin-bottom: 9px; }
+.m-scene2 h2 { font-weight: 700; font-size: 21px; line-height: 1.08; letter-spacing: -0.008em; color: var(--ink-primary); }
+
+/* the persistent Guide dock pill (mobile) — also the sole shadowed element */
+.m-guide-pill {
+  position: absolute; right: 14px; bottom: 16px; z-index: 9;
+  background: var(--accent); color: #fff; border-radius: 22px;
+  padding: 10px 16px; font-size: 12px; font-weight: 600; letter-spacing: 0.03em;
+  display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer; font-family: var(--serif);
+  box-shadow: 0 10px 26px -10px rgba(30,58,95,0.55), 0 3px 9px -4px rgba(33,27,20,0.3);
+}
+.m-guide-pill .glyph { width: 13px; height: 13px; border-radius: 50%; border: 2px solid #fff; }
+
+@media (max-width: 760px) {
+  .a11y ul { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== REVIEW INTRO (frame for the reviewer; NOT page copy) ===================== -->
+<div class="intro">
+  <div class="tag">Canonical key-screen mock · Hero · Home Scene 1 (/) · full fidelity · locked identity</div>
+  <h1>The hero — the calm, credible opening beat of the home Scene Arc.</h1>
+  <p>The FINAL 1:1 hero, rendered on the locked identity (all <span class="em">Source Serif 4</span>, warm cream + Prussian navy, hairline rules, faint drafting grid, flat — one soft shadow on the Guide pill only). It supersedes the earlier type-comparison hero. The wordmark <span class="em">Joshua R. Brandt, MSE</span>, a small-caps kicker, the positioning <span class="em">&lt;h1&gt;</span> "Seasoned, building at the frontier", a sub-line in voice, a refined portrait, <span class="em">the fork</span> (Explore vs. book a talk), and a <span class="em">quiet Guide entry</span> all sit above the fold on both viewports. The scene-rail shows its <span class="em">Scene-1</span> state. The wow <span class="em">builds</span> — nothing here is front-loaded spectacle. Inline CSS · no JavaScript · no images (the portrait is a refined styled placeholder, not stock / AI imagery).</p>
+</div>
+
+
+<!-- ============================================================
+     DESKTOP FRAME — the hero above the fold + the right scene-rail
+     ============================================================ -->
+<div class="frame-cap">Desktop <span class="sub">two-column hero · slim right scene-rail (Scene 1 of 7) · Guide dock bottom-right · Scene 2 peeks below the fold</span></div>
+
+<div class="device with-pill">
+  <div class="bar">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    <span class="url">joshuabrandt.abacusai.cloud / &nbsp;·&nbsp; the home Scene Arc</span>
+  </div>
+
+  <div class="viewport">
+    <div class="with-rail">
+
+      <!-- persistent scene-rail (right) — Scene-1 state -->
+      <aside class="scene-rail" aria-label="Scene navigation: progress and skip">
+        <div class="rail-head">Scenes · progress</div>
+        <ul class="rail-list">
+          <li class="current" aria-current="true"><span class="rail-tick" aria-hidden="true"></span>1 · Hero</li>
+          <li><span class="rail-tick" aria-hidden="true"></span>2 · Thesis</li>
+          <li><span class="rail-tick" aria-hidden="true"></span>3 · Timeline</li>
+          <li><span class="rail-tick" aria-hidden="true"></span>4 · Speaking</li>
+          <li><span class="rail-tick" aria-hidden="true"></span>5 · loandemo</li>
+          <li><span class="rail-tick" aria-hidden="true"></span>6 · Glass Box</li>
+          <li><span class="rail-tick" aria-hidden="true"></span>7 · Invite</li>
+        </ul>
+        <div class="rail-progress">
+          <div class="meter" aria-hidden="true"><span></span></div>
+          <div class="lab">Scene 1 of 7</div>
+        </div>
+        <div class="rail-foot">
+          <a class="rail-skip" href="#invite">Skip to the end &darr;</a>
+          <a class="rail-jump" href="#speaking">Jump: book a talk</a>
+        </div>
+      </aside>
+
+      <!-- scrolling content column -->
+      <div class="scroll-body">
+
+        <!-- ===== SCENE 1 — THE HERO ===== -->
+        <section class="hero" id="hero" aria-label="Introduction">
+          <div class="hero-top">
+            <div class="wordmark">Joshua R. Brandt, MSE</div>
+            <div class="open-marker">Built in the open · a BMAD Method project</div>
+          </div>
+
+          <div class="hero-grid">
+            <div class="hero-copy">
+              <p class="kicker">Software Engineer · 30 Years</p>
+
+              <!-- the positioning headline IS the page h1 -->
+              <h1 class="display">Seasoned,<span class="line2">building at the frontier</span></h1>
+
+              <p class="subline">Thirty years shipping software, now all-in on agentic engineering. <span class="em">This site is not a description of the work — it is the work, built in the open as a BMAD Method project.</span> The medium is the message.</p>
+
+              <!-- THE FORK — two real links; dual-audience intent made legible -->
+              <div class="fork">
+                <span class="fork-tag">Two ways in</span>
+                <div class="fork-row">
+                  <a class="btn btn-primary" href="#thesis">Explore</a>
+                  <span class="fork-sep">or</span>
+                  <a class="btn btn-secondary" href="#speaking">I&rsquo;m here to book a talk</a>
+                </div>
+              </div>
+
+              <!-- the quiet Guide entry — a third, understated option -->
+              <div class="guide-entry">
+                <a class="guide-link" href="#guide">
+                  <span class="lead">Or</span><u>ask my Guide about the work</u><span class="arr" aria-hidden="true">&rarr;</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- the portrait — refined styled placeholder, museum label -->
+            <figure class="portrait">
+              <div class="portrait-mat" role="img" aria-label="Portrait of Joshua R. Brandt (placeholder)">
+                <span class="pglyph" aria-hidden="true">JRB</span>
+                <span class="pcap" aria-hidden="true">Portrait</span>
+              </div>
+              <figcaption class="portrait-label">
+                <span class="pn">Joshua R. Brandt</span><span>Portrait</span>
+              </figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <!-- ===== SCENE 2 — THESIS (peeks below the fold to imply scroll) ===== -->
+        <section class="scene2" id="thesis" aria-label="Thesis">
+          <span class="scene-no">SCENE 2</span>
+          <h2>The medium is the message.</h2>
+        </section>
+
+      </div><!-- /scroll-body -->
+    </div><!-- /with-rail -->
+
+    <!-- the persistent Guide dock pill — the ONE soft shadow -->
+    <button class="guide-pill" type="button" aria-label="Ask my Guide">
+      <span class="glyph" aria-hidden="true"></span>Ask my Guide
+    </button>
+  </div><!-- /viewport (its bottom edge is the fold) -->
+</div><!-- /device -->
+
+<div class="foldnote"></div>
+
+
+<!-- ===================== ACCESSIBILITY / FALLBACK ANNOTATIONS (review-only; feeds EXPERIENCE.md) ===================== -->
+<div class="a11y">
+  <h2>Accessibility / fallback notes — feeds EXPERIENCE.md</h2>
+  <ul>
+    <li>The positioning line is the page <b>&lt;h1&gt;</b> ("Seasoned, building at the frontier"); the wordmark, kicker, and sub-line are ordinary semantic text — the full hero message is in the initial HTML (SEO / GEO substance).</li>
+    <li>The fork is two <b>real <code>&lt;a&gt;</code> links</b> — <b>Explore</b> &rarr; the Scene Arc (in-page) and <b>I'm here to book a talk</b> &rarr; <code>/speaking</code> — keyboard-focusable and followable with <b>JS off</b>. The Guide entries are a real link / button.</li>
+    <li>The portrait is a styled placeholder with a <b>text alternative</b> (here a labeled <code>role="img"</code>; the real headshot will carry meaningful <b>alt</b>). It is not stock / AI imagery.</li>
+    <li>The <b>faint drafting grid</b> and the <b>scene-rail tick / meter graphics are decorative</b> (<code>aria-hidden</code> / pseudo-elements); no information lives only in them — scene names, "Scene 1 of 7", and link text carry the meaning in the DOM.</li>
+    <li>Under <b>prefers-reduced-motion / JS-off</b> this renders as a <b>static, fully-styled hero</b> — the opening beat is calm by design, so there is <b>no spectacle to lose</b>; the fork, the Guide entries, and the scene-rail links all still work.</li>
+    <li>The <b>Guide pill is the single elevated surface</b> site-wide (the one soft shadow); it is a real <code>&lt;button&gt;</code> with an accessible label. The mobile scene-rail collapses to a sticky <b>top progress bar + "Jump to section" menu</b> with the same targets.</li>
+    <li>Color is never the sole signal: the current scene is marked by text ("Scene 1 of 7", <code>aria-current</code>) and weight, not only the lit tick. Navy on cream meets AA (10.15:1); secondary ink meets AA (5.6:1).</li>
+    <li>Reading / focus order follows the DOM: wordmark &rarr; kicker &rarr; <b>h1</b> &rarr; sub-line &rarr; fork &rarr; Guide entry &rarr; portrait &rarr; scene-rail &rarr; Guide pill — identical intent on desktop and mobile.</li>
+  </ul>
+</div>
+
+
+<!-- ============================================================
+     MOBILE FRAME (~390px) — the same hero, deliberately recomposed
+     ============================================================ -->
+<div class="frame-cap">Mobile <span class="sub">~390px · sticky top progress + "Jump to section" · compact name+headshot lockup · stacked fork · Guide entry + dock pill — all above the fold</span></div>
+
+<div class="phone">
+  <div class="status"></div>
+
+  <!-- sticky top: the rail, collapsed — progress bar + Jump menu -->
+  <div class="m-topnav">
+    <div class="m-progress" aria-hidden="true"><span></span></div>
+    <div class="m-topbar">
+      <span class="m-progress-lab">Scene 1 of 7</span>
+      <button class="m-jump" type="button">Jump to section &#9662;</button>
+    </div>
+  </div>
+
+  <div class="m-viewport">
+
+    <!-- ===== SCENE 1 — THE HERO (fits entirely above the fold) ===== -->
+    <section class="m-hero" id="m-hero" aria-label="Introduction">
+      <div class="m-hero-top">
+        <span class="m-wm">Joshua R. Brandt, MSE</span>
+        <span class="m-open">Built in the open · a BMAD Method project</span>
+      </div>
+
+      <!-- name/kicker + headshot lockup (horizontal — saves vertical budget) -->
+      <div class="m-lockup">
+        <figure class="m-portrait" role="img" aria-label="Portrait of Joshua R. Brandt (placeholder)">
+          <span class="pg" aria-hidden="true">JRB</span>
+        </figure>
+        <div class="m-id">
+          <p class="m-kicker">Software Engineer · 30 Years</p>
+          <p class="m-plabel"><span class="m-pn">Joshua R. Brandt</span> · Portrait</p>
+        </div>
+      </div>
+
+      <h1 class="m-display">Seasoned,<span class="line2">building at the frontier</span></h1>
+      <p class="m-subline">30 years shipping software, now all-in on agentic engineering. <span class="em">This site is the work, built in the open as a BMAD Method project.</span></p>
+
+      <!-- the fork — stacked, full-width -->
+      <div class="m-fork">
+        <span class="m-fork-tag">Two ways in</span>
+        <a class="m-btn m-btn-primary" href="#m-thesis">Explore</a>
+        <a class="m-btn" href="#m-speaking">I&rsquo;m here to book a talk</a>
+      </div>
+
+      <!-- quiet Guide entry -->
+      <div class="m-guide-entry">
+        <a class="m-guide-link" href="#m-guide"><span class="lead">Or</span><u>ask my Guide about the work</u> <span aria-hidden="true">&rarr;</span></a>
+      </div>
+    </section>
+
+    <!-- the fold — the full hero sits above this line -->
+    <div class="m-fold"><span>Mobile fold — hero fits above</span></div>
+
+    <!-- ===== SCENE 2 — THESIS peek ===== -->
+    <section class="m-scene2" id="m-thesis" aria-label="Thesis">
+      <span class="scene-no">SCENE 2</span>
+      <h2>The medium is the message.</h2>
+    </section>
+  </div><!-- /m-viewport -->
+
+  <!-- persistent Guide dock pill (mobile) — the one soft shadow -->
+  <button class="m-guide-pill" type="button" aria-label="Ask my Guide">
+    <span class="glyph" aria-hidden="true"></span>Ask my Guide
+  </button>
+</div><!-- /phone -->
+
+
+<p class="foot-note">Canonical hero · full fidelity on the locked identity · inline CSS · no JavaScript · no images (portrait = a refined styled placeholder, not stock / AI imagery) · Source Serif 4 via Google Fonts (font-display: swap). Governs EXPERIENCE.md → hero Key-Flow + Interaction Primitives (the fork, the scene-rail, the Guide) + the Accessibility Floor; DESIGN.md → Typography (display ramp), Components (button-primary / button-secondary, wordmark, scene-rail, Guide pill), Layout. Spines (DESIGN.md / EXPERIENCE.md) win on conflict.</p>
+
+</body>
+</html>

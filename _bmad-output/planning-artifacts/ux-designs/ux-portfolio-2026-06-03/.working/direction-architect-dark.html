@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Direction 4 — Architect's Table (Dark) · Josh Brandt</title>
+<style>
+/* ============================================================
+   DIRECTION 4 — ARCHITECT'S TABLE (DARK)
+   Personality: a structured dark. Cooler graphite/steel ground,
+   a faint visible drafting grid and drafting rules, serif display
+   paired with SMALL monospace metadata labels as a craft
+   signature. Slightly denser and more technical/architectural —
+   the drafting table of an engineer with taste. Cool register,
+   the counterpoint to the warm cinematic dark.
+
+   Typeface character (intended): a crisp, structured serif —
+   Georgia / transitional — kept a touch tighter and more upright
+   than the cinematic cut, so it reads as precise rather than
+   filmic. Paired with a system MONOSPACE (ui-monospace / SF Mono /
+   Menlo) for coordinate-style metadata labels — the drafting-table
+   signature. System fonts only (no web fonts, no network).
+
+   ---- PALETTE (every hex documented) ----
+   #0E1113  ground       — cool graphite near-black (drafting table)
+   #141A1E  ground-2     — raised steel panel (cards, agent panel)
+   #1A2228  ground-3     — faint plotted plane / portrait field
+   #E7ECEF  paper         — cool off-white display + primary text
+   #9AA7AE  text-soft     — muted steel-grey secondary text
+   #67747C  text-faint    — captions, monospace metadata, placeholder
+   #232E35  rule          — cool hairline borders
+   #1C2429  grid-line     — very faint drafting grid line (near-invisible)
+   #5FB7C4  accent        — cool cyan-steel — drafting ticks, primary action, live dot
+   #2E4E55  accent-dim    — dim accent for soft fills / coordinate ticks
+   ============================================================ */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --ground: #0E1113;
+  --ground-2: #141A1E;
+  --ground-3: #1A2228;
+  --paper: #E7ECEF;
+  --text-soft: #9AA7AE;
+  --text-faint: #67747C;
+  --rule: #232E35;
+  --grid-line: #1C2429;
+  --accent: #5FB7C4;
+  --accent-dim: #2E4E55;
+  --serif: 'Georgia', 'Iowan Old Style', 'Times New Roman', serif;
+  --mono: ui-monospace, 'SF Mono', 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
+}
+
+body {
+  background: #060809; /* cool black stage behind frames */
+  font-family: var(--serif);
+  color: var(--paper);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.55;
+  padding: 40px 24px 80px;
+}
+
+.rationale {
+  max-width: 1180px; margin: 0 auto 44px;
+  background: var(--ground-2); border: 1px solid var(--rule);
+  padding: 26px 34px; position: relative;
+}
+.rationale::before {
+  content: "01 / 04"; position: absolute; top: 18px; right: 26px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; color: var(--text-faint);
+}
+.rationale .tag { font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+.rationale h1 { font-weight: 600; font-size: 27px; letter-spacing: -0.01em; margin-bottom: 10px; color: var(--paper); }
+.rationale p { font-size: 15.5px; color: var(--text-soft); max-width: 80ch; line-height: 1.7; }
+
+.stage { max-width: 1180px; margin: 0 auto; }
+.frame-label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #7a868d; margin: 40px 0 12px; }
+.browser, .phone {
+  background: var(--ground); border: 1px solid #1a2227; border-radius: 8px;
+  box-shadow: 0 30px 70px -32px rgba(0,0,0,0.85); overflow: hidden;
+}
+.browser-bar, .phone-notch {
+  background: #11171B; border-bottom: 1px solid #1d262c;
+  display: flex; align-items: center; gap: 7px; padding: 11px 16px;
+}
+.dot { width: 11px; height: 11px; border-radius: 50%; background: #283238; }
+.url { margin-left: 14px; font-family: var(--mono); font-size: 12px; color: var(--text-faint); letter-spacing: 0.01em; }
+
+/* ============================================================
+   HERO — architect's table. Faint drafting grid overlays the dark.
+   ============================================================ */
+.hero {
+  position: relative;
+  background:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+    var(--ground);
+  background-size: 46px 46px, 46px 46px, auto;
+  background-position: -1px -1px, -1px -1px, 0 0;
+  padding: clamp(48px, 6vw, 88px) clamp(40px, 6vw, 92px);
+}
+/* corner registration ticks — drafting signature */
+.reg { position: absolute; width: 14px; height: 14px; border: 1px solid var(--accent-dim); }
+.reg.tl { top: 22px; left: 22px; border-right: none; border-bottom: none; }
+.reg.tr { top: 22px; right: 22px; border-left: none; border-bottom: none; }
+.reg.bl { bottom: 22px; left: 22px; border-right: none; border-top: none; }
+.reg.br { bottom: 22px; right: 22px; border-left: none; border-top: none; }
+
+.hero-top {
+  display: flex; justify-content: space-between; align-items: baseline;
+  border-bottom: 1px solid var(--rule); padding-bottom: 16px; margin-bottom: clamp(42px, 5vw, 72px);
+}
+.wordmark { font-size: 14px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--paper); font-weight: 600; }
+.nav-meta { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--text-faint); }
+
+.hero-grid {
+  display: grid; grid-template-columns: 1.55fr minmax(220px, 290px);
+  gap: clamp(40px, 5vw, 78px); align-items: start;
+}
+
+.eyebrow {
+  font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.12em; color: var(--accent);
+  margin-bottom: 22px; display: flex; align-items: center; gap: 12px;
+}
+.eyebrow::before { content:"//"; color: var(--text-faint); }
+
+.display {
+  font-weight: 600;
+  font-size: clamp(48px, 7.4vw, 104px);
+  line-height: 0.99;
+  letter-spacing: -0.018em;
+  margin-bottom: 12px;
+  color: var(--paper);
+}
+.display .l2 { display: block; }
+/* dimension line under the headline — a drafting flourish */
+.dim-line {
+  display: flex; align-items: center; gap: 0; margin-bottom: 28px; color: var(--accent-dim);
+}
+.dim-line .seg { flex: 1; height: 1px; background: var(--accent-dim); }
+.dim-line .cap { width: 1px; height: 9px; background: var(--accent-dim); }
+.dim-line .label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--text-faint); padding: 0 12px; white-space: nowrap; }
+
+.subline { font-size: clamp(16px, 1.4vw, 20px); line-height: 1.64; color: var(--text-soft); max-width: 50ch; margin-bottom: 40px; }
+.subline strong { color: var(--paper); font-weight: 600; }
+
+.paths { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.btn {
+  font-family: var(--serif); font-size: 15px; letter-spacing: 0.02em;
+  padding: 13px 28px; text-decoration: none; display: inline-block;
+  border: 1px solid #34424a; color: var(--paper); background: transparent;
+}
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #06181B; font-weight: 600; }
+.path-sep { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); }
+
+/* portrait — a plotted plate with coordinate label */
+.portrait { display: flex; flex-direction: column; }
+.portrait-mat {
+  background:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+    var(--ground-3);
+  background-size: 24px 24px, 24px 24px, auto;
+  border: 1px solid var(--rule);
+  aspect-ratio: 4/5; display:flex; align-items:center; justify-content:center; position: relative;
+}
+.portrait-mat::after { content:"PORTRAIT"; font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; color: var(--text-faint); }
+.portrait-label {
+  display:flex; justify-content: space-between; border-top: 1px solid var(--rule);
+  padding-top: 9px; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; color: var(--text-soft);
+}
+
+.agent-entry {
+  margin-top: clamp(40px, 4.5vw, 68px); border-top: 1px solid var(--rule); padding-top: 22px;
+  display: flex; justify-content: space-between; align-items: baseline; gap: 22px; flex-wrap: wrap;
+}
+.agent-entry .lede { font-size: 16px; color: var(--text-soft); max-width: 58ch; line-height: 1.58; }
+.agent-entry .lede strong { color: var(--paper); font-weight: 600; }
+.agent-cta { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent); padding-bottom: 3px; white-space: nowrap; }
+
+/* ============================================================
+   PHONE hero
+   ============================================================ */
+.phone { width: 390px; margin: 0 auto; }
+.phone-notch { justify-content: center; }
+.phone-notch .bar-pill { width: 120px; height: 7px; border-radius: 4px; background: #283238; }
+.phone-screen {
+  background:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+    var(--ground);
+  background-size: 34px 34px, 34px 34px, auto;
+}
+
+.m-hero { padding: 24px 22px 28px; }
+.m-top { display:flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--rule); padding-bottom: 12px; margin-bottom: 22px; }
+.m-wordmark { font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 600; }
+.m-meta { font-family: var(--mono); font-size: 9px; letter-spacing: 0.06em; color: var(--text-faint); }
+.m-portrait {
+  background:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+    var(--ground-3);
+  background-size: 20px 20px, 20px 20px, auto;
+  border: 1px solid var(--rule); aspect-ratio: 16/10; display:flex; align-items:center; justify-content:center; margin-bottom: 20px;
+}
+.m-portrait::after { content:"PORTRAIT — JOSH BRANDT"; font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; color: var(--text-faint); }
+.m-eyebrow { font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: var(--accent); margin-bottom: 12px; }
+.m-eyebrow::before { content:"// "; color: var(--text-faint); }
+.m-display { font-weight: 600; font-size: 39px; line-height: 0.99; letter-spacing: -0.016em; margin-bottom: 14px; }
+.m-subline { font-size: 14.5px; color: var(--text-soft); line-height: 1.55; margin-bottom: 20px; }
+.m-paths { display:flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.m-btn { font-family: var(--serif); font-size: 14px; text-align: center; padding: 12px; text-decoration: none; border: 1px solid #34424a; color: var(--paper); }
+.m-btn-primary { background: var(--accent); border-color: var(--accent); color: #06181B; font-weight: 600; }
+.m-agent { border-top: 1px solid var(--rule); padding-top: 15px; display:flex; justify-content: space-between; align-items: center; }
+.m-agent span { font-size: 12.5px; color: var(--text-soft); }
+.m-agent a { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); text-decoration:none; border-bottom: 1px solid var(--accent); padding-bottom: 2px; }
+
+/* ============================================================
+   AGENT PANEL + thinking state
+   ============================================================ */
+.panel-row { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+@media (max-width: 900px){ .panel-row { grid-template-columns: 1fr; } }
+
+.agent-panel { background: var(--ground-2); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.panel-head { display:flex; align-items:center; justify-content: space-between; padding: 15px 22px; border-bottom: 1px solid var(--rule); }
+.panel-head .title { font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--paper); font-weight: 600; }
+.panel-head .status { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); display:flex; align-items:center; gap: 8px; }
+.panel-head .status::before { content:""; width:7px; height:7px; background: var(--accent); }
+.panel-body { padding: 22px; }
+.panel-caption { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 18px; }
+
+.msg { margin-bottom: 18px; }
+.msg .who { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 7px; }
+.msg.visitor .bubble { font-size: 16px; color: var(--paper); line-height: 1.5; border-left: 1px solid var(--accent-dim); padding-left: 16px; }
+.msg.agent .bubble { font-size: 16px; color: var(--paper); line-height: 1.62; }
+.msg.agent .bubble code { font-family: var(--mono); font-size: 14px; color: var(--accent); }
+.msg.agent .bubble .cite { display:inline-block; margin-top: 6px; font-family: var(--mono); font-size: 13px; color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent); }
+
+.composer { margin-top: 20px; border-top: 1px solid var(--rule); padding-top: 14px; display:flex; justify-content: space-between; align-items: center; }
+.composer .ph { font-family: var(--mono); font-size: 13px; color: var(--text-faint); }
+.composer .send { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #06181B; background: var(--accent); padding: 8px 16px; font-weight: 600; }
+
+/* thinking state — a build/query log: monospace coordinates being plotted */
+.thinking-head .status::before { background: var(--accent); }
+.thinking-intro { font-size: 16px; color: var(--paper); line-height: 1.58; margin-bottom: 18px; }
+.thinking-intro span { color: var(--accent); }
+.log { font-family: var(--mono); font-size: 13.5px; line-height: 1.5; border-top: 1px solid var(--rule); padding-top: 14px; }
+.log-row { display: flex; align-items: baseline; gap: 14px; padding: 7px 0; color: var(--text-soft); }
+.log-key { color: var(--text-faint); min-width: 64px; }
+.log-src { flex: 1; }
+.log-row.active .log-src { color: var(--paper); }
+.log-row.active .log-key { color: var(--accent); }
+.log-row.queued { color: var(--text-faint); }
+.log-state {}
+.log-row.done .log-state { color: var(--text-faint); }
+.log-row.active .log-state { color: var(--accent); }
+.log-row.queued .log-state { color: var(--text-faint); }
+/* a faint plotted progress bar per active row */
+.log-bar { display:block; height: 2px; background: var(--rule); margin-top: 6px; position: relative; }
+.log-bar::after { content:""; position:absolute; left:0; top:0; height:2px; background: var(--accent); }
+.log-row.done .log-bar::after { width: 100%; }
+.log-row.active .log-bar::after { width: 52%; }
+.log-row.queued .log-bar::after { width: 0; }
+
+.note { max-width: 1180px; margin: 30px auto 0; font-family: var(--mono); font-size: 11.5px; color: #7a868d; text-align: center; letter-spacing: 0.02em; }
+</style>
+</head>
+<body>
+
+<div class="rationale">
+  <div class="tag">Direction 4 — Architect's Table · Dark</div>
+  <h1>The drafting table of an engineer with taste.</h1>
+  <p>A cool graphite ground under a faint drafting grid, with corner registration ticks and a dimension line beneath the headline. A precise serif is paired with small monospace metadata labels as the craft signature. Denser and more technical than the cinematic dark — structured, measured, deliberately engineered.</p>
+</div>
+
+<div class="stage">
+
+  <!-- ============ DESKTOP FRAME ============ -->
+  <div class="frame-label">Desktop · hero (above the fold)</div>
+  <div class="browser">
+    <div class="browser-bar">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="url">joshuabrandt.abacusai.cloud</span>
+    </div>
+    <div class="hero">
+      <span class="reg tl"></span><span class="reg tr"></span><span class="reg bl"></span><span class="reg br"></span>
+      <div class="hero-top">
+        <div class="wordmark">Josh Brandt</div>
+        <div class="nav-meta">built-in-the-open · bmad-project</div>
+      </div>
+
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <div class="eyebrow">software engineer · 30 years</div>
+          <h2 class="display">Seasoned,<span class="l2">Not Stuck.</span></h2>
+          <div class="dim-line">
+            <span class="cap"></span><span class="seg"></span>
+            <span class="label">VETERAN ↔ AGENTIC PRACTITIONER</span>
+            <span class="seg"></span><span class="cap"></span>
+          </div>
+          <p class="subline">Thirty years shipping software, now all-in on agentic engineering. <strong>This site does not describe the work. It is the work — built in the open, so it stands as its own proof.</strong></p>
+          <div class="paths">
+            <a class="btn" href="#">Explore the work</a>
+            <span class="path-sep">or</span>
+            <a class="btn btn-primary" href="#">Invite me to speak</a>
+          </div>
+        </div>
+
+        <div class="portrait">
+          <div class="portrait-mat"></div>
+          <div class="portrait-label"><span>JOSH BRANDT</span><span>PLATE 01</span></div>
+        </div>
+      </div>
+
+      <div class="agent-entry">
+        <p class="lede"><strong>Ask the Advocate.</strong> A grounded assistant that speaks for Josh and cites its sources. Confident, never hype — the skeptic gets sold, and gets the receipts.</p>
+        <a class="agent-cta" href="#">Open the Advocate Agent →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PHONE FRAME ============ -->
+  <div class="frame-label">Mobile · same hero (~390px, above the fold)</div>
+  <div class="phone">
+    <div class="phone-notch"><span class="bar-pill"></span></div>
+    <div class="phone-screen">
+      <div class="m-hero">
+        <div class="m-top">
+          <span class="m-wordmark">Josh Brandt</span>
+          <span class="m-meta">bmad-project</span>
+        </div>
+        <div class="m-portrait"></div>
+        <div class="m-eyebrow">software engineer · 30 yrs</div>
+        <h2 class="m-display">Seasoned, Not Stuck.</h2>
+        <p class="m-subline">Thirty years shipping software, now all-in on agentic engineering. Built in the open — its own proof.</p>
+        <div class="m-paths">
+          <a class="m-btn m-btn-primary" href="#">Invite me to speak</a>
+          <a class="m-btn" href="#">Explore the work</a>
+        </div>
+        <div class="m-agent">
+          <span>Ask the Advocate Agent.</span>
+          <a href="#">Open →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ AGENT PANEL + THINKING STATE ============ -->
+  <div class="frame-label">Advocate Agent · exchange (left) and the thinking state variant (right)</div>
+  <div class="panel-row">
+
+    <div class="agent-panel">
+      <div class="panel-head">
+        <span class="title">Advocate Agent</span>
+        <span class="status">grounded · cited</span>
+      </div>
+      <div class="panel-body">
+        <div class="panel-caption">// one exchange</div>
+        <div class="msg visitor">
+          <div class="who">visitor</div>
+          <div class="bubble">What's the most impressive thing he's built?</div>
+        </div>
+        <div class="msg agent">
+          <div class="who">advocate</div>
+          <div class="bubble">The clearest answer is <code>loandemo</code>. Josh built it as a live, on-stage proof — a working agentic system, narrated end to end. It is the case study I would point a skeptic to first.<br>
+          <a class="cite" href="#">→ loandemo case study</a></div>
+        </div>
+        <div class="composer">
+          <span class="ph">ask about the work…</span>
+          <span class="send">Send</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="agent-panel">
+      <div class="panel-head thinking-head">
+        <span class="title">Advocate Agent</span>
+        <span class="status">thinking</span>
+      </div>
+      <div class="panel-body">
+        <div class="panel-caption">// state variant — retrieval log</div>
+        <p class="thinking-intro">Reading the record. <span>Pulling only what is documented</span> before I answer.</p>
+        <div class="log">
+          <div class="log-row done">
+            <span class="log-key">read</span>
+            <span class="log-src">loandemo case study</span>
+            <span class="log-state">ok</span>
+            <span class="log-bar"></span>
+          </div>
+          <div class="log-row active">
+            <span class="log-key">reading</span>
+            <span class="log-src">Glass Box artifacts</span>
+            <span class="log-state">52%</span>
+            <span class="log-bar"></span>
+          </div>
+          <div class="log-row queued">
+            <span class="log-key">queued</span>
+            <span class="log-src">Master Timeline · build history</span>
+            <span class="log-state">—</span>
+            <span class="log-bar"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="note">self-contained · inline css only · system serif + mono · no javascript · no network requests · thinking state rendered statically, not a spinner</p>
+
+</div>
+</body>
+</html>
