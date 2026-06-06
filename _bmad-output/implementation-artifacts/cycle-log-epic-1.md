@@ -54,3 +54,10 @@
 2026-06-06T11:40:24Z	Story 1.7	qa_complete	spawn_at=2026-06-06T11:35:25Z model=claude-opus-4-8 tests=web/test/Footer.component.test.ts tests_added=13 first_run_failures=0 clarifications=0 closing_sections_present=true
 2026-06-06T11:48:29Z	Story 1.7	cr_complete	spawn_at=2026-06-06T11:40:00Z model=claude-opus-4-8 resolved=0 deferred=0 dismissed=0 high=0 med=0 low=0 clarifications=0 closing_sections_present=true
 2026-06-06T11:52:14Z	Story 1.7	smoke_complete	method=browser result=pass iterations=1 defects_caught=1 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-1.7-browse-footer.png model=claude-opus-4-8
+2026-06-06T11:52:48Z	Story 1.7	committed	sha=aff6049 submodules=
+2026-06-06T11:54:45Z	Story 1.8	story_created	path=_bmad-output/implementation-artifacts/1-8-build-time-content-pipeline-foundation.md
+2026-06-06T12:12:22Z	Story 1.8	dev_complete	spawn_at=2026-06-06T11:55:00Z model=claude-opus-4-8 files=12 clarifications=0 nfr_tripwires=0 adr_violations_surfaced=0 cycle_iteration=1 closing_sections_present=true
+2026-06-06T12:12:26Z	Story 1.8	adr_verifications_complete	tool=none acs=none result=none_required
+2026-06-06T12:18:47Z	Story 1.8	qa_complete	spawn_at=2026-06-06T12:12:40Z model=claude-opus-4-8 tests=scripts/pipeline-guards.test.ts tests_added=7 first_run_failures=0 clarifications=0 closing_sections_present=true
+2026-06-06T12:30:13Z	Story 1.8	cr_complete	spawn_at=2026-06-06T12:13:00Z model=claude-opus-4-8 resolved=1 deferred=1 dismissed=3 high=0 med=0 low=1 clarifications=0 closing_sections_present=true
+2026-06-06T12:30:43Z	Story 1.8	smoke_complete	method=cli result=pass iterations=1 defects_caught=0 evidence=determinism-byte-identical-833438283+pipeline-10-routes model=claude-opus-4-8

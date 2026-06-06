@@ -1,0 +1,19 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    // Build-time scripts run via `tsx` (never compiled to dist), so NodeNext
+    // resolution matches the runtime and `noEmit` stays on (like `shared`).
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "types": ["node"],
+    // tsx executes the .ts directly, so importing .ts extensions is fine, but we
+    // don't rely on it — keep the base default (allowImportingTsExtensions: true).
+    "noEmit": true
+  },
+  "include": ["**/*.ts"],
+  // Test files are type-checked + run by Vitest (vitest.config.ts), discovered
+  // via its `**/*.test.ts` glob (skill-rules Rule 8); excluded here so the
+  // orchestrator typecheck doesn't require vitest's ambient types.
+  "exclude": ["node_modules", "**/*.test.ts"]
+}

@@ -10,7 +10,9 @@
   },
   "scripts": {
     "dev": "pnpm -r --parallel --if-present run dev",
-    "build": "pnpm -r --if-present run build",
+    "build": "tsx scripts/build-content.ts && pnpm --filter web build",
+    "build:content": "tsx scripts/build-content.ts",
+    "check-deterministic": "tsx scripts/check-deterministic.ts",
     "typecheck": "pnpm -r --if-present run typecheck",
     "test": "pnpm -r --if-present run test",
     "lint": "eslint .",
@@ -23,6 +25,7 @@
     "eslint-plugin-astro": "^1.7.0",
     "prettier": "^3.8.3",
     "prettier-plugin-astro": "^0.14.1",
+    "tsx": "^4.22.4",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.60.1"
   }
