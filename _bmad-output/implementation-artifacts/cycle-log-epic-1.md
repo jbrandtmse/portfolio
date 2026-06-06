@@ -68,3 +68,10 @@
 2026-06-06T13:19:56Z	Story 1.9	qa_complete	spawn_at=2026-06-06T13:10:10Z model=claude-opus-4-8 tests=harness-validated-mutation-tested tests_added=0 first_run_failures=0 clarifications=0 closing_sections_present=true
 2026-06-06T13:37:00Z	Story 1.9	cr_complete	spawn_at=2026-06-06T13:18:00Z model=claude-opus-4-8 resolved=2 deferred=1 dismissed=0 high=0 med=0 low=3 clarifications=0 closing_sections_present=true
 2026-06-06T13:38:59Z	Story 1.9	smoke_complete	method=cli result=pass iterations=1 defects_caught=0 evidence=pnpm-test:all-green(vitest239+playwright37+lighthouse-budget) model=claude-opus-4-8
+2026-06-06T13:39:47Z	Story 1.9	committed	sha=037323c submodules=
+2026-06-06T13:43:45Z	Story 1.10	story_created	path=_bmad-output/implementation-artifacts/1-10-deploy-analytics-launch-gates.md
+2026-06-06T14:06:00Z	Story 1.10	dev_complete	spawn_at=2026-06-06T13:44:00Z model=claude-opus-4-8 files=13 clarifications=0 nfr_tripwires=0 adr_violations_surfaced=0 cycle_iteration=1 closing_sections_present=true
+2026-06-06T14:06:04Z	Story 1.10	adr_verifications_complete	tool=none acs=none result=none_required
+2026-06-06T14:12:22Z	Story 1.10	qa_complete	spawn_at=2026-06-06T14:06:20Z model=claude-opus-4-8 tests=scripts/deploy-artifacts.test.ts tests_added=21 first_run_failures=0 clarifications=0 closing_sections_present=true
+2026-06-06T14:19:53Z	Story 1.10	cr_complete	spawn_at=2026-06-06T14:07:00Z model=claude-opus-4-8 resolved=0 deferred=1 dismissed=2 high=0 med=0 low=1 clarifications=0 closing_sections_present=true
+2026-06-06T14:23:31Z	Story 1.10	smoke_complete	method=other result=pass iterations=1 defects_caught=0 evidence=LIVE-https://joshuabrandt.abacusai.cloud/-200+api-health-200+systemd-active+0-console-errors+screenshot model=claude-opus-4-8

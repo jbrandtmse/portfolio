@@ -1,10 +1,10 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 /**
  * Build-output assertions for the design-system foundation (Story 1.2), the
@@ -1011,5 +1011,163 @@ describe('Story 1.6 — generated robots.txt (AC3 / IAC-2; NFR-3 GEO-first)', ()
     expect(robots).toMatch(/User-agent:\s*\*\s*\nAllow:\s*\//);
     // No blanket Disallow anywhere (GEO-first posture).
     expect(robots).not.toMatch(/Disallow:\s*\//);
+  });
+});
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Story 1.10 — env-gated cookieless Umami + the /about channel-clicked surface.
+ *
+ * Real `astro build` output (the consumer-observable form; AC2 / IAC-2,
+ * skill-rules Rule 3). Two branches of the env-gate are proven against REAL
+ * builds:
+ *   • UNSET (the default build in the top beforeAll) → NO analytics script
+ *     anywhere, so the 0-executable-script floor (NFR-1) holds with no live Umami.
+ *   • SET (a SEPARATE build below, invoked with PUBLIC_UMAMI_* in the env, output
+ *     to a temp dir so it never clobbers the default dist) → the cookieless Umami
+ *     <script> renders in <head> with data-website-id, defer, and NO cookie.
+ * The 0-JS /about channel-clicked data attributes are asserted on the default build.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+describe('Story 1.10 — env-gated Umami is OFF by default (AC2 / IAC-2; NFR-1)', () => {
+  // The default build (top beforeAll) has NO PUBLIC_UMAMI_* set, so the gate is
+  // closed: there must be zero trace of Umami on any page. This is the explicit
+  // regression-guard that the analytics wiring ships 0 JS unless deliberately
+  // enabled (keeps the existing 0-executable-script assertions honest).
+  const PAGES = ['/', '/about', '/speaking', '/faq'] as const;
+
+  it.each(PAGES)(
+    'emits NO Umami tracker script and NO data-website-id on %s (gate closed)',
+    (route) => {
+      const html = route === '/' ? indexHtml : readFileSync(routeHtmlPath(route), 'utf8');
+      // The gate-closed discriminator is the TRACKER SCRIPT, not the literal word
+      // "umami" — /about deliberately carries `data-umami-event="channel-clicked"`
+      // attributes (0-JS click wiring), which must NOT be mistaken for the script.
+      // So assert: no <script> that loads a umami tracker, and no data-website-id
+      // (the script-only attribute) anywhere.
+      expect(html).not.toMatch(/<script\b[^>]*umami/i);
+      expect(html).not.toMatch(/data-website-id/i);
+    },
+  );
+
+  it('keeps the home + every Mirror route at 0 executable scripts with the gate closed', () => {
+    // Re-assert the floor specifically in the Umami context: the home keeps its
+    // single scene-rail script; the Mirror routes keep zero. No Umami JS is added.
+    expect(countExecutableScripts(indexHtml)).toBe(1);
+    for (const route of MIRROR_ROUTES) {
+      const html = readFileSync(routeHtmlPath(route), 'utf8');
+      expect(countExecutableScripts(html), `executable scripts on ${route}`).toBe(0);
+    }
+  });
+});
+
+describe('Story 1.10 — /about channel links carry the 0-JS channel-clicked event (IAC-2)', () => {
+  let aboutHtml = '';
+  beforeAll(() => {
+    aboutHtml = readFileSync(routeHtmlPath('/about'), 'utf8');
+  });
+
+  // The three sameAs channels (the Person.sameAs / visible-link set).
+  const CHANNELS = ['YouTube', 'GitHub', 'Suno'] as const;
+
+  it('marks each of the 3 channel <a>s with data-umami-event="channel-clicked"', () => {
+    const tagged = aboutHtml.match(/data-umami-event="channel-clicked"/g) ?? [];
+    expect(tagged).toHaveLength(CHANNELS.length);
+  });
+
+  it.each(CHANNELS)('carries the non-PII channel prop data-umami-event-channel="%s"', (channel) => {
+    expect(aboutHtml).toContain(`data-umami-event-channel="${channel}"`);
+  });
+
+  it('attaches the event to the REAL channel <a> (followable JS-off), not a wrapper', () => {
+    // Each channel anchor is still a real <a href> with rel="me" AND now carries
+    // the umami data attributes on the SAME element — so the click is tracked with
+    // zero app JS while the link stays followable with JS off.
+    for (const channel of CHANNELS) {
+      const anchor = aboutHtml.match(
+        new RegExp(`<a\\b[^>]*data-umami-event="channel-clicked"[^>]*>\\s*${channel}\\s*</a>`),
+      );
+      expect(anchor, `tagged <a> for ${channel}`).not.toBeNull();
+      expect(anchor![0]).toMatch(/\shref="/);
+      expect(anchor![0]).toMatch(/\srel="me"/);
+    }
+  });
+
+  it('adds NO executable JS to /about — the channel events are pure data attributes (NFR-1)', () => {
+    // The data-umami-event attributes are handled by Umami's own script; the page
+    // itself gains no executable <script> (only the existing ld+json DATA block).
+    expect(countExecutableScripts(aboutHtml)).toBe(0);
+    expect(aboutHtml).not.toMatch(/<script\b[^>]*\bsrc=/);
+  });
+});
+
+describe('Story 1.10 — env-gated Umami is ON when PUBLIC_UMAMI_* is set (AC2 / IAC-2)', () => {
+  // A SEPARATE real build with the gate OPEN. Built into a temp outDir with the
+  // PUBLIC_UMAMI_* vars in the environment so Vite statically inlines them — the
+  // authoritative proof of the SET branch (a single vitest process cannot flip a
+  // build-time-inlined import.meta.env value, so we must build again).
+  const UMAMI_SRC = 'https://umami.example.test/script.js';
+  const UMAMI_WEBSITE_ID = '00000000-aaaa-bbbb-cccc-000000000000';
+
+  let tmpOutDir = '';
+  let homeHtml = '';
+  let aboutHtml = '';
+
+  beforeAll(() => {
+    const require = createRequire(import.meta.url);
+    const astroPkgJson = require.resolve('astro/package.json');
+    const astroBin = join(dirname(astroPkgJson), 'bin', 'astro.mjs');
+
+    // The temp outDir MUST live on the same filesystem as the project: Astro
+    // finalizes a build by `rename`-ing assets out of web/.astro into the outDir,
+    // and a rename across devices (e.g. project → /tmp) fails with EXDEV. So place
+    // it INSIDE webRoot (gitignored via `.test-umami-build-*`) and clean it up.
+    tmpOutDir = mkdtempSync(join(webRoot, '.test-umami-build-'));
+    execFileSync('node', [astroBin, 'build', '--outDir', tmpOutDir], {
+      cwd: webRoot,
+      stdio: 'pipe',
+      env: {
+        ...process.env,
+        PUBLIC_UMAMI_SRC: UMAMI_SRC,
+        PUBLIC_UMAMI_WEBSITE_ID: UMAMI_WEBSITE_ID,
+      },
+    });
+
+    homeHtml = readFileSync(join(tmpOutDir, 'index.html'), 'utf8');
+    aboutHtml = readFileSync(join(tmpOutDir, 'about', 'index.html'), 'utf8');
+  });
+
+  afterAll(() => {
+    if (tmpOutDir) rmSync(tmpOutDir, { recursive: true, force: true });
+  });
+
+  it('renders the Umami <script> in <head> with the configured src + data-website-id', () => {
+    const headOnly = homeHtml.slice(0, homeHtml.indexOf('</head>'));
+    const tag = headOnly.match(
+      /<script\b[^>]*src="https:\/\/umami\.example\.test\/script\.js"[^>]*>/,
+    );
+    expect(tag, 'Umami <script> in <head>').not.toBeNull();
+    expect(tag![0]).toContain(`data-website-id="${UMAMI_WEBSITE_ID}"`);
+  });
+
+  it('the Umami script is deferred and COOKIELESS (no cookie attribute/param)', () => {
+    const tag = homeHtml.match(/<script\b[^>]*umami\.example\.test[^>]*>/)![0];
+    expect(tag).toMatch(/\bdefer\b/);
+    // Umami is cookieless by default — the embed sets no cookie option.
+    expect(tag).not.toMatch(/cookie/i);
+  });
+
+  it('emits the Umami script on Mirror routes too (it lives in the shared BaseLayout head)', () => {
+    expect(aboutHtml).toContain(`src="${UMAMI_SRC}"`);
+    expect(aboutHtml).toContain(`data-website-id="${UMAMI_WEBSITE_ID}"`);
+  });
+
+  it('still carries the /about channel-clicked data attributes alongside the script', () => {
+    // Enabling Umami does not change the 0-JS channel wiring — both coexist.
+    expect((aboutHtml.match(/data-umami-event="channel-clicked"/g) ?? []).length).toBe(3);
+  });
+
+  it('adds EXACTLY ONE external Umami script — no duplicate injection per page', () => {
+    const onHome = homeHtml.match(/src="https:\/\/umami\.example\.test\/script\.js"/g) ?? [];
+    expect(onHome).toHaveLength(1);
   });
 });

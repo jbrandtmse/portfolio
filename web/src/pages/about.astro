@@ -90,9 +90,23 @@ const CHANNELS = [
         <h2 id="about-channels-title" class="about__h2">Channels</h2>
         <ul class="about__channel-list">
           {
+            /* Each channel link carries the cookieless Umami click event
+              (Story 1.10, AC2 / IAC-2) as 0-JS data attributes: Umami's own
+              script records `channel-clicked` with a `channel` prop on click —
+              no app JS, so the 0-JS floor (NFR-1) holds. The prop is the channel
+              label only (no PII; NFR-7). The other 5 funnel events fire in their
+              own epics (Guide → Epic 4, invite/reel → Epic 3). */
+          }
+          {
             CHANNELS.map((c) => (
               <li class="about__channel">
-                <a class="about__channel-link" href={c.href} rel="me">
+                <a
+                  class="about__channel-link"
+                  href={c.href}
+                  rel="me"
+                  data-umami-event="channel-clicked"
+                  data-umami-event-channel={c.label}
+                >
                   {c.label}
                 </a>
                 <span class="about__flag about__flag--inline">{c.open}</span>

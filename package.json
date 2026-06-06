@@ -19,6 +19,7 @@
     "lh": "pnpm build && lhci autorun",
     "test:perf": "pnpm run lh",
     "test:all": "pnpm run typecheck && pnpm run lint && pnpm run format:check && pnpm run test && pnpm run test:e2e && pnpm run lh",
+    "launch-check": "pnpm run test:all",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

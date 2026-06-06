@@ -31,6 +31,10 @@ venv/
 # Astro generated types
 .astro/
 
+# Story 1.10 build-output test scratch dir (an env-set `astro build` outDir,
+# created+removed per run; ignored so a crashed run never leaves it tracked).
+.test-umami-build-*/
+
 # API runtime data (SQLite/Drizzle store added in later stories)
 api/data/
 

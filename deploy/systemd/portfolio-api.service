@@ -1,0 +1,51 @@
+# portfolio-api.service — the Hono API as a boot-persistent systemd unit
+# (Story 1.10, AC1; AR-8). nginx reverse-proxies /api/* to this service.
+#
+# INSTALL (one-time, by the operator):
+#   sudo cp deploy/systemd/portfolio-api.service /etc/systemd/system/portfolio-api.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now portfolio-api      # start now + start on boot
+# Thereafter scripts/deploy.sh runs `sudo systemctl restart portfolio-api` each deploy.
+#
+# SECRETS (NFR-5 / AR-12): runtime secrets are NEVER committed and NEVER in web/
+# client code. They are supplied server-side via the gitignored `.env` below
+# (EnvironmentFile, optional — the leading `-` means "skip if absent") and/or the
+# VM metadata service (IMDSv2), which the api reads at runtime. This unit file
+# itself carries NO secret values — only the non-secret API_PORT.
+
+[Unit]
+Description=Portfolio Hono API (serves /api/*; reverse-proxied by nginx)
+Documentation=https://joshuabrandt.abacusai.cloud
+# Network must be up before the api binds its port.
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/git/portfolio/api
+
+# 1.8 flag: the root `pnpm build` does NOT compile the api — scripts/deploy.sh
+# runs `pnpm --filter api build` (tsc → api/dist/index.js) before restarting this
+# unit, so dist/index.js exists here. Run the COMPILED JS directly with node (no
+# tsx/pnpm in the prod runtime). `node` resolves on the VM's PATH (/usr/bin/node);
+# pin an absolute path here if the VM's node ever moves.
+ExecStart=/usr/bin/node dist/index.js
+
+# Non-secret runtime config. API_PORT keeps the Hono port in one place (matches
+# the nginx proxy_pass target 127.0.0.1:8787 and the dev proxy; .env.example).
+Environment=NODE_ENV=production
+Environment=API_PORT=8787
+
+# Optional gitignored env file for server-side secrets (DATABASE_URL, RESEND_API_KEY,
+# …). The leading `-` makes it optional: the unit still starts if .env is absent
+# (e.g. when all secrets come from IMDSv2). NEVER commit this file (.gitignore).
+EnvironmentFile=-/home/ubuntu/git/portfolio/.env
+
+# Resilience: always bring the api back if it exits/crashes (auto-restart).
+Restart=always
+RestartSec=2
+
+[Install]
+# Boot-persistent: `systemctl enable` wires this so the api starts on boot.
+WantedBy=multi-user.target
