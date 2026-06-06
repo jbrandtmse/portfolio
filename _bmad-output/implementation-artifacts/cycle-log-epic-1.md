@@ -77,3 +77,4 @@
 2026-06-06T14:23:31Z	Story 1.10	smoke_complete	method=other result=pass iterations=1 defects_caught=0 evidence=LIVE-https://joshuabrandt.abacusai.cloud/-200+api-health-200+systemd-active+0-console-errors+screenshot model=claude-opus-4-8
 2026-06-06T14:23:48Z	Story 1.10	committed	sha=92ccf90 submodules=
 2026-06-06T14:24:52Z	Epic 1	epic_summary	stories=10 total_high=0 total_med=2 total_low=14 total_smoke_defects=1 rework_events=1 opus_stage_count=30 sonnet_stage_count=0 haiku_stage_count=0 deploy=LIVE:https://joshuabrandt.abacusai.cloud model=claude-opus-4-8
+2026-06-06T14:50:22Z	Epic 1	epic_merged_to_feature	repos=. feature_sha=7778524 merge_sha=7778524 submodules=
