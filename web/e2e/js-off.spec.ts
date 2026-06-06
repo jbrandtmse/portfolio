@@ -39,15 +39,15 @@ test.describe('home / with JavaScript disabled', () => {
     );
     await expect(page.getByRole('link', { name: /book a talk/i }).first()).toHaveAttribute(
       'href',
-      '/speaking',
+      '/speaking/',
     );
-    // Global footer links to every key Mirror route + /browse.
+    // Global footer links to every key Mirror route + /browse/ (trailing-slash form; Story 2.0 AC2).
     const footer = page.locator('footer.site-footer');
-    await expect(footer.locator('a[href="/about"]')).toHaveCount(1);
-    await expect(footer.locator('a[href="/browse"]')).toHaveCount(1);
+    await expect(footer.locator('a[href="/about/"]')).toHaveCount(1);
+    await expect(footer.locator('a[href="/browse/"]')).toHaveCount(1);
 
-    // Following the /browse link works with no JS (real navigation).
-    await footer.locator('a[href="/browse"]').click();
+    // Following the /browse/ link works with no JS (real navigation).
+    await footer.locator('a[href="/browse/"]').click();
     await expect(page).toHaveURL(/\/browse\/?$/);
     await expect(page.locator('h1')).toHaveCount(1);
   });
@@ -86,14 +86,16 @@ test.describe('home / with JavaScript disabled', () => {
     for (const id of SCENE_IDS) {
       expect(await details.locator(`a[href="#${id}"]`).count()).toBeGreaterThanOrEqual(1);
     }
-    // And the skip + jump affordances are in the menu too.
-    await expect(details.locator('a[href="/speaking"]')).toHaveCount(1);
+    // And the skip + jump affordances are in the menu too (trailing-slash form; Story 2.0 AC2).
+    await expect(details.locator('a[href="/speaking/"]')).toHaveCount(1);
   });
 });
 
 test.describe('a Mirror route with JavaScript disabled', () => {
-  test('/about renders as a real page with one <h1> and an entity-first lede', async ({ page }) => {
-    await page.goto('/about');
+  test('/about/ renders as a real page with one <h1> and an entity-first lede', async ({
+    page,
+  }) => {
+    await page.goto('/about/');
     await expect(page.locator('h1')).toHaveCount(1);
     await expect(page.locator('main p').first()).toContainText(/^Joshua R\. Brandt, MSE/);
   });

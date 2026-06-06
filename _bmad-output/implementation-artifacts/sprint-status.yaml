@@ -1,5 +1,5 @@
 # generated: 2026-06-06T02:19:05Z
-# last_updated: 2026-06-06T02:19:05Z
+# last_updated: 2026-06-06
 # project: portfolio
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-06T02:19:05Z
-last_updated: 2026-06-06T14:40:00Z
+last_updated: 2026-06-06T20:53:18Z
 project: portfolio
 project_key: NOKEY
 tracking_system: file-system
@@ -59,14 +59,15 @@ development_status:
   epic-1-retrospective: done
 
   # Epic 2: Proof-as-Process — Glass Box, Master Timeline & Flagships
-  epic-2: backlog
-  2-1-publish-allowlist-default-deny-glass-box-render-pipeline: backlog
-  2-2-glass-box-artifact-reader: backlog
-  2-3-glass-box-index-the-curated-chronological-build-story: backlog
-  2-4-master-timeline-hand-curated-seeded: backlog
-  2-5-loandemo-flagship-case-study: backlog
-  2-6-project-import-bmad-correct-course-extension-path: backlog
-  epic-2-retrospective: optional
+  epic-2: done
+  2-0-epic-1-deferred-cleanup: done
+  2-1-publish-allowlist-default-deny-glass-box-render-pipeline: done
+  2-2-glass-box-artifact-reader: done
+  2-3-glass-box-index-the-curated-chronological-build-story: done
+  2-4-master-timeline-hand-curated-seeded: done
+  2-5-loandemo-flagship-case-study: done
+  2-6-project-import-bmad-correct-course-extension-path: done
+  epic-2-retrospective: done
 
   # Epic 3: Speaker Surface & Conversion
   epic-3: backlog

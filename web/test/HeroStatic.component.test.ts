@@ -84,25 +84,27 @@ describe('HeroStatic.astro — the audience fork at the component boundary (AC2 
     // href-before-class in Astro's output, so match the opening tag and assert
     // it is an <a> (the regex anchors on `<a … href=…`).
     expect(html).toMatch(/<a\b[^>]*\shref="#thesis"[^>]*>[\s\S]*?Explore[\s\S]*?<\/a>/);
-    expect(html).toMatch(/<a\b[^>]*\shref="\/speaking"[^>]*>[\s\S]*?book a talk[\s\S]*?<\/a>/);
+    // "book a talk" → /speaking/ (trailing-slash form; Story 2.0 AC2).
+    expect(html).toMatch(/<a\b[^>]*\shref="\/speaking\/"[^>]*>[\s\S]*?book a talk[\s\S]*?<\/a>/);
   });
 
-  it('renders the quiet Guide entry as a real <a> to /faq that is NOT a .btn', () => {
+  it('renders the quiet Guide entry as a real <a> to /faq/ that is NOT a .btn', () => {
     // The third, understated option is a real inline link (followable JS-off),
     // deliberately distinct from the two fork buttons (it carries no .btn class).
-    const guideLink = html.match(/<a\b[^>]*\shref="\/faq"[^>]*>/);
+    // /faq/ uses the trailing-slash form (Story 2.0 AC2).
+    const guideLink = html.match(/<a\b[^>]*\shref="\/faq\/"[^>]*>/);
     expect(guideLink).not.toBeNull();
     expect(guideLink![0]).not.toMatch(/class="[^"]*\bbtn\b/);
     expect(html).toMatch(
-      /<a\b[^>]*\shref="\/faq"[^>]*>[\s\S]*?ask my Guide about the work[\s\S]*?<\/a>/,
+      /<a\b[^>]*\shref="\/faq\/"[^>]*>[\s\S]*?ask my Guide about the work[\s\S]*?<\/a>/,
     );
   });
 
   it('exposes exactly the three fork hrefs from the component (no stray nav)', () => {
     // The component emits precisely the three canonical destinations — the two
-    // fork buttons (#thesis, /speaking) and the quiet Guide entry (/faq) — and
-    // no other anchors leak in from the hero.
+    // fork buttons (#thesis, /speaking/) and the quiet Guide entry (/faq/) — and
+    // no other anchors leak in from the hero. Trailing-slash form (Story 2.0 AC2).
     const hrefs = [...html.matchAll(/<a\b[^>]*\shref="([^"]*)"[^>]*>/g)].map((m) => m[1]);
-    expect(hrefs).toEqual(['#thesis', '/speaking', '/faq']);
+    expect(hrefs).toEqual(['#thesis', '/speaking/', '/faq/']);
   });
 });

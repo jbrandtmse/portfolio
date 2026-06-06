@@ -120,15 +120,15 @@ function findNodeByType(html: string, type: string): Record<string, unknown> | u
  * ────────────────────────────────────────────────────────────────────────── */
 const ALL_MIRROR_ROUTES = [
   '/',
-  '/about',
-  '/timeline',
-  '/speaking',
-  '/speaking/reel',
-  '/work/loandemo',
-  '/glass-box',
-  '/faq',
-  '/invite',
-  '/browse',
+  '/about/',
+  '/timeline/',
+  '/speaking/',
+  '/speaking/reel/',
+  '/work/loandemo/',
+  '/glass-box/',
+  '/faq/',
+  '/invite/',
+  '/browse/',
 ] as const;
 
 /** Extract the global footer block (<footer class="…site-footer…">…</footer>). */
@@ -194,11 +194,13 @@ describe('built home page (web/dist/index.html)', () => {
   it('renders the three fork controls as real links with the exact hrefs (Story 1.3 IAC-1)', () => {
     // Explore → in-page Scene-Arc anchor #thesis (Story 1.4 finalizes the target).
     expect(indexHtml).toMatch(/<a\b[^>]*\shref="#thesis"[^>]*>[\s\S]*?Explore[\s\S]*?<\/a>/);
-    // "I'm here to book a talk" → /speaking (route stub from Story 1.5; bypasses Guide).
-    expect(indexHtml).toMatch(/<a\b[^>]*\shref="\/speaking"[^>]*>[\s\S]*?book a talk[\s\S]*?<\/a>/);
-    // Quiet "Or ask my Guide about the work" → /faq (becomes the Guide opener in Epic 4).
+    // "I'm here to book a talk" → /speaking/ (trailing-slash form; Story 2.0 AC2).
     expect(indexHtml).toMatch(
-      /<a\b[^>]*\shref="\/faq"[^>]*>[\s\S]*?ask my Guide about the work[\s\S]*?<\/a>/,
+      /<a\b[^>]*\shref="\/speaking\/"[^>]*>[\s\S]*?book a talk[\s\S]*?<\/a>/,
+    );
+    // Quiet "Or ask my Guide about the work" → /faq/ (becomes the Guide opener in Epic 4).
+    expect(indexHtml).toMatch(
+      /<a\b[^>]*\shref="\/faq\/"[^>]*>[\s\S]*?ask my Guide about the work[\s\S]*?<\/a>/,
     );
   });
 
@@ -215,9 +217,9 @@ describe('built home page (web/dist/index.html)', () => {
   });
 
   it('keeps the quiet Guide entry distinct from the two fork buttons (Story 1.3 IAC-1)', () => {
-    // The /faq Guide link is an inline link, NOT a .btn — visually distinct from
+    // The /faq/ Guide link is an inline link, NOT a .btn — visually distinct from
     // the Explore/book-a-talk buttons (DESIGN: a quiet, understated entry).
-    const guideLink = indexHtml.match(/<a\b[^>]*\shref="\/faq"[^>]*>/);
+    const guideLink = indexHtml.match(/<a\b[^>]*\shref="\/faq\/"[^>]*>/);
     expect(guideLink).not.toBeNull();
     expect(guideLink![0]).not.toMatch(/class="[^"]*\bbtn\b/);
   });
@@ -364,8 +366,8 @@ describe('home 7-scene scaffold + scene-rail (Story 1.4 IAC-1 / IAC-2)', () => {
     const rail = railMatch![0];
     // Skip to the end → the Close scene anchor.
     expect(rail).toMatch(/<a\b[^>]*\shref="#close"[^>]*>[\s\S]*?Skip[\s\S]*?<\/a>/);
-    // Jump: book a talk → the /speaking Mirror route (protects SM-C1).
-    expect(rail).toMatch(/<a\b[^>]*\shref="\/speaking"[^>]*>[\s\S]*?book a talk[\s\S]*?<\/a>/);
+    // Jump: book a talk → the /speaking/ Mirror route (trailing-slash form; SM-C1).
+    expect(rail).toMatch(/<a\b[^>]*\shref="\/speaking\/"[^>]*>[\s\S]*?book a talk[\s\S]*?<\/a>/);
   });
 
   it('marks the current scene with aria-current (static baseline = #hero), never color alone (AC2/AC4)', () => {
@@ -387,13 +389,12 @@ describe('home 7-scene scaffold + scene-rail (Story 1.4 IAC-1 / IAC-2)', () => {
   });
 
   it('teaser scenes link to their Mirror routes (summarize-and-link, UX-DR10) (AC1)', () => {
-    // Each teaser scene carries a real link to its Mirror route. (These 404
-    // until Story 1.5 — correct hrefs now, not a defect.)
-    expect(indexHtml).toMatch(/<a\b[^>]*\shref="\/timeline"[^>]*>/);
-    expect(indexHtml).toMatch(/<a\b[^>]*\shref="\/work\/loandemo"[^>]*>/);
-    expect(indexHtml).toMatch(/<a\b[^>]*\shref="\/glass-box"[^>]*>/);
-    // The Close shell links to /invite (the CTAs themselves are Epic 3).
-    expect(indexHtml).toMatch(/<a\b[^>]*\shref="\/invite"[^>]*>/);
+    // Each teaser scene carries a real link to its Mirror route (trailing-slash form; Story 2.0 AC2).
+    expect(indexHtml).toMatch(/<a\b[^>]*\shref="\/timeline\/"[^>]*>/);
+    expect(indexHtml).toMatch(/<a\b[^>]*\shref="\/work\/loandemo\/"[^>]*>/);
+    expect(indexHtml).toMatch(/<a\b[^>]*\shref="\/glass-box\/"[^>]*>/);
+    // The Close shell links to /invite/ (the CTAs themselves are Epic 3).
+    expect(indexHtml).toMatch(/<a\b[^>]*\shref="\/invite\/"[^>]*>/);
   });
 
   it('still keeps exactly one <h1> — scene titles are <h2> (clean hierarchy, NFR-2/SEO)', () => {
@@ -449,7 +450,33 @@ describe('built CSS — tokens as the single source of truth (AC1 / IAC-2)', () 
   });
 
   it('applies no box-shadow to any surface (flat/hairline system, AC3)', () => {
-    expect(builtCss).not.toMatch(/box-shadow:/);
+    // The flat design system forbids box-shadow on surfaces/cards/panels.
+    // Exception: the BMAD Method Dot (TimelineDot, Story 2.3) uses a static
+    // box-shadow halo for the `live` state — spec-verbatim (DESIGN §timeline-dot:
+    // "live filled + 4px rgba(30,58,95,0.16) static halo"). This is a DECORATIVE
+    // node marker, not a content surface. The --shadow-float token remains reserved
+    // for the Guide panel (the single elevated surface). The test is updated to
+    // allow box-shadow ONLY on the timeline dot component while preserving the
+    // flat-surface constraint for all other elements.
+    //
+    // Parse each rule block and verify non-dot blocks have no box-shadow.
+    // Strategy: split on } to get declaration blocks, skip blocks that are
+    // exclusively for the timeline-dot selector, check others have no box-shadow.
+    const blocks = builtCss.split('}');
+    const surfaceViolations = blocks.filter((block) => {
+      // Only care about blocks that have a non-none box-shadow declaration.
+      // box-shadow:none is explicitly allowed (it's the reset/flat declaration).
+      if (!block.match(/box-shadow:\s*(?!none)[^;}]/)) return false;
+      // The timeline-dot halo is exempt (decorative marker, spec-verbatim).
+      if (block.includes('timeline-dot')) return false;
+      // The --shadow-float token DEFINITION itself (not application) is allowed.
+      if (block.includes('--shadow-float')) return false;
+      return true;
+    });
+    expect(
+      surfaceViolations,
+      `box-shadow on surface (violating blocks): ${surfaceViolations.join('\n')}`,
+    ).toHaveLength(0);
   });
 });
 
@@ -517,6 +544,10 @@ const MIRROR_ROUTES = [
   '/about',
   '/browse',
 ] as const;
+// Note: MIRROR_ROUTES values are kept slashless here because routeHtmlPath() uses
+// them to derive the filesystem path (about/index.html etc.) — the slash form is
+// irrelevant to that lookup. The canonical href form is asserted below as exact
+// trailing-slash (the Story 2.0 AC5 lock removes the earlier slash-normalization).
 
 /** Absolute path to a route's built index.html (directory-index form). */
 function routeHtmlPath(route: string): string {
@@ -557,17 +588,20 @@ describe('Story 1.5 — every Mirror route is a real, answer-first, self-canonic
     },
   );
 
-  it.each(MIRROR_ROUTES)('is self-canonical to its own absolute URL on %s', (route) => {
-    const html = readFileSync(routeHtmlPath(route), 'utf8');
-    const canonicalMatch = html.match(/<link\b[^>]*\brel="canonical"[^>]*>/);
-    expect(canonicalMatch).not.toBeNull();
-    const hrefMatch = canonicalMatch![0].match(/\bhref="([^"]+)"/);
-    expect(hrefMatch).not.toBeNull();
-    // Astro builds the canonical from Astro.site + pathname. Normalize a trailing
-    // slash before comparing so the assertion is independent of trailingSlash.
-    const got = hrefMatch![1]!.replace(/\/$/, '');
-    expect(got).toBe(`${SITE_ORIGIN}${route}`);
-  });
+  it.each(MIRROR_ROUTES)(
+    'is self-canonical to its own absolute trailing-slash URL on %s (Story 2.0 AC3)',
+    (route) => {
+      const html = readFileSync(routeHtmlPath(route), 'utf8');
+      const canonicalMatch = html.match(/<link\b[^>]*\brel="canonical"[^>]*>/);
+      expect(canonicalMatch).not.toBeNull();
+      const hrefMatch = canonicalMatch![0].match(/\bhref="([^"]+)"/);
+      expect(hrefMatch).not.toBeNull();
+      // Exact trailing-slash form — no normalization (Story 2.0 AC5 mandates exact-string
+      // equality so any future form drift fails CI, not passes silently).
+      const got = hrefMatch![1]!;
+      expect(got).toBe(`${SITE_ORIGIN}${route}/`);
+    },
+  );
 
   it.each(MIRROR_ROUTES)('renders exactly one <h1> on %s (clean hierarchy)', (route) => {
     const html = readFileSync(routeHtmlPath(route), 'utf8');
@@ -713,22 +747,28 @@ describe('Story 1.5 — 1.3 hero fork + 1.4 teaser forward-refs now resolve (IAC
   // Every Mirror route the home links to (hero fork + scene teasers). Each MUST
   // now map to an existing built page (no 404). The home index.html is built in
   // the same run (beforeAll above already read it into indexHtml).
+  // HOME_FORWARD_REFS now use the trailing-slash form (Story 2.0 AC2) since the
+  // home markup emits trailing-slash hrefs. routeHtmlPath() still uses the
+  // slashless form for filesystem lookup (about/index.html is unchanged).
   const HOME_FORWARD_REFS = [
-    '/speaking', // hero fork "book a talk" + scene-rail jump + Speaker teaser
-    '/faq', // hero quiet Guide entry
-    '/timeline', // Timeline teaser
-    '/work/loandemo', // Flagship teaser
-    '/glass-box', // Glass Box teaser
-    '/invite', // Close scene
+    { href: '/speaking/', route: '/speaking' }, // hero fork "book a talk" + scene-rail jump + Speaker teaser
+    { href: '/faq/', route: '/faq' }, // hero quiet Guide entry
+    { href: '/timeline/', route: '/timeline' }, // Timeline teaser
+    { href: '/work/loandemo/', route: '/work/loandemo' }, // Flagship teaser
+    { href: '/glass-box/', route: '/glass-box' }, // Glass Box teaser
+    { href: '/invite/', route: '/invite' }, // Close scene
   ] as const;
 
-  it.each(HOME_FORWARD_REFS)('the home links to %s and that route is now built', (route) => {
-    // The home markup still carries the exact href (regression-guards 1.3/1.4)…
-    const hrefPattern = new RegExp(`<a\\b[^>]*\\shref="${route.replace('/', '\\/')}"[^>]*>`);
-    expect(indexHtml).toMatch(hrefPattern);
-    // …and the href now resolves to a real built directory-index (no 404).
-    expect(existsSync(routeHtmlPath(route))).toBe(true);
-  });
+  it.each(HOME_FORWARD_REFS)(
+    'the home links to $href (trailing-slash) and that route is now built',
+    ({ href, route }) => {
+      // The home markup carries the trailing-slash href (Story 2.0 AC2)…
+      const hrefPattern = new RegExp(`<a\\b[^>]*\\shref="${href.replace(/\//g, '\\/')}"[^>]*>`);
+      expect(indexHtml).toMatch(hrefPattern);
+      // …and the href resolves to a real built directory-index (no 404).
+      expect(existsSync(routeHtmlPath(route))).toBe(true);
+    },
+  );
 });
 
 /* ──────────────────────────────────────────────────────────────────────────
@@ -922,8 +962,14 @@ describe('Story 1.6 — generated sitemap.xml (AC3 / IAC-2)', () => {
   });
 
   it('enumerates exactly the current route set (count guards against stale routes)', () => {
+    // Story 2.2: the sitemap now includes the 10 static Mirror routes PLUS one
+    // entry per allowlisted Glass Box artifact (/glass-box/{slug}/). The dynamic
+    // reader pages are added by sitemap.xml.ts from glassbox.json. The test
+    // asserts count >= 10 (the static floor) and that the 10 static routes are
+    // all present (the per-route `it.each` above). The exact artifact count
+    // depends on the allowlist and may grow as artifacts are added.
     const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-    expect(locs).toHaveLength(SITEMAP_ROUTES.length);
+    expect(locs.length).toBeGreaterThanOrEqual(SITEMAP_ROUTES.length);
   });
 
   it('uses absolute URLs that match the Mirror self-canonical origin (UX-DR10)', () => {
@@ -1169,5 +1215,238 @@ describe('Story 1.10 — env-gated Umami is ON when PUBLIC_UMAMI_* is set (AC2 /
   it('adds EXACTLY ONE external Umami script — no duplicate injection per page', () => {
     const onHome = homeHtml.match(/src="https:\/\/umami\.example\.test\/script\.js"/g) ?? [];
     expect(onHome).toHaveLength(1);
+  });
+});
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Story 2.5 — /work/loandemo layered case study (AC1–AC6 / IAC-1).
+ *
+ * Build-output assertions on the produced /work/loandemo/index.html (real
+ * `astro build` output — the consumer-observable form, skill-rules Rule 3).
+ *
+ * Asserts:
+ *   • One <h1> (the case study title, from MirrorLayout).
+ *   • #code / #build / #retro section IDs exist (resolves Story 2.4's Dot links).
+ *   • Enriched CreativeWork JSON-LD: name "loandemo" + author Person + description
+ *     + dateCreated (keeps the 1.6 assertion green, AC1/AC5).
+ *   • The /speaking/ cross-link is a real <a> (forward-ref: AC2; talk content Epic 3).
+ *   • The lede leads with "Joshua R. Brandt, MSE" (entity-first, GEO floor).
+ *   • 0 executable scripts (NFR-1).
+ *   • No exclamation marks in copy (positive-assertion voice).
+ *   • [OPEN] flags present in the rendered HTML (credibility floor, AC3).
+ *   • The description does NOT contain the old [PLACEHOLDER] marker (enriched, AC1).
+ * ────────────────────────────────────────────────────────────────────────── */
+
+describe('Story 2.5 — /work/loandemo layered case study (AC1–AC6 / IAC-1)', () => {
+  let loandemoHtml = '';
+  beforeAll(() => {
+    loandemoHtml = readFileSync(routeHtmlPath('/work/loandemo'), 'utf8');
+  });
+
+  it('builds a real /work/loandemo/index.html', () => {
+    expect(existsSync(routeHtmlPath('/work/loandemo'))).toBe(true);
+  });
+
+  it('renders exactly one <h1> (the MirrorLayout title; #code/#build/#retro are h2, AC6)', () => {
+    const h1s = loandemoHtml.match(/<h1\b[^>]*>/g) ?? [];
+    expect(h1s).toHaveLength(1);
+  });
+
+  it('the lede leads with "Joshua R. Brandt, MSE" (entity-first, GEO floor, AC1)', () => {
+    const lede = firstParagraphText(loandemoHtml);
+    expect(lede.startsWith('Joshua R. Brandt, MSE')).toBe(true);
+  });
+
+  it('contains the #code section ID (resolves Story 2.4 Dot link to /work/loandemo/#code, AC5)', () => {
+    expect(loandemoHtml).toContain('id="code"');
+  });
+
+  it('contains the #build section ID (resolves Story 2.4 Dot link to /work/loandemo/#build, AC5)', () => {
+    expect(loandemoHtml).toContain('id="build"');
+  });
+
+  it('contains the #retro section ID (resolves Story 2.4 Dot link to /work/loandemo/#retro, AC5)', () => {
+    expect(loandemoHtml).toContain('id="retro"');
+  });
+
+  it('the #code / #build / #retro IDs are on <section> elements (AC2, heading hierarchy)', () => {
+    // Each fragment target is a <section id="…"> — real in-page sections, not bare anchors.
+    expect(loandemoHtml).toMatch(/<section\b[^>]*id="code"[^>]*>/);
+    expect(loandemoHtml).toMatch(/<section\b[^>]*id="build"[^>]*>/);
+    expect(loandemoHtml).toMatch(/<section\b[^>]*id="retro"[^>]*>/);
+  });
+
+  it('the #code / #build / #retro section headings are <h2> — never a 2nd <h1> (AC6 hierarchy)', () => {
+    // STRENGTHENED (QA): AC6 explicitly requires the section headings to be
+    // <h2>/<h3>, "not a 2nd h1". The IDs-on-<section> test above does NOT check
+    // the heading LEVEL inside each section — a regression that promoted a section
+    // heading to <h1> (breaking clean hierarchy + the one-h1 SEO floor) would slip
+    // through it. Bind each fragment section's FIRST heading to <h2> directly.
+    for (const id of ['code', 'build', 'retro'] as const) {
+      const section = loandemoHtml.match(
+        new RegExp(`<section\\b[^>]*id="${id}"[^>]*>([\\s\\S]*?)</section>`),
+      );
+      expect(section, `<section id="${id}">`).not.toBeNull();
+      const inner = section![1]!;
+      // The first heading tag inside the section must be an <h2> (the section
+      // title); h3 is allowed deeper (the evidence-card title) but never h1.
+      const firstHeading = inner.match(/<h([1-6])\b/);
+      expect(firstHeading, `a heading inside #${id}`).not.toBeNull();
+      expect(firstHeading![1], `#${id} section heading level`).toBe('2');
+      // And categorically: no <h1> anywhere inside any fragment section.
+      expect(inner).not.toMatch(/<h1\b/);
+    }
+  });
+
+  it('carries a /speaking/ cross-link as a real <a> (AC2; forward-ref: talk content Epic 3)', () => {
+    // The /speaking/ route exists from Epic 1; the talk content lands in Epic 3.
+    // The link must be a real <a href="/speaking/"> (trailing-slash; followable JS-off).
+    expect(loandemoHtml).toMatch(/<a\b[^>]*\shref="\/speaking\/"[^>]*>/);
+  });
+
+  it('carries a /glass-box/ cross-link as a real <a> (AC4: the two flagships reference each other)', () => {
+    expect(loandemoHtml).toMatch(/<a\b[^>]*\shref="\/glass-box\/"[^>]*>/);
+  });
+
+  it('carries a /timeline/ cross-link as a real <a> (AC4: links to the Master Timeline)', () => {
+    expect(loandemoHtml).toMatch(/<a\b[^>]*\shref="\/timeline\/"[^>]*>/);
+  });
+
+  it('ships 0 executable scripts (NFR-1)', () => {
+    expect(countExecutableScripts(loandemoHtml)).toBe(0);
+    expect(loandemoHtml).not.toMatch(/<script\b[^>]*\bsrc=/);
+  });
+
+  it('contains no exclamation marks in copy (positive-assertion voice)', () => {
+    const copyOnly = loandemoHtml.replace(/<!doctype html>/i, '');
+    expect(copyOnly).not.toContain('!');
+  });
+
+  it('contains [OPEN] flags in visible text (credibility floor: gaps flagged, AC3)', () => {
+    // The [OPEN] pattern must appear in the rendered HTML — the visible text
+    // commitment that assets/metrics not yet confirmed are flagged, not invented.
+    expect(loandemoHtml).toContain('[OPEN');
+  });
+
+  it('the CreativeWork description is enriched — [PLACEHOLDER] is gone (AC1)', () => {
+    // Story 1.6 seeded the JSON-LD with a "[PLACEHOLDER]" description; Story 2.5
+    // must replace it with a real case-study description (AC1: "ENRICH the 1.6 placeholder").
+    const work = findNodeByType(loandemoHtml, 'CreativeWork');
+    expect(work).toBeDefined();
+    const desc = work!.description as string;
+    expect(desc).not.toContain('[PLACEHOLDER]');
+    expect(desc.length).toBeGreaterThan(50);
+  });
+
+  it('/work/loandemo emits a valid CreativeWork JSON-LD with all required fields (1.6 assertion kept green, AC5)', () => {
+    // This is the Story 1.6 assertion kept + extended. All required fields must be present.
+    const work = findNodeByType(loandemoHtml, 'CreativeWork');
+    expect(work).toBeDefined();
+    expect(work!['@context']).toBe('https://schema.org');
+    expect(work!.name).toBe('loandemo');
+    expect((work!.author as Record<string, unknown>)['@type']).toBe('Person');
+    expect(typeof work!.description).toBe('string');
+    expect(typeof work!.url).toBe('string');
+    expect(typeof work!.dateCreated).toBe('string');
+    // dateCreated must be a valid ISO-8601 date string (parseable; not "[OPEN]").
+    expect(() => new Date(work!.dateCreated as string).toISOString()).not.toThrow();
+  });
+
+  it('the author Person in CreativeWork is "Joshua R. Brandt, MSE" (AC1)', () => {
+    const work = findNodeByType(loandemoHtml, 'CreativeWork');
+    expect(work).toBeDefined();
+    const author = work!.author as Record<string, unknown>;
+    expect(author.name).toBe('Joshua R. Brandt, MSE');
+  });
+
+  it('is self-canonical to /work/loandemo/ (trailing-slash; Story 2.0 AC3)', () => {
+    const canonicalMatch = loandemoHtml.match(/<link\b[^>]*\brel="canonical"[^>]*>/);
+    expect(canonicalMatch).not.toBeNull();
+    const hrefMatch = canonicalMatch![0].match(/\bhref="([^"]+)"/);
+    expect(hrefMatch).not.toBeNull();
+    expect(hrefMatch![1]).toBe(`${SITE_ORIGIN}/work/loandemo/`);
+  });
+
+  it('every Story 2.4 timeline loandemo fragment resolves to a real section here — no dangling fragment (AC5 reciprocity)', () => {
+    // STRENGTHENED (QA — the key cross-story wire-up). The dev tests assert the
+    // #code/#build/#retro IDs exist HERE, and timeline.spec.ts asserts the Dot
+    // links exist on /timeline/ — but NOTHING bound the two together. A peer who
+    // clicks a timeline loandemo Dot must land on a REAL in-page section. This
+    // closes the loop against GROUND TRUTH: read the BUILT /timeline/index.html,
+    // extract every `/work/loandemo/#…` href the timeline actually ships, and
+    // assert each fragment id is present as an element id in the built loandemo
+    // page. If a future edit renames a section here OR changes a Dot href in
+    // content/timeline/dots.ts, this fails (the dangling-fragment regression the
+    // Story 2.5 directive warns about). This is the Integration AC (Rule 1):
+    // consumer (timeline) → producer (this page) verified observably.
+    const timelineHtml = readFileSync(routeHtmlPath('/timeline'), 'utf8');
+
+    // The fragment ids the timeline links into on /work/loandemo/.
+    const timelineFragments = [
+      ...timelineHtml.matchAll(/href="\/work\/loandemo\/#([a-z-]+)"/g),
+    ].map((m) => m[1]!);
+
+    // The timeline MUST link at least the three canonical loandemo fragments
+    // (Story 2.4 dots.ts cluster: code · build · retro) — guards against the
+    // consumer silently dropping the wire-up.
+    const uniqueFragments = [...new Set(timelineFragments)];
+    expect(uniqueFragments.length).toBeGreaterThanOrEqual(3);
+    expect(uniqueFragments).toEqual(expect.arrayContaining(['code', 'build', 'retro']));
+
+    // Every fragment the timeline points at MUST resolve to a real element id on
+    // this page (no dangling fragment — the peer lands on a real section).
+    const idsHere = new Set([...loandemoHtml.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]!));
+    for (const frag of uniqueFragments) {
+      expect(idsHere.has(frag), `timeline links /work/loandemo/#${frag} → must exist here`).toBe(
+        true,
+      );
+    }
+  });
+
+  it('no fabricated metric/outcome ships as fact — every figure is [OPEN]/[ASSUMPTION]-flagged (AC3, adversarial)', () => {
+    // STRENGTHENED (QA — the 2.4 AC4 credibility lesson, HIGH-value). The existing
+    // "[OPEN] present" check is weak: it would still pass if the body ALSO leaked a
+    // fabricated outcome like "40% faster" or "$2M saved" next to the [OPEN] flags.
+    // AC3 forbids ANY invented metric/result/date/figure shipping as fact. This
+    // scan extracts the VISIBLE <main> text (tags + the ld+json <head> stripped)
+    // and asserts no fabricated-outcome numeric pattern appears. Known-legitimate,
+    // non-metric numerics are allowed: requirement/stage ids (FR-22, Stage-1), the
+    // talk year (2026), epic refs (Epic 3) — none is an invented performance claim.
+    const mainMatch = loandemoHtml.match(/<main\b[^>]*>([\s\S]*?)<\/main>/);
+    expect(mainMatch, '<main> region').not.toBeNull();
+    const visibleText = mainMatch![1]!
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&[a-z]+;/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // Fabricated-OUTCOME patterns: a percentage, a currency figure, an "Nx"
+    // multiplier, a "N <unit>" performance/scale figure, or a count of users/etc.
+    // Any of these presented as fact (i.e. NOT inside an [OPEN]/[ASSUMPTION] flag)
+    // is a credibility-floor violation.
+    const fabricationPatterns: Array<[string, RegExp]> = [
+      ['percentage', /\b\d+(\.\d+)?\s*%/],
+      ['currency', /[$€£]\s*\d/],
+      ['multiplier', /\b\d+(\.\d+)?x\b/i],
+      [
+        'scale/perf figure',
+        /\b\d+(\.\d+)?\s*(users|customers|requests|ms|seconds|minutes|hours|days|weeks|months|loans|applications|x\b)/i,
+      ],
+      ['relative-outcome claim', /\b\d+(\.\d+)?\s*(faster|slower|cheaper|fewer|more)\b/i],
+    ];
+    const leaks: string[] = [];
+    for (const [label, pattern] of fabricationPatterns) {
+      const m = visibleText.match(pattern);
+      if (m) {
+        const idx = visibleText.indexOf(m[0]);
+        const ctx = visibleText.slice(Math.max(0, idx - 40), idx + 40);
+        // Only a leak if NOT wrapped in an [OPEN…]/[ASSUMPTION…] flag in its context.
+        if (!/\[(OPEN|ASSUMPTION)/i.test(ctx)) {
+          leaks.push(`${label}: "${m[0]}" — context: …${ctx}…`);
+        }
+      }
+    }
+    expect(leaks, `fabricated metric(s) shipped as fact:\n${leaks.join('\n')}`).toEqual([]);
   });
 });

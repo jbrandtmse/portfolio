@@ -66,9 +66,11 @@ test.describe('view-source / (home) — the GEO substance is in the initial HTML
   });
 });
 
-test.describe('view-source /about (Mirror route) — full SEO floor in the initial HTML (no JS)', () => {
+// Trailing-slash form (Story 2.0 AC2; trailingSlash: 'always' → astro preview
+// serves /about/ as 200 and /about as 404).
+test.describe('view-source /about/ (Mirror route) — full SEO floor in the initial HTML (no JS)', () => {
   test('the answer-first lede names the entity in its first sentence', async ({ request }) => {
-    const res = await request.get('/about');
+    const res = await request.get('/about/');
     expect(res.ok()).toBeTruthy();
     const html = await res.text();
     expect(firstAnswerParagraph(html)).toMatch(/^Joshua R\. Brandt, MSE/);
@@ -77,16 +79,17 @@ test.describe('view-source /about (Mirror route) — full SEO floor in the initi
   test('is self-canonical — carries a <link rel="canonical"> to its own URL', async ({
     request,
   }) => {
-    const html = await (await request.get('/about')).text();
+    const html = await (await request.get('/about/')).text();
     const canonical = html.match(/<link\b[^>]*\brel="canonical"[^>]*>/);
     expect(canonical).not.toBeNull();
-    expect(canonical![0]).toMatch(/href="[^"]*\/about\/?"/);
+    // Exact trailing-slash form (Story 2.0 AC3 — canonical === trailing-slash).
+    expect(canonical![0]).toMatch(/href="[^"]*\/about\/"/);
   });
 
   test('embeds a parseable JSON-LD Person node in the served HTML (DATA, not JS)', async ({
     request,
   }) => {
-    const html = await (await request.get('/about')).text();
+    const html = await (await request.get('/about/')).text();
     expect(html).toMatch(/<script\b[^>]*type\s*=\s*["']application\/ld\+json["']/i);
     const person = parseLdJson(html).find((n) => n['@type'] === 'Person');
     expect(person).toBeDefined();

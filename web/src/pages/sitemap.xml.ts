@@ -11,6 +11,11 @@
  * unavailable. The route registry lives in lib/routes.ts; extend it as routes
  * are added (Story 1.7 `/browse`; Epic 2 `/glass-box/[artifact]`).
  *
+ * Story 2.2: the Glass Box artifact reader pages (`/glass-box/{slug}/`) are
+ * dynamic routes generated from glassbox.json. They are included here by
+ * loading the same generated data the reader route uses. If glassbox.json is
+ * absent (bare astro build / clean checkout), they are omitted gracefully.
+ *
  * This runs at BUILD TIME in Node and emits static XML; it ships no client JS.
  */
 import { execFileSync } from 'node:child_process';
@@ -18,8 +23,9 @@ import process from 'node:process';
 
 import type { APIRoute } from 'astro';
 
+import { loadGlassboxArtifacts } from '../lib/glassbox';
 import { FALLBACK_LASTMOD, gitLastmod } from '../lib/lastmod';
-import { SITEMAP_ROUTES } from '../lib/routes';
+import { SITEMAP_ROUTES, routeHref } from '../lib/routes';
 
 // Prerender as a static file at build time (the project is output: 'static',
 // but mark explicitly so this endpoint is never treated as on-demand).
@@ -59,20 +65,30 @@ export const GET: APIRoute = ({ site }) => {
   const origin = site?.href.replace(/\/$/, '') ?? 'https://joshuabrandt.abacusai.cloud';
   const repoRoot = gitRepoRoot();
 
-  const urls = SITEMAP_ROUTES.map((route) => {
+  // Static Mirror routes from the hand-maintained registry.
+  const staticUrls = SITEMAP_ROUTES.map((route) => {
     // Absolute URL with a TRAILING SLASH so each <loc> matches the page's own
-    // <link rel="canonical"> exactly (Story 1.5, UX-DR10). Astro's default
-    // directory build (build.format 'directory', trailingSlash 'ignore') serves
-    // every route as a directory index and emits a trailing-slash self-canonical
-    // (Astro.url.pathname is e.g. "/about/"), so the sitemap must use the same
-    // form — a slashless <loc> would advertise a non-canonical variant and split
-    // the SEO signal. The site root is already "/".
-    const loc = route.path === '/' ? `${origin}/` : `${origin}${route.path}/`;
+    // <link rel="canonical"> exactly (Story 1.5, UX-DR10; Rule 2). Built via the
+    // shared routeHref() helper so sitemap <loc> form is always === link form ===
+    // canonical form — a single source prevents drift (Story 2.0, AC4).
+    const loc = `${origin}${routeHref(route.path)}`;
     const lastmod = repoRoot ? gitLastmod(route.sourceFile, repoRoot) : FALLBACK_LASTMOD;
     return `  <url>\n    <loc>${xmlEscape(loc)}</loc>\n    <lastmod>${lastmod}</lastmod>\n  </url>`;
-  }).join('\n');
+  });
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
+  // Dynamic Glass Box reader pages (Story 2.2): /glass-box/{slug}/
+  // Gracefully absent when glassbox.json has not been generated yet (AC6).
+  const glassboxArtifacts = loadGlassboxArtifacts();
+  const glassboxUrls = glassboxArtifacts.map((artifact) => {
+    const loc = `${origin}/glass-box/${artifact.slug}/`;
+    // Use the artifact date (git committer date) as the lastmod — already the
+    // deterministic ISO-8601 form from the render pipeline (NFR-6).
+    const lastmod = artifact.date;
+    return `  <url>\n    <loc>${xmlEscape(loc)}</loc>\n    <lastmod>${lastmod}</lastmod>\n  </url>`;
+  });
+
+  const allUrls = [...staticUrls, ...glassboxUrls].join('\n');
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${allUrls}\n</urlset>\n`;
 
   return new Response(xml, {
     headers: { 'Content-Type': 'application/xml; charset=utf-8' },

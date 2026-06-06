@@ -1,0 +1,93 @@
+---
+/**
+ * TimelineDot.astro — the BMAD Method Dot (Story 2.3, Task 1).
+ *
+ * A purely decorative node marker for the Glass Box timeline spine and the
+ * Master Timeline (Story 2.4 reuses this component; props are designed for
+ * extensibility). Status meaning lives ENTIRELY in adjacent text — color and
+ * shape are supplementary, never the sole carrier (AC6, NFR-2, DESIGN tokens).
+ *
+ * STATES (prop: `state`):
+ *  • `resting`   — 13px circle, surface-raised fill, 1.5px solid accent ring.
+ *  • `filled`    — accent fill (shipped / curated artifact).
+ *  • `live`      — filled + 4px rgba(30,58,95,0.16) static halo (NO animation).
+ *  • `upcoming`  — surface-base fill, 1.5px DASHED accent, opacity 0.7.
+ *  • `faint`     — 11px circle, 1.5px #C0B49B ring (quiet runway ticks; decorative).
+ *  • `milestone` — 17px filled accent circle (flagship career milestone).
+ *
+ * 0 executable JS (NFR-1): all states are pure CSS classes. No client script.
+ * Decorative: aria-hidden="true" — the meaning is in the adjacent label/text.
+ */
+
+export type DotState = 'resting' | 'filled' | 'live' | 'upcoming' | 'faint' | 'milestone';
+
+interface Props {
+  /** Visual state of the dot. Defaults to 'resting'. */
+  state?: DotState;
+  /** Additional class to apply to the root element (for Story 2.4 sizing variants). */
+  class?: string;
+}
+
+const { state = 'resting', class: extraClass } = Astro.props;
+---
+
+<span class:list={['timeline-dot', `timeline-dot--${state}`, extraClass]} aria-hidden="true"></span>
+
+<style>
+  /* Base dot — all states share this foundation (13px circle). */
+  .timeline-dot {
+    display: inline-block;
+    width: 13px;
+    height: 13px;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+  }
+
+  /* resting: surface-raised fill + 1.5px solid accent ring */
+  .timeline-dot--resting {
+    background-color: var(--color-surface-raised);
+    outline: 1.5px solid var(--color-accent);
+    outline-offset: 0;
+  }
+
+  /* filled: solid accent fill (shipped / curated artifact node) */
+  .timeline-dot--filled {
+    background-color: var(--color-accent);
+    outline: none;
+  }
+
+  /* live: accent fill + 4px static rgba halo (spec-verbatim; no animation) */
+  .timeline-dot--live {
+    background-color: var(--color-accent);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(30, 58, 95, 0.16);
+  }
+
+  /* upcoming: surface-base fill + 1.5px DASHED accent ring + opacity 0.7 */
+  .timeline-dot--upcoming {
+    background-color: var(--color-surface-base);
+    outline: 1.5px dashed var(--color-accent);
+    outline-offset: 0;
+    opacity: 0.7;
+  }
+
+  /* faint: 11px circle, 1.5px #C0B49B ring — quiet 30-year runway ticks.
+     Decorative span; color is spec-verbatim (DESIGN §timeline-dot).
+     Intentionally below AA contrast — purely decorative (aria-hidden). */
+  .timeline-dot--faint {
+    width: 11px;
+    height: 11px;
+    background-color: var(--color-surface-raised);
+    outline: 1.5px solid #c0b49b;
+    outline-offset: 0;
+    opacity: 0.6;
+  }
+
+  /* milestone: 17px filled accent circle — flagship career milestone node. */
+  .timeline-dot--milestone {
+    width: 17px;
+    height: 17px;
+    background-color: var(--color-accent);
+    outline: none;
+  }
+</style>

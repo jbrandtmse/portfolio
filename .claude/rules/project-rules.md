@@ -63,6 +63,26 @@ Durable rules for AI dev + code-review agents working on this project. Rules are
 
 **How to apply:** never hardcode a third-party script/URL/key into shipped client code; read it from `PUBLIC_` env, render conditionally, test both branches; non-PUBLIC secrets stay server-side (NFR-5).
 
+## 5. Per-story verification runs the project's CANONICAL full gate, not a scoped subset
+
+**Context:** Any story whose dev / QA / code-review verification or lead smoke runs a quality gate that the project also runs as its launch/CI gate (lint, format, typecheck, test, e2e) — especially in a monorepo where the root gate's file globs differ from a single package's.
+
+**Rule:** Each pipeline stage (and the lead smoke) MUST run the project's **canonical full gate** — the exact command the launch/`test:all` gate runs (e.g. root `pnpm format:check` / `pnpm lint` / `pnpm typecheck` / `pnpm test` / `pnpm test:e2e`) — NOT a hand-narrowed, package-scoped subset. If you scope a check for speed during iteration, you MUST re-run the root gate before the stage is "green." A story is not done until the root gate it will be measured by is green.
+
+**Why:** Epic 2 stories 2.2 and 2.3 ran *scoped* prettier checks (`prettier --check "src/**" "test/**"`) that passed, but the ROOT `pnpm format:check` (`prettier --check .`, which formats `.astro` via `prettier-plugin-astro`) was RED on those new `.astro` components/pages — so format-RED files were committed and the `test:all` launch gate was silently broken from 2.2 until the lead caught it at 2.4's verification. A scoped subset that "passes" gives false confidence; only the canonical gate reflects reality. (Epic 2 retro, 2026-06-06.)
+
+**How to apply:** in every spawn prompt's verify step and the lead smoke, name the ROOT gate commands explicitly; treat "scoped check passed" as insufficient. When a new file *type* or path enters the repo (e.g. the first `.astro`, the first `.tsx`), confirm the root gate's globs cover it.
+
+## 6. Documentation / runbook deliverables get a LITERAL doc-follow smoke
+
+**Context:** Any story whose deliverable is a document, runbook, or path a human or agent is meant to FOLLOW (a how-to, an import/migration guide, an onboarding doc, a deploy runbook) — distinct from stories that ship code with an underlying mechanism.
+
+**Rule:** The lead per-story smoke MUST execute the document's steps **verbatim against the real runtime** and assert the document's *claimed* user-observable outcome — not merely test the underlying mechanism the doc describes. If the doc says "do X and Y appears," the smoke does exactly X and verifies exactly Y (then reverts any state it changed).
+
+**Why:** Epic 2 Story 2.6's Project-Import doc was *wrong* about a user-observable outcome — it claimed allowlisting an artifact makes it "appear on `/glass-box/`" (the index), but allowlisting only creates a per-artifact *reader* page; the `/glass-box/` index is separately curated. The mechanism tests + code-review all passed (the render functions were correct), because they tested the mechanism, not the doc's claim. Only following the doc literally (add a sample → build → observe) surfaced the inaccuracy. A wrong runbook is the defect that matters most for a doc deliverable — it misleads the next builder. (Epic 2 retro, 2026-06-06.)
+
+**How to apply:** for a doc/runbook story, the smoke method is "follow the doc as written"; assert each claimed outcome; flag any step that is stale, wrong, incomplete, or out-of-order as a smoke defect (not deferrable). Mechanism tests verify the doc *can* be true; the doc-follow smoke verifies the doc *is* true.
+
 ---
 
 ## Project configuration notes (not rules — durable decisions the next epic-cycle run should honor)

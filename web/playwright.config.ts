@@ -60,11 +60,12 @@ export default defineConfig({
   // Each spec runs under EXACTLY the project(s) whose context it needs, scoped by
   // testMatch — so e.g. js-off.spec.ts never also runs with JS on under `desktop`.
   projects: [
-    // (a) Normal e2e + (d) view-source SEO — desktop, JS on, motion on.
+    // (a) Normal e2e + (d) view-source SEO + Story 2.0 URL-form (AC6: the
+    // no-301-hop served-runtime check) — desktop, JS on, motion on.
     {
       name: 'desktop',
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
-      testMatch: /(home|view-source)\.spec\.ts/,
+      testMatch: /(home|view-source|url-form)\.spec\.ts/,
     },
     // (IAC-3) WCAG 2.1 AA audit at a DESKTOP viewport (/ and /about).
     {
@@ -97,6 +98,42 @@ export default defineConfig({
       name: 'reduced-motion',
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
       testMatch: /reduced-motion\.spec\.ts/,
+    },
+    // (Story 2.2) Glass Box artifact reader — desktop, JS on. Asserts real-
+    // runtime render of the reader pages: type chip, curator note, body prose,
+    // drop-cap/pull-quote CSS, WCAG 2.1 AA (axe), 0 executable scripts.
+    {
+      name: 'glassbox-reader',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /glassbox-reader\.spec\.ts/,
+    },
+    // (Story 2.3) Glass Box index — desktop, JS on. Asserts real-runtime render
+    // of the build-story spine: dots, artifact cards, ghost nodes, recursion beat,
+    // WCAG 2.1 AA (axe), 0 executable scripts. JS-off tested inline via
+    // browser.newContext({ javaScriptEnabled: false }).
+    {
+      name: 'glassbox-index',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /glassbox-index\.spec\.ts/,
+    },
+    // (Story 2.4) Master Timeline — desktop + mobile, JS on. Asserts real-
+    // runtime render of the timeline: era-bands, flagship clusters, Glass Box
+    // Dot links, loandemo forward-refs, DOM order (desktop vs mobile unchanged),
+    // WCAG 2.1 AA (axe), 0 executable scripts. JS-off tested inline.
+    {
+      name: 'timeline',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /timeline\.spec\.ts/,
+    },
+    // (Story 2.5) loandemo case study — desktop, JS on. Asserts real-runtime
+    // render of the flagship case study: one <h1>, answer-first lede, #code/
+    // #build/#retro fragment targets (resolves 2.4 Dot links), drop-cap + pull-
+    // quote editorial devices, cross-links (/speaking/, /glass-box/, /timeline/),
+    // [OPEN] flags, 0 executable scripts, WCAG 2.1 AA (axe), keyboard focus ring.
+    {
+      name: 'loandemo',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /loandemo\.spec\.ts/,
     },
   ],
 });

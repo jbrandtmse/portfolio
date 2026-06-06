@@ -1,0 +1,286 @@
+---
+/**
+ * ArtifactCard.astro — a single curated artifact card for the Glass Box spine
+ * and Master Timeline (Story 2.3, Task 2; shared with Story 2.4).
+ *
+ * DESIGN spec (§artifact-card):
+ *  • surface-raised background, 1px hairline border, radius-lg, card-pad
+ *  • Accent-outlined small-caps type CHIP (radius-sm)
+ *  • <h3> TITLE (clean heading hierarchy; index h1 is the page heading via MirrorLayout)
+ *  • italic one-line CURATOR NOTE (ink-secondary)
+ *  • navy "Read →" link (meta weight 600, arrow nudges 3px right on hover)
+ *  • Hover deepens border → #C6B89E (spec token; no other hardcoded hex)
+ *  • Flat (no shadow — the flat system)
+ *
+ * GHOST VARIANT (`ghost` prop = true):
+ *  • Transparent fill, 1px DASHED hairline, --color-ink-ghost text
+ *  • Literal "As it accrues" status text in place of curator note
+ *  • No read link
+ *
+ * LIVE PILL (for the shipping node — `showLivePill` prop = true):
+ *  • Filled accent, white text, radius-sm, text "Live · in progress"
+ *
+ * EXTERNAL LINK (for shipping nodes — use `href` + `external` prop):
+ *  Sets rel="noopener noreferrer" + explicit label.
+ *
+ * Props are designed for extensibility: Story 2.4 adds era-band / flagship
+ * variants without modifying this component.
+ *
+ * 0 executable JS (NFR-1): hover is pure CSS. No client script.
+ * Decorative — accessibility (AC6): focus-visible ring on the link;
+ * muted/ghost text uses AA-safe --color-ink-ghost / --color-ink-meta-min.
+ */
+
+export interface ArtifactCardProps {
+  /** Artifact type label (small-caps chip). Shown in ghost variant too. */
+  type: string;
+  /** Card heading — an h3 within the index page's heading hierarchy. */
+  title: string;
+  /**
+   * ISO-8601 date string for the artifact. Optional: ghost / not-yet-shipped
+   * nodes have NO real date — omit it (a synthetic `new Date()` here would bake
+   * a per-build wall-clock timestamp into the static HTML and break NFR-6
+   * determinism). The <time> element renders only when a real date is supplied.
+   */
+  date?: string;
+  /** One-line editorial curator note (ink-secondary italic). Not shown in ghost. */
+  curatorNote?: string;
+  /** URL the "Read →" link points to (trailing-slash, e.g. /glass-box/slug/). */
+  href?: string;
+  /** Ghost variant: dashed border, ink-ghost, "As it accrues", no link. */
+  ghost?: boolean;
+  /** Show the "Live · in progress" pill (for shipping / in-flight nodes). */
+  showLivePill?: boolean;
+  /** If true, renders href as an external link (opens in same tab, rel=noopener). */
+  external?: boolean;
+  /** Accessible label for external links (default: "View {title} (opens in new tab)"). */
+  externalLabel?: string;
+}
+
+type Props = ArtifactCardProps;
+
+const {
+  type,
+  title,
+  date,
+  curatorNote,
+  href,
+  ghost = false,
+  showLivePill = false,
+  external = false,
+  externalLabel,
+} = Astro.props;
+
+// Format only when a real date is supplied. Ghost / not-yet-shipped nodes pass
+// no date (their status is the "As it accrues" text), so no <time> is emitted —
+// this also keeps the static build deterministic (NFR-6): no build-time `now`.
+const displayDate = date
+  ? new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: 'UTC',
+    })
+  : null;
+
+const linkLabel = external
+  ? (externalLabel ?? `View ${title} (opens in new tab)`)
+  : `Read ${title}`;
+---
+
+<article class:list={['artifact-card', { 'artifact-card--ghost': ghost }]}>
+  {/* Type chip — small-caps accent-outlined label */}
+  <span class="artifact-card__chip" aria-label={`Type: ${type}`}>{type}</span>
+
+  {/* Live pill — only for in-flight / shipping nodes */}
+  {
+    showLivePill && (
+      <span class="artifact-card__live-pill" aria-label="Status: Live and in progress">
+        Live · in progress
+      </span>
+    )
+  }
+
+  {/* Title — h3 within the index heading hierarchy (one h1 is the page heading) */}
+  <h3 class="artifact-card__title">{title}</h3>
+
+  {/* Date — emitted only for real (dated) artifacts; ghost nodes have none. */}
+  {
+    date && displayDate && (
+      <time class="artifact-card__date" datetime={date}>
+        {displayDate}
+      </time>
+    )
+  }
+
+  {/* Curator note — ghost variant shows "As it accrues" in ghost ink */}
+  {
+    ghost ? (
+      <p class="artifact-card__status" aria-label="Status: As it accrues">
+        As it accrues
+      </p>
+    ) : curatorNote ? (
+      <p class="artifact-card__note">{curatorNote}</p>
+    ) : null
+  }
+
+  {/* Read link — absent in ghost variant */}
+  {
+    !ghost && href && (
+      <a
+        class="artifact-card__link"
+        href={href}
+        aria-label={linkLabel}
+        {...(external ? { rel: 'noopener noreferrer', target: '_self' } : {})}
+      >
+        {external ? 'View →' : 'Read →'}
+      </a>
+    )
+  }
+</article>
+
+<style>
+  /* ─── Base card ──────────────────────────────────────────────────────── */
+  .artifact-card {
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-lg);
+    padding: var(--space-card-pad);
+    /* Flat: no shadow (the flat system). */
+    box-shadow: none;
+    /* Smooth border transition for hover. */
+    transition: border-color 0.15s ease;
+    flex: 1;
+  }
+
+  .artifact-card:hover {
+    /* Deepen border on hover (spec: #C6B89E — warmer hairline tone). */
+    border-color: #c6b89e;
+  }
+
+  /* ─── Ghost variant ─────────────────────────────────────────────────── */
+  .artifact-card--ghost {
+    background-color: transparent;
+    border-style: dashed;
+    border-color: var(--color-border-hairline);
+    /* Ghost state: content uses --color-ink-ghost throughout. */
+  }
+
+  .artifact-card--ghost:hover {
+    /* Ghost cards don't deepen (no shipping content to arrive at). */
+    border-color: var(--color-border-hairline);
+  }
+
+  /* ─── Type chip ─────────────────────────────────────────────────────── */
+  .artifact-card__chip {
+    display: inline-block;
+    padding: 2px var(--space-2);
+    border: 1.5px solid var(--color-accent);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-kicker);
+    font-weight: var(--font-weight-semibold);
+    font-variant: small-caps;
+    letter-spacing: var(--letter-spacing-kicker);
+    color: var(--color-accent);
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  /* Ghost chip inherits ghost ink (chip text fades; outline stays accent). */
+  .artifact-card--ghost .artifact-card__chip {
+    color: var(--color-ink-ghost);
+    border-color: var(--color-ink-ghost);
+  }
+
+  /* ─── Live pill ─────────────────────────────────────────────────────── */
+  .artifact-card__live-pill {
+    display: inline-block;
+    margin-left: var(--space-2);
+    padding: 2px var(--space-2);
+    background-color: var(--color-accent);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-kicker);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-kicker);
+    color: #ffffff;
+    line-height: 1;
+  }
+
+  /* ─── Title (h3) ─────────────────────────────────────────────────────── */
+  .artifact-card__title {
+    margin-top: var(--space-3);
+    font: var(--text-h3);
+    font-family: var(--font-family-base);
+    letter-spacing: var(--letter-spacing-h3);
+    color: var(--color-ink-primary);
+  }
+
+  .artifact-card--ghost .artifact-card__title {
+    color: var(--color-ink-ghost);
+  }
+
+  /* ─── Date ───────────────────────────────────────────────────────────── */
+  .artifact-card__date {
+    display: block;
+    margin-top: var(--space-2);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-meta);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-ink-secondary);
+  }
+
+  .artifact-card--ghost .artifact-card__date {
+    color: var(--color-ink-ghost);
+  }
+
+  /* ─── Curator note (ink-secondary, italic) ───────────────────────────── */
+  .artifact-card__note {
+    margin-top: var(--space-3);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    font-style: italic;
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+  }
+
+  /* ─── Ghost status text ("As it accrues") ───────────────────────────── */
+  .artifact-card__status {
+    margin-top: var(--space-3);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-meta);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-ink-ghost);
+  }
+
+  /* ─── Read / View link ───────────────────────────────────────────────── */
+  .artifact-card__link {
+    display: inline-block;
+    margin-top: var(--space-4);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-accent);
+    text-decoration: none;
+    /* Arrow nudge on hover: CSS transition on transform. */
+    transition: transform 0.1s ease;
+  }
+
+  .artifact-card__link:hover {
+    color: var(--color-accent-hover);
+    transform: translateX(3px);
+  }
+
+  .artifact-card__link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+</style>

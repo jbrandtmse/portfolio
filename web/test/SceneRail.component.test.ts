@@ -55,9 +55,10 @@ describe('SceneRail.astro — desktop rail anchors map to the locked scene ids (
     expect(sceneFragments).toEqual(SCENE_IDS.map((id) => `#${id}`));
   });
 
-  it('provides Skip-to-end → #close and Jump → /speaking (the FR-2 skip/jump affordances)', () => {
+  it('provides Skip-to-end → #close and Jump → /speaking/ (the FR-2 skip/jump affordances)', () => {
     expect(html).toMatch(/<a\b[^>]*\shref="#close"[^>]*>[\s\S]*?Skip[\s\S]*?<\/a>/);
-    expect(html).toMatch(/<a\b[^>]*\shref="\/speaking"[^>]*>[\s\S]*?book a talk[\s\S]*?<\/a>/);
+    // /speaking/ uses the trailing-slash form (Story 2.0 AC2).
+    expect(html).toMatch(/<a\b[^>]*\shref="\/speaking\/"[^>]*>[\s\S]*?book a talk[\s\S]*?<\/a>/);
   });
 
   it('marks exactly one entry current via aria-current, and it is the Hero (#hero) (AC2/AC4 static baseline)', () => {
@@ -105,8 +106,9 @@ describe('SceneRail.astro — mobile "Jump to section" menu carries the same aff
     for (const id of SCENE_IDS) {
       expect(menu).toMatch(new RegExp(`<a\\b[^>]*\\shref="#${id}"[^>]*>`));
     }
-    // Skip → #close and jump → /speaking live in the menu too.
+    // Skip → #close and jump → /speaking/ live in the menu too.
+    // /speaking/ uses the trailing-slash form (Story 2.0 AC2).
     expect(menu).toMatch(/<a\b[^>]*\shref="#close"[^>]*>[\s\S]*?Skip[\s\S]*?<\/a>/);
-    expect(menu).toMatch(/<a\b[^>]*\shref="\/speaking"[^>]*>[\s\S]*?book a talk[\s\S]*?<\/a>/);
+    expect(menu).toMatch(/<a\b[^>]*\shref="\/speaking\/"[^>]*>[\s\S]*?book a talk[\s\S]*?<\/a>/);
   });
 });

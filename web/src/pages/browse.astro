@@ -18,7 +18,7 @@
  * assertion, no hype).
  */
 import MirrorLayout from '../layouts/MirrorLayout.astro';
-import { NAV_ROUTES } from '../lib/routes';
+import { NAV_ROUTES, routeHref } from '../lib/routes';
 
 const LEDE =
   'Joshua R. Brandt, MSE keeps every page on this site reachable without JavaScript. This is the complete index — each surface, linked, with a one-line note on what it holds.';
@@ -35,7 +35,7 @@ const LEDE =
       {
         NAV_ROUTES.map((route) => (
           <li class="browse-item">
-            <a class="browse-link" href={route.path}>
+            <a class="browse-link" href={routeHref(route.path)}>
               {route.label}
             </a>
             <p class="browse-desc">{route.description}</p>
