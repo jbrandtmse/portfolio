@@ -335,3 +335,79 @@ class in the scoped selector, and a non-dot block does not contain that substrin
   exemption is scoped to `timeline-dot` blocks only.
 - Minor (non-blocking): the index uses `<h2>` "Build Story" inside `MirrorLayout`;
   heading order is h1 → h2 → h3 (cards) — clean, asserted by the one-h1 + h3-card tests.
+
+---
+
+# Story 2.5 — `/work/loandemo` flagship case study (QA)
+
+QA stage for the loandemo flagship case study (FR-22). The dev shipped 19 build-output
+assertions + a 19-test Playwright `loandemo` project + the `loandemo` config project.
+QA verified all are non-vacuous (computed-style/observable-DOM, not existence-only) and
+ADVERSARIALLY strengthened three gaps the dev tests left open.
+
+## Strengthening added (QA)
+
+1. **AC5 cross-story reciprocity (the key consumer wire-up).** The dev + `timeline.spec.ts`
+   each asserted the loandemo fragment IDs exist HERE and the Dot links exist on `/timeline/`
+   — but nothing bound the two. Added (a) a build-output test that reads the BUILT
+   `/timeline/index.html`, extracts every `/work/loandemo/#…` href it actually ships, and
+   asserts each fragment resolves to a real element `id` on the loandemo page (no dangling
+   fragment; also asserts the 3 canonical `code`/`build`/`retro` are present); and (b) a
+   real-runtime Playwright test that starts on `/timeline/`, follows each loandemo Dot href,
+   and asserts the peer lands on a real VISIBLE in-page section. Integration AC (Rule 1):
+   consumer (timeline) → producer (this page) verified observably, both tiers.
+2. **AC3 no-fabrication (the 2.4 AC4 credibility lesson, HIGH-value).** The dev's `[OPEN`-present
+   check is weak (passes even if a fabricated outcome ships alongside). Added an adversarial
+   build-output scan of the visible `<main>` text (tags + `<head>` ld+json stripped) that FAILS
+   on any fabricated-OUTCOME numeric pattern (`N%`, `$N`, `Nx`, `N users/ms/loans…`, `N faster`)
+   not wrapped in an `[OPEN]`/`[ASSUMPTION]` flag. Manual scan confirmed clean: the only
+   numerics in the body are `Stage-1`, `FR-22`, `2026` (talk year), `Epic 3` — none a metric.
+3. **AC6 heading hierarchy.** The dev asserted the fragment IDs are on `<section>`s but not the
+   heading LEVEL. Added a test binding each `#code`/`#build`/`#retro` section's first heading to
+   `<h2>` and asserting no `<h1>` inside any section (clean hierarchy + one-h1 SEO floor).
+
+## Non-vacuity proof (mutation test)
+
+Temporarily mutated `loandemo.astro`: (A) injected "processed loans 40% faster" into a body
+paragraph, (B) renamed `<section id="code">` → `id="repository"`. Rebuilt and confirmed the new
+AC3 scan FAILED on (A), the AC5 reciprocity test FAILED on (B) (dangling fragment caught), and
+the AC6 hierarchy test FAILED too. Reverted; `loandemo.astro` is byte-clean (dev's version
+untouched). The strengthening assertions have teeth.
+
+## Generated / modified test files
+
+- [x] `web/test/build-output.test.ts` — +3 QA assertions (AC5 reciprocity, AC3 no-fabrication,
+  AC6 h2-hierarchy) on top of the dev's 19 Story-2.5 assertions.
+- [x] `web/e2e/loandemo.spec.ts` — +1 QA test (cross-page timeline→loandemo reciprocity journey)
+  on top of the dev's 19.
+
+## Real counts (`pnpm --filter web …`; `EADDRINUSE:8787` is a live-api env issue, avoided by the web filter)
+
+- `pnpm --filter web test` → **15 files, 506 tests passed** (was 503; +3 QA assertions).
+- `pnpm --filter web test:e2e` (full default suite, all projects) → **151 passed** (was 131
+  pre-2.5; +20 = 19 dev + 1 QA). `loandemo` project in isolation → **20/20**; `timeline`
+  regression → **25/25**. Build emits **16 pages**. Includes loandemo axe AA (0 violations).
+- Root `pnpm format:check` (`prettier --check .`) → **GREEN** (2.2–2.4 format-gate gap avoided).
+- `loandemo` project confirmed in the DEFAULT `test:e2e` run (Rule 8 discoverability ✓).
+
+## Coverage vs ACs
+
+- AC1 (layered, answer-first lede, one-h1, 0-JS, self-canonical, enriched CreativeWork
+  no-`[PLACEHOLDER]` + ISO `dateCreated`) ✓ · AC2 (`#code/#build/#retro` sections; drop-cap +
+  pull-quote, computed-style non-vacuous; `/speaking/` forward-ref link) ✓ · AC3 (curated
+  substitutes + `[OPEN]`; NO fabricated metric — adversarial scan) ✓ · AC4 (Glass Box +
+  Timeline cross-links; both flagships reference each other) ✓ · AC5 (fragment IDs exist AND
+  the 2.4 timeline Dots resolve here — reciprocity, both tiers; CreativeWork consumer-valid) ✓ ·
+  AC6 (one h1; section headings h2/h3; axe AA 0 violations; keyboard focus ring) ✓ · NFR-1
+  (0 executable scripts) ✓.
+
+## Notes for code review
+
+- No defects found in the dev's implementation. The page holds the AC3 credibility floor
+  cleanly (method-only narrative; every asset gap `[OPEN]`-flagged; zero fabricated figures).
+- Rule 3 (real-runtime, user-facing surface): SATISFIED — `loandemo.spec.ts` asserts observable
+  DOM + computed style (drop-cap `::first-letter` ratio, pull-quote border/italic, axe AA,
+  fragment-anchor visibility, cross-page reciprocity), not existence-only.
+- The CreativeWork `dateCreated: "2026-06-01"` is a curated deterministic constant (the exact
+  date is `[OPEN]`; the era `2026-06` is confirmed from `dots.ts`) — valid ISO, keeps the 1.6
+  assertion green. Not a fabricated factual claim; acceptable per the dev's documented rationale.

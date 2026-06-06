@@ -125,5 +125,15 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
       testMatch: /timeline\.spec\.ts/,
     },
+    // (Story 2.5) loandemo case study — desktop, JS on. Asserts real-runtime
+    // render of the flagship case study: one <h1>, answer-first lede, #code/
+    // #build/#retro fragment targets (resolves 2.4 Dot links), drop-cap + pull-
+    // quote editorial devices, cross-links (/speaking/, /glass-box/, /timeline/),
+    // [OPEN] flags, 0 executable scripts, WCAG 2.1 AA (axe), keyboard focus ring.
+    {
+      name: 'loandemo',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /loandemo\.spec\.ts/,
+    },
   ],
 });

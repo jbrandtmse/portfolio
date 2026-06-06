@@ -1217,3 +1217,236 @@ describe('Story 1.10 — env-gated Umami is ON when PUBLIC_UMAMI_* is set (AC2 /
     expect(onHome).toHaveLength(1);
   });
 });
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Story 2.5 — /work/loandemo layered case study (AC1–AC6 / IAC-1).
+ *
+ * Build-output assertions on the produced /work/loandemo/index.html (real
+ * `astro build` output — the consumer-observable form, skill-rules Rule 3).
+ *
+ * Asserts:
+ *   • One <h1> (the case study title, from MirrorLayout).
+ *   • #code / #build / #retro section IDs exist (resolves Story 2.4's Dot links).
+ *   • Enriched CreativeWork JSON-LD: name "loandemo" + author Person + description
+ *     + dateCreated (keeps the 1.6 assertion green, AC1/AC5).
+ *   • The /speaking/ cross-link is a real <a> (forward-ref: AC2; talk content Epic 3).
+ *   • The lede leads with "Joshua R. Brandt, MSE" (entity-first, GEO floor).
+ *   • 0 executable scripts (NFR-1).
+ *   • No exclamation marks in copy (positive-assertion voice).
+ *   • [OPEN] flags present in the rendered HTML (credibility floor, AC3).
+ *   • The description does NOT contain the old [PLACEHOLDER] marker (enriched, AC1).
+ * ────────────────────────────────────────────────────────────────────────── */
+
+describe('Story 2.5 — /work/loandemo layered case study (AC1–AC6 / IAC-1)', () => {
+  let loandemoHtml = '';
+  beforeAll(() => {
+    loandemoHtml = readFileSync(routeHtmlPath('/work/loandemo'), 'utf8');
+  });
+
+  it('builds a real /work/loandemo/index.html', () => {
+    expect(existsSync(routeHtmlPath('/work/loandemo'))).toBe(true);
+  });
+
+  it('renders exactly one <h1> (the MirrorLayout title; #code/#build/#retro are h2, AC6)', () => {
+    const h1s = loandemoHtml.match(/<h1\b[^>]*>/g) ?? [];
+    expect(h1s).toHaveLength(1);
+  });
+
+  it('the lede leads with "Joshua R. Brandt, MSE" (entity-first, GEO floor, AC1)', () => {
+    const lede = firstParagraphText(loandemoHtml);
+    expect(lede.startsWith('Joshua R. Brandt, MSE')).toBe(true);
+  });
+
+  it('contains the #code section ID (resolves Story 2.4 Dot link to /work/loandemo/#code, AC5)', () => {
+    expect(loandemoHtml).toContain('id="code"');
+  });
+
+  it('contains the #build section ID (resolves Story 2.4 Dot link to /work/loandemo/#build, AC5)', () => {
+    expect(loandemoHtml).toContain('id="build"');
+  });
+
+  it('contains the #retro section ID (resolves Story 2.4 Dot link to /work/loandemo/#retro, AC5)', () => {
+    expect(loandemoHtml).toContain('id="retro"');
+  });
+
+  it('the #code / #build / #retro IDs are on <section> elements (AC2, heading hierarchy)', () => {
+    // Each fragment target is a <section id="…"> — real in-page sections, not bare anchors.
+    expect(loandemoHtml).toMatch(/<section\b[^>]*id="code"[^>]*>/);
+    expect(loandemoHtml).toMatch(/<section\b[^>]*id="build"[^>]*>/);
+    expect(loandemoHtml).toMatch(/<section\b[^>]*id="retro"[^>]*>/);
+  });
+
+  it('the #code / #build / #retro section headings are <h2> — never a 2nd <h1> (AC6 hierarchy)', () => {
+    // STRENGTHENED (QA): AC6 explicitly requires the section headings to be
+    // <h2>/<h3>, "not a 2nd h1". The IDs-on-<section> test above does NOT check
+    // the heading LEVEL inside each section — a regression that promoted a section
+    // heading to <h1> (breaking clean hierarchy + the one-h1 SEO floor) would slip
+    // through it. Bind each fragment section's FIRST heading to <h2> directly.
+    for (const id of ['code', 'build', 'retro'] as const) {
+      const section = loandemoHtml.match(
+        new RegExp(`<section\\b[^>]*id="${id}"[^>]*>([\\s\\S]*?)</section>`),
+      );
+      expect(section, `<section id="${id}">`).not.toBeNull();
+      const inner = section![1]!;
+      // The first heading tag inside the section must be an <h2> (the section
+      // title); h3 is allowed deeper (the evidence-card title) but never h1.
+      const firstHeading = inner.match(/<h([1-6])\b/);
+      expect(firstHeading, `a heading inside #${id}`).not.toBeNull();
+      expect(firstHeading![1], `#${id} section heading level`).toBe('2');
+      // And categorically: no <h1> anywhere inside any fragment section.
+      expect(inner).not.toMatch(/<h1\b/);
+    }
+  });
+
+  it('carries a /speaking/ cross-link as a real <a> (AC2; forward-ref: talk content Epic 3)', () => {
+    // The /speaking/ route exists from Epic 1; the talk content lands in Epic 3.
+    // The link must be a real <a href="/speaking/"> (trailing-slash; followable JS-off).
+    expect(loandemoHtml).toMatch(/<a\b[^>]*\shref="\/speaking\/"[^>]*>/);
+  });
+
+  it('carries a /glass-box/ cross-link as a real <a> (AC4: the two flagships reference each other)', () => {
+    expect(loandemoHtml).toMatch(/<a\b[^>]*\shref="\/glass-box\/"[^>]*>/);
+  });
+
+  it('carries a /timeline/ cross-link as a real <a> (AC4: links to the Master Timeline)', () => {
+    expect(loandemoHtml).toMatch(/<a\b[^>]*\shref="\/timeline\/"[^>]*>/);
+  });
+
+  it('ships 0 executable scripts (NFR-1)', () => {
+    expect(countExecutableScripts(loandemoHtml)).toBe(0);
+    expect(loandemoHtml).not.toMatch(/<script\b[^>]*\bsrc=/);
+  });
+
+  it('contains no exclamation marks in copy (positive-assertion voice)', () => {
+    const copyOnly = loandemoHtml.replace(/<!doctype html>/i, '');
+    expect(copyOnly).not.toContain('!');
+  });
+
+  it('contains [OPEN] flags in visible text (credibility floor: gaps flagged, AC3)', () => {
+    // The [OPEN] pattern must appear in the rendered HTML — the visible text
+    // commitment that assets/metrics not yet confirmed are flagged, not invented.
+    expect(loandemoHtml).toContain('[OPEN');
+  });
+
+  it('the CreativeWork description is enriched — [PLACEHOLDER] is gone (AC1)', () => {
+    // Story 1.6 seeded the JSON-LD with a "[PLACEHOLDER]" description; Story 2.5
+    // must replace it with a real case-study description (AC1: "ENRICH the 1.6 placeholder").
+    const work = findNodeByType(loandemoHtml, 'CreativeWork');
+    expect(work).toBeDefined();
+    const desc = work!.description as string;
+    expect(desc).not.toContain('[PLACEHOLDER]');
+    expect(desc.length).toBeGreaterThan(50);
+  });
+
+  it('/work/loandemo emits a valid CreativeWork JSON-LD with all required fields (1.6 assertion kept green, AC5)', () => {
+    // This is the Story 1.6 assertion kept + extended. All required fields must be present.
+    const work = findNodeByType(loandemoHtml, 'CreativeWork');
+    expect(work).toBeDefined();
+    expect(work!['@context']).toBe('https://schema.org');
+    expect(work!.name).toBe('loandemo');
+    expect((work!.author as Record<string, unknown>)['@type']).toBe('Person');
+    expect(typeof work!.description).toBe('string');
+    expect(typeof work!.url).toBe('string');
+    expect(typeof work!.dateCreated).toBe('string');
+    // dateCreated must be a valid ISO-8601 date string (parseable; not "[OPEN]").
+    expect(() => new Date(work!.dateCreated as string).toISOString()).not.toThrow();
+  });
+
+  it('the author Person in CreativeWork is "Joshua R. Brandt, MSE" (AC1)', () => {
+    const work = findNodeByType(loandemoHtml, 'CreativeWork');
+    expect(work).toBeDefined();
+    const author = work!.author as Record<string, unknown>;
+    expect(author.name).toBe('Joshua R. Brandt, MSE');
+  });
+
+  it('is self-canonical to /work/loandemo/ (trailing-slash; Story 2.0 AC3)', () => {
+    const canonicalMatch = loandemoHtml.match(/<link\b[^>]*\brel="canonical"[^>]*>/);
+    expect(canonicalMatch).not.toBeNull();
+    const hrefMatch = canonicalMatch![0].match(/\bhref="([^"]+)"/);
+    expect(hrefMatch).not.toBeNull();
+    expect(hrefMatch![1]).toBe(`${SITE_ORIGIN}/work/loandemo/`);
+  });
+
+  it('every Story 2.4 timeline loandemo fragment resolves to a real section here — no dangling fragment (AC5 reciprocity)', () => {
+    // STRENGTHENED (QA — the key cross-story wire-up). The dev tests assert the
+    // #code/#build/#retro IDs exist HERE, and timeline.spec.ts asserts the Dot
+    // links exist on /timeline/ — but NOTHING bound the two together. A peer who
+    // clicks a timeline loandemo Dot must land on a REAL in-page section. This
+    // closes the loop against GROUND TRUTH: read the BUILT /timeline/index.html,
+    // extract every `/work/loandemo/#…` href the timeline actually ships, and
+    // assert each fragment id is present as an element id in the built loandemo
+    // page. If a future edit renames a section here OR changes a Dot href in
+    // content/timeline/dots.ts, this fails (the dangling-fragment regression the
+    // Story 2.5 directive warns about). This is the Integration AC (Rule 1):
+    // consumer (timeline) → producer (this page) verified observably.
+    const timelineHtml = readFileSync(routeHtmlPath('/timeline'), 'utf8');
+
+    // The fragment ids the timeline links into on /work/loandemo/.
+    const timelineFragments = [
+      ...timelineHtml.matchAll(/href="\/work\/loandemo\/#([a-z-]+)"/g),
+    ].map((m) => m[1]!);
+
+    // The timeline MUST link at least the three canonical loandemo fragments
+    // (Story 2.4 dots.ts cluster: code · build · retro) — guards against the
+    // consumer silently dropping the wire-up.
+    const uniqueFragments = [...new Set(timelineFragments)];
+    expect(uniqueFragments.length).toBeGreaterThanOrEqual(3);
+    expect(uniqueFragments).toEqual(expect.arrayContaining(['code', 'build', 'retro']));
+
+    // Every fragment the timeline points at MUST resolve to a real element id on
+    // this page (no dangling fragment — the peer lands on a real section).
+    const idsHere = new Set([...loandemoHtml.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]!));
+    for (const frag of uniqueFragments) {
+      expect(idsHere.has(frag), `timeline links /work/loandemo/#${frag} → must exist here`).toBe(
+        true,
+      );
+    }
+  });
+
+  it('no fabricated metric/outcome ships as fact — every figure is [OPEN]/[ASSUMPTION]-flagged (AC3, adversarial)', () => {
+    // STRENGTHENED (QA — the 2.4 AC4 credibility lesson, HIGH-value). The existing
+    // "[OPEN] present" check is weak: it would still pass if the body ALSO leaked a
+    // fabricated outcome like "40% faster" or "$2M saved" next to the [OPEN] flags.
+    // AC3 forbids ANY invented metric/result/date/figure shipping as fact. This
+    // scan extracts the VISIBLE <main> text (tags + the ld+json <head> stripped)
+    // and asserts no fabricated-outcome numeric pattern appears. Known-legitimate,
+    // non-metric numerics are allowed: requirement/stage ids (FR-22, Stage-1), the
+    // talk year (2026), epic refs (Epic 3) — none is an invented performance claim.
+    const mainMatch = loandemoHtml.match(/<main\b[^>]*>([\s\S]*?)<\/main>/);
+    expect(mainMatch, '<main> region').not.toBeNull();
+    const visibleText = mainMatch![1]!
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&[a-z]+;/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // Fabricated-OUTCOME patterns: a percentage, a currency figure, an "Nx"
+    // multiplier, a "N <unit>" performance/scale figure, or a count of users/etc.
+    // Any of these presented as fact (i.e. NOT inside an [OPEN]/[ASSUMPTION] flag)
+    // is a credibility-floor violation.
+    const fabricationPatterns: Array<[string, RegExp]> = [
+      ['percentage', /\b\d+(\.\d+)?\s*%/],
+      ['currency', /[$€£]\s*\d/],
+      ['multiplier', /\b\d+(\.\d+)?x\b/i],
+      [
+        'scale/perf figure',
+        /\b\d+(\.\d+)?\s*(users|customers|requests|ms|seconds|minutes|hours|days|weeks|months|loans|applications|x\b)/i,
+      ],
+      ['relative-outcome claim', /\b\d+(\.\d+)?\s*(faster|slower|cheaper|fewer|more)\b/i],
+    ];
+    const leaks: string[] = [];
+    for (const [label, pattern] of fabricationPatterns) {
+      const m = visibleText.match(pattern);
+      if (m) {
+        const idx = visibleText.indexOf(m[0]);
+        const ctx = visibleText.slice(Math.max(0, idx - 40), idx + 40);
+        // Only a leak if NOT wrapped in an [OPEN…]/[ASSUMPTION…] flag in its context.
+        if (!/\[(OPEN|ASSUMPTION)/i.test(ctx)) {
+          leaks.push(`${label}: "${m[0]}" — context: …${ctx}…`);
+        }
+      }
+    }
+    expect(leaks, `fabricated metric(s) shipped as fact:\n${leaks.join('\n')}`).toEqual([]);
+  });
+});

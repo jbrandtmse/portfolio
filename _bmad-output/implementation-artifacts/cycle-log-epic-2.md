@@ -40,3 +40,10 @@
 2026-06-06T18:51:24Z	Story 2.4	qa_complete	spawn_at=2026-06-06T18:25:49Z model=claude-opus-4-8 tests_added=10 first_run_failures=0 clarifications=0 closing_sections_present=true
 2026-06-06T19:18:51Z	Story 2.4	cr_complete	spawn_at=2026-06-06T18:51:24Z model=claude-opus-4-8 resolved=2 deferred=3 dismissed=2 high=0 med=1 low=2 clarifications=0 closing_sections_present=true note=lead_fixed_repo_wide_format_check_RED_and_brittle_recursion_beat_test
 2026-06-06T19:21:07Z	Story 2.4	smoke_complete	method=browser result=pass iterations=1 defects_caught=0 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-2.4-timeline.md model=claude-opus-4-8
+2026-06-06T19:22:11Z	Story 2.4	committed	sha=da4a9af submodules=
+2026-06-06T19:23:53Z	Story 2.5	story_created	path=_bmad-output/implementation-artifacts/2-5-loandemo-flagship-case-study.md spec_words=1815
+2026-06-06T19:37:56Z	Story 2.5	dev_complete	spawn_at=2026-06-06T19:23:53Z model=claude-sonnet-4-6 files=4 loc_added=789 loc_removed=20 clarifications=0 nfr_tripwires=0 adr_violations_surfaced=0 cycle_iteration=1 closing_sections_present=true
+2026-06-06T19:37:56Z	Story 2.5	adr_verifications_complete	tool=none acs=none result=none_required evidence= model=claude-opus-4-8
+2026-06-06T19:50:55Z	Story 2.5	qa_complete	spawn_at=2026-06-06T19:37:56Z model=claude-opus-4-8 tests_added=4 first_run_failures=0 clarifications=0 closing_sections_present=true
+2026-06-06T19:59:15Z	Story 2.5	cr_complete	spawn_at=2026-06-06T19:50:55Z model=claude-opus-4-8 resolved=0 deferred=0 dismissed=3 high=0 med=0 low=0 clarifications=0 closing_sections_present=true
+2026-06-06T20:00:35Z	Story 2.5	smoke_complete	method=browser result=pass iterations=1 defects_caught=0 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-2.5-loandemo.md model=claude-opus-4-8
