@@ -61,3 +61,10 @@
 2026-06-06T12:18:47Z	Story 1.8	qa_complete	spawn_at=2026-06-06T12:12:40Z model=claude-opus-4-8 tests=scripts/pipeline-guards.test.ts tests_added=7 first_run_failures=0 clarifications=0 closing_sections_present=true
 2026-06-06T12:30:13Z	Story 1.8	cr_complete	spawn_at=2026-06-06T12:13:00Z model=claude-opus-4-8 resolved=1 deferred=1 dismissed=3 high=0 med=0 low=1 clarifications=0 closing_sections_present=true
 2026-06-06T12:30:43Z	Story 1.8	smoke_complete	method=cli result=pass iterations=1 defects_caught=0 evidence=determinism-byte-identical-833438283+pipeline-10-routes model=claude-opus-4-8
+2026-06-06T12:30:58Z	Story 1.8	committed	sha=16b1726 submodules=
+2026-06-06T12:33:01Z	Story 1.9	story_created	path=_bmad-output/implementation-artifacts/1-9-accessibility-performance-floor-test-harness.md
+2026-06-06T13:09:50Z	Story 1.9	dev_complete	spawn_at=2026-06-06T12:33:20Z model=claude-opus-4-8 files=14 clarifications=0 nfr_tripwires=0 adr_violations_surfaced=0 cycle_iteration=1 closing_sections_present=true
+2026-06-06T13:09:54Z	Story 1.9	adr_verifications_complete	tool=none acs=none result=none_required
+2026-06-06T13:19:56Z	Story 1.9	qa_complete	spawn_at=2026-06-06T13:10:10Z model=claude-opus-4-8 tests=harness-validated-mutation-tested tests_added=0 first_run_failures=0 clarifications=0 closing_sections_present=true
+2026-06-06T13:37:00Z	Story 1.9	cr_complete	spawn_at=2026-06-06T13:18:00Z model=claude-opus-4-8 resolved=2 deferred=1 dismissed=0 high=0 med=0 low=3 clarifications=0 closing_sections_present=true
+2026-06-06T13:38:59Z	Story 1.9	smoke_complete	method=cli result=pass iterations=1 defects_caught=0 evidence=pnpm-test:all-green(vitest239+playwright37+lighthouse-budget) model=claude-opus-4-8

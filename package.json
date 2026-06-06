@@ -15,12 +15,17 @@
     "check-deterministic": "tsx scripts/check-deterministic.ts",
     "typecheck": "pnpm -r --if-present run typecheck",
     "test": "pnpm -r --if-present run test",
+    "test:e2e": "pnpm --filter @portfolio/web test:e2e",
+    "lh": "pnpm build && lhci autorun",
+    "test:perf": "pnpm run lh",
+    "test:all": "pnpm run typecheck && pnpm run lint && pnpm run format:check && pnpm run test && pnpm run test:e2e && pnpm run lh",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@lhci/cli": "^0.15.1",
     "eslint": "^10.4.1",
     "eslint-plugin-astro": "^1.7.0",
     "prettier": "^3.8.3",

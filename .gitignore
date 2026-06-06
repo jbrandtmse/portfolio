@@ -33,3 +33,13 @@ venv/
 
 # API runtime data (SQLite/Drizzle store added in later stories)
 api/data/
+
+# Test-harness artifacts (Story 1.9): Playwright e2e + Lighthouse CI outputs.
+# Generated on each run; never committed.
+test-results/
+playwright-report/
+.lighthouseci/
+# Playwright browser cache (only present if `npx playwright install` was used as
+# the fallback; the default channel:'chrome' uses the system browser and writes
+# nothing here).
+.cache/ms-playwright/

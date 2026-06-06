@@ -24,10 +24,12 @@
  *
  * 0-JS baseline (AC4): aria-current sits on #hero, the meter renders as a STATIC
  * filled bar at "Scene 1 of 7", and every anchor / skip / jump works. The single
- * tiny enhancement script (below) is gated by TWO layers — a CSS
- * prefers-reduced-motion media query (the scroll-driven meter fill) AND a JS
- * init-guard that checks prefers-reduced-motion and does nothing if reduced
- * (the semantic aria-current tracking, which CSS cannot do). Keep it tiny (NFR-1).
+ * tiny enhancement script (below) is gated by the SHARED two-layer gate in
+ * web/src/lib/motion.ts (Story 1.9, UX-DR21) — a CSS prefers-reduced-motion media
+ * query (the scroll-driven meter fill) AND the JS init-guard onMotionAllowed()
+ * that does nothing if reduced (the semantic aria-current tracking, which CSS
+ * cannot do). The gate is NOT re-implemented here; it is imported. Keep it tiny
+ * (NFR-1).
  *
  * Flat (DESIGN §Elevation): no box-shadow anywhere — depth is tone + hairline.
  * The current-tick "soft halo" is rendered with `outline` (a ring, not an
@@ -457,14 +459,16 @@ const TOTAL = SCENES.length;
     color: var(--color-accent);
   }
 
-  /* ── The two-layer reduced-motion gate — CSS layer ─────────────────────────
-     The scroll-driven width-fill (the meter ENHANCEMENT) is applied ONLY when
-     the user has no reduced-motion preference. Otherwise the static filled bars
-     above stand (EXPERIENCE State-Patterns: "static filled bar at Scene N of 7").
-     animation-timeline: scroll() drives the fill with zero JS; it is inert in
-     browsers that do not support scroll-driven animations (progressive — they
-     keep the static baseline). The JS init-guard below is the second layer.
-     TODO(Story 1.9): consolidate gate into motion.ts. */
+  /* ── The two-layer reduced-motion gate — CSS layer (Layer 1) ───────────────
+     This is the CSS half of the shared two-layer gate documented in
+     web/src/lib/motion.ts (CSS_REDUCED_MOTION_CONVENTION). The scroll-driven
+     width-fill (the meter ENHANCEMENT) is authored ONLY inside the no-preference
+     query, so under reduced motion the static filled bars above stand (EXPERIENCE
+     State-Patterns: "static filled bar at Scene N of 7"). animation-timeline:
+     scroll() drives the fill with zero JS; it is inert in browsers that do not
+     support scroll-driven animations (progressive — they keep the static
+     baseline). The JS init-guard (Layer 2) lives in the <script> below and is
+     also sourced from motion.ts (onMotionAllowed). */
   @media (prefers-reduced-motion: no-preference) {
     @keyframes scene-rail-fill {
       from {
@@ -488,18 +492,23 @@ const TOTAL = SCENES.length;
   /*
   The single, tiny scene-rail enhancement (NFR-1, well under 1KB). It does the
   ONE thing CSS cannot: move the semantic aria-current + the "Scene N of 7"
-  number to the in-view scene. It is the JS half of the two-layer reduced-motion
-  gate — it bails immediately if the user prefers reduced motion (the static
-  baseline + the CSS scroll-fill already cover that case). It never touches
-  scroll (no scroll-jacking; the page is scroll-native).
-  TODO(Story 1.9): consolidate this gate + observer wiring into motion.ts.
+  number to the in-view scene. It is the JS half (Layer 2) of the SHARED
+  two-layer reduced-motion gate — it runs through onMotionAllowed() from
+  web/src/lib/motion.ts, so it no-ops under reduced motion (the static baseline +
+  the CSS scroll-fill already cover that case) via the ONE shared gate, never an
+  inline per-component matchMedia. It never touches scroll (no scroll-jacking;
+  the page is scroll-native). Astro bundles the motion.ts import; the result is
+  still tiny and stays inlined (NFR-1 — verified by the build-output suite).
 */
 }
 <script>
-  // Two-layer gate, JS half: do nothing under reduced-motion. The static
-  // baseline (aria-current on #hero, "Scene 1 of 7") then stands as authored.
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-  if (!reduce.matches) {
+  import { onMotionAllowed } from '../../lib/motion';
+
+  // Layer 2 of the shared gate: onMotionAllowed runs this init ONLY when motion
+  // is allowed (real matchMedia AND not prefers-reduced-motion: reduce). Under
+  // reduced motion it no-ops and the static baseline (aria-current on #hero,
+  // "Scene 1 of 7") stands as authored — no observer is created.
+  onMotionAllowed(() => {
     const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-scene-link]'));
     const labels = Array.from(document.querySelectorAll<HTMLElement>('[data-scene-current]'));
     const order = links.map((a) => a.dataset.sceneLink ?? '');
@@ -539,5 +548,5 @@ const TOTAL = SCENES.length;
 
       for (const section of sections) observer.observe(section);
     }
-  }
+  });
 </script>

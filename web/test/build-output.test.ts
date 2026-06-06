@@ -271,7 +271,7 @@ describe('built home page (web/dist/index.html)', () => {
     expect(countLdJsonScripts(indexHtml)).toBe(1);
   });
 
-  it('the single EXECUTABLE script is a reduced-motion-gated IntersectionObserver, inlined (Story 1.4 IAC-2)', () => {
+  it('the single EXECUTABLE script is a reduced-motion-gated IntersectionObserver, inlined, sourced from motion.ts (Story 1.4 IAC-2; Story 1.9 IAC-1)', () => {
     // Astro inlines a script this small directly into the HTML (well under the
     // bundling threshold), so the gated enhancement is observable in the markup.
     // It MUST carry the two-layer reduced-motion gate's JS init-guard
@@ -289,6 +289,17 @@ describe('built home page (web/dist/index.html)', () => {
     const scriptBody = executableBlock![2]!;
     expect(scriptBody).toContain('prefers-reduced-motion');
     expect(scriptBody).toContain('IntersectionObserver');
+
+    // Story 1.9 IAC-1: the gate is now the SHARED utility from web/src/lib/motion.ts
+    // (onMotionAllowed), bundled+inlined into this script — NOT an ad-hoc per-component
+    // matchMedia. motion.ts's onMotionAllowed contributes the SSR-safe guard
+    // (`typeof window` + `matchMedia` feature-detect) that an inline
+    // `matchMedia(...).matches` check would NOT have. Assert that signature is
+    // present, proving the rail consumes motion.ts rather than re-implementing the
+    // gate inline. (Survives minification: `typeof window`, `matchMedia`, and the
+    // reduced-motion query string are all preserved through esbuild's mangling.)
+    expect(scriptBody).toMatch(/typeof window/);
+    expect(scriptBody).toContain('matchMedia');
   });
 
   it('references no external JavaScript bundle and ships no React island (NFR-1)', () => {

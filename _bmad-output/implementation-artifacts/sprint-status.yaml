@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-06T02:19:05Z
-last_updated: 2026-06-06T12:25:00Z
+last_updated: 2026-06-06T13:40:00Z
 project: portfolio
 project_key: NOKEY
 tracking_system: file-system
@@ -54,7 +54,7 @@ development_status:
   1-6-structured-data-emission-sitemap-robots: done
   1-7-lean-static-fallback-browse-global-footer: done
   1-8-build-time-content-pipeline-foundation: done
-  1-9-accessibility-performance-floor-test-harness: backlog
+  1-9-accessibility-performance-floor-test-harness: done
   1-10-deploy-analytics-launch-gates: backlog
   epic-1-retrospective: optional
 
