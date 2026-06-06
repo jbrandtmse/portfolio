@@ -99,5 +99,13 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
       testMatch: /reduced-motion\.spec\.ts/,
     },
+    // (Story 2.2) Glass Box artifact reader — desktop, JS on. Asserts real-
+    // runtime render of the reader pages: type chip, curator note, body prose,
+    // drop-cap/pull-quote CSS, WCAG 2.1 AA (axe), 0 executable scripts.
+    {
+      name: 'glassbox-reader',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /glassbox-reader\.spec\.ts/,
+    },
   ],
 });
