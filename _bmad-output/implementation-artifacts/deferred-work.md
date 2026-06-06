@@ -51,3 +51,45 @@ resolution (usually the story that should own the fix).
   - **Suggested resolution:** centralize the default in `api/src/env.ts` when it lands
     (or a tiny shared constant), and have both the proxy and the service read it from
     one source. `.env.example` remains the documented override.
+
+---
+
+## Deferred from: code review of story-1.2 (2026-06-06)
+
+- **[1.2 · LOW] React integration emits an unreferenced ~193KB `_astro/client.*.js` chunk into `dist`.**
+  `web/astro.config.mjs` registers `@astrojs/react` (Story 1.1 scaffold, for the three
+  later islands). With no island used in Story 1.2, the build still emits
+  `web/dist/_astro/client.CUuda7Aw.js` (~193KB). The home page ships **0 `<script>`
+  tags** and references no `.js` (verified in `dist/index.html` + the build-output
+  test), so **NFR-1 (0-JS-by-default) holds at the page level** — the chunk is just
+  dead weight sitting on the CDN, never fetched by the page.
+  - **Deferral rationale:** removing or conditionally-scoping the React integration is
+    a build-config decision that belongs with the first story that actually ships a
+    React island (so the integration is present exactly when needed), not with the
+    design-system foundation. Doing it here risks breaking the later island setup.
+  - **Suggested resolution:** in the first island story (Guide panel / Invite form,
+    Epic 4 / Epic 3), confirm the integration is needed and consider Astro's
+    per-page/island opt-in so non-island routes never emit the client runtime; or
+    document that the unreferenced chunk is acceptable because it is never linked from
+    any zero-JS page. Re-verify `dist/index.html` stays at 0 `<script>`.
+
+- **[1.2 · LOW] Empty `<footer class="site-footer">` renders a stray hairline-ruled band on pages with no footer slot content.**
+  `web/src/layouts/BaseLayout.astro` always renders the `<footer>` region; on a page
+  that fills no `footer` slot (the Story 1.2 home), the built HTML emits
+  `<footer class="site-footer">  </footer>`, and the scoped CSS gives it a
+  `border-top: 1px {border-hairline}`, a `margin-top: {section-band}`, and
+  `padding: {space-6} {margin-desktop}` — i.e. a visible empty ruled band at the
+  bottom of the page. Gating the render on `Astro.slots.has('footer')` was prototyped
+  and reverted during review.
+  - **Deferral rationale:** the story explicitly sanctions an always-present footer
+    *placeholder* ("leave a clearly-marked slot/placeholder… reserve the region… so
+    BaseLayout is footer-ready"), and IAC-1 wants the footer slot **observable in
+    `dist`**; gating render on slot-presence removes that consumer-observable evidence
+    and would require reworking the green build-output test. The blemish is on a
+    throwaway placeholder home that Story 1.3 replaces. Proportionate to defer rather
+    than rework QA evidence at code-review time.
+  - **Suggested resolution:** in **Story 1.7** (the real Footer), the slot is filled on
+    every Mirror page so the band is no longer empty; if any page must legitimately
+    omit the footer, gate the region with `Astro.slots.has('footer')` (or render the
+    placeholder only in dev) and update the build-output footer assertion to verify the
+    slot renders **when filled** rather than asserting an empty `<footer>` ships.

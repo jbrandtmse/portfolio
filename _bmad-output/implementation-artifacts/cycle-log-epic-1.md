@@ -12,3 +12,10 @@
 2026-06-06T02:42:28Z	Story 1.1	qa_complete	spawn_at=2026-06-06T02:37:25Z model=claude-opus-4-8 tests=api/src/health.test.ts tests_added=2 first_run_failures=0 clarifications=0 closing_sections_present=true
 2026-06-06T02:50:36Z	Story 1.1	cr_complete	spawn_at=2026-06-06T02:42:35Z model=claude-opus-4-8 resolved=0 deferred=3 dismissed=0 high=0 med=0 low=3 clarifications=0 closing_sections_present=true
 2026-06-06T02:53:51Z	Story 1.1	smoke_complete	method=cli result=pass iterations=1 defects_caught=0 evidence=api-health-200-via-proxy+build/typecheck/test-green+0-js model=claude-opus-4-8
+2026-06-06T02:54:27Z	Story 1.1	committed	sha=0d57b58 submodules=
+2026-06-06T02:57:12Z	Story 1.2	story_created	path=_bmad-output/implementation-artifacts/1-2-design-system-tokens-base-layout-shared-chrome.md
+2026-06-06T03:14:32Z	Story 1.2	dev_complete	spawn_at=2026-06-06T02:57:30Z model=claude-opus-4-8 files=13 clarifications=0 nfr_tripwires=0 adr_violations_surfaced=0 cycle_iteration=1 closing_sections_present=true
+2026-06-06T03:14:36Z	Story 1.2	adr_verifications_complete	tool=none acs=none result=none_required
+2026-06-06T03:19:37Z	Story 1.2	qa_complete	spawn_at=2026-06-06T03:14:40Z model=claude-opus-4-8 tests=web/test/Button.component.test.ts tests_added=5 first_run_failures=0 clarifications=0 closing_sections_present=true
+2026-06-06T03:29:26Z	Story 1.2	cr_complete	spawn_at=2026-06-06T03:15:30Z model=claude-opus-4-8 resolved=1 deferred=2 dismissed=2 high=0 med=1 low=2 clarifications=0 closing_sections_present=true
+2026-06-06T03:31:08Z	Story 1.2	smoke_complete	method=browser result=pass iterations=1 defects_caught=0 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-1.2-home.png model=claude-opus-4-8

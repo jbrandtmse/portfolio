@@ -1,18 +1,83 @@
 ---
-// Placeholder home page. Story 1.3 replaces this with the real hero.
-// 0-JS-by-default: no islands are shipped from this page yet.
+/**
+ * Home — a calm, on-brand placeholder shell that proves the design system
+ * renders (Story 1.2 / IAC-1). The REAL hero (two-column copy + portrait, the
+ * audience fork) is Story 1.3; this is intentionally minimal.
+ *
+ * Consumes BaseLayout + the shared chrome (Wordmark, Kicker, Button) so the
+ * built HTML is observably correct with JS off: one <html lang="en">, the
+ * wordmark string, real <button>/<a> actions, the footer slot, 0 <script> tags.
+ *
+ * Copy is positive-assertion, no hype — and contains no exclamation marks.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Wordmark from '../components/common/Wordmark.astro';
+import Kicker from '../components/common/Kicker.astro';
+import Button from '../components/common/Button.astro';
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="generator" content={Astro.generator} />
-    <title>Portfolio</title>
-  </head>
-  <body>
-    <h1>Portfolio</h1>
-    <p>Scaffold online. Real content arrives in later stories.</p>
-  </body>
-</html>
+<BaseLayout
+  title="Joshua R. Brandt, MSE"
+  description="A warm, structured, editorial portfolio for a 30-year engineer building at the frontier."
+>
+  <main class="home">
+    <header class="home__head">
+      <Wordmark size="hero" />
+    </header>
+
+    <section class="home__intro">
+      <Kicker>The studio is open</Kicker>
+      <h1 class="home__title">Seasoned, building at the frontier.</h1>
+      <p class="home__lede">
+        Thirty years of shipping software, now all-in on agentic engineering. This site is built in
+        the open, and it is its own proof. The full story arrives scene by scene.
+      </p>
+      <div class="home__actions">
+        <Button href="/browse" variant="primary">Browse the work</Button>
+        <Button href="/about" variant="secondary">Read the about</Button>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .home {
+    max-width: var(--measure-content);
+    margin-inline: auto;
+    padding: var(--space-section-band) var(--space-margin-desktop);
+  }
+
+  .home__head {
+    margin-bottom: var(--space-section-band);
+  }
+
+  .home__intro {
+    max-width: var(--measure-reading);
+  }
+
+  .home__title {
+    margin-top: var(--space-4);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-h1);
+    font-weight: var(--font-weight-h1);
+    line-height: var(--line-height-h1);
+    letter-spacing: var(--letter-spacing-h1);
+    color: var(--color-ink-primary);
+  }
+
+  .home__lede {
+    margin-top: var(--space-5);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-lede);
+    font-weight: var(--font-weight-lede);
+    line-height: var(--line-height-lede);
+    color: var(--color-ink-secondary);
+  }
+
+  .home__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-7);
+  }
+</style>

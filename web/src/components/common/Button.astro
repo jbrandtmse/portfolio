@@ -1,0 +1,118 @@
+---
+/**
+ * Button — the shared action control (AC4; DESIGN §Components → button-primary /
+ * button-secondary).
+ *
+ * Renders a REAL <button> by default, or an <a href> when `href` is passed (a
+ * link styled as a button — correct semantics for navigation, works JS-off).
+ *
+ * variant="primary"   → filled --color-accent, --color-surface-base text
+ *                       (cream-on-navy, 10.15:1 AA), 1px accent border.
+ * variant="secondary" → transparent, --color-ink-primary text + 1px outline;
+ *                       hover warms to a faint navy wash + accent text/border.
+ *
+ * Both share --radius-md, a visible :focus-visible navy ring (2px, 2px offset),
+ * and the --color-accent-hover hover. 0 JS — interactivity is native.
+ *
+ * Copy constraint: no exclamation marks in any label (positive-assertion voice).
+ */
+type ButtonVariant = 'primary' | 'secondary';
+type NativeButtonType = 'button' | 'submit' | 'reset';
+
+interface Props {
+  variant?: ButtonVariant;
+  /** When present, renders an <a href> instead of a <button>. */
+  href?: string;
+  /** Native button type (ignored when `href` is set). Defaults to "button". */
+  type?: NativeButtonType;
+  /** Extra classes to merge onto the control. */
+  class?: string;
+  /** Any other HTML attributes (e.g. aria-*, rel, target, disabled, download). */
+  [key: string]: unknown;
+}
+
+const { variant = 'primary', href, type = 'button', class: className, ...rest } = Astro.props;
+
+const classList = ['btn', `btn--${variant}`, className];
+---
+
+{
+  href ? (
+    <a href={href} class:list={classList} {...rest}>
+      <slot />
+    </a>
+  ) : (
+    <button type={type} class:list={classList} {...rest}>
+      <slot />
+    </button>
+  )
+}
+
+<style>
+  /* Shared base — both variants. */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 13px 22px;
+    border-radius: var(--radius-md);
+    font-family: var(--font-family-base);
+    /* 15px / 0.01em are the button's own pinned spec values (DESIGN button-*),
+       not covered by any ramp token (the ramp has no UI-body size token). */
+    font-size: 15px;
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease;
+  }
+
+  /* Visible keyboard focus — navy ring, 2px, 2px offset (AC4/AA). */
+  .btn:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Primary — filled navy, cream text reversed out (10.15:1 AA). */
+  .btn--primary {
+    background-color: var(--color-accent);
+    color: var(--color-surface-base);
+    border: 1px solid var(--color-accent);
+  }
+
+  .btn--primary:hover {
+    background-color: var(--color-accent-hover);
+    border-color: var(--color-accent-hover);
+  }
+
+  /* Secondary — transparent with a 1px ink outline; hover warms to a faint navy
+     wash and accent text/border. The wash (navy @ 6%) is a DESIGN-pinned
+     component one-off, not a global token. */
+  .btn--secondary {
+    background-color: transparent;
+    color: var(--color-ink-primary);
+    border: 1px solid var(--color-ink-primary);
+  }
+
+  .btn--secondary:hover {
+    background-color: rgba(30, 58, 95, 0.06);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  /* Disabled state for the real <button>. */
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn {
+      transition: none;
+    }
+  }
+</style>

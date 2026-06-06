@@ -1,0 +1,53 @@
+---
+/**
+ * Kicker — the small-caps eyebrow over titles (AC4; DESIGN §Components → Kicker).
+ *
+ * Uppercase, tracked ~0.30em, in --color-ink-secondary, introduced by a single
+ * 26px x 1px navy (--color-accent) lead-tick with a ~12-14px gap before the
+ * label. The tick is the one place the accent touches an eyebrow.
+ *
+ * The label text comes from the default slot. The lead-tick is decorative
+ * (aria-hidden) so assistive tech reads only the label. Renders as a <p> by
+ * default; pass `as` to place it as a different element. 0 JS.
+ */
+type KickerTag = 'p' | 'span' | 'div' | 'h2';
+
+interface Props {
+  as?: KickerTag;
+}
+
+const { as: Tag = 'p' }: Props = Astro.props;
+---
+
+<Tag class="kicker">
+  <span class="kicker__tick" aria-hidden="true"></span>
+  <span class="kicker__label"><slot /></span>
+</Tag>
+
+<style>
+  .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 13px; /* within the 12-14px lead-tick gap (DESIGN) */
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-kicker);
+    font-weight: var(--font-weight-kicker);
+    line-height: var(--line-height-kicker);
+    letter-spacing: var(--letter-spacing-kicker); /* 0.30em */
+    text-transform: uppercase;
+    color: var(--color-ink-secondary);
+  }
+
+  /* 26px x 1px navy lead-tick — the single accent on the eyebrow. */
+  .kicker__tick {
+    flex: none;
+    width: 26px;
+    height: 1px;
+    background-color: var(--color-accent);
+  }
+
+  .kicker__label {
+    /* The tracked-out tail can otherwise push trailing space; keep it tidy. */
+    display: inline-block;
+  }
+</style>
