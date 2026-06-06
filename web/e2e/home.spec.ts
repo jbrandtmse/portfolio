@@ -27,26 +27,27 @@ test.describe('home / — hero, fork, footer (normal, JS on)', () => {
       'href',
       '#thesis',
     );
-    // "book a talk" → /speaking (bypasses the Guide; protects SM-C1).
+    // "book a talk" → /speaking/ (trailing-slash form; Story 2.0 AC2).
     await expect(page.getByRole('link', { name: /book a talk/i }).first()).toHaveAttribute(
       'href',
-      '/speaking',
+      '/speaking/',
     );
-    // The quiet Guide entry → /faq.
+    // The quiet Guide entry → /faq/ (trailing-slash form; Story 2.0 AC2).
     await expect(page.getByRole('link', { name: /ask my Guide about the work/i })).toHaveAttribute(
       'href',
-      '/faq',
+      '/faq/',
     );
   });
 
-  test('renders the global static-fallback footer with a link to /about and /browse', async ({
+  test('renders the global static-fallback footer with a link to /about/ and /browse/ (trailing-slash form)', async ({
     page,
   }) => {
     await page.goto('/');
     const footer = page.locator('footer.site-footer');
     await expect(footer).toBeVisible();
-    await expect(footer.locator('a[href="/about"]')).toHaveCount(1);
-    await expect(footer.locator('a[href="/browse"]')).toHaveCount(1);
+    // Trailing-slash hrefs (Story 2.0 AC2).
+    await expect(footer.locator('a[href="/about/"]')).toHaveCount(1);
+    await expect(footer.locator('a[href="/browse/"]')).toHaveCount(1);
   });
 });
 
@@ -57,9 +58,9 @@ test.describe('home / — the scene-rail (the FR-2 skip/progress/jump affordance
     for (const id of ['hero', 'thesis', 'timeline', 'speaker', 'flagship', 'glass-box', 'close']) {
       await expect(rail.locator(`a[href="#${id}"]`).first()).toHaveCount(1);
     }
-    // Skip → #close and Jump → /speaking.
+    // Skip → #close and Jump → /speaking/ (trailing-slash form; Story 2.0 AC2).
     await expect(rail.locator('a[href="#close"]').first()).toBeVisible();
-    await expect(rail.locator('a[href="/speaking"]').first()).toBeVisible();
+    await expect(rail.locator('a[href="/speaking/"]').first()).toBeVisible();
   });
 
   test('a rail jump anchor navigates to its scene (the hash + the target in view)', async ({
@@ -95,8 +96,8 @@ test.describe('home / — the scene-rail (the FR-2 skip/progress/jump affordance
 });
 
 test.describe('a Mirror route loads as a real answer-first page', () => {
-  test('/about renders one <h1> and an entity-first lede', async ({ page }) => {
-    await page.goto('/about');
+  test('/about/ renders one <h1> and an entity-first lede', async ({ page }) => {
+    await page.goto('/about/');
     await expect(page.locator('h1')).toHaveCount(1);
     // The first paragraph (the answer-first lede) names the entity first.
     const lede = page.locator('main p').first();

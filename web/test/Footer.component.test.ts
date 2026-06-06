@@ -46,15 +46,15 @@ import Footer from '../src/components/common/Footer.astro';
 // component reads).
 const ALL_MIRROR_ROUTES = [
   '/',
-  '/about',
-  '/timeline',
-  '/speaking',
-  '/speaking/reel',
-  '/work/loandemo',
-  '/glass-box',
-  '/faq',
-  '/invite',
-  '/browse',
+  '/about/',
+  '/timeline/',
+  '/speaking/',
+  '/speaking/reel/',
+  '/work/loandemo/',
+  '/glass-box/',
+  '/faq/',
+  '/invite/',
+  '/browse/',
 ] as const;
 
 const ORIGIN = 'https://joshuabrandt.abacusai.cloud';
@@ -111,33 +111,45 @@ describe('Footer.astro — the current page is marked, never by color alone (AC3
   // and a nested route) so the normalize()/aria-current mapping is pinned, not
   // just the default. For each, exactly ONE link is current and it is the right
   // one, marked by aria-current + a textual affordance + a weight class.
-  const CASES = ['/', '/about', '/speaking/reel', '/browse'] as const;
+  // CASES: request pathname (slashless; the Container API receives slashless requests)
+  // and the expected href in the rendered footer (trailing-slash; Story 2.0 AC2).
+  const CASES = [
+    { pathname: '/', expectedHref: '/' },
+    { pathname: '/about', expectedHref: '/about/' },
+    { pathname: '/speaking/reel', expectedHref: '/speaking/reel/' },
+    { pathname: '/browse', expectedHref: '/browse/' },
+  ] as const;
 
-  it.each(CASES)('marks exactly one link current — the active route — on %s', async (pathname) => {
-    const html = await renderFooterAt(pathname);
+  it.each(CASES)(
+    'marks exactly one link current — the active route — on $pathname',
+    async ({ pathname, expectedHref }) => {
+      const html = await renderFooterAt(pathname);
 
-    // Exactly one link carries aria-current="page" (the assistive-tech signal).
-    const currentAnchors = [...html.matchAll(/<a\b[^>]*\saria-current="page"[^>]*>[\s\S]*?<\/a>/g)];
-    expect(currentAnchors, `one aria-current on ${pathname}`).toHaveLength(1);
+      // Exactly one link carries aria-current="page" (the assistive-tech signal).
+      const currentAnchors = [
+        ...html.matchAll(/<a\b[^>]*\saria-current="page"[^>]*>[\s\S]*?<\/a>/g),
+      ];
+      expect(currentAnchors, `one aria-current on ${pathname}`).toHaveLength(1);
 
-    const currentAnchor = currentAnchors[0]![0];
-    // …and it is the link to the active route (href matches the rendered path).
-    const hrefPattern = new RegExp(`\\shref="${pathname.replace(/\//g, '\\/')}"`);
-    expect(currentAnchor, `current link href on ${pathname}`).toMatch(hrefPattern);
+      const currentAnchor = currentAnchors[0]![0];
+      // …and it is the link to the active route (href is the trailing-slash form).
+      const hrefPattern = new RegExp(`\\shref="${expectedHref.replace(/\//g, '\\/')}"`);
+      expect(currentAnchor, `current link href on ${pathname}`).toMatch(hrefPattern);
 
-    // Color is NEVER the sole signal — two non-color carriers ride along:
-    //  (a) a VISIBLE textual marker inside the current link …
-    expect(currentAnchor, `textual "(current)" marker on ${pathname}`).toMatch(/\(current\)/);
-    //  (b) … and a state class (weight, not color) on the current link.
-    expect(currentAnchor, `current state class on ${pathname}`).toMatch(
-      /class="[^"]*site-footer__link--current[^"]*"/,
-    );
-  });
+      // Color is NEVER the sole signal — two non-color carriers ride along:
+      //  (a) a VISIBLE textual marker inside the current link …
+      expect(currentAnchor, `textual "(current)" marker on ${pathname}`).toMatch(/\(current\)/);
+      //  (b) … and a state class (weight, not color) on the current link.
+      expect(currentAnchor, `current state class on ${pathname}`).toMatch(
+        /class="[^"]*site-footer__link--current[^"]*"/,
+      );
+    },
+  );
 
   it('the textual "(current)" affordance appears exactly once per render (no leak to other links)', async () => {
     // The non-color marker must mark ONLY the active link — exactly one "(current)"
     // in the whole footer, matching the single aria-current.
-    for (const pathname of CASES) {
+    for (const { pathname } of CASES) {
       const html = await renderFooterAt(pathname);
       const markers = [...html.matchAll(/\(current\)/g)];
       expect(markers, `single "(current)" on ${pathname}`).toHaveLength(1);

@@ -19,7 +19,7 @@ import process from 'node:process';
 import type { APIRoute } from 'astro';
 
 import { FALLBACK_LASTMOD, gitLastmod } from '../lib/lastmod';
-import { SITEMAP_ROUTES } from '../lib/routes';
+import { SITEMAP_ROUTES, routeHref } from '../lib/routes';
 
 // Prerender as a static file at build time (the project is output: 'static',
 // but mark explicitly so this endpoint is never treated as on-demand).
@@ -61,13 +61,10 @@ export const GET: APIRoute = ({ site }) => {
 
   const urls = SITEMAP_ROUTES.map((route) => {
     // Absolute URL with a TRAILING SLASH so each <loc> matches the page's own
-    // <link rel="canonical"> exactly (Story 1.5, UX-DR10). Astro's default
-    // directory build (build.format 'directory', trailingSlash 'ignore') serves
-    // every route as a directory index and emits a trailing-slash self-canonical
-    // (Astro.url.pathname is e.g. "/about/"), so the sitemap must use the same
-    // form — a slashless <loc> would advertise a non-canonical variant and split
-    // the SEO signal. The site root is already "/".
-    const loc = route.path === '/' ? `${origin}/` : `${origin}${route.path}/`;
+    // <link rel="canonical"> exactly (Story 1.5, UX-DR10; Rule 2). Built via the
+    // shared routeHref() helper so sitemap <loc> form is always === link form ===
+    // canonical form — a single source prevents drift (Story 2.0, AC4).
+    const loc = `${origin}${routeHref(route.path)}`;
     const lastmod = repoRoot ? gitLastmod(route.sourceFile, repoRoot) : FALLBACK_LASTMOD;
     return `  <url>\n    <loc>${xmlEscape(loc)}</loc>\n    <lastmod>${lastmod}</lastmod>\n  </url>`;
   }).join('\n');

@@ -60,11 +60,12 @@ export default defineConfig({
   // Each spec runs under EXACTLY the project(s) whose context it needs, scoped by
   // testMatch — so e.g. js-off.spec.ts never also runs with JS on under `desktop`.
   projects: [
-    // (a) Normal e2e + (d) view-source SEO — desktop, JS on, motion on.
+    // (a) Normal e2e + (d) view-source SEO + Story 2.0 URL-form (AC6: the
+    // no-301-hop served-runtime check) — desktop, JS on, motion on.
     {
       name: 'desktop',
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
-      testMatch: /(home|view-source)\.spec\.ts/,
+      testMatch: /(home|view-source|url-form)\.spec\.ts/,
     },
     // (IAC-3) WCAG 2.1 AA audit at a DESKTOP viewport (/ and /about).
     {

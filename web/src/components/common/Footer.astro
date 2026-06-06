@@ -29,7 +29,7 @@
  *
  * Consumed by: BaseLayout (renders it globally) → every page, every later epic.
  */
-import { NAV_ROUTES } from '../../lib/routes';
+import { NAV_ROUTES, routeHref } from '../../lib/routes';
 import Wordmark from './Wordmark.astro';
 
 // Normalize a path for current-route comparison: strip a trailing slash so the
@@ -53,7 +53,7 @@ const here = normalize(Astro.url.pathname);
             return (
               <li>
                 <a
-                  href={route.path}
+                  href={routeHref(route.path)}
                   class:list={['site-footer__link', { 'site-footer__link--current': isCurrent }]}
                   aria-current={isCurrent ? 'page' : undefined}
                 >

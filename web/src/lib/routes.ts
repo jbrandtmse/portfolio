@@ -114,3 +114,18 @@ export const NAV_ROUTES: RouteEntry[] = [
  * above automatically extends the sitemap (now 10 routes with /browse).
  */
 export const SITEMAP_ROUTES: RouteEntry[] = NAV_ROUTES;
+
+/**
+ * Derive the trailing-slash href for a route path (project-rules.md Rule 2).
+ *
+ * The `path` values in the registry are stored slashless so existing string
+ * comparisons (e.g. aria-current logic) don't churn. This helper is the SINGLE
+ * place the trailing-slash form is produced for all consumers (Footer, /browse,
+ * sitemap). Rules:
+ *   - Site root "/" → "/" (already the canonical form; no double-slash)
+ *   - Any other path → append "/" if not already present
+ */
+export function routeHref(path: string): string {
+  if (path === '/') return '/';
+  return path.endsWith('/') ? path : `${path}/`;
+}

@@ -13,6 +13,13 @@ export default defineConfig({
   // UX-DR10), and which Story 1.6's sitemap/robots will reuse.
   site: 'https://joshuabrandt.abacusai.cloud',
   output: 'static',
+  // URL-form convention (project-rules.md Rule 2): trailing-slash everywhere so
+  // internal links === rel=canonical === sitemap <loc>. `build.format: 'directory'`
+  // (explicit; was the default) emits about/index.html so nginx serves /about/
+  // directly. `trailingSlash: 'always'` aligns dev/preview redirect behavior with
+  // the emitted form, eliminating the 301 hop that /about → /about/ caused in prod.
+  build: { format: 'directory' },
+  trailingSlash: 'always',
   integrations: [react()],
   vite: {
     server: {

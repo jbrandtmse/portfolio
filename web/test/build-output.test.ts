@@ -120,15 +120,15 @@ function findNodeByType(html: string, type: string): Record<string, unknown> | u
  * ────────────────────────────────────────────────────────────────────────── */
 const ALL_MIRROR_ROUTES = [
   '/',
-  '/about',
-  '/timeline',
-  '/speaking',
-  '/speaking/reel',
-  '/work/loandemo',
-  '/glass-box',
-  '/faq',
-  '/invite',
-  '/browse',
+  '/about/',
+  '/timeline/',
+  '/speaking/',
+  '/speaking/reel/',
+  '/work/loandemo/',
+  '/glass-box/',
+  '/faq/',
+  '/invite/',
+  '/browse/',
 ] as const;
 
 /** Extract the global footer block (<footer class="…site-footer…">…</footer>). */
@@ -194,11 +194,13 @@ describe('built home page (web/dist/index.html)', () => {
   it('renders the three fork controls as real links with the exact hrefs (Story 1.3 IAC-1)', () => {
     // Explore → in-page Scene-Arc anchor #thesis (Story 1.4 finalizes the target).
     expect(indexHtml).toMatch(/<a\b[^>]*\shref="#thesis"[^>]*>[\s\S]*?Explore[\s\S]*?<\/a>/);
-    // "I'm here to book a talk" → /speaking (route stub from Story 1.5; bypasses Guide).
-    expect(indexHtml).toMatch(/<a\b[^>]*\shref="\/speaking"[^>]*>[\s\S]*?book a talk[\s\S]*?<\/a>/);
-    // Quiet "Or ask my Guide about the work" → /faq (becomes the Guide opener in Epic 4).
+    // "I'm here to book a talk" → /speaking/ (trailing-slash form; Story 2.0 AC2).
     expect(indexHtml).toMatch(
-      /<a\b[^>]*\shref="\/faq"[^>]*>[\s\S]*?ask my Guide about the work[\s\S]*?<\/a>/,
+      /<a\b[^>]*\shref="\/speaking\/"[^>]*>[\s\S]*?book a talk[\s\S]*?<\/a>/,
+    );
+    // Quiet "Or ask my Guide about the work" → /faq/ (becomes the Guide opener in Epic 4).
+    expect(indexHtml).toMatch(
+      /<a\b[^>]*\shref="\/faq\/"[^>]*>[\s\S]*?ask my Guide about the work[\s\S]*?<\/a>/,
     );
   });
 
@@ -215,9 +217,9 @@ describe('built home page (web/dist/index.html)', () => {
   });
 
   it('keeps the quiet Guide entry distinct from the two fork buttons (Story 1.3 IAC-1)', () => {
-    // The /faq Guide link is an inline link, NOT a .btn — visually distinct from
+    // The /faq/ Guide link is an inline link, NOT a .btn — visually distinct from
     // the Explore/book-a-talk buttons (DESIGN: a quiet, understated entry).
-    const guideLink = indexHtml.match(/<a\b[^>]*\shref="\/faq"[^>]*>/);
+    const guideLink = indexHtml.match(/<a\b[^>]*\shref="\/faq\/"[^>]*>/);
     expect(guideLink).not.toBeNull();
     expect(guideLink![0]).not.toMatch(/class="[^"]*\bbtn\b/);
   });
@@ -364,8 +366,8 @@ describe('home 7-scene scaffold + scene-rail (Story 1.4 IAC-1 / IAC-2)', () => {
     const rail = railMatch![0];
     // Skip to the end → the Close scene anchor.
     expect(rail).toMatch(/<a\b[^>]*\shref="#close"[^>]*>[\s\S]*?Skip[\s\S]*?<\/a>/);
-    // Jump: book a talk → the /speaking Mirror route (protects SM-C1).
-    expect(rail).toMatch(/<a\b[^>]*\shref="\/speaking"[^>]*>[\s\S]*?book a talk[\s\S]*?<\/a>/);
+    // Jump: book a talk → the /speaking/ Mirror route (trailing-slash form; SM-C1).
+    expect(rail).toMatch(/<a\b[^>]*\shref="\/speaking\/"[^>]*>[\s\S]*?book a talk[\s\S]*?<\/a>/);
   });
 
   it('marks the current scene with aria-current (static baseline = #hero), never color alone (AC2/AC4)', () => {
@@ -387,13 +389,12 @@ describe('home 7-scene scaffold + scene-rail (Story 1.4 IAC-1 / IAC-2)', () => {
   });
 
   it('teaser scenes link to their Mirror routes (summarize-and-link, UX-DR10) (AC1)', () => {
-    // Each teaser scene carries a real link to its Mirror route. (These 404
-    // until Story 1.5 — correct hrefs now, not a defect.)
-    expect(indexHtml).toMatch(/<a\b[^>]*\shref="\/timeline"[^>]*>/);
-    expect(indexHtml).toMatch(/<a\b[^>]*\shref="\/work\/loandemo"[^>]*>/);
-    expect(indexHtml).toMatch(/<a\b[^>]*\shref="\/glass-box"[^>]*>/);
-    // The Close shell links to /invite (the CTAs themselves are Epic 3).
-    expect(indexHtml).toMatch(/<a\b[^>]*\shref="\/invite"[^>]*>/);
+    // Each teaser scene carries a real link to its Mirror route (trailing-slash form; Story 2.0 AC2).
+    expect(indexHtml).toMatch(/<a\b[^>]*\shref="\/timeline\/"[^>]*>/);
+    expect(indexHtml).toMatch(/<a\b[^>]*\shref="\/work\/loandemo\/"[^>]*>/);
+    expect(indexHtml).toMatch(/<a\b[^>]*\shref="\/glass-box\/"[^>]*>/);
+    // The Close shell links to /invite/ (the CTAs themselves are Epic 3).
+    expect(indexHtml).toMatch(/<a\b[^>]*\shref="\/invite\/"[^>]*>/);
   });
 
   it('still keeps exactly one <h1> — scene titles are <h2> (clean hierarchy, NFR-2/SEO)', () => {
@@ -517,6 +518,10 @@ const MIRROR_ROUTES = [
   '/about',
   '/browse',
 ] as const;
+// Note: MIRROR_ROUTES values are kept slashless here because routeHtmlPath() uses
+// them to derive the filesystem path (about/index.html etc.) — the slash form is
+// irrelevant to that lookup. The canonical href form is asserted below as exact
+// trailing-slash (the Story 2.0 AC5 lock removes the earlier slash-normalization).
 
 /** Absolute path to a route's built index.html (directory-index form). */
 function routeHtmlPath(route: string): string {
@@ -557,17 +562,20 @@ describe('Story 1.5 — every Mirror route is a real, answer-first, self-canonic
     },
   );
 
-  it.each(MIRROR_ROUTES)('is self-canonical to its own absolute URL on %s', (route) => {
-    const html = readFileSync(routeHtmlPath(route), 'utf8');
-    const canonicalMatch = html.match(/<link\b[^>]*\brel="canonical"[^>]*>/);
-    expect(canonicalMatch).not.toBeNull();
-    const hrefMatch = canonicalMatch![0].match(/\bhref="([^"]+)"/);
-    expect(hrefMatch).not.toBeNull();
-    // Astro builds the canonical from Astro.site + pathname. Normalize a trailing
-    // slash before comparing so the assertion is independent of trailingSlash.
-    const got = hrefMatch![1]!.replace(/\/$/, '');
-    expect(got).toBe(`${SITE_ORIGIN}${route}`);
-  });
+  it.each(MIRROR_ROUTES)(
+    'is self-canonical to its own absolute trailing-slash URL on %s (Story 2.0 AC3)',
+    (route) => {
+      const html = readFileSync(routeHtmlPath(route), 'utf8');
+      const canonicalMatch = html.match(/<link\b[^>]*\brel="canonical"[^>]*>/);
+      expect(canonicalMatch).not.toBeNull();
+      const hrefMatch = canonicalMatch![0].match(/\bhref="([^"]+)"/);
+      expect(hrefMatch).not.toBeNull();
+      // Exact trailing-slash form — no normalization (Story 2.0 AC5 mandates exact-string
+      // equality so any future form drift fails CI, not passes silently).
+      const got = hrefMatch![1]!;
+      expect(got).toBe(`${SITE_ORIGIN}${route}/`);
+    },
+  );
 
   it.each(MIRROR_ROUTES)('renders exactly one <h1> on %s (clean hierarchy)', (route) => {
     const html = readFileSync(routeHtmlPath(route), 'utf8');
@@ -713,22 +721,28 @@ describe('Story 1.5 — 1.3 hero fork + 1.4 teaser forward-refs now resolve (IAC
   // Every Mirror route the home links to (hero fork + scene teasers). Each MUST
   // now map to an existing built page (no 404). The home index.html is built in
   // the same run (beforeAll above already read it into indexHtml).
+  // HOME_FORWARD_REFS now use the trailing-slash form (Story 2.0 AC2) since the
+  // home markup emits trailing-slash hrefs. routeHtmlPath() still uses the
+  // slashless form for filesystem lookup (about/index.html is unchanged).
   const HOME_FORWARD_REFS = [
-    '/speaking', // hero fork "book a talk" + scene-rail jump + Speaker teaser
-    '/faq', // hero quiet Guide entry
-    '/timeline', // Timeline teaser
-    '/work/loandemo', // Flagship teaser
-    '/glass-box', // Glass Box teaser
-    '/invite', // Close scene
+    { href: '/speaking/', route: '/speaking' }, // hero fork "book a talk" + scene-rail jump + Speaker teaser
+    { href: '/faq/', route: '/faq' }, // hero quiet Guide entry
+    { href: '/timeline/', route: '/timeline' }, // Timeline teaser
+    { href: '/work/loandemo/', route: '/work/loandemo' }, // Flagship teaser
+    { href: '/glass-box/', route: '/glass-box' }, // Glass Box teaser
+    { href: '/invite/', route: '/invite' }, // Close scene
   ] as const;
 
-  it.each(HOME_FORWARD_REFS)('the home links to %s and that route is now built', (route) => {
-    // The home markup still carries the exact href (regression-guards 1.3/1.4)…
-    const hrefPattern = new RegExp(`<a\\b[^>]*\\shref="${route.replace('/', '\\/')}"[^>]*>`);
-    expect(indexHtml).toMatch(hrefPattern);
-    // …and the href now resolves to a real built directory-index (no 404).
-    expect(existsSync(routeHtmlPath(route))).toBe(true);
-  });
+  it.each(HOME_FORWARD_REFS)(
+    'the home links to $href (trailing-slash) and that route is now built',
+    ({ href, route }) => {
+      // The home markup carries the trailing-slash href (Story 2.0 AC2)…
+      const hrefPattern = new RegExp(`<a\\b[^>]*\\shref="${href.replace(/\//g, '\\/')}"[^>]*>`);
+      expect(indexHtml).toMatch(hrefPattern);
+      // …and the href resolves to a real built directory-index (no 404).
+      expect(existsSync(routeHtmlPath(route))).toBe(true);
+    },
+  );
 });
 
 /* ──────────────────────────────────────────────────────────────────────────

@@ -21,7 +21,8 @@ import { expect, test } from '@playwright/test';
  * suppressed).
  */
 
-const ROUTES = ['/', '/about'] as const;
+// Trailing-slash form (Story 2.0 AC2; trailingSlash: 'always' in astro.config.mjs).
+const ROUTES = ['/', '/about/'] as const;
 
 for (const route of ROUTES) {
   test.describe(`WCAG 2.1 AA — ${route}`, () => {
