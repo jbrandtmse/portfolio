@@ -242,6 +242,68 @@ test.describe('Glass Box index — artifact cards + links (AC5)', () => {
   });
 });
 
+/**
+ * Story 3.0 (AC3/AC4) — the shipping node's external "live site" link is the
+ * ONLY external ArtifactCard rendered anywhere on the site (loandemo builds its
+ * own evidence cards and renders no external ArtifactCard). This is therefore
+ * the real-runtime surface for the label↔target honesty fix.
+ *
+ * The fix: ArtifactCard's DEFAULT external label dropped the false "(opens in
+ * new tab)" parenthetical, because external links open with target="_self"
+ * (same tab). The component test (web/test/glassbox-components.component.test.ts)
+ * covers the default branch in isolation; HERE we assert the contract on the
+ * REAL built page — the actually-rendered anchor must NOT claim "new tab" while
+ * it is target="_self", and the consumer's EXPLICIT label must render verbatim
+ * (the explicit label wins over the default). These FAIL if the anchor ever
+ * regains a "new tab" claim while staying same-tab, or if the explicit
+ * externalLabel stops being honored.
+ */
+test.describe('Glass Box index — external live-site link honesty (Story 3.0, AC3/AC4)', () => {
+  const LIVE_SITE_HREF = 'https://joshuabrandt.abacusai.cloud/';
+
+  test('the live-site anchor opens in the SAME tab (target="_self", rel=noopener)', async ({
+    page,
+  }) => {
+    await page.goto(INDEX_PATH);
+    const liveLink = page.locator(`a[href="${LIVE_SITE_HREF}"]`);
+    await expect(liveLink).toHaveCount(1);
+    // Curated external link opens in place (by design) — the behavior the label
+    // must be honest about.
+    await expect(liveLink).toHaveAttribute('target', '_self');
+    await expect(liveLink).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
+  test('the live-site aria-label does NOT claim "opens in new tab" while target="_self"', async ({
+    page,
+  }) => {
+    await page.goto(INDEX_PATH);
+    const liveLink = page.locator(`a[href="${LIVE_SITE_HREF}"]`);
+    await expect(liveLink).toHaveCount(1);
+    // It must carry an accessible label…
+    const ariaLabel = await liveLink.getAttribute('aria-label');
+    expect(ariaLabel, 'external live-site link must have an aria-label').not.toBeNull();
+    // …and that label must NOT promise a new tab (the link is same-tab).
+    expect(ariaLabel!).not.toMatch(/new tab/i);
+    // Belt-and-suspenders: assert the label↔target honesty as one fact — if the
+    // anchor is same-tab, no "new tab" wording is present on the live element.
+    const target = await liveLink.getAttribute('target');
+    expect(target).toBe('_self');
+  });
+
+  test('the consumer’s explicit externalLabel renders verbatim (explicit wins over the default)', async ({
+    page,
+  }) => {
+    await page.goto(INDEX_PATH);
+    const liveLink = page.locator(`a[href="${LIVE_SITE_HREF}"]`);
+    // The index passes externalLabel={`Visit the live site: ${href}`} — the
+    // explicit label must be honored verbatim (not replaced by the default).
+    await expect(liveLink).toHaveAttribute('aria-label', `Visit the live site: ${LIVE_SITE_HREF}`);
+    // The visible link text is the "View →" affordance (external cards use View,
+    // not Read) — confirms this is the external branch of the component.
+    await expect(liveLink).toHaveText(/View/);
+  });
+});
+
 test.describe('Glass Box index — ghost nodes (AC2)', () => {
   test('renders 3 ghost cards with "As it accrues" text (no dead reader link)', async ({
     page,

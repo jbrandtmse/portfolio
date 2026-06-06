@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-06T02:19:05Z
-last_updated: 2026-06-06T20:53:18Z
+last_updated: 2026-06-06T22:08:03Z
 project: portfolio
 project_key: NOKEY
 tracking_system: file-system
@@ -70,7 +70,8 @@ development_status:
   epic-2-retrospective: done
 
   # Epic 3: Speaker Surface & Conversion
-  epic-3: backlog
+  epic-3: in-progress
+  3-0-epic-2-deferred-cleanup: done
   3-1-speaker-surface-reel-signature-talks: backlog
   3-2-copy-paste-bios-social-proof: backlog
   3-3-invite-me-capture-data-model-endpoint-email: backlog

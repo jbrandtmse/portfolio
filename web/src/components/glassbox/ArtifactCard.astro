@@ -53,7 +53,7 @@ export interface ArtifactCardProps {
   showLivePill?: boolean;
   /** If true, renders href as an external link (opens in same tab, rel=noopener). */
   external?: boolean;
-  /** Accessible label for external links (default: "View {title} (opens in new tab)"). */
+  /** Accessible label for external links (default: "View {title}"). External links open in the same tab (target="_self"); pass an explicit label if your use case needs different wording. */
   externalLabel?: string;
 }
 
@@ -83,9 +83,7 @@ const displayDate = date
     })
   : null;
 
-const linkLabel = external
-  ? (externalLabel ?? `View ${title} (opens in new tab)`)
-  : `Read ${title}`;
+const linkLabel = external ? (externalLabel ?? `View ${title}`) : `Read ${title}`;
 ---
 
 <article class:list={['artifact-card', { 'artifact-card--ghost': ghost }]}>

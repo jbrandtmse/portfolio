@@ -95,6 +95,49 @@ function findGeneratedJson(): string | null {
 }
 
 /**
+ * Format a timeline ISO date string as a short "Mon YYYY" label, deterministically
+ * and independently of the runner's local timezone (Story 3.0, AC5).
+ *
+ * - ISO date-only strings (e.g. "2026-06" or "2026-06-06") are parsed as UTC
+ *   calendar values — `YYYY-MM(-DD)?` — so the visible label never shifts when
+ *   built west of UTC (where `new Date("2026-06-01").toLocaleDateString(...)` can
+ *   roll back to May in America/Los_Angeles at midnight UTC).
+ * - If the input starts with "~" (approximate era marker, e.g. "~1996"), it is
+ *   returned verbatim (no formatting — the tilde form is the display value).
+ * - If the input starts with "[" (an OPEN/ASSUMPTION flag carried in the datetime
+ *   attr, e.g. "[OPEN]"), it is returned verbatim.
+ * - On any parse failure (NaN date), the raw string is returned as a fallback.
+ *
+ * Both IIFEs in FlagshipNode.astro (milestone date + cluster-dot dates) are
+ * replaced by this single shared call.
+ *
+ * @param iso - A timeline date value: an ISO-8601 date string, a "~YYYY"
+ *   approximate, or a "[FLAG]" passthrough.
+ * @returns A deterministic "Mon YYYY" label, or the raw string for passthroughs.
+ */
+const _dotDateFormatter = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+export function formatDotDate(iso: string): string {
+  // Passthrough: approximate era markers ("~1996") and flag values ("[OPEN]", "[ASSUMPTION]…").
+  if (iso.startsWith('~') || iso.startsWith('[')) return iso;
+  // Parse YYYY-MM or YYYY-MM-DD as a UTC calendar value to avoid TZ shift.
+  // new Date("2026-06")    → 2026-06-01T00:00:00Z  (UTC midnight — safe)
+  // new Date("2026-06-06") → 2026-06-06T00:00:00Z  (UTC midnight — safe)
+  // ISO datetime strings with a time component are also handled gracefully.
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    return _dotDateFormatter.format(d);
+  } catch {
+    return iso;
+  }
+}
+
+/**
  * Load the curated Master Timeline era-bands from the generated JSON.
  *
  * Returns `[]` if the file is absent (graceful degradation — bare `astro build`

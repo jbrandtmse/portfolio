@@ -187,4 +187,45 @@ describe('ArtifactCard.astro — every variant renders (2.4 reuse contract)', ()
     });
     expect(html).not.toContain('!');
   });
+
+  // Story 3.0 AC3/AC4 — default external label must NOT claim "new tab" while target="_self"
+  it('default external label does NOT claim "opens in new tab" when target="_self" (AC3)', async () => {
+    // Render with external=true and NO explicit externalLabel — exercises the default.
+    const html = await container.renderToString(ArtifactCard, {
+      props: {
+        ...base,
+        href: 'https://example.com/',
+        external: true,
+        // externalLabel intentionally omitted — tests the default
+      },
+    });
+    const anchor = html.match(/<a\b[^>]*>/)?.[0] ?? '';
+    // The anchor must use target="_self" (same tab, by design).
+    expect(anchor).toContain('target="_self"');
+    // The aria-label must NOT claim "new tab" while the target is "_self".
+    const ariaLabelMatch = anchor.match(/aria-label="([^"]+)"/);
+    expect(ariaLabelMatch, 'aria-label attribute present on external anchor').not.toBeNull();
+    const ariaLabel = ariaLabelMatch![1]!;
+    expect(ariaLabel).not.toMatch(/new tab/i);
+    // The label should still identify the target (contains the title).
+    expect(ariaLabel).toContain(base.title);
+  });
+
+  it('explicit externalLabel renders verbatim and is unchanged by the default fix (AC4)', async () => {
+    // Existing consumers (/glass-box index, /work/loandemo) pass explicit labels.
+    // Verify that an explicit label still wins regardless of the default change.
+    const explicitLabel = 'Visit the live site (opens in new tab)';
+    const html = await container.renderToString(ArtifactCard, {
+      props: {
+        ...base,
+        href: 'https://example.com/',
+        external: true,
+        externalLabel: explicitLabel,
+      },
+    });
+    const anchor = html.match(/<a\b[^>]*>/)?.[0] ?? '';
+    expect(anchor).toContain(`aria-label="${explicitLabel}"`);
+    // Explicit labels are a consumer decision; the component renders them as-is.
+    expect(anchor).toContain('target="_self"');
+  });
 });
