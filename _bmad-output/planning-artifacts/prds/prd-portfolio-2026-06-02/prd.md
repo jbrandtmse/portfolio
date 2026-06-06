@@ -24,9 +24,9 @@ Idea numbers (e.g. `#39`) and proper nouns are carried from those sources for tr
 
 ## 1. Vision
 
-`joshuabrandt.abacusai.cloud` is a personal portfolio that doesn't *describe* Josh Brandt's work — it **demonstrates** it. Josh is a software engineer with 30 years of shipping experience who has gone deep on agentic engineering, but that work is scattered and invisible across GitHub, conference talks, YouTube, and Suno. The site is the **remarkable center of gravity** that makes the substance undeniable and shareable: a clean, confident experience navigated by a grounded **Advocate Agent**, built and maintained *as a public BMAD project* so the site itself is Exhibit A (`#2`). The medium is the message.
+`joshuabrandt.abacusai.cloud` is a personal portfolio that doesn't *describe* Josh Brandt's work — it **demonstrates** it. Josh is a software engineer with 30 years of shipping experience who has gone deep on agentic engineering, but that work is scattered and invisible across GitHub, conference talks, YouTube, and Suno. The site is the **remarkable center of gravity** that makes the substance undeniable and shareable: a clean, confident experience navigated by a grounded **Guide**, built and maintained *as a public BMAD project* so the site itself is Exhibit A (`#2`). The medium is the message.
 
-What a visitor gets depends on who they are. A practitioner can talk to the Advocate Agent, open the **Glass Box** to walk the site's own real BMAD artifacts, and scrub the **Master Timeline** to watch the site build itself — a recursive "whoa" they want to share. A conference organizer can ignore all of that and reach a **Speaker Surface** — reel, talk topics, and a frictionless **Invite-Me** path — in seconds. A content wanderer can sample the creative work and follow. Every rich, agentic, cinematic path has a **Lean Static Fallback** so nothing is ever hidden behind the magic.
+What a visitor gets depends on who they are. A practitioner can talk to the Guide, open the **Glass Box** to walk the site's own real BMAD artifacts, and scrub the **Master Timeline** to watch the site build itself — a recursive "whoa" they want to share. A conference organizer can ignore all of that and reach a **Speaker Surface** — reel, talk topics, and a frictionless **Invite-Me** path — in seconds. A content wanderer can sample the creative work and follow. Every rich, agentic, cinematic path has a **Lean Static Fallback** so nothing is ever hidden behind the magic.
 
 This matters because reputation in agentic engineering compounds through *proof*, not claims, and Josh has the rare combination of a 30-year track record **and** cutting-edge practice. The site's honest job is to be a craft artifact remarkable enough that peers **share** it (building reputation) and a credible hub that **converts** attention into speaking invitations and audience — explicitly *not* a cold-traffic lead-gen funnel. There is no defensible *technology* moat; the advantage is **authenticity + novelty + a real track record**, costly to imitate because it requires actually being Josh and actually doing the work — so the real risk is **execution and taste, not competitors**.
 
@@ -59,7 +59,7 @@ Timing is load-bearing. Agentic engineering is the differentiator of the moment,
 - **UJ-1. Devon, the practitioner, finds the recursion irresistible and shares it.** `[ASSUMPTION: name]`
   - **Persona + context:** A fellow agentic-engineering builder who clicked a link from a community channel (Discord/X/Slack). Curious, a little skeptical of "AI portfolio" hype.
   - **Entry state:** Unauthenticated, desktop, arriving cold at the hero from a shared URL.
-  - **Path:** Reads the calm "Seasoned, building at the frontier" hero → types a question into the **Advocate Agent** ("is this site actually built with BMAD?") → the agent answers with **citations** and routes them into the **Glass Box** → they open the **real** brief/brainstorm/retros and scrub the **Master Timeline** teaser.
+  - **Path:** Reads the calm "Seasoned, building at the frontier" hero → types a question into the **Guide** ("is this site actually built with BMAD?") → the agent answers with **citations** and routes them into the **Glass Box** → they open the **real** brief/brainstorm/retros and scrub the **Master Timeline** teaser.
   - **Climax:** The realization that the site they're touring *is the project on the timeline they're scrubbing* — proof-as-process, hard to fake.
   - **Resolution:** They **share** the link and **follow** Josh. Realizes the reputation engine (SM-2) and audience goal (SM-3).
   - **Edge case:** With JS/motion disabled, the **Lean Static Fallback** still exposes the same artifacts as crawlable pages, so the "whoa" survives degraded.
@@ -67,7 +67,7 @@ Timing is load-bearing. Agentic engineering is the differentiator of the moment,
 - **UJ-2. Mara, the organizer, confirms and invites in under two minutes.** `[ASSUMPTION: name]`
   - **Persona + context:** A program-committee member who heard Josh's name (a referral, or the buzz from UJ-1). Busy; does not want to chat with a bot.
   - **Entry state:** Unauthenticated, likely mobile, arriving at the hero or a deep link to **Speaker Surface**.
-  - **Path:** Skips the Advocate Agent → reaches **Speaker Surface** (the **READY 2026** reel front and center, signature talk topics, copy-paste bios, social proof) → reads one abstract → taps **Invite-Me**.
+  - **Path:** Skips the Guide → reaches **Speaker Surface** (the **READY 2026** reel front and center, signature talk topics, copy-paste bios, social proof) → reads one abstract → taps **Invite-Me**.
   - **Climax:** A frictionless contact form confirms her inquiry was received with a stated response expectation.
   - **Resolution:** The inquiry is **persisted and emailed** to Josh; Josh follows up. Realizes the speaking outcome (SM-1).
   - **Edge case:** She arrives Googling Josh first — the **Static Mirror** (SSG + JSON-LD) means the speaker facts and talk abstracts are indexable and credible *before* she clicks.
@@ -84,7 +84,7 @@ Timing is load-bearing. Agentic engineering is the differentiator of the moment,
   - **Persona + context:** Josh has a new project to add. No CMS exists by design (`#34`).
   - **Entry state:** Local repo, BMAD toolchain.
   - **Path:** Runs **`/bmad-correct-course`** to add a new epic/stories → runs the normal dev cycle → curated artifacts + media land in the **single git repo** → build regenerates the **Static Mirror** and **Knowledge Base** index, and refreshes the **Master Timeline** (hand-curated Dots in Stage 1, automated harvest from Stage 2 onward).
-  - **Climax:** The new project shows up as a **BMAD Dot** on the Master Timeline and is reachable by the Advocate Agent — the site grew by being engineered, not edited.
+  - **Climax:** The new project shows up as a **BMAD Dot** on the Master Timeline and is reachable by the Guide — the site grew by being engineered, not edited.
   - **Resolution:** Deploy; the loop closes. Realizes the living-artifact vision and never-stale promise.
   - **Edge case:** A project with no artifacts/screenshots still imports via the **Project Import** workflow with curated substitutes (e.g. playable embed instead of screenshots).
 
@@ -92,8 +92,8 @@ Timing is load-bearing. Agentic engineering is the differentiator of the moment,
 
 *Downstream workflows and readers must use these terms exactly. Introducing a synonym anywhere is a discipline violation.*
 
-- **Advocate Agent** — The grounded conversational agent that is the site's primary navigation/curation interface (`#7`, `#22`, `#36`). Answers only from the **Knowledge Base**, cites sources, holds a fixed confident-advocate persona, and routes visitors to **Static Mirror** pages (router, not silo). Runs as a small live backend; everything else is static.
-- **Knowledge Base (KB)** — The curated markdown in the git repo that the Advocate Agent retrieves from. Indexed at build time. The *only* substance the agent may speak from.
+- **The Guide** (the grounded conversational agent; renamed from *Advocate Agent* during UX design, 2026-06-04) — The site's primary navigation/curation interface (`#7`, `#22`, `#36`). Answers only from the **Knowledge Base**, cites sources, holds a fixed confident-advocate persona, and routes visitors to **Static Mirror** pages (router, not silo). Runs as a small live backend; everything else is static.
+- **Knowledge Base (KB)** — The curated markdown in the git repo that the Guide retrieves from. Indexed at build time. The *only* substance the agent may speak from.
 - **Lean Static Fallback** — The non-agentic, fully browsable path to *all* content. Guarantees "complete access, curated surface — nothing hidden, nothing overwhelming" (`#24`). Default for reduced-motion / no-JS / non-chat visitors.
 - **Static Mirror** — The SSG-prerendered, crawlable HTML for every key route in which all agent-revealed facts (bio, talk titles/abstracts, project descriptions, FAQ) exist as real headings/paragraphs/links, independent of JS or the agent. Underwrites SEO/GEO.
 - **Glass Box** — The navigable, curated, read-only view of the site's **real** BMAD Artifacts proving the site builds itself (`#4`, `#5`). "Polished glass, not raw guts."
@@ -103,12 +103,12 @@ Timing is load-bearing. Agentic engineering is the differentiator of the moment,
 - **Speaker Surface** — The dedicated speaker scene: **Speaker Reel**, signature talk topics/abstracts, bios, social proof, and the **Invite-Me** path (`#46`).
 - **Speaker Reel** — The 60–120s video reel plus full-talk links, READY 2026 front and center.
 - **Invite-Me** — The frictionless speaker-contact path. An accessible contact form whose submissions are **persisted to Postgres and emailed** to Josh.
-- **Wing** — A top-level content domain: the **Technical Wing**, the **Creative Wing**, the **Agentic Wing** (`#21`). Distinct and self-navigable by default; the Advocate Agent re-curates/blends across them on demand.
+- **Wing** — A top-level content domain: the **Technical Wing**, the **Creative Wing**, the **Agentic Wing** (`#21`). Distinct and self-navigable by default; the Guide re-curates/blends across them on demand.
 - **Creative Lab** — The tonal-shift movement/scene where the Architect's Studio briefly becomes a creative space; Suno, generative art, and playable work take center stage (`#42`). Skippable.
 - **Architect's Studio** — The dominant visual language: spare, confident, generous whitespace, strong typography, restrained palette (`#15`). Default register: "serious, and I have taste."
 - **Continuous Canvas** — The single navigable space (no page reloads) the site is moved through, with graphic transitions between **Scenes** (`#32`).
 - **Scene** — A distinct stop on the Continuous Canvas (Hero, Master Timeline, Speaker Surface, etc.). The ordered set is the **Scene Arc**.
-- **Scene Arc** — The default guided cinematic sequence; the Advocate Agent can reorder/deepen/skip Scenes per visitor (`#41`).
+- **Scene Arc** — The default guided cinematic sequence; the Guide can reorder/deepen/skip Scenes per visitor (`#41`).
 - **Thesis (Scene)** — The early Scene that states the site's core claim: *the site itself is Exhibit A*, built as a public BMAD project (`#2`). Establishes Proof-as-Process before the deeper Scenes.
 - **Depth Dial** — A visitor-operated control for how deep the experience goes: 30-second skim → overview → deep technical/process dive (`#23`).
 - **Demonstrator** — A curated, pre-recorded/replayable demonstration of real agentic work (`#8`, `#35`). Never live arbitrary public execution.
@@ -121,10 +121,10 @@ Timing is load-bearing. Agentic engineering is the differentiator of the moment,
 
 *Load-bearing for `bmad-ux`. Captured here so the FR structure doesn't silently drop the feel.*
 
-- **Quality priorities (make *exceptional* vs merely correct)** — orthogonal to staging: the **Advocate Agent and Proof-as-Process are the soul**; cinematic polish and content are the **body**; maintainability is the **skeleton** that keeps it alive (`#16` + the brainstorm prioritization). When effort is scarce, protect the soul first. The **Glass Box** is the designated day-one *remarkable* element (brief) and is held to the soul-tier craft bar.
+- **Quality priorities (make *exceptional* vs merely correct)** — orthogonal to staging: the **Guide and Proof-as-Process are the soul**; cinematic polish and content are the **body**; maintainability is the **skeleton** that keeps it alive (`#16` + the brainstorm prioritization). When effort is scarce, protect the soul first. The **Glass Box** is the designated day-one *remarkable* element (brief) and is held to the soul-tier craft bar.
 - **Visual register — Architect's Studio.** Spare and confident: generous whitespace, strong/editorial typography (≈1 display + 1–2 text styles), restrained palette. "Professionalism as the floor, not the ceiling." `[ASSUMPTION: exact palette/typeface chosen in UX.]`
-- **The wow builds; it is not front-loaded** (`#40`). Scene 1 is calm and credible; restraint *is* the flex. Two surfaces carry the designed wow: the **Advocate Agent visibly thinking/working** (`#16` — creative budget on chat first) and the **Creative Lab** tonal swell; everything else stays calm.
-- **Advocate Agent voice — confident advocate, never hype.** Proactively makes the case "like a sharp recruiter who knows the work cold" (`#26`), but every claim is tied to a cited artifact: "the skeptic gets sold *and* gets the receipts" (`#27`). Plainly states when something isn't documented. Concise, bulleted, no speculation. "Spontaneity in phrasing, control over substance" (`#36`).
+- **The wow builds; it is not front-loaded** (`#40`). Scene 1 is calm and credible; restraint *is* the flex. Two surfaces carry the designed wow: the **Guide visibly thinking/working** (`#16` — creative budget on chat first) and the **Creative Lab** tonal swell; everything else stays calm.
+- **The Guide's voice — confident advocate, never hype.** Proactively makes the case "like a sharp recruiter who knows the work cold" (`#26`), but every claim is tied to a cited artifact: "the skeptic gets sold *and* gets the receipts" (`#27`). Plainly states when something isn't documented. Concise, bulleted, no speculation. "Spontaneity in phrasing, control over substance" (`#36`).
 - **Two kinds of openness, kept distinct:** *process* transparency (the Glass Box, honest) vs *narrative* curation (the personal story shown as a highlight reel, not warts-and-all — `#11`).
 - **References:** architect's studio; film composer (for soundtrack sequencing); cinematic "director's mode." **Anti-references (avoid):** static CV/résumé; raw file dump ("raw guts"); flat gallery/grid; confessional tone; page-reload model; "trust me" framing; hacker/Matrix terminals; literal AI metaphors (floating brains/robots/neural stock art); gimmick fonts; neon-gradient overload; scroll-jacking with no skip affordance; "look at my effects" with no message; unrefined "AI-slop" — **human curation is the differentiator; show it.**
 - **Engineering is creative** (`#43`): the creative work reinforces (not dilutes) the engineering story; range is evidence of a modern engineer.
@@ -133,10 +133,10 @@ Timing is load-bearing. Agentic engineering is the differentiator of the moment,
 
 *The frame the Features hang on. Confirmed/detailed in `bmad-ux`.*
 
-- **Default Scene Arc** (full vision; the Advocate Agent may reorder/deepen/skip per visitor): **Hero → Thesis → Master Timeline → Speaker Surface → Flagship Case Study → Wings → Creative Lab → Glass Box → Close**. The Speaker Surface sits early–mid **by design** (`#46`): the reel is the credibility engine for the speaking-first goal (`#44`), so it precedes the deep dives — a placement SM-C1 guards against cinematic re-order regressions.
+- **Default Scene Arc** (full vision; the Guide may reorder/deepen/skip per visitor): **Hero → Thesis → Master Timeline → Speaker Surface → Flagship Case Study → Wings → Creative Lab → Glass Box → Close**. The Speaker Surface sits early–mid **by design** (`#46`): the reel is the credibility engine for the speaking-first goal (`#44`), so it precedes the deep dives — a placement SM-C1 guards against cinematic re-order regressions.
 - **Stage 1 trimmed arc:** **Hero → Master Timeline (seed + teaser) → Speaker Surface → one deep Flagship → Glass Box → Close**. `[ASSUMPTION: Stage 1 ships as discrete, fast Scenes/sections rather than the full continuous cinematic canvas; the Continuous Canvas + camera-path transitions are a Stage 2 capability.]`
-- **Fast on-ramp** (`#14`): the homepage orients in seconds (hero + Advocate Agent entry + identity); the Master Timeline is the showpiece *one click in*, not the literal front door — preserving the skeptical organizer's fast path.
-- **Two navigation modes, always both available:** the **Advocate Agent** (primary, rich, agentic) and the **Lean Static Fallback** (complete, browsable, accessible). The agent is a **router** to **Static Mirror** pages, never the only way to a fact.
+- **Fast on-ramp** (`#14`): the homepage orients in seconds (hero + Guide entry + identity); the Master Timeline is the showpiece *one click in*, not the literal front door — preserving the skeptical organizer's fast path.
+- **Two navigation modes, always both available:** the **Guide** (primary, rich, agentic) and the **Lean Static Fallback** (complete, browsable, accessible). The agent is a **router** to **Static Mirror** pages, never the only way to a fact.
 - **Wings** are the default content structure (Technical / Creative / Agentic), self-navigable; the agent blends across them on demand.
 - **Design principle — "agentic ideal, graceful fallback"** (named at `#31`): every feature ships its smart/agentic version where feasible and degrades cleanly where not. Applied per-FR below; the per-feature "how agentic at launch" call is an Open Question (§14) for features where it's unsettled.
 
@@ -149,7 +149,7 @@ Timing is load-bearing. Agentic engineering is the differentiator of the moment,
 **Description:** The Architect's Studio shell and the way visitors move through it. Stage 1 is a fast, restrained, sectioned shell with a calm hero. Stage 2 turns it into a Continuous Canvas with cinematic Scene transitions, a director's-mode Scene Arc, and the Depth Dial. Realizes UJ-1, UJ-2, UJ-3.
 
 #### FR-1: Calm credible hero `[S1]`
-A visitor landing cold sees the "Seasoned, building at the frontier" hero that communicates who Josh is within seconds, with the Advocate Agent entry and a fast on-ramp, without front-loading spectacle. Realizes UJ-1, UJ-2.
+A visitor landing cold sees the "Seasoned, building at the frontier" hero that communicates who Josh is within seconds, with the Guide entry and a fast on-ramp, without front-loading spectacle. Realizes UJ-1, UJ-2.
 **Consequences (testable):**
 - The hero conveys identity (name, **headshot/portrait**, one-line positioning) and an Invite-Me-or-explore choice above the fold on mobile and desktop.
 - Hero meets the performance budget (NFR-1): FCP < ~2s mid-mobile; no blocking WebGL.
@@ -169,7 +169,7 @@ The site becomes a single Continuous Canvas navigated as a directed camera path,
 - At most one fixed WebGL canvas is used site-wide (NFR-1). `[ASSUMPTION: the single optional WebGL set-piece, if built, lives here or in the Master Timeline.]`
 
 #### FR-4: Director's-mode Scene Arc reordering `[S2]`
-The Advocate Agent can reorder, deepen, or skip Scenes for a visitor based on the conversation (`#41`), while a sensible default cut always exists.
+The Guide can reorder, deepen, or skip Scenes for a visitor based on the conversation (`#41`), while a sensible default cut always exists.
 **Consequences (testable):**
 - A visitor who tells the agent their intent is taken to a reordered Scene sequence; a visitor who does nothing gets the default arc.
 - Reordering never hides content from the Lean Static Fallback.
@@ -180,12 +180,12 @@ A visitor can set how deep the experience goes — 30-second skim → overview �
 - Changing the Depth Dial changes the level of detail surfaced for a given Scene without navigating away.
 - The dial state is reflected by both the agent path and the static path.
 
-### 7.2 The Advocate Agent
+### 7.2 The Guide
 
 **Description:** The grounded conversational interface (`#7`, `#22`, `#26`, `#27`, `#36`). Stage 1 answers-with-citations and routes; Stage 2 adapts the experience and runs curated Demonstrations; Stage 3 captures/books speaking inquiries. Always paired with the Lean Static Fallback. The agent's *visible thinking/working* is a designed wow surface (`#16`), not a hidden spinner — reconciled with NFR-2 (announce per-message, not per-token). Realizes UJ-1, UJ-2.
 
 #### FR-6: Grounded, cited answers from the Knowledge Base `[S1]`
-A visitor can ask the Advocate Agent a question and receive an answer drawn only from the Knowledge Base, with a citation to the source artifact/section.
+A visitor can ask the Guide a question and receive an answer drawn only from the Knowledge Base, with a citation to the source artifact/section.
 **Consequences (testable):**
 - The agent retrieves only from the build-time KB index and never uses outside knowledge. *(Retrieval mechanism — BM25-first, top-k, embeddings-if-justified — is an architecture decision; see §10.)*
 - When the retrieval score is below threshold or context is empty, the agent returns a canned "I don't have that documented" response and **does not call the model**.
@@ -194,7 +194,7 @@ A visitor can ask the Advocate Agent a question and receive an answer drawn only
 - `[ASSUMPTION: mid-tier model (e.g. claude-haiku-4-5 / gpt-5-mini class) with streaming, per research.]`
 
 #### FR-7: Agent-as-router to Static Mirror `[S1]`
-The Advocate Agent routes visitors to crawlable Static Mirror pages rather than being the sole source of any fact.
+The Guide routes visitors to crawlable Static Mirror pages rather than being the sole source of any fact.
 **Consequences (testable):**
 - Every fact the agent can state also exists as real HTML on a Static Mirror page (verifiable via `view-source` + find, JS disabled — NFR-3).
 - Agent responses embed working links to those pages.
@@ -417,7 +417,7 @@ The site measures page/funnel behavior, outbound-channel clicks, and the Invite-
 *System-wide quality attributes. Numbered NFR-N for cross-reference.*
 
 - **NFR-1 Performance.** FCP < ~2s on mid-range mobile; main-page JS < ~200–250KB gzipped; at most one fixed WebGL canvas site-wide; heavy stack (WebGL, large embeds) lazy-loaded (`client:visible`/`client:idle`); compressed assets for any WebGL (KTX2/Basis/Draco) with static fallback. `[ASSUMPTION: budgets adopted from research; confirm.]`
-- **NFR-2 Accessibility.** `prefers-reduced-motion` gated at two layers (CSS media query **and** JS — do not init GSAP/ScrollTrigger/WebGL; show static hero). Advocate Agent widget: `role="dialog"`; transcript `role="log"` + `aria-live="polite"` with updates batched **per-message, not per-token**; focus management on open/close/response; real `<button>` elements; fully keyboard-operable. WebGL canvas treated as `aria-hidden` decorative with DOM equivalents. Avoid Lenis/smooth-scroll or gate it behind reduced-motion. `[ASSUMPTION: target WCAG 2.1 AA.]`
+- **NFR-2 Accessibility.** `prefers-reduced-motion` gated at two layers (CSS media query **and** JS — do not init GSAP/ScrollTrigger/WebGL; show static hero). Guide widget: `role="dialog"`; transcript `role="log"` + `aria-live="polite"` with updates batched **per-message, not per-token**; focus management on open/close/response; real `<button>` elements; fully keyboard-operable. WebGL canvas treated as `aria-hidden` decorative with DOM equivalents. Avoid Lenis/smooth-scroll or gate it behind reduced-motion. `[ASSUMPTION: target WCAG 2.1 AA.]`
 - **NFR-3 SEO/GEO (first-class).** SSG-prerender all key routes (home, about, each talk, each project, speaking, contact); the Static Mirror exposes all agent-revealed facts as real HTML verifiable via `view-source` + find with JS disabled (agent = router, not silo); answer-first intros, clear heading hierarchy, Q&A blocks, plain-text key facts; do not block AI crawlers; brand/name present in short answers; JSON-LD per FR-35.
 - **NFR-4 Agent reliability & latency.** Responses stream; retrieval is from the build-time index only; empty/low-score context skips the model call; the agent backend is a single small service behind nginx. **Latency targets:** time-to-first-token < ~1.5 s; hard ceiling ~10 s before a graceful fallback message; retrieval adds < ~200 ms. `[ASSUMPTION: targets pending load testing.]`
 - **NFR-5 Static, key-free runtime.** All non-agent content is prebuilt static assets served by nginx (`#A1` — static film + small live agent brain); the only dynamic components are the agent backend and the Invite-Me endpoint. No runtime API keys or external rate limits in the content path.
@@ -427,7 +427,7 @@ The site measures page/funnel behavior, outbound-channel clicks, and the Invite-
 ## 9. Constraints & Guardrails
 
 ### 9.1 Safety
-- The Advocate Agent is **retrieve-only** with a **citation-required** prompt and **strict context separation** against prompt injection (FR-6, FR-9). Persona/system prompt is server-side and never exposed.
+- The Guide is **retrieve-only** with a **citation-required** prompt and **strict context separation** against prompt injection (FR-6, FR-9). Persona/system prompt is server-side and never exposed.
 - **No public live agentic execution** — Demonstrations are pre-recorded/curated (`#35`); no arbitrary execution engine is exposed to visitors.
 - **No live external reads** at runtime (`#37`); nothing unapproved ever appears (`#11` highlight-reel curation governs narrative; Glass Box governs honest process exposure).
 
@@ -442,7 +442,7 @@ The site measures page/funnel behavior, outbound-channel clicks, and the Invite-
 
 *Recorded as input/constraint; `bmad-create-architecture` confirms the stack.*
 
-- **Hosting.** Static build served by an nginx vhost at `joshuabrandt.abacusai.cloud` (ingress port 80) on Josh's Abacus VM, plus a small live backend for the Advocate Agent and the Invite-Me endpoint. Postgres is attached (Invite-Me store now; pgvector available if embeddings are ever justified). S3 path currently unset.
+- **Hosting.** Static build served by an nginx vhost at `joshuabrandt.abacusai.cloud` (ingress port 80) on Josh's Abacus VM, plus a small live backend for the Guide and the Invite-Me endpoint. Postgres is attached (Invite-Me store now; pgvector available if embeddings are ever justified). S3 path currently unset.
 - **LLM.** The VM's OpenAI-compatible endpoint exposes 137 models incl. `claude-opus-4-8`, `claude-sonnet-4-6`, `claude-haiku-4-5`, `gpt-5.x`, `gemini-3.x` — no external key needed. `[ASSUMPTION: mid-tier model for the agent.]`
 - **Recommended stack (input).** Astro (SSG) + React islands (hero + chat widget); CSS scroll-driven animations as the ~80% baseline; GSAP + ScrollTrigger for the cinematic layer; at most one Three.js/React-Three-Fiber hero set-piece with static fallback; avoid Lenis. Layers map to stages (baseline → cinematic → optional set-piece).
 - **RAG index (input).** Build-time markdown indexer; chunk at heading boundaries (≈300–800 tokens); BM25/keyword first; add vectors (`sqlite-vec`/LanceDB/pgvector) only if logged retrieval misses justify it.
@@ -464,7 +464,7 @@ The site measures page/funnel behavior, outbound-channel clicks, and the Invite-
 ## 12. MVP Scope & Staging
 
 ### 12.1 In Scope — Stage 1 (Credible Hub), MVP
-A credible, shareable site that stands alone, targeting ~end-of-June-2026. FRs: **FR-1, FR-2, FR-6, FR-7, FR-8, FR-9, FR-13, FR-14, FR-16, FR-19, FR-20, FR-22, FR-23, FR-31, FR-32, FR-33, FR-34, FR-35, FR-36** — i.e. the calm shell + fast hero, the grounded Advocate Agent + Lean Static Fallback, the Glass Box (real artifacts + timeline teaser), a **hand-curated** seed of the Master Timeline (automated harvest → Stage 2), the Speaker Surface (reel/topics/bios/social proof), two flagship case studies + curated content links, Invite-Me (persist+email), the Close, the git/code-as-CMS pipeline + Project Import, the Static Mirror/JSON-LD, and privacy-first analytics.
+A credible, shareable site that stands alone, targeting ~end-of-June-2026. FRs: **FR-1, FR-2, FR-6, FR-7, FR-8, FR-9, FR-13, FR-14, FR-16, FR-19, FR-20, FR-22, FR-23, FR-31, FR-32, FR-33, FR-34, FR-35, FR-36** — i.e. the calm shell + fast hero, the grounded Guide + Lean Static Fallback, the Glass Box (real artifacts + timeline teaser), a **hand-curated** seed of the Master Timeline (automated harvest → Stage 2), the Speaker Surface (reel/topics/bios/social proof), two flagship case studies + curated content links, Invite-Me (persist+email), the Close, the git/code-as-CMS pipeline + Project Import, the Static Mirror/JSON-LD, and privacy-first analytics.
 
 ### 12.2 Out of Scope for MVP (specified, deferred)
 - **Stage 2 (The Magic):** FR-3, FR-4, FR-5, FR-10, FR-11, FR-15, FR-17, FR-21, FR-24, FR-25, FR-26, FR-27, FR-29, FR-30. (Continuous Canvas + cinematic transitions, director's-mode reordering, Depth Dial, agent re-curation, Demonstrator, guided-tour Glass Box, zoomable Master Timeline, EPK, full Wings, greatest-hits ordering, playable embeds, Video-Synced Repo, Creative Lab, Adaptive Soundtrack.)
@@ -489,7 +489,7 @@ Stage = delivery sequence, not priority cut (`#47`): every stage is committed MV
 **Counter-metrics (do not optimize)**
 - **SM-C1 — Don't bury the organizer.** The fast-credible organizer path (UJ-2) must stay reachable *without* engaging chat or the cinematic layer; time-to-Speaker-Surface and Invite-Me must not regress as Stage 2/3 polish lands. Counterbalances the cinematic features behind SM-1/SM-2.
 - **SM-C2 — Don't slip the ship.** Stage 1 ships on the soft target even if Stage 2/3 "magic" is incomplete; richness never justifies missing the date. Counterbalances SM-2/SM-3 ambition.
-- **SM-C3 — Zero ungrounded agent claims.** The Advocate Agent must not fabricate or over-hype; spot-audits should find no claim that isn't grounded/cited. Counterbalances the "confident advocate" pressure behind SM-1.
+- **SM-C3 — Zero ungrounded agent claims.** The Guide must not fabricate or over-hype; spot-audits should find no claim that isn't grounded/cited. Counterbalances the "confident advocate" pressure behind SM-1.
 - **SM-C4 — Quality of shares over volume.** A spike in low-intent cold traffic is not success; the signal is peer shares/follows. Counterbalances raw-traffic gaming of SM-3.
 
 ## 14. Open Questions

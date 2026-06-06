@@ -159,7 +159,7 @@ cinematic layer.)
 **Rationale for Selection:**
 Astro's islands model maps 1:1 onto the product: SSG-prerender every Mirror route (free
 NFR-3 crawlability + the JS-off fallback), ship 0 JS by default (protects NFR-1), and
-hydrate React only for the two interactive surfaces (hero affordances + the Guide panel).
+hydrate React only for the three island surfaces (the Guide pill, the Guide panel, and the Invite-Me form).
 It lives inside this repo so the build can render the real _bmad-output/ artifacts for the
 Glass Box (FR-13) — the site is literally its own source of truth (FR-33). The separate
 Hono service keeps the static surface key-free (NFR-5); nginx serves dist/ directly and
@@ -292,7 +292,7 @@ FR-17) · Adaptive Soundtrack (Stage 2; Suno regen prereq) · in-chat speaking-i
 
 - **Rendering:** Astro SSG (`output: 'static'`); every Mirror route prerendered to crawlable HTML
   (NFR-3).
-- **Islands:** React only for the hero affordances + the Guide panel (`client:visible`/
+- **Islands:** React only for the three islands — the Guide pill, the Guide panel, and the Invite-Me form (`client:visible`/
   `client:idle`); everything else ships 0 JS — holds the ~200–250KB budget (NFR-1).
 - **State:** nanostores for the single cross-island signal (open the Guide from hero/footer);
   otherwise local React state inside the Guide island (the conversation thread). No global store.
@@ -466,7 +466,7 @@ auto-retries the model on low confidence (fail-closed = canned answer, no model 
 - Honor the a11y contract on every interactive surface: real `<button>`/`<a>`, visible
   `:focus-visible`, color-never-the-sole-signal, the two-layer reduced-motion gate, per-message
   aria-live — via a shared gate utility, not re-implemented per component.
-- Keep the NFR-1 budget: 0-JS by default, hydrate only the two islands, no token hardcoding.
+- Keep the NFR-1 budget: 0-JS by default, hydrate only the three islands, no token hardcoding.
 
 **Enforcement:** shared root ESLint + Prettier + TS strict; Vitest/Playwright/Lighthouse-CI gates;
 code-review against this section. These rules seed the dev-agent `project-context.md` (via

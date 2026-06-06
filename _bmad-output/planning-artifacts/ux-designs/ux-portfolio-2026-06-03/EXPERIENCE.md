@@ -117,7 +117,7 @@ The Guide's "grounded" assurance lives in **two distinct elements**, intentional
 ### Named strings (canonical)
 
 - **Name / wordmark:** `Joshua R. Brandt, MSE` (the authoritative form for hero wordmark, headshot label, bios, page headers, JSON-LD/SEO, and all future mocks).
-- **Positioning line:** **"Seasoned, building at the frontier"** (the page `<h1>` on the hero; replaces "Seasoned, Not Stuck"). Asserts the duality — deep experience + working at the cutting edge — positively and actively; "building" ties to the demonstrate-don't-describe thesis. ⚠ Upstream-sync flag carried from the decision log: the PRD's resolving positioning is still "Seasoned, Not Stuck" → flow this change back to the PRD via `/bmad-correct-course`.
+- **Positioning line:** **"Seasoned, building at the frontier"** (the page `<h1>` on the hero; replaces "Seasoned, Not Stuck"). Asserts the duality — deep experience + working at the cutting edge — positively and actively; "building" ties to the demonstrate-don't-describe thesis. (Synced to the PRD 2026-06-05: PRD §1 and FR-1 carry "Seasoned, building at the frontier".)
 - **CTA strings:** "Explore" · "I'm here to book a talk" · "Ask my Guide" (pill + inline) · "Invite me to speak" · "Or ask my Guide about the work."
 - **Thesis line:** "The medium is the message."
 - **Copy-paste bios** (the two real strings, set verbatim in the mock — `[ASSUMPTION]` until Josh confirms): a **50-word short bio** and a **100–150-word long bio** (126w as drafted), both ending *"seasoned, building at the frontier."* — **lowercase + trailing period by design** (it is the tail of a running sentence inside the prose bio, *not* the hero `<h1>`); the standalone hero/`<h1>` form is Title-case **"Seasoned, building at the frontier"**. Do not normalize one to match the other.
@@ -353,4 +353,4 @@ Per-feature "agentic ideal, graceful fallback." **Stage = delivery sequence, not
 - `[OPEN]` **Signature-talk titles/abstracts** are seeded `[ASSUMPTION]` (e.g. "Patterns That Survive Hype Cycles") — confirm or replace.
 - `[OPEN]` **Site-wide semantic zoom (FR-18)** behavior — deferred pending UX (S3).
 - `[ASSUMPTION]` **Protagonist names** (Devon / Mara / Sam) — substitute real archetypes freely; the beats matter more than the names.
-- ⚠ **Upstream sync:** propagate the new positioning line ("Seasoned, building at the frontier") back to the PRD (`/bmad-correct-course`).
+- ✅ **Upstream sync (resolved 2026-06-05):** the positioning line "Seasoned, building at the frontier" is in the PRD (§1 + FR-1).
