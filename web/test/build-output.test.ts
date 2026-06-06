@@ -109,6 +109,53 @@ function findNodeByType(html: string, type: string): Record<string, unknown> | u
   return parseLdJson(html).find((n) => n['@type'] === type);
 }
 
+/* ──────────────────────────────────────────────────────────────────────────
+ * Story 1.7 — the global static-fallback footer + /browse.
+ *
+ * The canonical 10 Mirror routes (the registry order, lib/routes.ts). The global
+ * footer (on EVERY page) and /browse must each link all ten; the sitemap now
+ * enumerates all ten. Kept here as the test's own copy so a registry drift that
+ * silently drops a route still fails these assertions (ground-truth, not the
+ * same array the source reads).
+ * ────────────────────────────────────────────────────────────────────────── */
+const ALL_MIRROR_ROUTES = [
+  '/',
+  '/about',
+  '/timeline',
+  '/speaking',
+  '/speaking/reel',
+  '/work/loandemo',
+  '/glass-box',
+  '/faq',
+  '/invite',
+  '/browse',
+] as const;
+
+/** Extract the global footer block (<footer class="…site-footer…">…</footer>). */
+function footerBlock(html: string): string | null {
+  const m = html.match(/<footer\b[^>]*class="[^"]*site-footer[^"]*"[^>]*>[\s\S]*?<\/footer>/);
+  return m ? m[0] : null;
+}
+
+/**
+ * Assert the global static-fallback footer is present on a page and carries a
+ * real <a> to every one of the canonical 10 Mirror routes (IAC-1). Shared by the
+ * home assertion and the per-Mirror-route parametrized assertion below.
+ */
+function expectGlobalFooter(html: string, where: string): void {
+  const footer = footerBlock(html);
+  expect(footer, `<footer class="site-footer"> on ${where}`).not.toBeNull();
+  // A labelled landmark nav inside the footer (screen-reader navigable).
+  expect(footer!, `footer <nav> on ${where}`).toMatch(/<nav\b[^>]*\saria-label="[^"]+"/);
+  // A real <a> to every Mirror route (exact href, followable JS-off).
+  for (const route of ALL_MIRROR_ROUTES) {
+    const hrefPattern = new RegExp(`<a\\b[^>]*\\shref="${route.replace(/\//g, '\\/')}"[^>]*>`);
+    expect(footer!, `footer link to ${route} on ${where}`).toMatch(hrefPattern);
+  }
+  // The footer carries no executable JS (0-JS fallback floor; NFR-1).
+  expect(countExecutableScripts(footer!), `footer is 0-JS on ${where}`).toBe(0);
+}
+
 describe('built home page (web/dist/index.html)', () => {
   it('builds an index.html', () => {
     expect(existsSync(indexHtmlPath)).toBe(true);
@@ -181,8 +228,33 @@ describe('built home page (web/dist/index.html)', () => {
     expect(builtCss).toMatch(/\.btn--primary[^{]*\{[^}]*var\(--color-accent\)/);
   });
 
-  it('provides the global footer slot region', () => {
-    expect(indexHtml).toMatch(/<footer[^>]*class="[^"]*site-footer[^"]*"/);
+  it('renders the global static-fallback footer with real <a> to all 10 Mirror routes (Story 1.7 IAC-1)', () => {
+    // The footer (BaseLayout-global) is now realized on the home: a <footer
+    // class="site-footer"> with a labelled <nav> linking every Mirror route,
+    // 0-JS. This replaces the 1.2 empty-slot placeholder check.
+    expectGlobalFooter(indexHtml, 'home /');
+  });
+
+  it('the global footer carries the canonical Wordmark identity (Story 1.7; UX-DR5)', () => {
+    const footer = footerBlock(indexHtml);
+    expect(footer).not.toBeNull();
+    expect(footer!).toContain('Joshua R. Brandt, MSE');
+  });
+
+  it('footer + /browse links get a visible :focus-visible ring and never suppress it (Story 1.7 AC3)', () => {
+    // AC3: tabbing the footer and /browse shows a visible :focus-visible indicator
+    // on every link. The footer/browse links carry NO per-link outline override,
+    // so they inherit the global navy ring (global.css, Story 1.2). Assert in the
+    // built CSS that (a) the global :focus-visible ring ships verbatim (the accent
+    // outline + offset — the actual focus affordance), and (b) the footer/browse
+    // link selectors never set `outline:` (i.e. never remove or replace the ring).
+    expect(builtCssNorm).toMatch(
+      /:focus-visible\{[^}]*outline:2px solid var\(--color-accent\)[^}]*outline-offset:2px/,
+    );
+    // No outline override scoped to the footer or /browse link classes — the ring
+    // is never suppressed for these keyboard-reached links (would defeat AC3).
+    expect(builtCss).not.toMatch(/\.site-footer__link[^{]*\{[^}]*outline\s*:/);
+    expect(builtCss).not.toMatch(/\.browse-link[^{]*\{[^}]*outline\s*:/);
   });
 
   it('ships exactly ONE tiny EXECUTABLE <script> — the gated scene-rail enhancement (NFR-1)', () => {
@@ -419,7 +491,10 @@ describe('dev-only style guide is not shipped', () => {
 const SITE_ORIGIN = 'https://joshuabrandt.abacusai.cloud';
 
 // Each Mirror route created by Story 1.5 → its built directory-index path. Astro
-// (default build.format 'directory') emits <route>/index.html for each.
+// (default build.format 'directory') emits <route>/index.html for each. Story 1.7
+// adds /browse — a Mirror route built through MirrorLayout, so it inherits every
+// per-route guarantee below (answer-first, self-canonical, one <h1>, the global
+// footer, 0-JS, no exclamation).
 const MIRROR_ROUTES = [
   '/timeline',
   '/speaking',
@@ -429,6 +504,7 @@ const MIRROR_ROUTES = [
   '/faq',
   '/invite',
   '/about',
+  '/browse',
 ] as const;
 
 /** Absolute path to a route's built index.html (directory-index form). */
@@ -488,10 +564,13 @@ describe('Story 1.5 — every Mirror route is a real, answer-first, self-canonic
     expect(h1s).toHaveLength(1);
   });
 
-  it.each(MIRROR_ROUTES)('provides the global footer slot region on %s', (route) => {
-    const html = readFileSync(routeHtmlPath(route), 'utf8');
-    expect(html).toMatch(/<footer[^>]*class="[^"]*site-footer[^"]*"/);
-  });
+  it.each(MIRROR_ROUTES)(
+    'renders the global static-fallback footer with all 10 Mirror links on %s (Story 1.7 IAC-1)',
+    (route) => {
+      const html = readFileSync(routeHtmlPath(route), 'utf8');
+      expectGlobalFooter(html, route);
+    },
+  );
 
   it.each(MIRROR_ROUTES)(
     'ships 0 EXECUTABLE JS — no executable <script>, no island, no JS bundle on %s (NFR-1)',
@@ -563,6 +642,59 @@ describe('Story 1.5 — the canonical /about (AC3)', () => {
   it('reuses the museum-mat headshot placeholder with a meaningful labelled region', () => {
     expect(aboutHtml).toMatch(/role="img"[^>]*aria-label="Portrait of Joshua R\. Brandt[^"]*"/);
     expect(aboutHtml).toContain('JRB');
+  });
+});
+
+describe('Story 1.7 — /browse is the complete crawlable static index (IAC-2)', () => {
+  let browseHtml = '';
+  // The browse body (the <main>…</main> region) — excludes the global footer so
+  // "the index itself links every route" is asserted on the index content, not
+  // satisfied incidentally by the footer that is on every page.
+  let browseBody = '';
+  beforeAll(() => {
+    browseHtml = readFileSync(routeHtmlPath('/browse'), 'utf8');
+    const mainMatch = browseHtml.match(/<main\b[^>]*>[\s\S]*?<\/main>/);
+    browseBody = mainMatch ? mainMatch[0] : '';
+  });
+
+  it('builds a real browse/index.html (verifiable JS-off)', () => {
+    expect(existsSync(routeHtmlPath('/browse'))).toBe(true);
+    expect(browseBody.length).toBeGreaterThan(0);
+  });
+
+  it.each(ALL_MIRROR_ROUTES)('the index body links %s as a real <a> (crawlable)', (route) => {
+    const hrefPattern = new RegExp(`<a\\b[^>]*\\shref="${route.replace(/\//g, '\\/')}"[^>]*>`);
+    expect(browseBody).toMatch(hrefPattern);
+  });
+
+  it('lists each of the 10 routes as its own item with a one-line description', () => {
+    // Each registry route renders one <li> with the link + a description <p>.
+    // Assert there are at least 10 list items, each carrying a non-empty <p>.
+    const items = [...browseBody.matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/g)].map((m) => m[1]!);
+    expect(items.length).toBeGreaterThanOrEqual(ALL_MIRROR_ROUTES.length);
+    // Every item has BOTH a real <a> and a description paragraph with real text.
+    const itemsWithLinkAndDesc = items.filter((item) => {
+      const hasLink = /<a\b[^>]*\shref="[^"]+"[^>]*>/.test(item);
+      const descMatch = item.match(/<p\b[^>]*>([\s\S]*?)<\/p>/);
+      const descText = descMatch
+        ? descMatch[1]!
+            .replace(/<[^>]+>/g, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+        : '';
+      return hasLink && descText.length > 0;
+    });
+    expect(itemsWithLinkAndDesc.length).toBeGreaterThanOrEqual(ALL_MIRROR_ROUTES.length);
+  });
+
+  it('the lede first sentence names the entity (answer-first GEO floor)', () => {
+    // /browse is in MIRROR_ROUTES so this is also checked there; assert here too
+    // for the index specifically (the FR-8 parity surface).
+    expect(firstParagraphText(browseHtml).startsWith('Joshua R. Brandt, MSE')).toBe(true);
+  });
+
+  it('carries no exclamation marks (positive-assertion, no hype)', () => {
+    expect(browseHtml.replace(/<!doctype html>/i, '')).not.toContain('!');
   });
 });
 
@@ -734,7 +866,8 @@ describe('Story 1.6 — generated sitemap.xml (AC3 / IAC-2)', () => {
     sitemap = readFileSync(sitemapPath, 'utf8');
   });
 
-  // Every current Mirror route the sitemap must enumerate (story Task 3 list).
+  // Every current Mirror route the sitemap must enumerate. Story 1.7 adds
+  // /browse → the sitemap is now 10 routes (the count assertion below guards it).
   const SITEMAP_ROUTES = [
     '/',
     '/about',
@@ -745,6 +878,7 @@ describe('Story 1.6 — generated sitemap.xml (AC3 / IAC-2)', () => {
     '/glass-box',
     '/faq',
     '/invite',
+    '/browse',
   ] as const;
 
   it('builds a sitemap.xml', () => {

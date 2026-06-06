@@ -47,3 +47,10 @@
 2026-06-06T11:10:00Z	Story 1.6	qa_complete	spawn_at=2026-06-06T11:04:45Z model=claude-opus-4-8 tests=web/test/build-output.test.ts tests_added=1 first_run_failures=0 clarifications=0 closing_sections_present=true
 2026-06-06T11:21:19Z	Story 1.6	cr_complete	spawn_at=2026-06-06T11:05:00Z model=claude-opus-4-8 resolved=1 deferred=0 dismissed=0 high=0 med=1 low=0 clarifications=0 closing_sections_present=true
 2026-06-06T11:22:00Z	Story 1.6	smoke_complete	method=cli result=pass iterations=1 defects_caught=0 evidence=dist-parse:6-routes-jsonld+sitemap-9-routes+robots-5-tokens model=claude-opus-4-8
+2026-06-06T11:22:16Z	Story 1.6	committed	sha=568a1a2 submodules=
+2026-06-06T11:23:37Z	Story 1.7	story_created	path=_bmad-output/implementation-artifacts/1-7-lean-static-fallback-browse-global-footer.md
+2026-06-06T11:35:10Z	Story 1.7	dev_complete	spawn_at=2026-06-06T11:23:50Z model=claude-opus-4-8 files=8 clarifications=0 nfr_tripwires=0 adr_violations_surfaced=0 cycle_iteration=1 closing_sections_present=true
+2026-06-06T11:35:14Z	Story 1.7	adr_verifications_complete	tool=none acs=none result=none_required
+2026-06-06T11:40:24Z	Story 1.7	qa_complete	spawn_at=2026-06-06T11:35:25Z model=claude-opus-4-8 tests=web/test/Footer.component.test.ts tests_added=13 first_run_failures=0 clarifications=0 closing_sections_present=true
+2026-06-06T11:48:29Z	Story 1.7	cr_complete	spawn_at=2026-06-06T11:40:00Z model=claude-opus-4-8 resolved=0 deferred=0 dismissed=0 high=0 med=0 low=0 clarifications=0 closing_sections_present=true
+2026-06-06T11:52:14Z	Story 1.7	smoke_complete	method=browser result=pass iterations=1 defects_caught=1 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-1.7-browse-footer.png model=claude-opus-4-8

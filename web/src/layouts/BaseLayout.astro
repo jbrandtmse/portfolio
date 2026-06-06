@@ -3,18 +3,23 @@
  * BaseLayout — the site-wide document shell (AC3).
  *
  * Provides <html lang="en">, head/meta, a named JSON-LD slot (empty now —
- * Story 1.6 fills it), the page body slot, and a global footer slot placeholder
- * (the real Footer is Story 1.7). Imports the design tokens, the self-hosted
+ * Story 1.6 fills it), the page body slot, and the GLOBAL static-fallback Footer
+ * (Story 1.7) rendered on every page. Imports the design tokens, the self-hosted
  * font, and the global baseline.
  *
- * Ships 0 JS by default: there is NO <script> and NO React island here. Every
- * later page that needs an island opts in explicitly (NFR-1). Realizes the
- * flat/hairline system — no shadow is applied to any surface (the single
- * --shadow-float token is reserved for the Guide, later epics).
+ * Ships 0 JS by default: there is NO <script> and NO React island here (the
+ * Footer is 0-JS too). Every later page that needs an island opts in explicitly
+ * (NFR-1). Realizes the flat/hairline system — no shadow is applied to any
+ * surface (the single --shadow-float token is reserved for the Guide, later
+ * epics).
  *
- * Consumed by: index.astro (this story) and every later Mirror page; Story 1.5's
- * MirrorLayout composes on top of it.
+ * Consumed by: index.astro and every Mirror page; Story 1.5's MirrorLayout
+ * composes on top of it. Story 1.7 realizes the footer placeholder this layout
+ * reserved with the real <Footer/> (Mirror links + /browse), so EVERY page gets
+ * the static fallback.
  */
+import Footer from '../components/common/Footer.astro';
+
 import '../styles/tokens.css';
 import '../styles/fonts.css';
 import '../styles/global.css';
@@ -55,27 +60,13 @@ const { title = 'Joshua R. Brandt, MSE', description, canonical } = Astro.props;
 
     {
       /*
-      Global footer slot — placeholder. The real Footer (Mirror links, /browse)
-      is built in Story 1.7; consumers can pass footer content via this slot, or
-      it renders empty. Marked so BaseLayout is footer-ready without shipping the
-      full footer now.
+      Global static-fallback Footer (Story 1.7): real <a> links to every Mirror
+      route + the Wordmark, rendered on EVERY page so nothing is hidden behind
+      the cinematics or the Guide (FR-8). 0 executable JS. The link list is
+      sourced from lib/routes.ts (the single source of truth shared with /browse
+      and the sitemap).
     */
     }
-    <footer class="site-footer">
-      <slot name="footer" />
-    </footer>
+    <Footer />
   </body>
 </html>
-
-<style>
-  /* Footer placeholder: flat, hairline top rule, token-driven spacing. The real
-     footer content + links arrive in Story 1.7; this only reserves the region. */
-  .site-footer {
-    border-top: 1px solid var(--color-border-hairline);
-    margin-top: var(--space-section-band);
-    padding: var(--space-6) var(--space-margin-desktop);
-    color: var(--color-ink-secondary);
-    font: var(--text-meta);
-    letter-spacing: var(--letter-spacing-meta);
-  }
-</style>

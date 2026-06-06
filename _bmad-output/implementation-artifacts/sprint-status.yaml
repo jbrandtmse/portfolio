@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-06T02:19:05Z
-last_updated: 2026-06-06
+last_updated: 2026-06-06T11:52:14Z
 project: portfolio
 project_key: NOKEY
 tracking_system: file-system
@@ -52,7 +52,7 @@ development_status:
   1-4-home-scene-scaffold-scene-rail-skip-progress: done
   1-5-static-mirror-layout-route-stubs-the-canonical-about: done
   1-6-structured-data-emission-sitemap-robots: done
-  1-7-lean-static-fallback-browse-global-footer: backlog
+  1-7-lean-static-fallback-browse-global-footer: done
   1-8-build-time-content-pipeline-foundation: backlog
   1-9-accessibility-performance-floor-test-harness: backlog
   1-10-deploy-analytics-launch-gates: backlog

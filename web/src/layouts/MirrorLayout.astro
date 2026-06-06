@@ -17,11 +17,12 @@
  *     absolute URL, built from Astro.url.pathname + Astro.site (UX-DR10: each
  *     Mirror route is canonical to itself; teasers never duplicate Mirror body).
  *     Astro.site is set in astro.config.mjs and also feeds Story 1.6's sitemap.
- *   • Footer slot passthrough — forwards a `footer` slot up to BaseLayout's
- *     global footer region (the real Mirror-link footer is Story 1.7).
  *
- * Wraps BaseLayout (Story 1.2) for <html lang=en>, head/meta, the JSON-LD slot,
- * and the global footer slot. Forwards a `jsonld` slot up to BaseLayout's head
+ * The global static-fallback Footer (Story 1.7) is rendered by BaseLayout on
+ * every page, so Mirror routes inherit it automatically — no per-page wiring.
+ *
+ * Wraps BaseLayout (Story 1.2) for <html lang=en>, head/meta, and the JSON-LD
+ * slot. Forwards a `jsonld` slot up to BaseLayout's head
  * (Story 1.6) so Mirror routes can emit structured data; the layout itself ships
  * 0 executable JS: no <script>, no island (NFR-1) — this static layer IS the
  * JS-off experience. (A `<script type="application/ld+json">` a route passes
@@ -83,9 +84,6 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : un
       <slot />
     </article>
   </main>
-
-  {/* Forward a page-supplied footer up to BaseLayout's global footer region. */}
-  <slot name="footer" slot="footer" />
 </BaseLayout>
 
 <style>
