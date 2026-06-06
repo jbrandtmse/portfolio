@@ -16,6 +16,8 @@ tmp/
 .env
 .env.*
 *.local
+# ...but keep the committed, secret-free template
+!.env.example
 
 # Dependencies / build (in case code is added later)
 node_modules/
@@ -25,3 +27,9 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+
+# Astro generated types
+.astro/
+
+# API runtime data (SQLite/Drizzle store added in later stories)
+api/data/

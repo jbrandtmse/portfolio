@@ -1,0 +1,136 @@
+# generated: 2026-06-06T02:19:05Z
+# last_updated: 2026-06-06T02:19:05Z
+# project: portfolio
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog -> in-progress: Automatically when first story is created (via create-story)
+#   - in-progress -> done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-06-06T02:19:05Z
+last_updated: 2026-06-06T02:45:00Z
+project: portfolio
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # ===== Stage 1 — Credible Hub (MVP) =====
+
+  # Epic 1: Foundation — Credible Hub Shell & Static Mirror
+  epic-1: in-progress
+  1-1-scaffold-the-pnpm-monorepo-web-api-shared: done
+  1-2-design-system-tokens-base-layout-shared-chrome: backlog
+  1-3-calm-credible-hero-with-the-audience-fork: backlog
+  1-4-home-scene-scaffold-scene-rail-skip-progress: backlog
+  1-5-static-mirror-layout-route-stubs-the-canonical-about: backlog
+  1-6-structured-data-emission-sitemap-robots: backlog
+  1-7-lean-static-fallback-browse-global-footer: backlog
+  1-8-build-time-content-pipeline-foundation: backlog
+  1-9-accessibility-performance-floor-test-harness: backlog
+  1-10-deploy-analytics-launch-gates: backlog
+  epic-1-retrospective: optional
+
+  # Epic 2: Proof-as-Process — Glass Box, Master Timeline & Flagships
+  epic-2: backlog
+  2-1-publish-allowlist-default-deny-glass-box-render-pipeline: backlog
+  2-2-glass-box-artifact-reader: backlog
+  2-3-glass-box-index-the-curated-chronological-build-story: backlog
+  2-4-master-timeline-hand-curated-seeded: backlog
+  2-5-loandemo-flagship-case-study: backlog
+  2-6-project-import-bmad-correct-course-extension-path: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3: Speaker Surface & Conversion
+  epic-3: backlog
+  3-1-speaker-surface-reel-signature-talks: backlog
+  3-2-copy-paste-bios-social-proof: backlog
+  3-3-invite-me-capture-data-model-endpoint-email: backlog
+  3-4-invite-me-form-accessible-resilient: backlog
+  3-5-the-close-follow-subscribe-ctas-curated-creative-touch: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: The Guide — Grounded Advocate (capstone)
+  epic-4: backlog
+  4-1-knowledge-base-index-retriever-seam: backlog
+  4-2-crawlable-faq-mirror-route: backlog
+  4-3-the-guide-endpoint-retrieve-ground-stream: backlog
+  4-4-the-guide-island-non-modal-panel-citations-visible-thinking: backlog
+  epic-4-retrospective: optional
+
+  # ===== Stage 2 — The Magic (sketched; detailed when scheduled) =====
+
+  # Epic 5: Cinematic Canvas, Director's Mode & Depth Dial
+  epic-5: backlog
+  5-1-continuous-canvas-with-cinematic-scene-transitions: backlog
+  5-2-depth-dial: backlog
+  5-3-agent-re-curation-by-stated-intent: backlog
+  5-4-directors-mode-scene-reordering: backlog
+  epic-5-retrospective: optional
+
+  # Epic 6: Zoomable Timeline & Guided Glass Box
+  epic-6: backlog
+  6-1-deterministic-git-dot-auto-harvest: backlog
+  6-2-zoomable-master-timeline: backlog
+  6-3-glass-box-guided-tour: backlog
+  6-4-glass-box-explorable-map: backlog
+  epic-6-retrospective: optional
+
+  # Epic 7: Wings, Playables & Video-Synced Repo
+  epic-7: backlog
+  7-1-distinct-wings-technical-creative-agentic: backlog
+  7-2-greatest-hits-relevance-ordered: backlog
+  7-3-playable-project-embeds: backlog
+  7-4-video-synced-repo: backlog
+  epic-7-retrospective: optional
+
+  # Epic 8: Creative Lab & Adaptive Soundtrack
+  epic-8: backlog
+  8-1-creative-lab-movement: backlog
+  8-2-adaptive-soundtrack: backlog
+  epic-8-retrospective: optional
+
+  # ===== Stage 2 (cont.) — The Magic =====
+
+  # Epic 9: The Demonstrator & Speaker EPK
+  epic-9: backlog
+  9-1-the-demonstrator: backlog
+  9-2-bmad-build-walkthrough: backlog
+  9-3-speaker-one-sheet-epk: backlog
+  epic-9-retrospective: optional
+
+  # ===== Stage 3 — Full Richness (sketched) =====
+
+  # Epic 10: Full Richness
+  epic-10: backlog
+  10-1-in-chat-speaking-inquiry-capture-booking: backlog
+  10-2-site-wide-semantic-zoom: backlog
+  10-3-remaining-content-import: backlog
+  epic-10-retrospective: optional
