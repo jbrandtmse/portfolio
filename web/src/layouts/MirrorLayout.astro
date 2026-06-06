@@ -20,13 +20,17 @@
  *   • Footer slot passthrough — forwards a `footer` slot up to BaseLayout's
  *     global footer region (the real Mirror-link footer is Story 1.7).
  *
- * Wraps BaseLayout (Story 1.2) for <html lang=en>, head/meta, the empty JSON-LD
- * slot (Story 1.6 fills it), and the global footer slot. Ships 0 JS: no <script>,
- * no island (NFR-1) — this static layer IS the JS-off experience. NO exclamation
- * marks in any copy (positive-assertion voice).
+ * Wraps BaseLayout (Story 1.2) for <html lang=en>, head/meta, the JSON-LD slot,
+ * and the global footer slot. Forwards a `jsonld` slot up to BaseLayout's head
+ * (Story 1.6) so Mirror routes can emit structured data; the layout itself ships
+ * 0 executable JS: no <script>, no island (NFR-1) — this static layer IS the
+ * JS-off experience. (A `<script type="application/ld+json">` a route passes
+ * through the slot is DATA, not executable JS.) NO exclamation marks in any copy
+ * (positive-assertion voice).
  *
  * Consumed by: every Mirror route in this story (/about + the 7 stubs), and the
- * Mirror content authored by Epics 2–4. Story 1.6 fills its JSON-LD slot.
+ * Mirror content authored by Epics 2–4. /about, /speaking, /speaking/reel,
+ * /work/loandemo, and /faq pass JSON-LD through its slot (Story 1.6).
  */
 import BaseLayout from './BaseLayout.astro';
 
@@ -62,6 +66,14 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : un
 ---
 
 <BaseLayout title={title} description={description} canonical={canonical}>
+  {
+    /* Forward a page-supplied JSON-LD block up to BaseLayout's head slot (Story
+      1.6). Mirror routes that emit structured data (e.g. /about, /speaking)
+      pass a <script type="application/ld+json" slot="jsonld"> child; routes
+      without one render nothing here. */
+  }
+  <slot name="jsonld" slot="jsonld" />
+
   <main class="mirror">
     <article class="mirror__inner">
       <h1 class="mirror__title">{heading}</h1>

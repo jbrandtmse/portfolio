@@ -52,6 +52,63 @@ beforeAll(() => {
   builtCssNorm = builtCss.replace(/:\s+/g, ':');
 });
 
+/* ──────────────────────────────────────────────────────────────────────────
+ * Script-classification helpers (Story 1.6).
+ *
+ * JSON-LD ships in <script type="application/ld+json"> — that is DATA, not
+ * executable JS, so it must NOT count against the 0-JS budget (NFR-1). These
+ * helpers split the two so the "0 script" / "exactly one script" assertions
+ * count only EXECUTABLE scripts.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+/** All <script …> opening tags in the document. */
+function allScriptTags(html: string): string[] {
+  return html.match(/<script\b[^>]*>/gi) ?? [];
+}
+
+/** Count `<script type="application/ld+json">` (DATA) blocks. */
+function countLdJsonScripts(html: string): number {
+  return allScriptTags(html).filter((tag) => /type\s*=\s*["']application\/ld\+json["']/i.test(tag))
+    .length;
+}
+
+/** Count EXECUTABLE scripts — every <script> that is NOT an ld+json data block. */
+function countExecutableScripts(html: string): number {
+  return allScriptTags(html).filter((tag) => !/type\s*=\s*["']application\/ld\+json["']/i.test(tag))
+    .length;
+}
+
+/**
+ * Parse every `<script type="application/ld+json">` block in the document and
+ * return the flattened list of top-level JSON-LD nodes (an array block is
+ * spread into its entries). Throws (failing the test) if any block is not valid
+ * JSON — exactly the IAC-1 "valid parseable JSON" guarantee.
+ */
+function parseLdJson(html: string): Array<Record<string, unknown>> {
+  const blocks =
+    html.match(
+      /<script\b[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi,
+    ) ?? [];
+  const nodes: Array<Record<string, unknown>> = [];
+  for (const block of blocks) {
+    const inner = block.replace(/^<script\b[^>]*>/i, '').replace(/<\/script>$/i, '');
+    // Must be valid JSON (the serializer escapes < > & as \uXXXX, which is still
+    // valid JSON). JSON.parse throws on malformed input → the test fails.
+    const parsed = JSON.parse(inner) as unknown;
+    if (Array.isArray(parsed)) {
+      nodes.push(...(parsed as Array<Record<string, unknown>>));
+    } else {
+      nodes.push(parsed as Record<string, unknown>);
+    }
+  }
+  return nodes;
+}
+
+/** Find the first parsed JSON-LD node of a given @type in the document. */
+function findNodeByType(html: string, type: string): Record<string, unknown> | undefined {
+  return parseLdJson(html).find((n) => n['@type'] === type);
+}
+
 describe('built home page (web/dist/index.html)', () => {
   it('builds an index.html', () => {
     expect(existsSync(indexHtmlPath)).toBe(true);
@@ -128,23 +185,36 @@ describe('built home page (web/dist/index.html)', () => {
     expect(indexHtml).toMatch(/<footer[^>]*class="[^"]*site-footer[^"]*"/);
   });
 
-  it('ships exactly ONE tiny <script> — the gated scene-rail enhancement (NFR-1)', () => {
+  it('ships exactly ONE tiny EXECUTABLE <script> — the gated scene-rail enhancement (NFR-1)', () => {
     // 0-JS-by-default holds except the single minimal scene-rail enhancement
     // (Story 1.4 Task 3). The hero/scaffold themselves ship no JS; the rail adds
     // exactly one small inlined script for the semantic aria-current tracking.
-    const scripts = indexHtml.match(/<script\b/g) ?? [];
-    expect(scripts).toHaveLength(1);
+    //
+    // Story 1.6 adds a <script type="application/ld+json"> (Person + ProfilePage)
+    // to <head> — that is DATA, not executable JS, and does NOT count against the
+    // 0-JS budget. Count only EXECUTABLE scripts here (exclude ld+json).
+    const executableScripts = countExecutableScripts(indexHtml);
+    expect(executableScripts).toBe(1);
+    // And exactly one ld+json data block is present (the structured data).
+    expect(countLdJsonScripts(indexHtml)).toBe(1);
   });
 
-  it('the single script is a reduced-motion-gated IntersectionObserver, inlined (Story 1.4 IAC-2)', () => {
+  it('the single EXECUTABLE script is a reduced-motion-gated IntersectionObserver, inlined (Story 1.4 IAC-2)', () => {
     // Astro inlines a script this small directly into the HTML (well under the
     // bundling threshold), so the gated enhancement is observable in the markup.
     // It MUST carry the two-layer reduced-motion gate's JS init-guard
     // (prefers-reduced-motion) AND use IntersectionObserver — i.e. it is the
     // expected minimal enhancement, not a heavyweight regression.
-    const scriptBlock = indexHtml.match(/<script\b[^>]*>([\s\S]*?)<\/script>/);
-    expect(scriptBlock).not.toBeNull();
-    const scriptBody = scriptBlock![1]!;
+    //
+    // Story 1.6 adds a <script type="application/ld+json"> in <head>, which now
+    // precedes the scene-rail script in document order — so match the EXECUTABLE
+    // script specifically (skip the ld+json data block) rather than "the first
+    // <script>".
+    const executableBlock = [...indexHtml.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)].find(
+      (m) => !/type\s*=\s*["']application\/ld\+json["']/i.test(m[1] ?? ''),
+    );
+    expect(executableBlock).toBeDefined();
+    const scriptBody = executableBlock![2]!;
     expect(scriptBody).toContain('prefers-reduced-motion');
     expect(scriptBody).toContain('IntersectionObserver');
   });
@@ -424,10 +494,14 @@ describe('Story 1.5 — every Mirror route is a real, answer-first, self-canonic
   });
 
   it.each(MIRROR_ROUTES)(
-    'ships 0 JS — no <script>, no island, no JS bundle on %s (NFR-1)',
+    'ships 0 EXECUTABLE JS — no executable <script>, no island, no JS bundle on %s (NFR-1)',
     (route) => {
       const html = readFileSync(routeHtmlPath(route), 'utf8');
-      expect(html.match(/<script\b/g) ?? []).toHaveLength(0);
+      // 0-JS budget counts EXECUTABLE scripts only. Story 1.6 adds a
+      // <script type="application/ld+json"> (DATA) to several Mirror routes
+      // (/about, /speaking, /speaking/reel, /work/loandemo, /faq) — that does
+      // NOT violate NFR-1. Assert zero executable scripts; ld+json is allowed.
+      expect(countExecutableScripts(html)).toBe(0);
       expect(html).not.toMatch(/<script\b[^>]*\bsrc=/);
       expect(html).not.toMatch(/<link\b[^>]*\brel="modulepreload"/);
       expect(html).not.toMatch(/\.js(["'?])/);
@@ -511,5 +585,286 @@ describe('Story 1.5 — 1.3 hero fork + 1.4 teaser forward-refs now resolve (IAC
     expect(indexHtml).toMatch(hrefPattern);
     // …and the href now resolves to a real built directory-index (no 404).
     expect(existsSync(routeHtmlPath(route))).toBe(true);
+  });
+});
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Story 1.6 — JSON-LD emission + sitemap.xml + robots.txt.
+ *
+ * Real `astro build` output (the consumer-observable form; IAC-1 / IAC-2,
+ * skill-rules Rule 3 real-runtime evidence). Asserts: each owning route emits a
+ * <script type="application/ld+json"> whose parsed JSON has the right @type(s)
+ * with @context: "https://schema.org" and the required fields per type; the
+ * generated sitemap.xml lists every route (absolute URL + lastmod); robots.txt
+ * has the Sitemap line + Allow for every required AI-crawler token.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+describe('Story 1.6 — JSON-LD is valid, parseable, and DATA (not executable JS) (IAC-1)', () => {
+  // The home page is read into indexHtml in the top beforeAll.
+  it('home / and /about each emit a Person (name "Joshua R. Brandt, MSE") AND a ProfilePage', () => {
+    for (const route of ['/', '/about'] as const) {
+      const html = route === '/' ? indexHtml : readFileSync(routeHtmlPath(route), 'utf8');
+      const person = findNodeByType(html, 'Person');
+      const profile = findNodeByType(html, 'ProfilePage');
+      expect(person, `Person on ${route}`).toBeDefined();
+      expect(profile, `ProfilePage on ${route}`).toBeDefined();
+
+      // Person required fields (story Dev Notes) + the EXACT canonical name.
+      expect(person!['@context']).toBe('https://schema.org');
+      expect(person!.name).toBe('Joshua R. Brandt, MSE');
+      expect(person!.jobTitle).toBe('Software Engineer');
+      expect(typeof person!.description).toBe('string');
+      expect((person!.description as string).length).toBeGreaterThan(0);
+      expect(typeof person!.url).toBe('string');
+      // sameAs mirrors the /about channels (YouTube/GitHub/Suno) — 3 URLs.
+      expect(Array.isArray(person!.sameAs)).toBe(true);
+      expect((person!.sameAs as string[]).length).toBeGreaterThanOrEqual(3);
+      expect(typeof person!.image).toBe('string');
+
+      // ProfilePage required field: mainEntity → the Person.
+      expect(profile!['@context']).toBe('https://schema.org');
+      const mainEntity = profile!.mainEntity as Record<string, unknown>;
+      expect(mainEntity['@type']).toBe('Person');
+      expect(mainEntity.name).toBe('Joshua R. Brandt, MSE');
+      // The embedded Person inherits the page node's @context (no own @context).
+      expect('@context' in mainEntity).toBe(false);
+    }
+  });
+
+  it('the home Person + /about Person carry byte-identical canonical facts (one source)', () => {
+    const aboutHtml = readFileSync(routeHtmlPath('/about'), 'utf8');
+    const homePerson = findNodeByType(indexHtml, 'Person');
+    const aboutPerson = findNodeByType(aboutHtml, 'Person');
+    expect(JSON.stringify(homePerson)).toBe(JSON.stringify(aboutPerson));
+  });
+
+  it('/speaking emits a valid Event with the required fields (placeholder OK)', () => {
+    const html = readFileSync(routeHtmlPath('/speaking'), 'utf8');
+    const event = findNodeByType(html, 'Event');
+    expect(event).toBeDefined();
+    expect(event!['@context']).toBe('https://schema.org');
+    expect(typeof event!.name).toBe('string');
+    expect(typeof event!.startDate).toBe('string');
+    expect(typeof event!.eventAttendanceMode).toBe('string');
+    expect((event!.location as Record<string, unknown>)['@type']).toBeDefined();
+    // performer is the real Person; organizer is present.
+    expect((event!.performer as Record<string, unknown>)['@type']).toBe('Person');
+    expect((event!.organizer as Record<string, unknown>)['@type']).toBeDefined();
+  });
+
+  it('/speaking/reel emits a valid VideoObject with the required fields (placeholder OK)', () => {
+    const html = readFileSync(routeHtmlPath('/speaking/reel'), 'utf8');
+    const video = findNodeByType(html, 'VideoObject');
+    expect(video).toBeDefined();
+    expect(video!['@context']).toBe('https://schema.org');
+    expect(typeof video!.name).toBe('string');
+    expect(typeof video!.description).toBe('string');
+    expect(typeof video!.thumbnailUrl).toBe('string');
+    expect(typeof video!.uploadDate).toBe('string');
+    // ~90s reel target.
+    expect(video!.duration).toBe('PT1M30S');
+  });
+
+  it('/work/loandemo emits a valid CreativeWork (name "loandemo") with required fields', () => {
+    const html = readFileSync(routeHtmlPath('/work/loandemo'), 'utf8');
+    const work = findNodeByType(html, 'CreativeWork');
+    expect(work).toBeDefined();
+    expect(work!['@context']).toBe('https://schema.org');
+    expect(work!.name).toBe('loandemo');
+    expect((work!.author as Record<string, unknown>)['@type']).toBe('Person');
+    expect(typeof work!.description).toBe('string');
+    expect(typeof work!.url).toBe('string');
+    expect(typeof work!.dateCreated).toBe('string');
+  });
+
+  it('/faq emits a valid FAQPage with Question/acceptedAnswer→Answer pairs (placeholder OK)', () => {
+    const html = readFileSync(routeHtmlPath('/faq'), 'utf8');
+    const faq = findNodeByType(html, 'FAQPage');
+    expect(faq).toBeDefined();
+    expect(faq!['@context']).toBe('https://schema.org');
+    const mainEntity = faq!.mainEntity as Array<Record<string, unknown>>;
+    expect(Array.isArray(mainEntity)).toBe(true);
+    expect(mainEntity.length).toBeGreaterThanOrEqual(1);
+    for (const q of mainEntity) {
+      expect(q['@type']).toBe('Question');
+      expect(typeof q.name).toBe('string');
+      const answer = q.acceptedAnswer as Record<string, unknown>;
+      expect(answer['@type']).toBe('Answer');
+      expect(typeof answer.text).toBe('string');
+    }
+  });
+
+  it('every ld+json block on every JSON-LD route is valid parseable JSON', () => {
+    // parseLdJson throws on malformed JSON (the assertion is that it does NOT).
+    const routes = [
+      '/',
+      '/about',
+      '/speaking',
+      '/speaking/reel',
+      '/work/loandemo',
+      '/faq',
+    ] as const;
+    for (const route of routes) {
+      const html = route === '/' ? indexHtml : readFileSync(routeHtmlPath(route), 'utf8');
+      expect(() => parseLdJson(html)).not.toThrow();
+      expect(parseLdJson(html).length).toBeGreaterThan(0);
+    }
+  });
+
+  it('the ld+json is rendered server-side in <head> (not the body)', () => {
+    const headOnly = indexHtml.slice(0, indexHtml.indexOf('</head>'));
+    expect(countLdJsonScripts(headOnly)).toBeGreaterThanOrEqual(1);
+  });
+
+  it('routes WITHOUT a JSON-LD owner emit no ld+json (e.g. /timeline, /glass-box, /invite)', () => {
+    // These stubs get their structured data in later epics; no ld+json yet, and
+    // critically still 0 executable JS.
+    for (const route of ['/timeline', '/glass-box', '/invite'] as const) {
+      const html = readFileSync(routeHtmlPath(route), 'utf8');
+      expect(countLdJsonScripts(html)).toBe(0);
+      expect(countExecutableScripts(html)).toBe(0);
+    }
+  });
+});
+
+describe('Story 1.6 — generated sitemap.xml (AC3 / IAC-2)', () => {
+  const sitemapPath = join(distDir, 'sitemap.xml');
+  let sitemap = '';
+  beforeAll(() => {
+    sitemap = readFileSync(sitemapPath, 'utf8');
+  });
+
+  // Every current Mirror route the sitemap must enumerate (story Task 3 list).
+  const SITEMAP_ROUTES = [
+    '/',
+    '/about',
+    '/timeline',
+    '/speaking',
+    '/speaking/reel',
+    '/work/loandemo',
+    '/glass-box',
+    '/faq',
+    '/invite',
+  ] as const;
+
+  it('builds a sitemap.xml', () => {
+    expect(existsSync(sitemapPath)).toBe(true);
+  });
+
+  it('is a valid urlset document', () => {
+    expect(sitemap).toContain('<?xml version="1.0" encoding="UTF-8"?>');
+    expect(sitemap).toMatch(
+      /<urlset\b[^>]*xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9"/,
+    );
+    expect(sitemap).toContain('</urlset>');
+  });
+
+  it.each(SITEMAP_ROUTES)('lists %s as an absolute <loc> with a <lastmod>', (route) => {
+    // The <loc> uses the TRAILING-SLASH form so it matches the page's own
+    // <link rel="canonical"> exactly (Astro directory build → "/about/"); a
+    // slashless <loc> would advertise a non-canonical variant (UX-DR10).
+    const loc = route === '/' ? `${SITE_ORIGIN}/` : `${SITE_ORIGIN}${route}/`;
+    // The <loc> appears verbatim (absolute, same origin as the self-canonicals).
+    expect(sitemap).toContain(`<loc>${loc}</loc>`);
+    // …inside a <url> that also carries a well-formed ISO-8601 <lastmod>.
+    const urlBlock = sitemap.match(
+      new RegExp(
+        `<url>\\s*<loc>${loc.replace(/[/.]/g, '\\$&')}</loc>\\s*<lastmod>([^<]+)</lastmod>`,
+      ),
+    );
+    expect(urlBlock, `<url> block for ${route}`).not.toBeNull();
+    expect(urlBlock![1]).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/);
+  });
+
+  it('enumerates exactly the current route set (count guards against stale routes)', () => {
+    const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+    expect(locs).toHaveLength(SITEMAP_ROUTES.length);
+  });
+
+  it('uses absolute URLs that match the Mirror self-canonical origin (UX-DR10)', () => {
+    const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]!);
+    for (const loc of locs) {
+      expect(loc.startsWith(`${SITE_ORIGIN}/`)).toBe(true);
+    }
+  });
+
+  it('enumerates EXACTLY the live built page set — no missing / phantom routes (IAC-2)', () => {
+    // IAC-2 requires the sitemap list "every existing Mirror route". The sitemap
+    // is driven by a hand-maintained registry (src/lib/routes.ts), decoupled from
+    // the build's real page output — so a future story that adds a route but
+    // forgets to extend the registry (e.g. 1.7 /browse, Epic 2 /glass-box/[…])
+    // would silently omit it, and the hardcoded SITEMAP_ROUTES checks above would
+    // pass anyway (they drift together with the registry). This binds the sitemap
+    // to GROUND TRUTH: the actual <route>/index.html pages emitted into dist.
+    //
+    // Derive the live route set by walking dist for directory-index pages
+    // (Astro's directory build.format), converting each to its absolute <loc> in
+    // the same shape the sitemap uses (site root → "<origin>/").
+    function liveRouteLocs(dir: string, base = ''): string[] {
+      const out: string[] = [];
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        if (entry.isDirectory()) {
+          // Skip Astro's hashed asset dir — it holds no routable pages.
+          if (entry.name === '_astro') continue;
+          out.push(...liveRouteLocs(join(dir, entry.name), `${base}/${entry.name}`));
+        } else if (entry.name === 'index.html') {
+          // dist/index.html → "/"; dist/about/index.html → "/about/", etc. The
+          // directory-index page IS the trailing-slash URL, which matches both
+          // the page's self-canonical and the sitemap <loc> form.
+          const route = base === '' ? '/' : `${base}/`;
+          out.push(`${SITE_ORIGIN}${route}`);
+        }
+      }
+      return out;
+    }
+
+    const liveLocs = liveRouteLocs(distDir).sort();
+    const sitemapLocs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]!).sort();
+
+    // Set equality both directions: every built page is in the sitemap (no
+    // missing route) AND every sitemap entry is a real built page (no phantom).
+    expect(sitemapLocs).toEqual(liveLocs);
+  });
+});
+
+describe('Story 1.6 — generated robots.txt (AC3 / IAC-2; NFR-3 GEO-first)', () => {
+  const robotsPath = join(distDir, 'robots.txt');
+  let robots = '';
+  beforeAll(() => {
+    robots = readFileSync(robotsPath, 'utf8');
+  });
+
+  // The AC3 minimum required AI-crawler tokens.
+  const REQUIRED_AI_TOKENS = [
+    'ClaudeBot',
+    'GPTBot',
+    'OAI-SearchBot',
+    'PerplexityBot',
+    'Google-Extended',
+  ] as const;
+
+  it('builds a robots.txt', () => {
+    expect(existsSync(robotsPath)).toBe(true);
+  });
+
+  it('points to the absolute sitemap URL', () => {
+    expect(robots).toContain(`Sitemap: ${SITE_ORIGIN}/sitemap.xml`);
+  });
+
+  it.each(REQUIRED_AI_TOKENS)(
+    'explicitly Allows the AI-crawler token %s (does NOT block it)',
+    (token) => {
+      // A `User-agent: <token>` group immediately followed by `Allow: /`.
+      const block = robots.match(new RegExp(`User-agent:\\s*${token}\\s*\\nAllow:\\s*/`));
+      expect(block, `Allow block for ${token}`).not.toBeNull();
+      // And it is never Disallowed (NFR-3 — GEO-first, do not block AI crawlers).
+      expect(robots).not.toMatch(new RegExp(`User-agent:\\s*${token}\\s*\\nDisallow:\\s*/`));
+    },
+  );
+
+  it('ends with a catch-all User-agent: * / Allow: / (nothing is globally blocked)', () => {
+    expect(robots).toMatch(/User-agent:\s*\*\s*\nAllow:\s*\//);
+    // No blanket Disallow anywhere (GEO-first posture).
+    expect(robots).not.toMatch(/Disallow:\s*\//);
   });
 });

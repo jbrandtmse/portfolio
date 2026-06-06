@@ -40,3 +40,10 @@
 2026-06-06T10:28:57Z	Story 1.5	qa_complete	spawn_at=2026-06-06T10:21:50Z model=claude-opus-4-8 tests=web/test/MirrorLayout.component.test.ts tests_added=5 first_run_failures=0 clarifications=0 closing_sections_present=true
 2026-06-06T10:42:52Z	Story 1.5	cr_complete	spawn_at=2026-06-06T10:30:00Z model=claude-opus-4-8 resolved=0 deferred=1 dismissed=0 high=0 med=0 low=1 clarifications=0 closing_sections_present=true
 2026-06-06T10:44:02Z	Story 1.5	smoke_complete	method=browser result=pass iterations=1 defects_caught=0 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-1.5-about.png model=claude-opus-4-8
+2026-06-06T10:44:16Z	Story 1.5	committed	sha=6c529a6 submodules=
+2026-06-06T10:47:12Z	Story 1.6	story_created	path=_bmad-output/implementation-artifacts/1-6-structured-data-emission-sitemap-robots.md
+2026-06-06T11:04:29Z	Story 1.6	dev_complete	spawn_at=2026-06-06T10:47:30Z model=claude-opus-4-8 files=15 clarifications=0 nfr_tripwires=0 adr_violations_surfaced=0 cycle_iteration=1 closing_sections_present=true
+2026-06-06T11:04:33Z	Story 1.6	adr_verifications_complete	tool=none acs=none result=none_required
+2026-06-06T11:10:00Z	Story 1.6	qa_complete	spawn_at=2026-06-06T11:04:45Z model=claude-opus-4-8 tests=web/test/build-output.test.ts tests_added=1 first_run_failures=0 clarifications=0 closing_sections_present=true
+2026-06-06T11:21:19Z	Story 1.6	cr_complete	spawn_at=2026-06-06T11:05:00Z model=claude-opus-4-8 resolved=1 deferred=0 dismissed=0 high=0 med=1 low=0 clarifications=0 closing_sections_present=true
+2026-06-06T11:22:00Z	Story 1.6	smoke_complete	method=cli result=pass iterations=1 defects_caught=0 evidence=dist-parse:6-routes-jsonld+sitemap-9-routes+robots-5-tokens model=claude-opus-4-8

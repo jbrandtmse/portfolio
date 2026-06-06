@@ -22,6 +22,23 @@
  * ticks + a museum-style label). CSS only — not stock, not AI imagery (NFR-1).
  */
 import MirrorLayout from '../layouts/MirrorLayout.astro';
+import { personJsonLd, profilePageJsonLd, serializeJsonLd } from '../lib/jsonld';
+import { PERSON, SITE_ORIGIN } from '../lib/person';
+
+// /about JSON-LD (Story 1.6, AC1; this is the canonical Person home, UX-DR14):
+// the REAL Person + a ProfilePage whose mainEntity is that Person. Uses the SAME
+// canonical Person facts as the home (one source — web/src/lib/person.ts), so
+// the Person data is byte-identical across both GEO routes. Person.sameAs
+// mirrors the visible channel links below; both are [OPEN] until the real URLs
+// land. ProfilePage url is this page's own canonical. dateModified omitted for
+// deterministic output (NFR-6). Serialized into BaseLayout's jsonld slot (passed
+// through MirrorLayout).
+const aboutJsonLd = serializeJsonLd([
+  personJsonLd(PERSON),
+  // Trailing slash so the ProfilePage url matches this page's own canonical
+  // (Astro directory build → ".../about/"; Story 1.5 self-canonical).
+  profilePageJsonLd({ mainEntity: PERSON, url: `${SITE_ORIGIN}/about/` }),
+]);
 
 // Answer-first lede — first sentence names the entity (GEO floor).
 const LEDE =
@@ -50,6 +67,12 @@ const CHANNELS = [
   title="About — Joshua R. Brandt, MSE"
   description="Joshua R. Brandt, MSE is a software engineer with thirty years of shipping experience, now building at the frontier of agentic engineering."
 >
+  {
+    /* Structured data — Person + ProfilePage (REAL), forwarded through
+      MirrorLayout into BaseLayout's head. DATA, not executable JS (NFR-1). */
+  }
+  <script type="application/ld+json" slot="jsonld" is:inline set:html={aboutJsonLd} />
+
   <div class="about">
     <div class="about__body">
       {/* The canonical bio — short form, then long form. Set verbatim. */}

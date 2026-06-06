@@ -11,9 +11,30 @@
  * The lede's first sentence names "Joshua R. Brandt, MSE" (GEO floor).
  */
 import MirrorLayout from '../layouts/MirrorLayout.astro';
+import { faqPageJsonLd, serializeJsonLd } from '../lib/jsonld';
 
 const LEDE =
   'Joshua R. Brandt, MSE answers the questions organizers and peers ask most. These answers are the same ones his Guide cites.';
+
+// PLACEHOLDER FAQPage JSON-LD (Story 1.6, AC1; one of the 3 GEO routes). Epic 4
+// replaces these with the real Q&A (the same answers the Guide cites). Two
+// clearly-flagged placeholder pairs so the route emits a valid schema.org
+// FAQPage with the required Question/acceptedAnswer→Answer shape. No exclamation
+// marks (positive-assertion voice).
+const faqJsonLd = serializeJsonLd(
+  faqPageJsonLd([
+    {
+      question: '[PLACEHOLDER] What does Joshua R. Brandt, MSE speak about?',
+      answer:
+        'Placeholder answer. Epic 4 publishes the real Q&A here — the same answers the Guide cites.',
+    },
+    {
+      question: '[PLACEHOLDER] How do I invite him to speak?',
+      answer:
+        'Placeholder answer. Epic 4 publishes the real answer, mirroring the invite path on this site.',
+    },
+  ]),
+);
 ---
 
 <MirrorLayout
@@ -22,6 +43,11 @@ const LEDE =
   title="FAQ — Joshua R. Brandt, MSE"
   description="Answers from Joshua R. Brandt, MSE to the questions organizers and peers ask most — the same answers his Guide cites."
 >
+  {
+    /* Structured data — PLACEHOLDER FAQPage (real Q&A lands in Epic 4). DATA, not
+      executable JS (NFR-1). */
+  }
+  <script type="application/ld+json" slot="jsonld" is:inline set:html={faqJsonLd} />
   <p class="stub-note">
     The full set of answers is on its way. Epic 4 fills this page with the Q&amp;A — the same
     answers the Guide cites — published as crawlable FAQPage content.

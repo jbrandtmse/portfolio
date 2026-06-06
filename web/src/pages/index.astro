@@ -38,12 +38,30 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import HeroStatic from '../components/hero/HeroStatic.astro';
 import Kicker from '../components/common/Kicker.astro';
 import SceneRail from '../components/scene/SceneRail.astro';
+import { personJsonLd, profilePageJsonLd, serializeJsonLd } from '../lib/jsonld';
+import { PERSON, SITE_ORIGIN } from '../lib/person';
+
+// Home JSON-LD (Story 1.6, AC1; EXPERIENCE §"SEO/GEO floor"): the REAL Person +
+// a ProfilePage whose mainEntity is that Person. Same canonical Person facts as
+// /about (one source — web/src/lib/person.ts), serialized into the BaseLayout
+// `jsonld` slot below. The ProfilePage url is the site root (the home is the
+// person's canonical home). dateModified is intentionally omitted to keep the
+// output deterministic (NFR-6; Story 1.8 verifies byte-stability).
+const homeJsonLd = serializeJsonLd([
+  personJsonLd(PERSON),
+  profilePageJsonLd({ mainEntity: PERSON, url: `${SITE_ORIGIN}/` }),
+]);
 ---
 
 <BaseLayout
   title="Joshua R. Brandt, MSE"
   description="A warm, structured, editorial portfolio for a 30-year engineer building at the frontier."
 >
+  {
+    /* Structured data — Person + ProfilePage (REAL), rendered server-side in
+      <head> via BaseLayout's jsonld slot. DATA, not executable JS (NFR-1). */
+  }
+  <script type="application/ld+json" slot="jsonld" is:inline set:html={homeJsonLd} />
   {
     /* The persistent scene-rail — the FR-2 skip/progress/jump affordance. It is
      fixed chrome overlaying the scroll-native arc, so the scene DOM order below
