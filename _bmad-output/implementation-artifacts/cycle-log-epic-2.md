@@ -47,3 +47,10 @@
 2026-06-06T19:50:55Z	Story 2.5	qa_complete	spawn_at=2026-06-06T19:37:56Z model=claude-opus-4-8 tests_added=4 first_run_failures=0 clarifications=0 closing_sections_present=true
 2026-06-06T19:59:15Z	Story 2.5	cr_complete	spawn_at=2026-06-06T19:50:55Z model=claude-opus-4-8 resolved=0 deferred=0 dismissed=3 high=0 med=0 low=0 clarifications=0 closing_sections_present=true
 2026-06-06T20:00:35Z	Story 2.5	smoke_complete	method=browser result=pass iterations=1 defects_caught=0 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-2.5-loandemo.md model=claude-opus-4-8
+2026-06-06T20:01:40Z	Story 2.5	committed	sha=bb51b2e submodules=
+2026-06-06T20:03:17Z	Story 2.6	story_created	path=_bmad-output/implementation-artifacts/2-6-project-import-bmad-correct-course-extension-path.md spec_words=1619
+2026-06-06T20:12:42Z	Story 2.6	dev_complete	spawn_at=2026-06-06T20:03:17Z model=claude-sonnet-4-6 files=4 loc_added=482 loc_removed=0 clarifications=0 nfr_tripwires=0 adr_violations_surfaced=0 cycle_iteration=1 closing_sections_present=true
+2026-06-06T20:12:42Z	Story 2.6	adr_verifications_complete	tool=none acs=none result=none_required evidence= model=claude-opus-4-8
+2026-06-06T20:21:24Z	Story 2.6	qa_complete	spawn_at=2026-06-06T20:12:42Z model=claude-opus-4-8 tests_added=14 first_run_failures=0 clarifications=0 closing_sections_present=true
+2026-06-06T20:28:50Z	Story 2.6	cr_complete	spawn_at=2026-06-06T20:21:24Z model=claude-opus-4-8 resolved=0 deferred=0 dismissed=4 high=0 med=0 low=0 clarifications=0 closing_sections_present=true
+2026-06-06T20:32:10Z	Story 2.6	smoke_complete	method=cli result=pass iterations=1 defects_caught=1 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-2.6-project-import.md model=claude-opus-4-8

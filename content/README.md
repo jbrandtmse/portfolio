@@ -39,6 +39,26 @@ curated content arrives with its epic:
 Do **not** add the above ahead of their stories — this README documents the
 convention; the content itself is each epic's deliverable.
 
+## Adding a project (Project Import)
+
+The documented path for wiring a new project into the site is
+[`docs/project-import.md`](../docs/project-import.md). Follow it — it is the
+**code-as-CMS engineering flow** (a `/bmad-correct-course` or new story → dev
+→ PR → deploy), not a CMS or admin step.
+
+The import has **three wiring points**, all in this directory:
+
+1. **`content/kb/*.md`** — add the project's Guide KB markdown (agent-retrievable
+   once Epic 4 / Story 4.1 ships the KB indexer).
+2. **`content/timeline/dots.ts`** — add a hand-curated Dot / flagship cluster to
+   `TIMELINE_ERAS` (Stage 1; no automated harvest — that is Stage 2 / Epic 6).
+3. **`content/glassbox.allowlist.ts`** — allowlist the project's publishable
+   artifacts (default-deny: only listed files ever render in the Glass Box).
+
+After wiring the three points, run `pnpm build` (deterministic regeneration) and
+`scripts/deploy.sh`. See [`docs/project-import.md`](../docs/project-import.md)
+for the full step-by-step path.
+
 ## Conventions
 
 - **Determinism:** never introduce `Date.now()`, `Math.random()`, or argless

@@ -411,3 +411,101 @@ untouched). The strengthening assertions have teeth.
 - The CreativeWork `dateCreated: "2026-06-01"` is a curated deterministic constant (the exact
   date is `[OPEN]`; the era `2026-06` is confirmed from `dots.ts`) — valid ISO, keeps the 1.6
   assertion green. Not a fabricated factual claim; acceptable per the dev's documented rationale.
+
+---
+
+# Story 2.6 — Project Import & `/bmad-correct-course` extension path (QA)
+
+Process/tooling/doc story. Deliverables: `docs/project-import.md` (the documented Project Import
+path), a `content/README.md` pointer, and `scripts/project-import.test.ts` (the mechanism test).
+No new browser surface.
+
+## Rule 3 EXEMPTION (confirmed)
+
+This story ships documentation + a mechanism-validation test, NOT a user-facing browser surface.
+Per skill-rules Rule 3, the browser/Playwright tier is EXEMPT — and the exemption is noted, not
+silently skipped (the test file carries an explicit Rule 3 EXEMPTION NOTE). The **real-runtime
+tier** here is the CLI/library tier: the mechanism test invokes the REAL `renderGlassbox()` /
+`renderTimeline()` and asserts on their output. No HIGH is filed for "no browser test."
+
+## What I scrutinized / strengthened (adversarial)
+
+1. **AC2/AC4 mechanism is GENUINELY data-driven (non-vacuity = the core proof).** Mutation-tested
+   BOTH render functions against the dev's test:
+   - Mutated `renderGlassbox` to ignore its `allowlist` arg (return `[]`) → **3 tests FAILED**
+     (flow-through, ISO-date, data-driven parameterization). Reverted byte-clean.
+   - Mutated `renderTimeline` to ignore its `eras` arg (always serialize the live `TIMELINE_ERAS`)
+     → the **flow-through test FAILED** (`expected length 1 but got 2`). Reverted byte-clean.
+   Conclusion: the test reads the REAL render functions and the sample genuinely flows input →
+   output. Not vacuous, not a restatement of the input.
+2. **Explicit render-level negative controls added (a project NOT added does NOT appear).** The
+   dev's no-pollution tests rely on the live manifest's current contents. I added 2 purer
+   negative controls: feed each render a NON-EMPTY decoy input that lacks the sample → assert the
+   sample is absent AND the decoy (which WAS in the input) is present (render is honest, not
+   trivially empty). Independent of the live manifests.
+3. **No-live-pollution — verified from a fresh build, not just in-test.** Ran `pnpm build` and
+   scanned the generated `web/src/generated/glassbox.json` + `timeline.json`: contain exactly the
+   6 real Glass Box artifacts and the real runway ticks + 2 real flagships (`loandemo`,
+   `This portfolio`). Grep for `sample-project-import-fixture` / `Sample Project (test fixture)` /
+   `decoy` / `sample-project-artifact` in the generated output → **CLEAN, zero matches.** The live
+   site still has exactly its real projects.
+4. **Doc-accuracy guard added (AC1/AC3 — a doc can rot).** New `it.each` asserts every repo path
+   `docs/project-import.md` instructs the reader to wire/run exists on disk AND is mentioned in
+   the doc: `content/kb`, `content/timeline/dots.ts`, `content/glassbox.allowlist.ts`,
+   `content/README.md`, `scripts/render-glassbox.ts`, `scripts/render-timeline.ts`,
+   `scripts/build-content.ts`, `scripts/deploy.sh`, `docs/launch-checklist.md`. Non-vacuity
+   confirmed: a bogus path yields `false` for both `includes` and `existsSync` (the guard has
+   teeth). Manually verified the doc's deploy flow matches `scripts/deploy.sh` step-for-step
+   (`git pull --ff-only` → `pnpm install --frozen-lockfile` → `pnpm --filter api build` →
+   `pnpm build` → `systemctl restart portfolio-api` → `nginx -t`/reload) and `pnpm build` =
+   `tsx scripts/build-content.ts && pnpm --filter web build`. (The doc's `scripts/build-kb-index.ts`
+   reference is an Epic-4/Story-4.1 forward-reference the doc explicitly labels future — excluded
+   from the existence guard by design, not a doc-rot defect.)
+5. **KB forward-ref not over-claimed (AC2 forward-ref).** Added 2 assertions that the doc names the
+   Epic-4 / Story-4.1 KB step and uses "agent-retrievable" framing, and frames the model as
+   `/bmad-correct-course` + "no CMS/admin" (FR-33/FR-34). The doc states KB files are "NOT rendered
+   directly to any page today (that is Epic 4 / Story 4.1)" — retrieval is NOT claimed to work now.
+6. **Determinism (AC2 / NFR-6).** The dev asserts a deep-equal second render for both functions;
+   `pnpm check-deterministic` PASS — two clean builds byte-identical (tree hash `a66a0a67…`).
+
+## Generated / modified test files
+
+- [x] `scripts/project-import.test.ts` — +14 QA tests (2 render-level negative controls;
+  9-path doc-existence `it.each`; +3 doc-framing assertions: KB-forward-ref honesty,
+  `/bmad-correct-course` no-CMS) on top of the dev's 11 mechanism tests → **25 tests** in the file.
+
+## Real counts (`EADDRINUSE:8787` is a live-api env issue, avoided by package-filtered runs)
+
+- `pnpm --filter @portfolio/scripts test` → **8 files, 107 tests passed** (was 93; +14 QA).
+  The `project-import.test.ts` file alone → **25/25**.
+- `pnpm --filter web test` → **15 files, 506 tests passed** (no regression; this story adds no
+  web tests).
+- `pnpm build` → green, 16 pages. `pnpm check-deterministic` → **PASS** (byte-identical, tree
+  hash `a66a0a67…`). Generated output **unpolluted** by the fixture (verified by grep).
+- Root `pnpm format:check` → **GREEN** (the test file was Prettier-fixed via `pnpm format`;
+  `docs/` is `.prettierignore`d so the doc itself is not format-gated). `pnpm typecheck` → 0
+  errors (all packages). `pnpm lint` → 0 violations.
+- Rule 8 discoverability ✓ — `scripts/project-import.test.ts` matches the scripts vitest
+  `include: ['**/*.test.ts']`, runs under `pnpm --filter @portfolio/scripts test`, part of root
+  `test`/`test:all`.
+
+## Coverage vs ACs
+
+- AC1 (doc exists, linked from `content/README.md`, names the 3 wiring points + deterministic
+  build + `deploy.sh`) ✓ — doc + README read; doc-existence guard added · AC2 (sample flows
+  through real `renderGlassbox()`/`renderTimeline()` → Glass Box artifact + timeline Dot;
+  deterministic; no live pollution; KB validated in Epic 4) ✓ — mutation-proven non-vacuous +
+  fresh-build pollution scan · AC3 (`/bmad-correct-course` engineering flow, no CMS/admin/runtime
+  reads) ✓ — doc-framing assertions added · AC4 (Integration: producer doc → consumer render
+  pipeline real, not aspirational; deterministic second run) ✓ — negative controls + determinism.
+
+## Notes for code review
+
+- No defects found in the dev's implementation. The mechanism test is genuinely data-driven
+  (mutation-confirmed both directions), does NOT pollute the live manifests (fresh-build grep
+  clean), and the doc's referenced paths + deploy flow are accurate against the real files.
+- Rule 3 EXEMPT (process/tooling/doc, not a browser surface) — noted in the test file and here;
+  the real-runtime tier is the actual `renderGlassbox()`/`renderTimeline()` invocations. Do NOT
+  file a HIGH for "no browser test."
+- The QA additions are pure test/guard code in `scripts/` (Prettier-clean); no production code,
+  no `content/` manifest, and no render function was changed (both render files are byte-clean).
