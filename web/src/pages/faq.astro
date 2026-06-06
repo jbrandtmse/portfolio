@@ -1,0 +1,38 @@
+---
+/**
+ * /faq — the FAQ Mirror route (Story 1.5 stub; AC2; one of the 3 GEO routes,
+ * UX-DR14). Answer-first, self-canonical, exactly one <h1> via MirrorLayout.
+ *
+ * RESOLVES the forward-reference from the 1.3 hero's quiet Guide entry
+ * ("Or ask my Guide about the work" → /faq). Epic 4 fills the body with the Q&A
+ * and the FAQPage structured data; Epic 4 also switches the hero's quiet link to
+ * open the Guide island in place of this route. 0 JS.
+ *
+ * The lede's first sentence names "Joshua R. Brandt, MSE" (GEO floor).
+ */
+import MirrorLayout from '../layouts/MirrorLayout.astro';
+
+const LEDE =
+  'Joshua R. Brandt, MSE answers the questions organizers and peers ask most. These answers are the same ones his Guide cites.';
+---
+
+<MirrorLayout
+  heading="Frequently asked questions"
+  lede={LEDE}
+  title="FAQ — Joshua R. Brandt, MSE"
+  description="Answers from Joshua R. Brandt, MSE to the questions organizers and peers ask most — the same answers his Guide cites."
+>
+  <p class="stub-note">
+    The full set of answers is on its way. Epic 4 fills this page with the Q&amp;A — the same
+    answers the Guide cites — published as crawlable FAQPage content.
+  </p>
+</MirrorLayout>
+
+<style>
+  .stub-note {
+    margin-top: var(--space-6);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+  }
+</style>

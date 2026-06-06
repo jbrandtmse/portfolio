@@ -1,0 +1,37 @@
+---
+/**
+ * /invite — the Invite-Me Mirror route (Story 1.5 stub; AC2).
+ *
+ * Answer-first, self-canonical, exactly one <h1> via MirrorLayout. RESOLVES the
+ * forward-reference from the 1.4 Close scene ("Invite me to speak" → /invite).
+ * Epic 3 fills the body with the accessible invite/collaboration form. 0 JS;
+ * no form is built in this story.
+ *
+ * The lede's first sentence names "Joshua R. Brandt, MSE" (GEO floor).
+ */
+import MirrorLayout from '../layouts/MirrorLayout.astro';
+
+const LEDE =
+  'Joshua R. Brandt, MSE takes speaking and collaboration inquiries here. Send a short note and he replies personally.';
+---
+
+<MirrorLayout
+  heading="Invite me"
+  lede={LEDE}
+  title="Invite me — Joshua R. Brandt, MSE"
+  description="Send Joshua R. Brandt, MSE a speaking or collaboration inquiry. A short note reaches him directly."
+>
+  <p class="stub-note">
+    The invite form is on its way. Epic 3 fills this page with an accessible, JS-off-friendly form
+    to start a speaking or collaboration conversation.
+  </p>
+</MirrorLayout>
+
+<style>
+  .stub-note {
+    margin-top: var(--space-6);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+  }
+</style>

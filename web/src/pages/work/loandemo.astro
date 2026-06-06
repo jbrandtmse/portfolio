@@ -1,0 +1,36 @@
+---
+/**
+ * /work/loandemo — the flagship case-study Mirror route (Story 1.5 stub; AC2).
+ *
+ * Answer-first, self-canonical, exactly one <h1> via MirrorLayout. RESOLVES the
+ * forward-reference from the 1.4 Flagship teaser ("Read the loandemo case study"
+ * → /work/loandemo). Epic 2 fills the body with the layered case study. 0 JS.
+ *
+ * The lede's first sentence names "Joshua R. Brandt, MSE" (GEO floor).
+ */
+import MirrorLayout from '../../layouts/MirrorLayout.astro';
+
+const LEDE =
+  'Joshua R. Brandt, MSE built loandemo as a real, end-to-end agentic-engineering case study. This is the layered story of how it was made.';
+---
+
+<MirrorLayout
+  heading="loandemo — the flagship case study"
+  lede={LEDE}
+  title="loandemo case study — Joshua R. Brandt, MSE"
+  description="How Joshua R. Brandt, MSE built loandemo end to end — a real agentic-engineering case study, told in layers."
+>
+  <p class="stub-note">
+    The full case study is on its way. Epic 2 fills this page with the layered story of how loandemo
+    was built, from intent to working software.
+  </p>
+</MirrorLayout>
+
+<style>
+  .stub-note {
+    margin-top: var(--space-6);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+  }
+</style>

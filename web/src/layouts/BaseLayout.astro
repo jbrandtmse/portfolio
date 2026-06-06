@@ -24,9 +24,15 @@ interface Props {
   title?: string;
   /** Meta description. Optional; omitted from <head> when not provided. */
   description?: string;
+  /**
+   * Absolute canonical URL for this page. Optional; when provided, a
+   * <link rel="canonical"> is emitted in <head>. Mirror routes pass their own
+   * self URL (Story 1.5 MirrorLayout, UX-DR10); the home leaves it unset.
+   */
+  canonical?: string;
 }
 
-const { title = 'Joshua R. Brandt, MSE', description } = Astro.props;
+const { title = 'Joshua R. Brandt, MSE', description, canonical } = Astro.props;
 ---
 
 <!doctype html>
@@ -38,6 +44,7 @@ const { title = 'Joshua R. Brandt, MSE', description } = Astro.props;
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
     {description && <meta name="description" content={description} />}
+    {canonical && <link rel="canonical" href={canonical} />}
 
     {/* JSON-LD structured data — populated by Story 1.6. Empty for now. */}
     <slot name="jsonld" />

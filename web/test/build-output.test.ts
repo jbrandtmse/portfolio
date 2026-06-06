@@ -331,3 +331,185 @@ describe('dev-only style guide is not shipped', () => {
     }
   });
 });
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Story 1.5 — MirrorLayout + Stage-1 route stubs + the canonical /about.
+ *
+ * These assert on the produced static HTML for every Mirror route (real
+ * `astro build` output — the consumer-observable form of the ACs, JS-off; Rule
+ * 3 real-runtime evidence). Each Mirror route must: build to a real
+ * <route>/index.html; open answer-first with "Joshua R. Brandt, MSE" in the
+ * FIRST SENTENCE of its lede; be self-canonical to its own absolute URL; carry
+ * exactly one <h1>; provide the footer slot region; ship 0 JS; and carry no
+ * exclamation marks (IAC-1). The 1.3 hero fork + 1.4 teaser forward-refs must
+ * now resolve to these built routes (IAC-2).
+ * ────────────────────────────────────────────────────────────────────────── */
+
+// Canonical origin from astro.config.mjs (Story 1.5; also feeds 1.6 sitemap).
+const SITE_ORIGIN = 'https://joshuabrandt.abacusai.cloud';
+
+// Each Mirror route created by Story 1.5 → its built directory-index path. Astro
+// (default build.format 'directory') emits <route>/index.html for each.
+const MIRROR_ROUTES = [
+  '/timeline',
+  '/speaking',
+  '/speaking/reel',
+  '/work/loandemo',
+  '/glass-box',
+  '/faq',
+  '/invite',
+  '/about',
+] as const;
+
+/** Absolute path to a route's built index.html (directory-index form). */
+function routeHtmlPath(route: string): string {
+  return join(distDir, ...route.split('/').filter(Boolean), 'index.html');
+}
+
+/** The text of the FIRST <p> in the document — the answer-first lede paragraph. */
+function firstParagraphText(html: string): string {
+  const m = html.match(/<p\b[^>]*>([\s\S]*?)<\/p>/);
+  if (!m) return '';
+  return m[1]!
+    .replace(/<[^>]+>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+describe('Story 1.5 — every Mirror route is a real, answer-first, self-canonical page (IAC-1)', () => {
+  it.each(MIRROR_ROUTES)('builds a real index.html for %s (verifiable JS-off)', (route) => {
+    expect(existsSync(routeHtmlPath(route))).toBe(true);
+    const html = readFileSync(routeHtmlPath(route), 'utf8');
+    // Real HTML document (not a redirect shell): has <html lang="en"> + <body>.
+    // Astro appends a scoped data-attribute to both tags, so match the opening
+    // tag prefix (same convention as the home-page assertions above).
+    expect(html).toMatch(/<html lang="en"[\s>]/);
+    expect(html).toMatch(/<body[\s>]/);
+  });
+
+  it.each(MIRROR_ROUTES)(
+    'opens answer-first — the lede leads with the entity name — on %s',
+    (route) => {
+      const html = readFileSync(routeHtmlPath(route), 'utf8');
+      const lede = firstParagraphText(html);
+      // The opening paragraph names the entity FIRST (the GEO floor; UX-DR15).
+      // Assert it leads with the canonical string rather than naively splitting
+      // on "." — the entity itself contains "R." and "MSE", which a sentence
+      // splitter would mistake for a boundary.
+      expect(lede.startsWith('Joshua R. Brandt, MSE')).toBe(true);
+    },
+  );
+
+  it.each(MIRROR_ROUTES)('is self-canonical to its own absolute URL on %s', (route) => {
+    const html = readFileSync(routeHtmlPath(route), 'utf8');
+    const canonicalMatch = html.match(/<link\b[^>]*\brel="canonical"[^>]*>/);
+    expect(canonicalMatch).not.toBeNull();
+    const hrefMatch = canonicalMatch![0].match(/\bhref="([^"]+)"/);
+    expect(hrefMatch).not.toBeNull();
+    // Astro builds the canonical from Astro.site + pathname. Normalize a trailing
+    // slash before comparing so the assertion is independent of trailingSlash.
+    const got = hrefMatch![1]!.replace(/\/$/, '');
+    expect(got).toBe(`${SITE_ORIGIN}${route}`);
+  });
+
+  it.each(MIRROR_ROUTES)('renders exactly one <h1> on %s (clean hierarchy)', (route) => {
+    const html = readFileSync(routeHtmlPath(route), 'utf8');
+    const h1s = html.match(/<h1\b[^>]*>/g) ?? [];
+    expect(h1s).toHaveLength(1);
+  });
+
+  it.each(MIRROR_ROUTES)('provides the global footer slot region on %s', (route) => {
+    const html = readFileSync(routeHtmlPath(route), 'utf8');
+    expect(html).toMatch(/<footer[^>]*class="[^"]*site-footer[^"]*"/);
+  });
+
+  it.each(MIRROR_ROUTES)(
+    'ships 0 JS — no <script>, no island, no JS bundle on %s (NFR-1)',
+    (route) => {
+      const html = readFileSync(routeHtmlPath(route), 'utf8');
+      expect(html.match(/<script\b/g) ?? []).toHaveLength(0);
+      expect(html).not.toMatch(/<script\b[^>]*\bsrc=/);
+      expect(html).not.toMatch(/<link\b[^>]*\brel="modulepreload"/);
+      expect(html).not.toMatch(/\.js(["'?])/);
+    },
+  );
+
+  it.each(MIRROR_ROUTES)(
+    'contains no exclamation marks in copy on %s (positive-assertion)',
+    (route) => {
+      const html = readFileSync(routeHtmlPath(route), 'utf8');
+      const copyOnly = html.replace(/<!doctype html>/i, '');
+      expect(copyOnly).not.toContain('!');
+    },
+  );
+});
+
+describe('Story 1.5 — the canonical /about (AC3)', () => {
+  let aboutHtml = '';
+  beforeAll(() => {
+    aboutHtml = readFileSync(routeHtmlPath('/about'), 'utf8');
+  });
+
+  it('sets the 50-word short bio VERBATIM', () => {
+    expect(aboutHtml).toContain(
+      'Joshua R. Brandt, MSE is a software engineer with 30 years of shipping experience, ' +
+        'now building at the frontier of agentic engineering. He speaks on the patterns that ' +
+        'outlast hype cycles and on running real software through disciplined, auditable agent ' +
+        'workflows — seasoned, building at the frontier.',
+    );
+  });
+
+  it('sets the 100–150-word long bio VERBATIM, keeping the lowercase running tail', () => {
+    expect(aboutHtml).toContain(
+      'Joshua R. Brandt, MSE is a software engineer with three decades of shipping experience ' +
+        'who has gone deep on agentic engineering — seasoned, building at the frontier.',
+    );
+    expect(aboutHtml).toContain(
+      'aim to leave senior audiences with patterns they can use the next morning.',
+    );
+    // The lowercase bio tail must NOT be normalized to the Title-case hero form.
+    expect(aboutHtml).not.toContain('Seasoned, building at the frontier');
+  });
+
+  it('flags the bios [ASSUMPTION] as real text (not color alone)', () => {
+    expect(aboutHtml).toContain('[ASSUMPTION]');
+  });
+
+  it('renders the sameAs channels (YouTube, GitHub, Suno) as real <a>s with [OPEN] flags', () => {
+    for (const channel of ['YouTube', 'GitHub', 'Suno']) {
+      // A real anchor whose text is the channel label.
+      expect(aboutHtml).toMatch(new RegExp(`<a\\b[^>]*>\\s*${channel}\\s*</a>`));
+    }
+    // Each placeholder href is flagged [OPEN] in visible text (not color alone).
+    expect(aboutHtml).toContain('[OPEN: YouTube channel URL]');
+    expect(aboutHtml).toContain('[OPEN: GitHub profile URL]');
+    expect(aboutHtml).toContain('[OPEN: Suno profile URL]');
+  });
+
+  it('reuses the museum-mat headshot placeholder with a meaningful labelled region', () => {
+    expect(aboutHtml).toMatch(/role="img"[^>]*aria-label="Portrait of Joshua R\. Brandt[^"]*"/);
+    expect(aboutHtml).toContain('JRB');
+  });
+});
+
+describe('Story 1.5 — 1.3 hero fork + 1.4 teaser forward-refs now resolve (IAC-2)', () => {
+  // Every Mirror route the home links to (hero fork + scene teasers). Each MUST
+  // now map to an existing built page (no 404). The home index.html is built in
+  // the same run (beforeAll above already read it into indexHtml).
+  const HOME_FORWARD_REFS = [
+    '/speaking', // hero fork "book a talk" + scene-rail jump + Speaker teaser
+    '/faq', // hero quiet Guide entry
+    '/timeline', // Timeline teaser
+    '/work/loandemo', // Flagship teaser
+    '/glass-box', // Glass Box teaser
+    '/invite', // Close scene
+  ] as const;
+
+  it.each(HOME_FORWARD_REFS)('the home links to %s and that route is now built', (route) => {
+    // The home markup still carries the exact href (regression-guards 1.3/1.4)…
+    const hrefPattern = new RegExp(`<a\\b[^>]*\\shref="${route.replace('/', '\\/')}"[^>]*>`);
+    expect(indexHtml).toMatch(hrefPattern);
+    // …and the href now resolves to a real built directory-index (no 404).
+    expect(existsSync(routeHtmlPath(route))).toBe(true);
+  });
+});

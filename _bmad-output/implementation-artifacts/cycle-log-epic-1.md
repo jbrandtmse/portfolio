@@ -33,3 +33,10 @@
 2026-06-06T04:24:13Z	Story 1.4	qa_complete	spawn_at=2026-06-06T04:20:20Z model=claude-opus-4-8 tests=web/test/SceneRail.component.test.ts tests_added=6 first_run_failures=0 clarifications=0 closing_sections_present=true
 2026-06-06T04:32:22Z	Story 1.4	cr_complete	spawn_at=2026-06-06T04:26:30Z model=claude-opus-4-8 resolved=0 deferred=2 dismissed=3 high=0 med=0 low=2 clarifications=0 closing_sections_present=true
 2026-06-06T04:34:03Z	Story 1.4	smoke_complete	method=browser result=pass iterations=1 defects_caught=0 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-1.4-scenes-rail.png model=claude-opus-4-8
+2026-06-06T04:34:17Z	Story 1.4	committed	sha=e7d0cd0 submodules=
+2026-06-06T04:36:46Z	Story 1.5	story_created	path=_bmad-output/implementation-artifacts/1-5-static-mirror-layout-route-stubs-the-canonical-about.md
+2026-06-06T10:21:34Z	Story 1.5	dev_complete	spawn_at=2026-06-06T10:11:00Z model=claude-opus-4-8 files=11 clarifications=0 nfr_tripwires=0 adr_violations_surfaced=0 cycle_iteration=2 closing_sections_present=true
+2026-06-06T10:21:38Z	Story 1.5	adr_verifications_complete	tool=none acs=none result=none_required
+2026-06-06T10:28:57Z	Story 1.5	qa_complete	spawn_at=2026-06-06T10:21:50Z model=claude-opus-4-8 tests=web/test/MirrorLayout.component.test.ts tests_added=5 first_run_failures=0 clarifications=0 closing_sections_present=true
+2026-06-06T10:42:52Z	Story 1.5	cr_complete	spawn_at=2026-06-06T10:30:00Z model=claude-opus-4-8 resolved=0 deferred=1 dismissed=0 high=0 med=0 low=1 clarifications=0 closing_sections_present=true
+2026-06-06T10:44:02Z	Story 1.5	smoke_complete	method=browser result=pass iterations=1 defects_caught=0 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-1.5-about.png model=claude-opus-4-8

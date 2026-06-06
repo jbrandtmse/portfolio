@@ -140,3 +140,30 @@ resolution (usually the story that should own the fix).
     `color-mix()` convention is adopted), replace the literal with a token-derived value so
     the halo tracks any future accent change. Track with the design-tokens owner; low
     priority.
+
+## Deferred from: code review of story-1.5 (2026-06-06)
+
+- **[1.5 · LOW] Dev completion-note claim that the home output is "byte-identical / unchanged" is imprecise (output is correct, but not byte-identical).**
+  `web/src/layouts/BaseLayout.astro` — the Dev Agent Record states the home (`index.astro`,
+  which leaves `canonical` unset) produces "unchanged output … byte-identical". Against the
+  `e7d0cd0` baseline the built `web/dist/index.html` is NOT strictly byte-identical: the
+  baseline references ONE stylesheet (`/_astro/index.*.css`); the current build references
+  TWO (`/_astro/BaseLayout.*.css` + `/_astro/index.*.css`). Verified the home DOM is
+  byte-identical once the two `<link rel="stylesheet">` tags are removed, and the COMBINED
+  CSS is rule-for-rule identical (126 rule blocks in both, 0 differences; 21741 vs 21740
+  bytes — a 1-byte newline-join artifact). Root cause: `BaseLayout` went from 1 consumer
+  (home only, at baseline) to 9 (home + the 8 new Mirror routes), so Astro hoists
+  BaseLayout's shared CSS into a separate dedup chunk rather than inlining it into the
+  single page chunk.
+  - **Deferral rationale:** not a defect and nothing to fix — the home renders the exact
+    same DOM and the exact same set of CSS rules, with no visual or semantic change. The
+    stylesheet split is a standard Astro CSS-deduplication optimization triggered by adding
+    routes (more consumers of a shared layout), NOT by the `canonical` prop the story added
+    (the prop is unset for the home and emits nothing). The 1.2–1.4 regression tests still
+    pass because they assert on CSS rule content/structure, not the stylesheet filename
+    count. The only inaccuracy is the wording of the completion note.
+  - **Suggested resolution:** none required for correctness. If future stories want to
+    assert "home output unchanged" as a hard gate, assert on the home DOM (with stylesheet
+    `<link>`s normalized) and/or the combined CSS rule set, NOT the raw byte stream or the
+    stylesheet file count — Astro's chunk boundaries legitimately shift as the number of
+    shared-layout consumers grows.

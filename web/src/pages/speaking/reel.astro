@@ -1,0 +1,35 @@
+---
+/**
+ * /speaking/reel — the speaker-reel Mirror route (Story 1.5 stub; AC2; one of
+ * the 3 GEO routes, UX-DR14). Answer-first, self-canonical, exactly one <h1> via
+ * MirrorLayout. Epic 3 fills the body with the reel and its VideoObject
+ * structured data. 0 JS.
+ *
+ * The lede's first sentence names "Joshua R. Brandt, MSE" (GEO floor).
+ */
+import MirrorLayout from '../../layouts/MirrorLayout.astro';
+
+const LEDE =
+  "Joshua R. Brandt, MSE's speaker reel previews how he presents the build, live. The full reel and its details live here.";
+---
+
+<MirrorLayout
+  heading="Speaker reel"
+  lede={LEDE}
+  title="Speaker reel — Joshua R. Brandt, MSE"
+  description="The speaker reel of Joshua R. Brandt, MSE — a preview of how he presents the build, live."
+>
+  <p class="stub-note">
+    The reel is on its way. Epic 3 fills this page with the speaker reel and its VideoObject
+    details.
+  </p>
+</MirrorLayout>
+
+<style>
+  .stub-note {
+    margin-top: var(--space-6);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+  }
+</style>

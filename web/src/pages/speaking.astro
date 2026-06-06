@@ -1,0 +1,37 @@
+---
+/**
+ * /speaking — the Speaker Surface Mirror route (Story 1.5 stub; AC2).
+ *
+ * Answer-first, self-canonical, exactly one <h1> via MirrorLayout. RESOLVES the
+ * forward-reference links from the 1.3 hero fork ("I'm here to book a talk") and
+ * the 1.4 Speaker teaser (both → /speaking). Epic 3 (Speaker Surface) fills the
+ * body with the reel, signature talks, bios, and the invite path. 0 JS.
+ *
+ * The lede's first sentence names "Joshua R. Brandt, MSE" (GEO floor).
+ */
+import MirrorLayout from '../layouts/MirrorLayout.astro';
+
+const LEDE =
+  'Joshua R. Brandt, MSE is a software engineer and speaker with thirty years of shipping experience. This page lists his signature talks, formats, and how to book him.';
+---
+
+<MirrorLayout
+  heading="Speaking"
+  lede={LEDE}
+  title="Speaking — Joshua R. Brandt, MSE"
+  description="Signature talks, formats, and booking for Joshua R. Brandt, MSE — a software engineer and speaker with thirty years of shipping experience."
+>
+  <p class="stub-note">
+    The full speaker surface is on its way. Epic 3 fills this page with the reel, the signature
+    talks, the speaker bios, and a direct path to book a talk.
+  </p>
+</MirrorLayout>
+
+<style>
+  .stub-note {
+    margin-top: var(--space-6);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+  }
+</style>

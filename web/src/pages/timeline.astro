@@ -1,0 +1,39 @@
+---
+/**
+ * /timeline — the Master Timeline Mirror route (Story 1.5 stub; AC2).
+ *
+ * Answer-first, self-canonical, exactly one <h1> via MirrorLayout. This is the
+ * crawlable stub that RESOLVES the home Timeline teaser's forward-reference link
+ * (Story 1.4 → /timeline). Epic 2 (Master Timeline) fills the body with the
+ * craft-progression Dots. 0 JS.
+ *
+ * The lede's first sentence names "Joshua R. Brandt, MSE" (GEO floor).
+ */
+import MirrorLayout from '../layouts/MirrorLayout.astro';
+
+const LEDE =
+  'Joshua R. Brandt, MSE has spent thirty years shipping software, now building at the frontier of agentic engineering. This is the Master Timeline of that work — a craft progression from the long runway to the agentic turn.';
+---
+
+<MirrorLayout
+  heading="The Master Timeline"
+  lede={LEDE}
+  title="Master Timeline — Joshua R. Brandt, MSE"
+  description="The Master Timeline of Joshua R. Brandt, MSE — thirty years of shipping software, from the long runway to the agentic turn."
+>
+  <p class="stub-note">
+    The full timeline is on its way. Epic 2 fills this page with the chronological Dots — the craft
+    progression from the early shipping years to the agentic turn.
+  </p>
+</MirrorLayout>
+
+<style>
+  /* Quiet placeholder note — body copy, secondary ink. Removed when the owning
+     epic authors the real content. */
+  .stub-note {
+    margin-top: var(--space-6);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+  }
+</style>

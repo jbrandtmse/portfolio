@@ -8,6 +8,10 @@ const API_PORT = process.env.API_PORT ?? '8787';
 
 // https://astro.build/config
 export default defineConfig({
+  // Canonical production origin. Feeds Astro.site, which MirrorLayout uses to
+  // build each Mirror route's self-canonical <link rel="canonical"> (Story 1.5,
+  // UX-DR10), and which Story 1.6's sitemap/robots will reuse.
+  site: 'https://joshuabrandt.abacusai.cloud',
   output: 'static',
   integrations: [react()],
   vite: {
