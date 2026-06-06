@@ -38,6 +38,11 @@ venv/
 # API runtime data (SQLite/Drizzle store added in later stories)
 api/data/
 
+# Glass Box generated reader data (Story 2.1). Written by the content pipeline
+# (scripts/render-glassbox.ts → web/src/generated/glassbox.json) before astro build.
+# Never committed — regenerated deterministically from the allowlist + repo working tree.
+web/src/generated/
+
 # Test-harness artifacts (Story 1.9): Playwright e2e + Lighthouse CI outputs.
 # Generated on each run; never committed.
 test-results/

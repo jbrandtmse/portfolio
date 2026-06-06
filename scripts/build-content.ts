@@ -45,6 +45,8 @@
  */
 import { fileURLToPath } from 'node:url';
 
+import { renderGlassboxGenerator } from './render-glassbox.ts';
+
 /**
  * A single content generator: a named, deterministic step that reads only from
  * `content/` + the repo and writes generated outputs to gitignored locations.
@@ -74,7 +76,10 @@ export interface Generator {
  * generator into `pnpm build`.
  */
 export const CONTENT_GENERATORS: readonly Generator[] = [
-  // (empty — see the TODO hooks above; first generator lands in Story 2.1)
+  // Story 2.1: publish allowlist + Glass Box render pipeline (AR-13).
+  // Reads content/glassbox.allowlist.ts → writes web/src/generated/glassbox.json.
+  renderGlassboxGenerator,
+  // TODO(Story 4.1): build-kb-index generator (content/kb/*.md → Orama index → api/data/)
 ];
 
 /** Options for {@link runPipeline} (a logger seam keeps it unit-testable). */
@@ -98,7 +103,7 @@ export async function runPipeline(options: RunPipelineOptions = {}): Promise<voi
   log(`[content-pipeline] starting — ${generators.length} generator(s) registered`);
 
   if (generators.length === 0) {
-    // The Story 1.8 state: a clean no-op. Generators land in Story 2.1 / 4.1.
+    // No generators registered (the Story 1.8 no-op state; Story 2.1 / 4.1 add entries).
     log('[content-pipeline] no generators registered yet — nothing to generate (no-op).');
   }
 

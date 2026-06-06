@@ -155,3 +155,97 @@ referenced; no exclamation marks (IAC-2).
   e2e (real JS-disabled navigation of the fork) + FCP/perf-budget enforcement
   there. Once `/speaking` and `/faq` land (Story 1.5), the fork hrefs resolve and
   e2e can follow them end-to-end (the pre-1.5 404 is not a 1.3 defect).
+
+---
+
+# Test Automation Summary — Story 2.1 (Publish allowlist + Glass Box render pipeline)
+
+QA stage of `/epic-cycle`. Framework: **Vitest** (existing). Branch: `PORT-1-epic2`.
+
+## Scope & Rule 3 exemption
+
+Story 2.1 delivers a **build-time pipeline / library** (the default-deny publish
+allowlist `content/glassbox.allowlist.ts` + the `render-glassbox` generator), **not
+a user-facing browser surface** — the Glass Box PAGES are Stories 2.2/2.3. Per
+skill-rules **Rule 3**, the browser/Playwright real-runtime tier is **EXEMPT for
+this story**. The correct real-runtime tier is **actual invocation of
+`renderGlassbox()` / `renderGlassboxGenerator.run()` with assertions on the
+produced output** (return value + the emitted `web/src/generated/glassbox.json`).
+Both are exercised.
+
+## Generated Tests
+
+### QA-added (this stage)
+
+- [x] `scripts/render-glassbox.security.test.ts` — **14 tests**, the adversarial /
+  security-critical tier (complements the dev's file, does not duplicate it):
+  - **Default-deny mutation-resistance (AC3):** NEGATIVE (the FULL real never-render
+    corpus never appears, asserted by artifact IDENTITY — slug + sourceFile + body,
+    NOT raw substring, since allowlisted bodies legitimately mention
+    "decision-log"/"addendum"/"reconcile" in prose); POSITIVE CONTROL (a synthetic
+    allowlist pointing at a real `.decision-log.md` DOES render it — proving the gate
+    IS the allowlist, not a hard-coded skip); corpus SWEEP (every never-render file
+    renders iff listed); STRUCTURAL (`render(allowlist)` is EXACTLY the allowlist
+    set → the render iterates the allowlist, not the filesystem; an unlisted file
+    structurally cannot enter).
+  - **Corpus integrity:** every never-render path actually exists in the repo (no
+    silent-skip typos) and ALL THREE `.decision-log.md` files are covered — the
+    AC3-named family the dev corpus omitted entirely.
+  - **Git-date determinism (AC2 / NFR-6):** each `date` equals the independently
+    recomputed `git log -1 --format=%cI` of its sourceFile (proves git-derived, not
+    wall-clock); no date exceeds HEAD's committer date; the same-date slug tie-break
+    is provably exercised (launch set has shared dates).
+  - **Generator real-runtime tier (Rule 3):** invokes `renderGlassboxGenerator.run()`,
+    reads back `glassbox.json`, asserts it deep-equals the pure function, is plain
+    serializable JSON (every field a string — no Date objects / functions), default-
+    deny still holds at the serialization boundary, and `render-glassbox` is the
+    first registered generator (wired into `pnpm build`).
+  - **No-network (FR-33):** extends the source-scan guard to
+    `content/glassbox.allowlist.ts`.
+
+### Dev-authored (verified rigorous, retained as-is)
+
+- [x] `scripts/render-glassbox.test.ts` — 23 tests: allowlist slug coverage, no-leak
+  (body + path), contract (unique slug / non-empty body / ISO-8601 date / type-in-
+  union), two-call determinism, fail-loud on missing file (throws + message names
+  the file), source-level no-network / no-nondeterminism guard.
+- [x] `scripts/build-content.test.ts` — registry-count assertions updated 0→1
+  (`render-glassbox` registered as the first generator).
+
+## Mutation verification (the default-deny suite is NOT vacuous)
+
+Poisoned the allowlist with a real `.decision-log.md` entry → **exactly 3 security
+tests failed** as designed (NEGATIVE identity, corpus sweep, serialization
+boundary). Reverted the allowlist, regenerated `glassbox.json` from the clean
+source, and confirmed the working tree is clean. This proves the suite genuinely
+fails on a leak rather than passing for the wrong reason.
+
+## Coverage (Story 2.1 ACs)
+
+| AC | Covered by | Status |
+|----|-----------|--------|
+| AC1 — one default-deny allowlist, single source of truth | structural `render ⊆ allowlist` + dev slug-coverage | ✅ |
+| AC2 — deterministic render, git-committer date | git-date equality + byte-stable build (sha256 ×2) + dev two-call deep-equal | ✅ |
+| AC3 — default-deny never-render set cannot leak | NEGATIVE + POSITIVE CONTROL + SWEEP + STRUCTURAL (mutation-verified) | ✅ |
+| AC4 — fail-loud on missing/unreadable sourceFile | dev throw tests | ✅ |
+| AC5 — data contract (unique slug, non-empty body, ISO-8601 date, type-in-union) | dev contract tests + generator serializable-JSON test | ✅ |
+| FR-33 — no network | source-scan guards on `render-glassbox.ts` (dev) + `glassbox.allowlist.ts` (QA) | ✅ |
+| NFR-6 — byte-identical at same git state | generator byte-stability (sha256) + git-date mechanism | ✅ |
+
+## Verification (all run, all pass)
+
+- `pnpm --filter @portfolio/scripts test` → **6 files, 71 tests passed** (was 5/57;
+  +1 file / +14 tests). The new file is discoverable by the scripts vitest config
+  (`include: ['**/*.test.ts']`) and runs under root `pnpm test` / `test:all` →
+  **Rule 8 satisfied**.
+- `pnpm --filter web test` → **11 files, 268 tests passed** (unaffected — QA work is
+  scripts-only).
+- Determinism: `glassbox.json` sha256 identical across two generator runs (NFR-6).
+- API package test (`EADDRINUSE: 8787`) intentionally NOT gated — environmental
+  (deployed `portfolio-api` owns the port), tracked in `deferred-work.md`, unrelated
+  to Story 2.1 (which touches no api code).
+
+## Next Steps
+
+- Stories 2.2/2.3 add the browser/Playwright real-runtime tier when the Glass Box
+  pages consume this reader data (the consumer side of Rule 1 / Rule 3).

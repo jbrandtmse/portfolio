@@ -36,22 +36,28 @@ const orchestratorCode = orchestratorSource
   .replace(/\/\*[\s\S]*?\*\//g, '')
   .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
 
-describe('content-pipeline orchestrator — empty registry is a no-op-safe foundation (AC1)', () => {
-  it('ships an EMPTY generator registry now (the first generators land in Story 2.1 / 4.1)', () => {
-    // Story 1.8 delivers the SCAFFOLD, not the generators (Rule 1 "no consumers
-    // yet"). The registry must be empty until Glass Box (2.1) / KB index (4.1).
+describe('content-pipeline orchestrator — registry state (AC1)', () => {
+  it('has exactly ONE generator registered: render-glassbox (Story 2.1 / AR-13)', () => {
+    // Story 2.1 is the first generator to land. The registry now has 1 entry.
+    // Next: Story 4.1 adds build-kb-index (the second entry).
     expect(Array.isArray(CONTENT_GENERATORS)).toBe(true);
-    expect(CONTENT_GENERATORS).toHaveLength(0);
+    expect(CONTENT_GENERATORS).toHaveLength(1);
+    expect(CONTENT_GENERATORS[0]!.name).toBe('render-glassbox');
   });
 
-  it('runs clean (resolves, no throw) with the empty registry', async () => {
+  it('runs clean (resolves, no throw) with an injected empty registry', async () => {
     const logs: string[] = [];
-    await expect(runPipeline({ log: (m) => logs.push(m) })).resolves.toBeUndefined();
+    // Inject empty registry — the real registry now has render-glassbox (file IO).
+    await expect(
+      runPipeline({ generators: [], log: (m) => logs.push(m) }),
+    ).resolves.toBeUndefined();
   });
 
   it('logs what it runs so the build is observable (AC1 / IAC-1)', async () => {
     const logs: string[] = [];
-    await runPipeline({ log: (m) => logs.push(m) });
+    // Inject an empty registry to test the orchestrator's logging in isolation
+    // (the real registry now has render-glassbox, which does real file IO).
+    await runPipeline({ generators: [], log: (m) => logs.push(m) });
     // It announces start + the (zero) generator count + completion — observable
     // in `pnpm build` output even when nothing is generated yet.
     const joined = logs.join('\n');
