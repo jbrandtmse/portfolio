@@ -26,3 +26,10 @@
 2026-06-06T03:50:23Z	Story 1.3	qa_complete	spawn_at=2026-06-06T03:44:30Z model=claude-opus-4-8 tests=web/test/HeroStatic.component.test.ts tests_added=7 first_run_failures=0 clarifications=0 closing_sections_present=true
 2026-06-06T03:57:58Z	Story 1.3	cr_complete	spawn_at=2026-06-06T03:50:30Z model=claude-opus-4-8 resolved=0 deferred=1 dismissed=0 high=0 med=0 low=1 clarifications=0 closing_sections_present=true
 2026-06-06T03:58:53Z	Story 1.3	smoke_complete	method=browser result=pass iterations=1 defects_caught=0 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-1.3-hero.png model=claude-opus-4-8
+2026-06-06T03:59:06Z	Story 1.3	committed	sha=0d71918 submodules=
+2026-06-06T04:02:22Z	Story 1.4	story_created	path=_bmad-output/implementation-artifacts/1-4-home-scene-scaffold-scene-rail-skip-progress.md
+2026-06-06T04:20:07Z	Story 1.4	dev_complete	spawn_at=2026-06-06T04:02:40Z model=claude-opus-4-8 files=5 clarifications=0 nfr_tripwires=0 adr_violations_surfaced=0 cycle_iteration=1 closing_sections_present=true
+2026-06-06T04:20:11Z	Story 1.4	adr_verifications_complete	tool=none acs=none result=none_required
+2026-06-06T04:24:13Z	Story 1.4	qa_complete	spawn_at=2026-06-06T04:20:20Z model=claude-opus-4-8 tests=web/test/SceneRail.component.test.ts tests_added=6 first_run_failures=0 clarifications=0 closing_sections_present=true
+2026-06-06T04:32:22Z	Story 1.4	cr_complete	spawn_at=2026-06-06T04:26:30Z model=claude-opus-4-8 resolved=0 deferred=2 dismissed=3 high=0 med=0 low=2 clarifications=0 closing_sections_present=true
+2026-06-06T04:34:03Z	Story 1.4	smoke_complete	method=browser result=pass iterations=1 defects_caught=0 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-1.4-scenes-rail.png model=claude-opus-4-8

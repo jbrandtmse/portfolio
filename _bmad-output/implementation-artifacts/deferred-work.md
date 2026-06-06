@@ -102,3 +102,41 @@ resolution (usually the story that should own the fix).
   `web/src/components/hero/HeroStatic.astro:85` emits `I&rsquo;m here to book a talk`, which builds to the U+2019 right-single-quote glyph in `dist/index.html`. EXPERIENCE.md §"Named strings (canonical)" writes the CTA with a straight ASCII apostrophe (`"I'm here to book a talk"`). The Dev Notes direct "use the canonical strings EXACTLY … do not normalize," so this is a (minor) deviation from the spine's literal string.
   - **Deferral rationale:** the rendered glyph is the typographically correct apostrophe and faithfully matches the visual mockup (`mockups/hero.html:672` itself uses `&rsquo;` for this exact CTA, and the spine designates the mock as the composition/visual reference). Neither EXPERIENCE.md nor DESIGN.md gives any smart-quote/typographic-apostrophe directive, and a markdown source naturally types `'` even when the intended rendered glyph is `'`. The "do not normalize" guidance is, in context, aimed at the enumerated casing/period hazards (Title-case vs lowercase, no trailing period vs period on the `<h1>`), not at an ASCII-vs-Unicode apostrophe. No word/meaning changes; the page- and component-level tests match on `book a talk` and are unaffected. Forcing a straight ASCII apostrophe would arguably be *less* faithful to the mock and to good typography. Classified LOW and deferred rather than patched to avoid pre-empting a house-style decision the owner has not made.
   - **Suggested resolution:** a one-line owner decision on house style for apostrophes/quotes in user-facing copy. If straight ASCII apostrophes are preferred site-wide, change `I&rsquo;m` → `I'm` here (and codify the convention, e.g. a lint/format rule or a `.claude/rules` copy-style note) so future copy is consistent; otherwise keep the curly form and consider adding a one-line "smart-quotes in user copy" note to the spine's Microcopy rules so the canonical strings and the rendered output agree on the glyph.
+
+---
+
+## Deferred from: code review of story-1.4 (2026-06-06)
+
+- **[1.4 · LOW] The last scene (`#close`) may not receive `aria-current` via scroll at the page bottom.**
+  `web/src/components/scene/SceneRail.astro:531-540` — the scroll enhancement's
+  `IntersectionObserver` uses `rootMargin: '-30% 0px -60% 0px'`, so the "active" band is
+  only the 30–40% horizontal slice of the viewport. A short final section (`#close`) at
+  the document bottom can fail to cross the 40% line before the page bottoms out, so the
+  semantic `aria-current` (and the "Scene N of 7" number) can stick on the second-to-last
+  scene even when the visitor has scrolled to the very end.
+  - **Deferral rationale:** this is an enhancement-quality nuance, not an AC failure. The
+    AC4 static baseline is complete and unaffected (`aria-current` on `#hero`, static
+    meter, all anchors followable JS-off); the FR-2 "Skip to the end" control and the
+    Close rail/menu anchors all navigate to `#close` regardless; AC2's "current scene …
+    indicated via `aria-current` … as the visitor scrolls" holds for the interior scenes.
+    The fix belongs with the centralized motion logic, not as an ad-hoc patch now.
+  - **Suggested resolution:** in **Story 1.9** (consolidate the gate + observer into
+    `web/src/lib/motion.ts`), add a bottom-of-page fallback that activates the last scene
+    when `scrollY + innerHeight` is within a small epsilon of `scrollHeight` (or observe a
+    sentinel at the page foot), so the final scene reliably lights at the end of scroll.
+
+- **[1.4 · LOW] Current-tick halo color is a literal `rgba(30,58,95,0.2)` rather than token-derived.**
+  `web/src/components/scene/SceneRail.astro:266` renders the current-tick "soft halo" as
+  `outline: 3px solid rgba(30,58,95,0.2)`. The literal equals `--color-accent` (`#1E3A5F`)
+  at 20% alpha and matches the DESIGN `tick-current` halo spec (`3px rgba(30,58,95,0.20)`)
+  verbatim, but it is a hardcoded color value rather than derived from the accent token.
+  - **Deferral rationale:** intentional and spec-faithful. There is currently no
+    channel/alpha token for the accent, and applying alpha to a hex custom property would
+    require `color-mix()` or rgb-channel tokens — a change to the tokens layer that is out
+    of scope for this story. The story's Dev Agent Record already documents this decision.
+    Not a defect; the box-shadow→outline substitution is the load-bearing correctness call
+    (and is correct — it preserves the one-shadow invariant).
+  - **Suggested resolution:** when the tokens layer gains channel/alpha tokens (or a
+    `color-mix()` convention is adopted), replace the literal with a token-derived value so
+    the halo tracks any future accent change. Track with the design-tokens owner; low
+    priority.

@@ -1,0 +1,543 @@
+---
+/**
+ * SceneRail — the persistent home-arc progress / jump / skip affordance
+ * (Story 1.4, AC2/AC3/AC4; FR-2). DESIGN §Components → scene-rail; EXPERIENCE
+ * §Component-Patterns → Scene-rail, §Responsive (rail reflow), §State-Patterns
+ * (JS-off + Reduced-motion → the meter becomes a static filled bar).
+ *
+ * THIS IS the FR-2 skip/progress affordance — the antidote to scroll-jacking.
+ * The page is scroll-native; the rail only reflects position and jumps. No
+ * camera path / scroll-jacking here (that is the Stage-2 layer, Epic 5).
+ *
+ * Desktop  → a slim right-edge vertical rail on --color-surface-raised with a
+ *            left hairline: 7 scene entries, a "Scene N of 7" progress meter, a
+ *            "Skip to the end" outline button, and a "Jump: book a talk".
+ * Mobile   → collapses to a sticky top progress bar + a native <details>
+ *            "Jump to section" menu carrying the SAME 7 anchors + skip + jump.
+ *
+ * Each of the 7 scene entries is a REAL in-page anchor (<a href="#hero">…), a
+ * jump-to-scene target with a ≥44×44px hit area and a visible :focus-visible
+ * navy ring — followable JS-off, keyboard-operable. The decorative tick glyph is
+ * aria-hidden; the scene-NAME link text carries the meaning and the navigation.
+ * The current scene is signalled by aria-current="true" + label weight — NEVER
+ * by color alone (the lit tick is redundant, not the sole signal).
+ *
+ * 0-JS baseline (AC4): aria-current sits on #hero, the meter renders as a STATIC
+ * filled bar at "Scene 1 of 7", and every anchor / skip / jump works. The single
+ * tiny enhancement script (below) is gated by TWO layers — a CSS
+ * prefers-reduced-motion media query (the scroll-driven meter fill) AND a JS
+ * init-guard that checks prefers-reduced-motion and does nothing if reduced
+ * (the semantic aria-current tracking, which CSS cannot do). Keep it tiny (NFR-1).
+ *
+ * Flat (DESIGN §Elevation): no box-shadow anywhere — depth is tone + hairline.
+ * The current-tick "soft halo" is rendered with `outline` (a ring, not an
+ * elevation shadow): the spine forbids box-shadow on any surface but the Guide
+ * ("if any other element grows a shadow, the system is broken" — DESIGN), so the
+ * mockup's box-shadow halo is rendered here as the spec-faithful flat ring.
+ */
+
+// The locked Stage-1 scene order (EXPERIENCE §"Scene order (Stage 1, locked)").
+// id = the in-page anchor / matching <section> id; label = the scene-name link
+// text that carries the meaning. Order here IS the DOM order in the rail.
+const SCENES = [
+  { id: 'hero', label: 'Hero' },
+  { id: 'thesis', label: 'Thesis' },
+  { id: 'timeline', label: 'Timeline' },
+  { id: 'speaker', label: 'Speaker' },
+  { id: 'flagship', label: 'Flagship' },
+  { id: 'glass-box', label: 'Glass Box' },
+  { id: 'close', label: 'Close' },
+] as const;
+
+const TOTAL = SCENES.length;
+---
+
+<nav class="scene-rail" aria-label="Scene navigation: progress, jump, and skip">
+  {/* ── DESKTOP: the slim right-edge rail ─────────────────────────────────── */}
+  <div class="rail-d">
+    <p class="rail-d__head">Scenes · progress</p>
+
+    <ol class="rail-d__list">
+      {
+        SCENES.map((scene, i) => (
+          <li class="rail-d__item">
+            <a
+              class:list={['rail-d__link', { 'is-current': i === 0 }]}
+              href={`#${scene.id}`}
+              data-scene-link={scene.id}
+              {...(i === 0 ? { 'aria-current': 'true' } : {})}
+            >
+              <span class="rail-d__tick" aria-hidden="true" />
+              <span class="rail-d__num" aria-hidden="true">
+                {i + 1}
+              </span>
+              <span class="rail-d__name">{scene.label}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+
+    {
+      /* Progress meter — static filled bar at the baseline; the fill width is
+       driven by a CSS scroll-driven animation only when motion is allowed. The
+       "Scene N of 7" text is the non-color signal (the JS enhancement updates N). */
+    }
+    <div class="rail-d__progress">
+      <div class="rail-d__meter" aria-hidden="true">
+        <span class="rail-d__meter-fill"></span>
+      </div>
+      <p class="rail-d__lab">Scene <span data-scene-current>1</span> of {TOTAL}</p>
+    </div>
+
+    <div class="rail-d__foot">
+      <a class="rail-d__skip" href="#close"
+        >Skip to the end <span aria-hidden="true">&darr;</span></a
+      >
+      <a class="rail-d__jump" href="/speaking">Jump: book a talk</a>
+    </div>
+  </div>
+
+  {/* ── MOBILE: sticky top progress bar + "Jump to section" disclosure ─────── */}
+  <div class="rail-m">
+    <div class="rail-m__bar" aria-hidden="true">
+      <span class="rail-m__bar-fill"></span>
+    </div>
+    <details class="rail-m__menu">
+      <summary class="rail-m__summary">
+        <span class="rail-m__lab">Scene <span data-scene-current>1</span> of {TOTAL}</span>
+        <span class="rail-m__cta">Jump to section <span aria-hidden="true">&#9662;</span></span>
+      </summary>
+      <ol class="rail-m__list">
+        {
+          SCENES.map((scene, i) => (
+            <li>
+              <a class="rail-m__link" href={`#${scene.id}`}>
+                <span class="rail-m__num" aria-hidden="true">
+                  {i + 1}
+                </span>
+                {scene.label}
+              </a>
+            </li>
+          ))
+        }
+        <li class="rail-m__sep">
+          <a class="rail-m__link rail-m__link--skip" href="#close"> Skip to the end </a>
+        </li>
+        <li>
+          <a class="rail-m__link rail-m__link--jump" href="/speaking"> Jump: book a talk </a>
+        </li>
+      </ol>
+    </details>
+  </div>
+</nav>
+
+<style>
+  /* The rail is fixed chrome — it overlays the scroll-native page rather than
+     consuming a column, so the locked scene DOM order is untouched. */
+  .scene-rail {
+    font-family: var(--font-family-base);
+  }
+
+  /* ── DESKTOP rail ──────────────────────────────────────────────────────────
+     A slim, flat, right-edge vertical rail on raised cream with a left hairline
+     (DESIGN scene-rail: width ~208px). Hidden on mobile (the .rail-m bar takes
+     over). Fixed so it persists as the page scrolls. */
+  .rail-d {
+    display: none;
+  }
+
+  @media (min-width: 1024px) {
+    .rail-d {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 5;
+      width: 208px;
+      display: flex;
+      flex-direction: column;
+      padding: 26px 20px;
+      background: var(--color-surface-raised);
+      border-left: 1px solid var(--color-border-hairline);
+    }
+
+    /* The mobile sticky bar is desktop-irrelevant. */
+    .rail-m {
+      display: none;
+    }
+  }
+
+  .rail-d__head {
+    margin: 0 0 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-border-hairline);
+    font-size: 9.5px;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-ink-secondary);
+  }
+
+  .rail-d__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .rail-d__item {
+    position: relative;
+  }
+
+  /* The whole tick+number+name row is ONE jump target, padded so the 9px dot
+     grows to a ≥44px hit area (DESIGN tick-hit-area). A real <a> — JS-off. */
+  .rail-d__link {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-height: 44px;
+    padding: 7px 6px;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-regular);
+    line-height: 1.2;
+    color: var(--color-ink-secondary);
+    text-decoration: none;
+  }
+
+  .rail-d__link:hover {
+    color: var(--color-accent);
+  }
+
+  /* Visible keyboard focus — 2px navy ring, 2px offset (DESIGN tick-focus). */
+  .rail-d__link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* tick: 9px circle, 1px accent ring, transparent fill (DESIGN). Decorative. */
+  .rail-d__tick {
+    flex: 0 0 auto;
+    width: 9px;
+    height: 9px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-accent);
+    background: transparent;
+  }
+
+  .rail-d__num {
+    flex: 0 0 auto;
+    width: 1.1em;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--color-ink-meta-min);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rail-d__name {
+    /* The scene-NAME carries the meaning; nothing relies on the tick alone. */
+  }
+
+  /* CURRENT scene — status is in WEIGHT + aria-current (never color alone). The
+     navy edge-bar + the lit tick (with a flat outline halo, not a shadow) are
+     redundant reinforcements. Driven by [aria-current] so the JS enhancement
+     and the static baseline share one source of truth. */
+  .rail-d__link[aria-current='true'] {
+    color: var(--color-accent);
+    font-weight: var(--font-weight-bold);
+  }
+
+  /* 3px navy edge-bar at the left of the current row (DESIGN tick-current). */
+  .rail-d__link[aria-current='true']::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 6px;
+    bottom: 6px;
+    width: 3px;
+    background: var(--color-accent);
+  }
+
+  .rail-d__link[aria-current='true'] .rail-d__tick {
+    background: var(--color-accent);
+    /* The "soft halo" rendered as a flat ring via outline — NOT box-shadow (the
+       flat system reserves shadow for the Guide alone; DESIGN §Elevation). */
+    outline: 3px solid rgba(30, 58, 95, 0.2);
+    outline-offset: 0;
+  }
+
+  /* PROGRESS meter — 5px track in grid-line, accent fill, radius 3px (DESIGN). */
+  .rail-d__progress {
+    margin: 18px 0 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--color-border-hairline);
+  }
+
+  .rail-d__meter {
+    height: 5px;
+    margin-bottom: 7px;
+    border-radius: 3px;
+    background: var(--color-grid-line);
+    overflow: hidden;
+  }
+
+  /* Static baseline: a filled bar at "Scene 1 of 7" (1/7 ≈ 14.3%). The animated
+     scroll-driven width-fill is the ENHANCEMENT, applied only when motion is
+     allowed (CSS layer of the two-layer gate) — it auto-degrades to this static
+     bar under reduced-motion / unsupported browsers. */
+  .rail-d__meter-fill {
+    display: block;
+    height: 100%;
+    width: 14.3%;
+    background: var(--color-accent);
+    border-radius: 3px;
+  }
+
+  .rail-d__lab {
+    margin: 0;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-secondary);
+  }
+
+  .rail-d__foot {
+    margin-top: auto;
+  }
+
+  /* Skip to the end — outline button, 1px accent, radius 7px (DESIGN skip-button). */
+  .rail-d__skip {
+    display: block;
+    padding: 9px 8px;
+    border: 1px solid var(--color-accent);
+    border-radius: 7px;
+    font-size: 11px;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  .rail-d__skip:hover {
+    color: var(--color-accent-hover);
+    border-color: var(--color-accent-hover);
+  }
+
+  .rail-d__skip:focus-visible,
+  .rail-d__jump:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .rail-d__jump {
+    display: block;
+    margin-top: 9px;
+    text-align: center;
+    font-size: 10.5px;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.06em;
+    color: var(--color-ink-secondary);
+    text-decoration: none;
+  }
+
+  .rail-d__jump:hover {
+    color: var(--color-accent-hover);
+  }
+
+  /* ── MOBILE rail: sticky top progress bar + "Jump to section" disclosure ────
+     Presentation-only reflow (same anchors); the page reading order is intact.
+     A native <details> menu → 0-JS, keyboard-operable. Shown < 1024px. */
+  .rail-m {
+    position: sticky;
+    top: 0;
+    z-index: 9;
+    background: var(--color-surface-raised);
+    border-bottom: 1px solid var(--color-border-hairline);
+  }
+
+  .rail-m__bar {
+    height: 4px;
+    background: var(--color-grid-line);
+    overflow: hidden;
+  }
+
+  /* Static baseline fill (1/7); scroll-driven width-fill is the gated enhancement. */
+  .rail-m__bar-fill {
+    display: block;
+    height: 100%;
+    width: 14.3%;
+    background: var(--color-accent);
+  }
+
+  .rail-m__menu {
+    /* native disclosure */
+  }
+
+  .rail-m__summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    min-height: 44px;
+    padding: var(--space-2) var(--space-4);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  /* Hide the default marker; the "Jump to section ▾" text is the affordance. */
+  .rail-m__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .rail-m__summary:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -2px;
+  }
+
+  .rail-m__lab {
+    font-size: 10px;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-secondary);
+  }
+
+  .rail-m__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 12px;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.03em;
+    color: var(--color-accent);
+  }
+
+  .rail-m__list {
+    margin: 0;
+    padding: var(--space-2) 0 var(--space-3);
+    list-style: none;
+    border-top: 1px solid var(--color-border-hairline);
+  }
+
+  .rail-m__link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 44px;
+    padding: var(--space-2) var(--space-4);
+    font-size: 14px;
+    color: var(--color-ink-primary);
+    text-decoration: none;
+  }
+
+  .rail-m__link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -2px;
+  }
+
+  .rail-m__num {
+    flex: 0 0 auto;
+    width: 1.4em;
+    font-size: 11px;
+    color: var(--color-ink-meta-min);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rail-m__sep {
+    margin-top: var(--space-2);
+    border-top: 1px solid var(--color-border-hairline);
+  }
+
+  .rail-m__link--skip,
+  .rail-m__link--jump {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-accent);
+  }
+
+  /* ── The two-layer reduced-motion gate — CSS layer ─────────────────────────
+     The scroll-driven width-fill (the meter ENHANCEMENT) is applied ONLY when
+     the user has no reduced-motion preference. Otherwise the static filled bars
+     above stand (EXPERIENCE State-Patterns: "static filled bar at Scene N of 7").
+     animation-timeline: scroll() drives the fill with zero JS; it is inert in
+     browsers that do not support scroll-driven animations (progressive — they
+     keep the static baseline). The JS init-guard below is the second layer.
+     TODO(Story 1.9): consolidate gate into motion.ts. */
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes scene-rail-fill {
+      from {
+        width: 0%;
+      }
+      to {
+        width: 100%;
+      }
+    }
+
+    .rail-d__meter-fill,
+    .rail-m__bar-fill {
+      width: 0%;
+      animation: scene-rail-fill linear both;
+      animation-timeline: scroll(root block);
+    }
+  }
+</style>
+
+{
+  /*
+  The single, tiny scene-rail enhancement (NFR-1, well under 1KB). It does the
+  ONE thing CSS cannot: move the semantic aria-current + the "Scene N of 7"
+  number to the in-view scene. It is the JS half of the two-layer reduced-motion
+  gate — it bails immediately if the user prefers reduced motion (the static
+  baseline + the CSS scroll-fill already cover that case). It never touches
+  scroll (no scroll-jacking; the page is scroll-native).
+  TODO(Story 1.9): consolidate this gate + observer wiring into motion.ts.
+*/
+}
+<script>
+  // Two-layer gate, JS half: do nothing under reduced-motion. The static
+  // baseline (aria-current on #hero, "Scene 1 of 7") then stands as authored.
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if (!reduce.matches) {
+    const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-scene-link]'));
+    const labels = Array.from(document.querySelectorAll<HTMLElement>('[data-scene-current]'));
+    const order = links.map((a) => a.dataset.sceneLink ?? '');
+    const sections = order
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+
+    if (links.length > 0 && sections.length > 0) {
+      let activeId = order[0] ?? '';
+
+      const setActive = (id: string) => {
+        if (id === activeId) return;
+        activeId = id;
+        for (const a of links) {
+          if (a.dataset.sceneLink === id) {
+            a.setAttribute('aria-current', 'true');
+          } else {
+            a.removeAttribute('aria-current');
+          }
+        }
+        const n = order.indexOf(id) + 1;
+        if (n > 0) {
+          for (const lab of labels) lab.textContent = String(n);
+        }
+      };
+
+      // The scene whose top is nearest the upper third of the viewport wins —
+      // a minimal "current section" heuristic, no scroll handler churn.
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) setActive(entry.target.id);
+          }
+        },
+        { rootMargin: '-30% 0px -60% 0px', threshold: 0 },
+      );
+
+      for (const section of sections) observer.observe(section);
+    }
+  }
+</script>
