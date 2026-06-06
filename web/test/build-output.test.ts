@@ -7,10 +7,11 @@ import { fileURLToPath } from 'node:url';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 /**
- * Build-output assertions for the design-system foundation (Story 1.2,
- * IAC-1 / IAC-2). These run a REAL `astro build` and assert on the produced
- * static HTML + CSS — the consumer-observable form of AC1/AC3/AC4 and genuine
- * real-runtime evidence for a user-facing surface (skill-rules Rule 3).
+ * Build-output assertions for the design-system foundation (Story 1.2) and the
+ * calm-credible hero + audience fork (Story 1.3, IAC-1 / IAC-2). These run a
+ * REAL `astro build` and assert on the produced static HTML + CSS — the
+ * consumer-observable form of the ACs and genuine real-runtime evidence for a
+ * user-facing surface (skill-rules Rule 3).
  *
  * The build runs once in beforeAll; every test reads from web/dist.
  */
@@ -65,10 +66,53 @@ describe('built home page (web/dist/index.html)', () => {
     expect(indexHtml).toContain('Joshua R. Brandt, MSE');
   });
 
-  it('renders the primary action as a real <a> or <button> (not a div)', () => {
-    const primary = indexHtml.match(/<(a|button)\b[^>]*class="[^"]*btn--primary[^"]*"[^>]*>/);
-    expect(primary).not.toBeNull();
-    expect(['a', 'button']).toContain(primary![1]);
+  it('renders exactly one <h1> reading the canonical positioning line (Story 1.3 IAC-1)', () => {
+    const h1s = indexHtml.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/g) ?? [];
+    expect(h1s).toHaveLength(1);
+    // Strip any inner tags/whitespace and assert the exact Title-case, no-period
+    // canonical string (no normalization — DESIGN locks this casing).
+    const text = h1s[0]!
+      .replace(/<[^>]+>/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    expect(text).toBe('Seasoned, building at the frontier');
+  });
+
+  it('carries the "built in the open · a BMAD Method project" framing (Story 1.3 IAC-1)', () => {
+    expect(indexHtml).toContain('built in the open · a BMAD Method project');
+  });
+
+  it('wraps the hero in a <section id="hero"> (locked scene order starts at Hero)', () => {
+    expect(indexHtml).toMatch(/<section\b[^>]*\sid="hero"[^>]*>/);
+  });
+
+  it('renders the three fork controls as real links with the exact hrefs (Story 1.3 IAC-1)', () => {
+    // Explore → in-page Scene-Arc anchor #thesis (Story 1.4 finalizes the target).
+    expect(indexHtml).toMatch(/<a\b[^>]*\shref="#thesis"[^>]*>[\s\S]*?Explore[\s\S]*?<\/a>/);
+    // "I'm here to book a talk" → /speaking (route stub from Story 1.5; bypasses Guide).
+    expect(indexHtml).toMatch(/<a\b[^>]*\shref="\/speaking"[^>]*>[\s\S]*?book a talk[\s\S]*?<\/a>/);
+    // Quiet "Or ask my Guide about the work" → /faq (becomes the Guide opener in Epic 4).
+    expect(indexHtml).toMatch(
+      /<a\b[^>]*\shref="\/faq"[^>]*>[\s\S]*?ask my Guide about the work[\s\S]*?<\/a>/,
+    );
+  });
+
+  it('renders the "Explore" primary action as a real <a> driven by the accent token (Story 1.3)', () => {
+    // Explore is the primary fork CTA — a real <a> (followable JS-off), styled
+    // with the shared .btn--primary navy fill (not a div). Match the opening tag
+    // and assert it carries BOTH the href and the primary class, order-agnostic
+    // (Astro emits href before the class:list-built class attribute).
+    const tag = indexHtml.match(/<a\b[^>]*\shref="#thesis"[^>]*>/);
+    expect(tag).not.toBeNull();
+    expect(tag![0]).toMatch(/class="[^"]*\bbtn--primary\b[^"]*"/);
+  });
+
+  it('keeps the quiet Guide entry distinct from the two fork buttons (Story 1.3 IAC-1)', () => {
+    // The /faq Guide link is an inline link, NOT a .btn — visually distinct from
+    // the Explore/book-a-talk buttons (DESIGN: a quiet, understated entry).
+    const guideLink = indexHtml.match(/<a\b[^>]*\shref="\/faq"[^>]*>/);
+    expect(guideLink).not.toBeNull();
+    expect(guideLink![0]).not.toMatch(/class="[^"]*\bbtn\b/);
   });
 
   it('includes the navy-fill primary button driven by the accent token', () => {

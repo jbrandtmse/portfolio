@@ -93,3 +93,12 @@ resolution (usually the story that should own the fix).
     omit the footer, gate the region with `Astro.slots.has('footer')` (or render the
     placeholder only in dev) and update the build-output footer assertion to verify the
     slot renders **when filled** rather than asserting an empty `<footer>` ships.
+
+---
+
+## Deferred from: code review of story-1.3 (2026-06-06)
+
+- **[1.3 · LOW] Fork CTA renders the curly apostrophe (`I&rsquo;m`, U+2019) where the spine's canonical string uses a straight ASCII apostrophe (`I'm`).**
+  `web/src/components/hero/HeroStatic.astro:85` emits `I&rsquo;m here to book a talk`, which builds to the U+2019 right-single-quote glyph in `dist/index.html`. EXPERIENCE.md §"Named strings (canonical)" writes the CTA with a straight ASCII apostrophe (`"I'm here to book a talk"`). The Dev Notes direct "use the canonical strings EXACTLY … do not normalize," so this is a (minor) deviation from the spine's literal string.
+  - **Deferral rationale:** the rendered glyph is the typographically correct apostrophe and faithfully matches the visual mockup (`mockups/hero.html:672` itself uses `&rsquo;` for this exact CTA, and the spine designates the mock as the composition/visual reference). Neither EXPERIENCE.md nor DESIGN.md gives any smart-quote/typographic-apostrophe directive, and a markdown source naturally types `'` even when the intended rendered glyph is `'`. The "do not normalize" guidance is, in context, aimed at the enumerated casing/period hazards (Title-case vs lowercase, no trailing period vs period on the `<h1>`), not at an ASCII-vs-Unicode apostrophe. No word/meaning changes; the page- and component-level tests match on `book a talk` and are unaffected. Forcing a straight ASCII apostrophe would arguably be *less* faithful to the mock and to good typography. Classified LOW and deferred rather than patched to avoid pre-empting a house-style decision the owner has not made.
+  - **Suggested resolution:** a one-line owner decision on house style for apostrophes/quotes in user-facing copy. If straight ASCII apostrophes are preferred site-wide, change `I&rsquo;m` → `I'm` here (and codify the convention, e.g. a lint/format rule or a `.claude/rules` copy-style note) so future copy is consistent; otherwise keep the curly form and consider adding a one-line "smart-quotes in user copy" note to the spine's Microcopy rules so the canonical strings and the rendered output agree on the glyph.

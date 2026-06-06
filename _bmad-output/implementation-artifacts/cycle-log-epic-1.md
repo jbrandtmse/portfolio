@@ -19,3 +19,10 @@
 2026-06-06T03:19:37Z	Story 1.2	qa_complete	spawn_at=2026-06-06T03:14:40Z model=claude-opus-4-8 tests=web/test/Button.component.test.ts tests_added=5 first_run_failures=0 clarifications=0 closing_sections_present=true
 2026-06-06T03:29:26Z	Story 1.2	cr_complete	spawn_at=2026-06-06T03:15:30Z model=claude-opus-4-8 resolved=1 deferred=2 dismissed=2 high=0 med=1 low=2 clarifications=0 closing_sections_present=true
 2026-06-06T03:31:08Z	Story 1.2	smoke_complete	method=browser result=pass iterations=1 defects_caught=0 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-1.2-home.png model=claude-opus-4-8
+2026-06-06T03:31:25Z	Story 1.2	committed	sha=a0dca83 submodules=
+2026-06-06T03:33:56Z	Story 1.3	story_created	path=_bmad-output/implementation-artifacts/1-3-calm-credible-hero-with-the-audience-fork.md
+2026-06-06T03:44:20Z	Story 1.3	dev_complete	spawn_at=2026-06-06T03:34:10Z model=claude-opus-4-8 files=5 clarifications=0 nfr_tripwires=0 adr_violations_surfaced=0 cycle_iteration=1 closing_sections_present=true
+2026-06-06T03:44:24Z	Story 1.3	adr_verifications_complete	tool=none acs=none result=none_required
+2026-06-06T03:50:23Z	Story 1.3	qa_complete	spawn_at=2026-06-06T03:44:30Z model=claude-opus-4-8 tests=web/test/HeroStatic.component.test.ts tests_added=7 first_run_failures=0 clarifications=0 closing_sections_present=true
+2026-06-06T03:57:58Z	Story 1.3	cr_complete	spawn_at=2026-06-06T03:50:30Z model=claude-opus-4-8 resolved=0 deferred=1 dismissed=0 high=0 med=0 low=1 clarifications=0 closing_sections_present=true
+2026-06-06T03:58:53Z	Story 1.3	smoke_complete	method=browser result=pass iterations=1 defects_caught=0 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-1.3-hero.png model=claude-opus-4-8
