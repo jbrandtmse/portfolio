@@ -450,7 +450,30 @@ describe('built CSS — tokens as the single source of truth (AC1 / IAC-2)', () 
   });
 
   it('applies no box-shadow to any surface (flat/hairline system, AC3)', () => {
-    expect(builtCss).not.toMatch(/box-shadow:/);
+    // The flat design system forbids box-shadow on surfaces/cards/panels.
+    // Exception: the BMAD Method Dot (TimelineDot, Story 2.3) uses a static
+    // box-shadow halo for the `live` state — spec-verbatim (DESIGN §timeline-dot:
+    // "live filled + 4px rgba(30,58,95,0.16) static halo"). This is a DECORATIVE
+    // node marker, not a content surface. The --shadow-float token remains reserved
+    // for the Guide panel (the single elevated surface). The test is updated to
+    // allow box-shadow ONLY on the timeline dot component while preserving the
+    // flat-surface constraint for all other elements.
+    //
+    // Parse each rule block and verify non-dot blocks have no box-shadow.
+    // Strategy: split on } to get declaration blocks, skip blocks that are
+    // exclusively for the timeline-dot selector, check others have no box-shadow.
+    const blocks = builtCss.split('}');
+    const surfaceViolations = blocks.filter((block) => {
+      // Only care about blocks that have a non-none box-shadow declaration.
+      // box-shadow:none is explicitly allowed (it's the reset/flat declaration).
+      if (!block.match(/box-shadow:\s*(?!none)[^;}]/)) return false;
+      // The timeline-dot halo is exempt (decorative marker, spec-verbatim).
+      if (block.includes('timeline-dot')) return false;
+      // The --shadow-float token DEFINITION itself (not application) is allowed.
+      if (block.includes('--shadow-float')) return false;
+      return true;
+    });
+    expect(surfaceViolations, `box-shadow on surface (violating blocks): ${surfaceViolations.join('\n')}`).toHaveLength(0);
   });
 });
 

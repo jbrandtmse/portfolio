@@ -1,38 +1,331 @@
 ---
 /**
- * /glass-box — the Glass Box index Mirror route (Story 1.5 stub; AC2).
+ * /glass-box — the Glass Box index (Story 2.3; replaces the Story 1.5 stub).
  *
- * Answer-first, self-canonical, exactly one <h1> via MirrorLayout. RESOLVES the
- * forward-reference from the 1.4 Glass Box teaser ("Open the Glass Box" →
- * /glass-box). Epic 2 fills the body with the curated build-story index; the
- * per-artifact reader /glass-box/[artifact] is also Epic 2 (out of scope here).
- * 0 JS.
+ * The curated, chronological build-story of how this site was made. A dated
+ * vertical timeline spine of BMAD Method Dots (TimelineDot) and artifact cards
+ * (ArtifactCard), composed through MirrorLayout (answer-first, self-canonical,
+ * ONE <h1>, 0 executable JS, crawlable).
  *
- * The lede's first sentence names "Joshua R. Brandt, MSE" (GEO floor).
+ * DATA: consumes the Story 2.1 glassbox.json via the Story 2.2 loader
+ * (loadGlassboxArtifacts()). The node manifest (glassbox.index.ts) defines
+ * curation state + order; titles and dates come from real glassbox.json entries.
+ *
+ * GRACEFUL ABSENT-DATA: if glassbox.json is missing, the framing copy and
+ * ghosted nodes still render; real artifact nodes are omitted. No crash.
+ *
+ * ACs satisfied:
+ *  AC1 — dated vertical spine of BMAD Method Dots + artifact cards (TimelineDot +
+ *         ArtifactCard, each real artifact maps to a Story-2.2 reader).
+ *  AC2 — planning nodes + live shipping node + ghosted "As it accrues" nodes;
+ *         status in text + shape never color alone; ghost = dashed + "As it accrues".
+ *  AC3 — default-deny-as-taste framing; verbatim recursion beat; Glass-Box-vs-
+ *         Timeline cross-link to /timeline/ (forward-ref per Rule 3: story 2.4).
+ *  AC4 — spine IS a semantic <ol>; every link is a real <a>; 0 executable JS.
+ *  AC5 — real glassbox.json data (slug, title, date) consumed; trailing-slash links.
+ *  AC6 — exactly ONE <h1> (MirrorLayout title); ghost text uses --color-ink-ghost.
+ *
+ * EDITORIAL (Dev Notes): NO drop-cap, NO pull-quotes — reserved for reader only.
+ * Cross-link /timeline/ is a forward-reference (Story 2.4 fills it; Rule 3 note).
  */
 import MirrorLayout from '../../layouts/MirrorLayout.astro';
+import TimelineDot from '../../components/glassbox/TimelineDot.astro';
+import ArtifactCard from '../../components/glassbox/ArtifactCard.astro';
+import { loadGlassboxArtifacts } from '../../lib/glassbox';
+import { FEATURED_SLUGS, SHIPPING_NODE, GHOST_NODES } from '../../content/glassbox.index';
+import type { GlassboxArtifact } from '../../lib/glassbox';
 
 const LEDE =
-  'Joshua R. Brandt, MSE builds in the open. The Glass Box is the curated, read-only record of the real BMAD Method artifacts behind this work.';
+  'Joshua R. Brandt, MSE builds in the open. The Glass Box is the curated, read-only record of the real BMAD Method artifacts behind this work — the planning, the design, and the execution, as it happened.';
+
+// Load real artifact data from glassbox.json (Story 2.1/2.2 producer).
+// Gracefully returns [] if the file is absent — the page still renders.
+const allArtifacts = loadGlassboxArtifacts();
+
+// Build a lookup map: slug → artifact
+const artifactMap = new Map<string, GlassboxArtifact>(
+  allArtifacts.map((a) => [a.slug, a]),
+);
+
+// Resolve featured nodes to real artifact data, filter missing (graceful degradation).
+const featuredNodes = FEATURED_SLUGS
+  .map((node) => {
+    const artifact = artifactMap.get(node.slug);
+    return artifact ? { node, artifact } : null;
+  })
+  .filter((entry): entry is { node: typeof FEATURED_SLUGS[number]; artifact: GlassboxArtifact } =>
+    entry !== null,
+  )
+  // Sort chronologically by artifact date (AC5: order matches glassbox.json dates).
+  .sort((a, b) => new Date(a.artifact.date).getTime() - new Date(b.artifact.date).getTime());
 ---
 
 <MirrorLayout
   heading="The Glass Box"
   lede={LEDE}
   title="The Glass Box — Joshua R. Brandt, MSE"
-  description="The Glass Box — the curated, read-only record of the real BMAD Method artifacts behind the work of Joshua R. Brandt, MSE."
+  description="The Glass Box — the curated, dated build-story of the real BMAD Method artifacts behind the work of Joshua R. Brandt, MSE. Planning, design, and execution, in the open."
 >
-  <p class="stub-note">
-    The build-story index is on its way. Epic 2 fills this page with the curated, chronological
-    record of the real artifacts behind this work.
-  </p>
+  {/* ── Curation framing (AC3) ─────────────────────────────────────────── */}
+  <section class="glass-box__framing" aria-label="About the Glass Box">
+    <p class="glass-box__framing-lead">
+      Not everything makes it in. The Glass Box is default-deny: only artifacts that reward
+      reading — that show real thinking, not a polished surface — are published here. Curation
+      is an act of taste, not gatekeeping.
+    </p>
+
+    {/* Verbatim recursion beat (AC3, UX-DR19) */}
+    <p class="glass-box__recursion-beat">
+      You're reading the build history of the site you're reading it on. It's being built in
+      the open, right now.
+    </p>
+
+    {/* Glass-Box-vs-Timeline boundary (AC3; /timeline/ forward-ref → Story 2.4) */}
+    <p class="glass-box__boundary-note">
+      This is the <strong>Glass Box</strong> — the build history of this specific project.
+      For the cross-project arc spanning all of Josh's work, see the{' '}
+      <a href="/timeline/" class="glass-box__boundary-link">Master Timeline</a>.
+    </p>
+  </section>
+
+  {/* ── Build-story spine (AC1, AC2, AC4) ────────────────────────────── */}
+  {/*
+    JS-off (AC4): the spine IS a semantic <ol>. CSS positions the Dots alongside
+    the cards via flex; if CSS is absent, the list degrades to a plain ordered
+    list of dated artifact links. No JS needed.
+  */}
+  <section class="glass-box__spine-section" aria-label="Build story timeline">
+    <h2 class="glass-box__spine-heading">Build Story</h2>
+    <ol class="glass-box__spine" role="list">
+
+      {/* ── Featured artifact nodes (AC1, AC5) ──────────────────────── */}
+      {featuredNodes.map(({ node, artifact }) => (
+        <li class="glass-box__spine-item">
+          <div class="glass-box__dot-col">
+            <TimelineDot state={node.dotState} />
+            <span class="glass-box__spine-line" aria-hidden="true" />
+          </div>
+          <div class="glass-box__card-col">
+            <ArtifactCard
+              type={artifact.type}
+              title={artifact.title}
+              date={artifact.date}
+              curatorNote={artifact.curatorNote}
+              href={`/glass-box/${artifact.slug}/`}
+            />
+          </div>
+        </li>
+      ))}
+
+      {/* ── Shipping node (AC2: non-ghosted, live site link) ──────────── */}
+      <li class="glass-box__spine-item">
+        <div class="glass-box__dot-col">
+          <TimelineDot state="live" />
+          <span class="glass-box__spine-line" aria-hidden="true" />
+        </div>
+        <div class="glass-box__card-col">
+          <ArtifactCard
+            type={SHIPPING_NODE.type}
+            title={SHIPPING_NODE.title}
+            date={SHIPPING_NODE.date}
+            curatorNote={SHIPPING_NODE.curatorNote}
+            href={SHIPPING_NODE.href}
+            showLivePill={true}
+            external={true}
+            externalLabel={`Visit the live site: ${SHIPPING_NODE.href}`}
+          />
+          {/* Repo link — shown as a supplemental link beneath the card */}
+          {SHIPPING_NODE.repoHref && (
+            <p class="glass-box__repo-link-note">
+              {SHIPPING_NODE.repoPublic ? (
+                <a
+                  href={SHIPPING_NODE.repoHref}
+                  class="glass-box__repo-link"
+                  rel="noopener noreferrer"
+                  aria-label="Public source repository on GitHub"
+                >
+                  Public repository →
+                </a>
+              ) : (
+                <span class="glass-box__repo-open">[OPEN: public repo/commits URL to be confirmed]</span>
+              )}
+            </p>
+          )}
+        </div>
+      </li>
+
+      {/* ── Ghosted "As it accrues" nodes (AC2) ──────────────────────── */}
+      {GHOST_NODES.map((ghost) => (
+        <li class="glass-box__spine-item glass-box__spine-item--ghost">
+          <div class="glass-box__dot-col">
+            <TimelineDot state="upcoming" />
+            <span class="glass-box__spine-line" aria-hidden="true" />
+          </div>
+          <div class="glass-box__card-col">
+            {/* Ghost nodes carry NO date (status is "As it accrues"); omitting
+                it keeps the static build deterministic (NFR-6 — no build-time now). */}
+            <ArtifactCard
+              type={ghost.type}
+              title={ghost.title}
+              ghost={true}
+            />
+          </div>
+        </li>
+      ))}
+
+    </ol>
+  </section>
 </MirrorLayout>
 
 <style>
-  .stub-note {
-    margin-top: var(--space-6);
+  /* ─── Framing section ─────────────────────────────────────────────────── */
+  .glass-box__framing {
+    margin-top: var(--space-7);
+    max-width: var(--measure-reading);
+  }
+
+  .glass-box__framing-lead {
+    font-family: var(--font-family-base);
     font-size: var(--font-size-body);
     line-height: var(--line-height-body);
     color: var(--color-ink-secondary);
+  }
+
+  /* The verbatim recursion beat — italic to signal importance. */
+  .glass-box__recursion-beat {
+    margin-top: var(--space-5);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    font-style: italic;
+    line-height: var(--line-height-body);
+    color: var(--color-ink-primary);
+  }
+
+  .glass-box__boundary-note {
+    margin-top: var(--space-5);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+  }
+
+  .glass-box__boundary-link {
+    color: var(--color-accent);
+    text-decoration-line: underline;
+    text-underline-offset: 2px;
+  }
+
+  .glass-box__boundary-link:hover {
+    color: var(--color-accent-hover);
+  }
+
+  .glass-box__boundary-link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* ─── Spine section ───────────────────────────────────────────────────── */
+  .glass-box__spine-section {
+    margin-top: var(--space-section-band);
+  }
+
+  .glass-box__spine-heading {
+    font: var(--text-h2);
+    font-family: var(--font-family-base);
+    letter-spacing: var(--letter-spacing-h2);
+    color: var(--color-ink-primary);
+    margin-bottom: var(--space-7);
+  }
+
+  /* The timeline list — reset list styles; each item is a flex row. */
+  .glass-box__spine {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* ─── Spine item (dot + card row) ──────────────────────────────────── */
+  .glass-box__spine-item {
+    display: flex;
+    gap: var(--space-5);
+    align-items: flex-start;
+    position: relative;
+  }
+
+  /* Vertical spacing between spine nodes. */
+  .glass-box__spine-item + .glass-box__spine-item {
+    margin-top: var(--space-7);
+  }
+
+  /* ─── Dot column ─────────────────────────────────────────────────────── */
+  .glass-box__dot-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    padding-top: var(--space-5); /* Align dot with card top area. */
+    gap: var(--space-2);
+  }
+
+  /* Hairline spine connecting dots */
+  .glass-box__spine-line {
+    display: block;
+    width: 1px;
+    flex: 1;
+    min-height: var(--space-7);
+    background-color: var(--color-border-hairline);
+  }
+
+  /* Hide spine-line after the very last item */
+  .glass-box__spine-item:last-child .glass-box__spine-line {
+    display: none;
+  }
+
+  /* ─── Card column ────────────────────────────────────────────────────── */
+  .glass-box__card-col {
+    flex: 1;
+    min-width: 0; /* prevent flex blowout */
+  }
+
+  /* ─── Repo link note (below shipping card) ────────────────────────────── */
+  .glass-box__repo-link-note {
+    margin-top: var(--space-3);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-meta);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+  }
+
+  .glass-box__repo-link {
+    color: var(--color-ink-secondary);
+    text-decoration-line: underline;
+    text-underline-offset: 2px;
+  }
+
+  .glass-box__repo-link:hover {
+    color: var(--color-accent);
+  }
+
+  .glass-box__repo-link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  .glass-box__repo-open {
+    color: var(--color-ink-meta-min);
+  }
+
+  /* ─── Mobile ──────────────────────────────────────────────────────────── */
+  @media (max-width: 760px) {
+    .glass-box__spine-item {
+      gap: var(--space-3);
+    }
+
+    .glass-box__dot-col {
+      padding-top: var(--space-4);
+    }
   }
 </style>

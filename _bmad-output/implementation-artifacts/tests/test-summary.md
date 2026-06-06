@@ -249,3 +249,89 @@ fails on a leak rather than passing for the wrong reason.
 
 - Stories 2.2/2.3 add the browser/Playwright real-runtime tier when the Glass Box
   pages consume this reader data (the consumer side of Rule 1 / Rule 3).
+
+---
+
+# Test Automation Summary — Story 2.3 (Glass Box index — curated chronological build-story)
+
+QA stage of `/epic-cycle`. Story 2.3 is a **user-facing surface** (`/glass-box`) →
+**Rule 3 real-runtime is REQUIRED** and satisfied (Playwright DOM + computed-style +
+axe AA + JS-off). The dev shipped tests; QA verified non-vacuousness, proved the
+narrowed flat-system guard still has teeth, and strengthened four adversarial gaps.
+
+## Dev tests verified (baseline, all passing)
+
+- `web/test/glassbox-index.test.ts` — build-output (vitest), 23 → **25** assertions.
+- `web/e2e/glassbox-index.spec.ts` — real-runtime (Playwright), 19 → **25** tests.
+- `web/playwright.config.ts` — `glassbox-index` project (`testMatch /glassbox-index\.spec\.ts/`).
+  Discoverable (Rule 8): vitest globs `test/**/*.test.ts`; Playwright `testDir ./e2e` + project.
+- `web/test/build-output.test.ts` — flat-system "no box-shadow" assertion narrowed to
+  exempt the spec-verbatim `timeline-dot` halo.
+
+## Box-shadow guard — adversarial teeth check (the directive's key concern)
+
+The dev replaced `expect(builtCss).not.toMatch(/box-shadow:/)` with a per-block parse
+that exempts any CSS block containing `timeline-dot`. **Verified the narrowing is NOT
+too broad:** injected `box-shadow: 0 2px 8px rgba(0,0,0,.2)` onto `.artifact-card` (a
+non-dot content surface), rebuilt, ran the single test → it **FAILED** with the exact
+violating block (`.artifact-card[data-astro-cid-…]{…box-shadow:…}`). Reverted; test
+passes again. The flat-system guard still has teeth for cards/panels/any non-dot
+surface — the exemption is correctly scoped (Astro keeps the literal `timeline-dot`
+class in the scoped selector, and a non-dot block does not contain that substring).
+
+## Gaps strengthened (QA-added, all non-vacuous — each proven to fail on regression)
+
+1. **Live-dot static halo — computed style + NO animation (NFR-2).** Dev test asserted
+   only `toBeVisible()`/count. Added 3 Playwright tests on the real computed style:
+   the halo is a non-`none` `4px rgba(30,58,95,0.16)` box-shadow; `animationName ===
+   'none'` + zero animation/transition duration; stays static under
+   `prefers-reduced-motion`. **Teeth proven:** injected `animation: pulse 2s infinite`
+   on `.timeline-dot--live` → the two no-animation tests FAILED (`animationName`
+   received `"pulse"`); reverted.
+2. **Data CONSUMED, not hardcoded (AC1/AC5).** Added 2 vitest assertions that read the
+   real `glassbox.json` at test time and require every artifact's exact title +
+   machine `datetime` + type chip to appear in the rendered index, and that the full
+   rendered link order equals the JSON date-sorted order (deterministic across the
+   three 06-02 ties + two 06-06 ties). A hardcoded/ drifted title or a mis-sort fails.
+   (Manifest stores only slugs — titles/dates can only come from the data.)
+3. **WCAG 1.4.1 — dots decorative, status in text (AC2/AC6).** Added 3 Playwright
+   tests: every `.timeline-dot` carries `aria-hidden="true"` (≥10 dots; not a
+   color-only status carrier); the shipping status is in the `Live · in progress` pill
+   text and the pill is NOT aria-hidden; each ghost status is the `As it accrues` text
+   and NOT aria-hidden — proving meaning lives in the a11y tree, never color/shape alone.
+4. **Component-reuse contract for Story 2.4 (Consumed-by).** New file
+   `web/test/glassbox-components.component.test.ts` — 12 isolated Astro Container-API
+   render tests covering EVERY `TimelineDot` state (resting/filled/live/upcoming +
+   default) and EVERY `ArtifactCard` variant (default Read-link, ghost no-link, live
+   pill, external `rel="noopener noreferrer"` + "View →", 0-JS, no `!`). Exercises
+   states the index does not use (`resting`) so a 2.4-only regression is caught now.
+
+## Generated / modified test files
+
+- [x] `web/test/glassbox-components.component.test.ts` — NEW (12 tests, Container API).
+- [x] `web/e2e/glassbox-index.spec.ts` — +6 tests (live-halo computed style ×3; WCAG
+  1.4.1 decorative ×3).
+- [x] `web/test/glassbox-index.test.ts` — +2 tests (data-consumed; full date-order).
+
+## Real counts (`pnpm --filter web ...`; the `EADDRINUSE:8787` live-api issue avoided by the web filter)
+
+- `pnpm --filter web test` → **14 files, 445 tests passed** (was 13/431; +1 file /+14).
+- `pnpm --filter web test:e2e` → **106 tests passed** across all projects (was 100;
+  +6 in `glassbox-index`). Includes the index axe AA (0 violations) + JS-off pass.
+- `glassbox-index` project in isolation → **25/25**. Full build emits **16 pages**
+  incl. all 6 `/glass-box/{slug}/` readers (AC5 no-404 verified by real navigation).
+- ESLint + Prettier clean on all three test files.
+
+## Coverage vs ACs
+
+- AC1 (spine of Dots + cards) ✓ · AC2 (launch set + ghost; status in text+shape) ✓
+- AC3 (recursion beat verbatim; `/timeline/` cross-link; 0 `!`) ✓ · AC4 (JS-off `<ol>`) ✓
+- AC5 (data consumed; readers resolve; chronological order) ✓ · AC6 (one h1; axe AA;
+  AA-safe ink-ghost) ✓ · NFR-1 (0-JS) ✓ · NFR-2 (static halo, reduced-motion) ✓.
+
+## Notes for code review
+
+- The narrowed box-shadow guard is sound (teeth verified). No action needed; the
+  exemption is scoped to `timeline-dot` blocks only.
+- Minor (non-blocking): the index uses `<h2>` "Build Story" inside `MirrorLayout`;
+  heading order is h1 → h2 → h3 (cards) — clean, asserted by the one-h1 + h3-card tests.

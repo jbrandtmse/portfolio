@@ -107,5 +107,14 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
       testMatch: /glassbox-reader\.spec\.ts/,
     },
+    // (Story 2.3) Glass Box index — desktop, JS on. Asserts real-runtime render
+    // of the build-story spine: dots, artifact cards, ghost nodes, recursion beat,
+    // WCAG 2.1 AA (axe), 0 executable scripts. JS-off tested inline via
+    // browser.newContext({ javaScriptEnabled: false }).
+    {
+      name: 'glassbox-index',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /glassbox-index\.spec\.ts/,
+    },
   ],
 });

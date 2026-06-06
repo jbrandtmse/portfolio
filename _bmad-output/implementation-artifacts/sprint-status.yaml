@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-06T02:19:05Z
-last_updated: 2026-06-06T17:10:00Z
+last_updated: 2026-06-06T17:58:00Z
 project: portfolio
 project_key: NOKEY
 tracking_system: file-system
@@ -63,7 +63,7 @@ development_status:
   2-0-epic-1-deferred-cleanup: done
   2-1-publish-allowlist-default-deny-glass-box-render-pipeline: done
   2-2-glass-box-artifact-reader: done
-  2-3-glass-box-index-the-curated-chronological-build-story: backlog
+  2-3-glass-box-index-the-curated-chronological-build-story: done
   2-4-master-timeline-hand-curated-seeded: backlog
   2-5-loandemo-flagship-case-study: backlog
   2-6-project-import-bmad-correct-course-extension-path: backlog
