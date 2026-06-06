@@ -46,6 +46,7 @@
 import { fileURLToPath } from 'node:url';
 
 import { renderGlassboxGenerator } from './render-glassbox.ts';
+import { renderTimelineGenerator } from './render-timeline.ts';
 
 /**
  * A single content generator: a named, deterministic step that reads only from
@@ -79,6 +80,9 @@ export const CONTENT_GENERATORS: readonly Generator[] = [
   // Story 2.1: publish allowlist + Glass Box render pipeline (AR-13).
   // Reads content/glassbox.allowlist.ts → writes web/src/generated/glassbox.json.
   renderGlassboxGenerator,
+  // Story 2.4: Master Timeline hand-curated manifest (FR-16).
+  // Reads content/timeline/dots.ts → writes web/src/generated/timeline.json.
+  renderTimelineGenerator,
   // TODO(Story 4.1): build-kb-index generator (content/kb/*.md → Orama index → api/data/)
 ];
 

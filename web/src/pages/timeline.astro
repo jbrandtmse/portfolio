@@ -1,39 +1,268 @@
 ---
 /**
- * /timeline — the Master Timeline Mirror route (Story 1.5 stub; AC2).
+ * /timeline — the Master Timeline Mirror route (Story 2.4; replaces 1.5 stub).
  *
- * Answer-first, self-canonical, exactly one <h1> via MirrorLayout. This is the
- * crawlable stub that RESOLVES the home Timeline teaser's forward-reference link
- * (Story 1.4 → /timeline). Epic 2 (Master Timeline) fills the body with the
- * craft-progression Dots. 0 JS.
+ * Answer-first, self-canonical, exactly ONE <h1> via MirrorLayout.
+ * Crawlable, 0 executable JS. The semantic <ol> is the content — orientation
+ * (horizontal desktop / vertical mobile) is CSS-only; DOM order is unchanged.
  *
- * The lede's first sentence names "Joshua R. Brandt, MSE" (GEO floor).
+ * Structure:
+ *  • ONE <ol> (oldest → newest, the DOM reading order)
+ *  • Era-band regions label the spine (runway + agentic turn)
+ *  • Two flagship nodes (portfolio + loandemo) each expand to a static Dot cluster
+ *  • Runway era: faint ticks (decorative) + era-band label — NO invented facts
+ *  • Cross-link to the Glass Box (the recursion boundary, reciprocal of 2.3)
+ *
+ * The lede's first sentence names "Joshua R. Brandt, MSE" (GEO floor; UX-DR15).
+ * No drop-cap or pull-quote (reader-only devices). No exclamation marks.
  */
+
 import MirrorLayout from '../layouts/MirrorLayout.astro';
+import EraBand from '../components/timeline/EraBand.astro';
+import FlagshipNode from '../components/timeline/FlagshipNode.astro';
+import TimelineDot from '../components/glassbox/TimelineDot.astro';
+import { loadTimelineEras } from '../lib/timeline.ts';
+import type { FlagshipNode as FlagshipNodeData, RunwayTick } from '../lib/timeline.ts';
+
+// The hand-curated manifest is the repo-root content/timeline/dots.ts (the
+// single source of truth, FR-33/34). The render-timeline build step emits
+// web/src/generated/timeline.json; this loader reads it (graceful-absent),
+// exactly as the Glass Box page reads glassbox.json. (Story 2.4 / architecture
+// §Structure: content/timeline/dots.ts → render-timeline → timeline.json.)
+const TIMELINE_ERAS = loadTimelineEras();
 
 const LEDE =
-  'Joshua R. Brandt, MSE has spent thirty years shipping software, now building at the frontier of agentic engineering. This is the Master Timeline of that work — a craft progression from the long runway to the agentic turn.';
+  'Joshua R. Brandt, MSE has spent thirty years shipping software, now building at the frontier of agentic engineering. This is the Master Timeline of that craft — from the long runway of shipping years to the dense agentic turn, built in the open using the BMAD Method.';
 ---
 
 <MirrorLayout
   heading="The Master Timeline"
   lede={LEDE}
   title="Master Timeline — Joshua R. Brandt, MSE"
-  description="The Master Timeline of Joshua R. Brandt, MSE — thirty years of shipping software, from the long runway to the agentic turn."
+  description="The Master Timeline of Joshua R. Brandt, MSE — thirty years of shipping software, from the long runway to the agentic turn. Drill into the proof."
 >
-  <p class="stub-note">
-    The full timeline is on its way. Epic 2 fills this page with the chronological Dots — the craft
-    progression from the early shipping years to the agentic turn.
-  </p>
+  <section class="timeline-section" aria-label="Craft progression timeline">
+    <p class="timeline-cross-link">
+      The planning artifacts and build story are documented in{' '}
+      <a href="/glass-box/">the Glass Box</a>.
+    </p>
+
+    <ol class="timeline-spine" aria-label="Timeline from runway to agentic turn">
+      {
+        TIMELINE_ERAS.map((era, eraIndex) => (
+          <li
+            class:list={['timeline-era', `timeline-era--${era.id}`]}
+            aria-label={`Era: ${era.label}`}
+          >
+            <EraBand
+              id={era.id}
+              label={era.label}
+              metaNote={era.metaNote}
+              dividerBefore={eraIndex > 0}
+            />
+
+            <ol
+              class:list={['timeline-era__entries', `timeline-era__entries--${era.id}`]}
+              aria-label={`Entries in ${era.label}`}
+            >
+              {era.entries.map((entry) => {
+                if (entry.kind === 'tick') {
+                  // Runway faint tick — decorative span (aria-hidden on the dot)
+                  const tick = entry as RunwayTick;
+                  return (
+                    <li class="timeline-entry timeline-entry--tick" aria-label={tick.label}>
+                      <TimelineDot state="faint" />
+                      <div class="timeline-tick__label">
+                        <span class="timeline-tick__name">{tick.label}</span>
+                        <time class="timeline-tick__date" datetime={tick.date}>
+                          {tick.date}
+                        </time>
+                      </div>
+                    </li>
+                  );
+                } else {
+                  // Flagship node — milestone dot + static cluster
+                  const flagship = entry as FlagshipNodeData;
+                  return (
+                    <li
+                      class="timeline-entry timeline-entry--flagship"
+                      aria-label={`Flagship: ${flagship.label}`}
+                    >
+                      <FlagshipNode
+                        label={flagship.label}
+                        date={flagship.date}
+                        description={flagship.description}
+                        cluster={flagship.cluster}
+                      />
+                    </li>
+                  );
+                }
+              })}
+            </ol>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
 </MirrorLayout>
 
 <style>
-  /* Quiet placeholder note — body copy, secondary ink. Removed when the owning
-     epic authors the real content. */
-  .stub-note {
+  /* ──────────────────────────────────────────────────────────────
+   * Timeline section wrapper
+   * ────────────────────────────────────────────────────────────── */
+  .timeline-section {
     margin-top: var(--space-6);
+  }
+
+  /* Cross-link to Glass Box (the recursion boundary). */
+  .timeline-cross-link {
     font-size: var(--font-size-body);
-    line-height: var(--line-height-body);
     color: var(--color-ink-secondary);
+    margin-bottom: var(--space-6);
+    font-style: italic;
+  }
+
+  /* Link in text block must be distinguishable without color alone (WCAG 1.4.1;
+     link-in-text-block rule). Underline provides the non-color differentiator. */
+  .timeline-cross-link a {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .timeline-cross-link a:hover {
+    text-decoration-thickness: 2px;
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+   * The semantic <ol> spine — vertical on mobile (default / DOM order),
+   * horizontal on desktop (CSS reflow — DOM order UNCHANGED).
+   *
+   * CRITICAL: No flex `order:` or `row-reverse` is used — the DOM reading
+   * order (oldest → newest) is preserved in both orientations. The horizontal
+   * reflow is achieved by changing flex-direction on the outer ol only.
+   * ────────────────────────────────────────────────────────────── */
+  .timeline-spine {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    /* Mobile/default: vertical stack (DOM order = top → bottom = oldest → newest) */
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+
+    /* Spine hairline rule — the dots ride on this */
+    position: relative;
+  }
+
+  /* Spine hairline (vertical on mobile, horizontal on desktop — see below). */
+  .timeline-spine::before {
+    content: '';
+    position: absolute;
+
+    /* Mobile: vertical line down the left edge */
+    left: 6px; /* centered on a 13px dot (base size) */
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--color-border-hairline, #d1c5b0);
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+   * Desktop: horizontal reflow — orientation is presentation-only.
+   * The DOM order (oldest → newest, left → right) is unchanged.
+   * ────────────────────────────────────────────────────────────── */
+  @media (min-width: 900px) {
+    .timeline-spine {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: var(--space-8);
+      overflow-x: auto;
+      padding-bottom: var(--space-4);
+    }
+
+    /* Desktop: horizontal hairline under the dots */
+    .timeline-spine::before {
+      left: 0;
+      right: 0;
+      top: 8px; /* centered on a 13px dot */
+      bottom: auto;
+      width: auto;
+      height: 1px;
+    }
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+   * Era bands (the two outer <li>s)
+   * ────────────────────────────────────────────────────────────── */
+  .timeline-era {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    position: relative;
+  }
+
+  @media (min-width: 900px) {
+    .timeline-era {
+      min-width: 280px;
+    }
+
+    /* Agentic turn is wider (denser content) */
+    .timeline-era--agentic-turn {
+      min-width: 380px;
+    }
+  }
+
+  /* Era entries list */
+  .timeline-era__entries {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+   * Timeline entries
+   * ────────────────────────────────────────────────────────────── */
+  .timeline-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    position: relative;
+  }
+
+  /* Faint runway ticks — the DOT is faint (decorative, aria-hidden);
+     the LABEL text must still meet AA contrast (meaningful text). */
+  .timeline-entry--tick {
+    /* Do not reduce opacity on the whole entry — the text inside carries meaning.
+       Only the dot span itself is decorative (aria-hidden, faint variant). */
+  }
+
+  .timeline-tick__label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .timeline-tick__name {
+    font-size: var(--font-size-meta, 12px);
+    /* ink-secondary: 5.63:1 on surface-raised — AA pass at normal text sizes. */
+    color: var(--color-ink-secondary);
+    font-style: italic;
+    line-height: 1.3;
+  }
+
+  .timeline-tick__date {
+    font-size: 12px;
+    /* ink-meta-min: 4.64:1 on surface-raised — AA floor (>4.5:1) at 12px. */
+    color: var(--color-ink-meta-min, var(--color-ink-secondary));
+  }
+
+  /* Flagship entries fill available space */
+  .timeline-entry--flagship {
+    flex: 1;
   }
 </style>

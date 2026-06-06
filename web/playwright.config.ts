@@ -116,5 +116,14 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
       testMatch: /glassbox-index\.spec\.ts/,
     },
+    // (Story 2.4) Master Timeline — desktop + mobile, JS on. Asserts real-
+    // runtime render of the timeline: era-bands, flagship clusters, Glass Box
+    // Dot links, loandemo forward-refs, DOM order (desktop vs mobile unchanged),
+    // WCAG 2.1 AA (axe), 0 executable scripts. JS-off tested inline.
+    {
+      name: 'timeline',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /timeline\.spec\.ts/,
+    },
   ],
 });

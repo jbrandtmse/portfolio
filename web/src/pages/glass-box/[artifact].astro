@@ -54,16 +54,6 @@ const pageTitle = `${title} — Glass Box — Joshua R. Brandt, MSE`;
 const description = `Read the full ${type} artifact: ${title}. ${curatorNote}`;
 ---
 
-<MirrorLayout
-  heading={title}
-  lede={lede}
-  title={pageTitle}
-  description={description}
->
-  <ArtifactReader
-    type={type}
-    curatorNote={curatorNote}
-    date={date}
-    body={body}
-  />
+<MirrorLayout heading={title} lede={lede} title={pageTitle} description={description}>
+  <ArtifactReader type={type} curatorNote={curatorNote} date={date} body={body} />
 </MirrorLayout>

@@ -167,9 +167,8 @@ test.describe('Glass Box reader — /glass-box/product-brief/', () => {
     // Count executable <script> tags (exclude ld+json data blocks).
     const executableScripts = await page.evaluate(() => {
       const scripts = Array.from(document.querySelectorAll('script'));
-      return scripts.filter(
-        (s) => s.type !== 'application/ld+json' && s.type !== 'importmap',
-      ).length;
+      return scripts.filter((s) => s.type !== 'application/ld+json' && s.type !== 'importmap')
+        .length;
     });
     expect(executableScripts).toBe(0);
   });
@@ -188,8 +187,8 @@ test.describe('Glass Box reader — /glass-box/product-brief/', () => {
       const bq = blockquotes.first();
       await expect(bq).toBeVisible();
       // border-left-width should be non-zero (the navy left rule is applied).
-      const borderLeftWidth = await bq.evaluate(
-        (el) => parseFloat(getComputedStyle(el).borderLeftWidth),
+      const borderLeftWidth = await bq.evaluate((el) =>
+        parseFloat(getComputedStyle(el).borderLeftWidth),
       );
       expect(borderLeftWidth).toBeGreaterThan(0);
     }

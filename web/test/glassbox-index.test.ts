@@ -138,14 +138,16 @@ describe('Story 2.3 AC6 — one <h1> and 0 executable JS', () => {
 
 describe('Story 2.3 AC3 — recursion beat + Glass-Box-vs-Timeline cross-link', () => {
   it('carries the verbatim recursion beat (core phrase)', () => {
-    // The recursion beat must appear verbatim (AC3, UX-DR19). Whitespace may
-    // differ between adjacent words due to template formatting — we check the
-    // key phrases that must appear and confirm they are in the same element.
-    expect(indexHtml).toContain(
-      "You're reading the build history of the site you're reading it on.",
+    // The recursion beat must appear verbatim (AC3, UX-DR19). Adjacent words may
+    // be separated by a newline + indentation in the built HTML (Astro preserves
+    // the source line-wrap inside the <p>), so normalize runs of whitespace to a
+    // single space before matching the verbatim phrase — line-wrapping is not a
+    // copy change.
+    const normalized = indexHtml.replace(/\s+/g, ' ');
+    expect(normalized).toContain(
+      "You're reading the build history of the site you're reading it on. " +
+        "It's being built in the open, right now.",
     );
-    expect(indexHtml).toContain("It's being built in");
-    expect(indexHtml).toContain('the open, right now.');
   });
 
   it('cross-links /timeline/ (Glass-Box-vs-Timeline boundary)', () => {

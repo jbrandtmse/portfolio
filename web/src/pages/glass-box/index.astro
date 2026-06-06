@@ -43,18 +43,16 @@ const LEDE =
 const allArtifacts = loadGlassboxArtifacts();
 
 // Build a lookup map: slug → artifact
-const artifactMap = new Map<string, GlassboxArtifact>(
-  allArtifacts.map((a) => [a.slug, a]),
-);
+const artifactMap = new Map<string, GlassboxArtifact>(allArtifacts.map((a) => [a.slug, a]));
 
 // Resolve featured nodes to real artifact data, filter missing (graceful degradation).
-const featuredNodes = FEATURED_SLUGS
-  .map((node) => {
-    const artifact = artifactMap.get(node.slug);
-    return artifact ? { node, artifact } : null;
-  })
-  .filter((entry): entry is { node: typeof FEATURED_SLUGS[number]; artifact: GlassboxArtifact } =>
-    entry !== null,
+const featuredNodes = FEATURED_SLUGS.map((node) => {
+  const artifact = artifactMap.get(node.slug);
+  return artifact ? { node, artifact } : null;
+})
+  .filter(
+    (entry): entry is { node: (typeof FEATURED_SLUGS)[number]; artifact: GlassboxArtifact } =>
+      entry !== null,
   )
   // Sort chronologically by artifact date (AC5: order matches glassbox.json dates).
   .sort((a, b) => new Date(a.artifact.date).getTime() - new Date(b.artifact.date).getTime());
@@ -69,59 +67,62 @@ const featuredNodes = FEATURED_SLUGS
   {/* ── Curation framing (AC3) ─────────────────────────────────────────── */}
   <section class="glass-box__framing" aria-label="About the Glass Box">
     <p class="glass-box__framing-lead">
-      Not everything makes it in. The Glass Box is default-deny: only artifacts that reward
-      reading — that show real thinking, not a polished surface — are published here. Curation
-      is an act of taste, not gatekeeping.
+      Not everything makes it in. The Glass Box is default-deny: only artifacts that reward reading
+      — that show real thinking, not a polished surface — are published here. Curation is an act of
+      taste, not gatekeeping.
     </p>
 
     {/* Verbatim recursion beat (AC3, UX-DR19) */}
     <p class="glass-box__recursion-beat">
-      You're reading the build history of the site you're reading it on. It's being built in
-      the open, right now.
+      You're reading the build history of the site you're reading it on. It's being built in the
+      open, right now.
     </p>
 
     {/* Glass-Box-vs-Timeline boundary (AC3; /timeline/ forward-ref → Story 2.4) */}
     <p class="glass-box__boundary-note">
-      This is the <strong>Glass Box</strong> — the build history of this specific project.
-      For the cross-project arc spanning all of Josh's work, see the{' '}
+      This is the <strong>Glass Box</strong> — the build history of this specific project. For the cross-project
+      arc spanning all of Josh's work, see the{' '}
       <a href="/timeline/" class="glass-box__boundary-link">Master Timeline</a>.
     </p>
   </section>
 
   {/* ── Build-story spine (AC1, AC2, AC4) ────────────────────────────── */}
-  {/*
+  {
+    /*
     JS-off (AC4): the spine IS a semantic <ol>. CSS positions the Dots alongside
     the cards via flex; if CSS is absent, the list degrades to a plain ordered
     list of dated artifact links. No JS needed.
-  */}
+  */
+  }
   <section class="glass-box__spine-section" aria-label="Build story timeline">
     <h2 class="glass-box__spine-heading">Build Story</h2>
     <ol class="glass-box__spine" role="list">
-
       {/* ── Featured artifact nodes (AC1, AC5) ──────────────────────── */}
-      {featuredNodes.map(({ node, artifact }) => (
-        <li class="glass-box__spine-item">
-          <div class="glass-box__dot-col">
-            <TimelineDot state={node.dotState} />
-            <span class="glass-box__spine-line" aria-hidden="true" />
-          </div>
-          <div class="glass-box__card-col">
-            <ArtifactCard
-              type={artifact.type}
-              title={artifact.title}
-              date={artifact.date}
-              curatorNote={artifact.curatorNote}
-              href={`/glass-box/${artifact.slug}/`}
-            />
-          </div>
-        </li>
-      ))}
+      {
+        featuredNodes.map(({ node, artifact }) => (
+          <li class="glass-box__spine-item">
+            <div class="glass-box__dot-col">
+              <TimelineDot state={node.dotState} />
+              <span class="glass-box__spine-line" aria-hidden="true" />
+            </div>
+            <div class="glass-box__card-col">
+              <ArtifactCard
+                type={artifact.type}
+                title={artifact.title}
+                date={artifact.date}
+                curatorNote={artifact.curatorNote}
+                href={`/glass-box/${artifact.slug}/`}
+              />
+            </div>
+          </li>
+        ))
+      }
 
       {/* ── Shipping node (AC2: non-ghosted, live site link) ──────────── */}
       <li class="glass-box__spine-item">
         <div class="glass-box__dot-col">
           <TimelineDot state="live" />
-          <span class="glass-box__spine-line" aria-hidden="true" />
+          <span class="glass-box__spine-line" aria-hidden="true"></span>
         </div>
         <div class="glass-box__card-col">
           <ArtifactCard
@@ -135,44 +136,45 @@ const featuredNodes = FEATURED_SLUGS
             externalLabel={`Visit the live site: ${SHIPPING_NODE.href}`}
           />
           {/* Repo link — shown as a supplemental link beneath the card */}
-          {SHIPPING_NODE.repoHref && (
-            <p class="glass-box__repo-link-note">
-              {SHIPPING_NODE.repoPublic ? (
-                <a
-                  href={SHIPPING_NODE.repoHref}
-                  class="glass-box__repo-link"
-                  rel="noopener noreferrer"
-                  aria-label="Public source repository on GitHub"
-                >
-                  Public repository →
-                </a>
-              ) : (
-                <span class="glass-box__repo-open">[OPEN: public repo/commits URL to be confirmed]</span>
-              )}
-            </p>
-          )}
+          {
+            SHIPPING_NODE.repoHref && (
+              <p class="glass-box__repo-link-note">
+                {SHIPPING_NODE.repoPublic ? (
+                  <a
+                    href={SHIPPING_NODE.repoHref}
+                    class="glass-box__repo-link"
+                    rel="noopener noreferrer"
+                    aria-label="Public source repository on GitHub"
+                  >
+                    Public repository →
+                  </a>
+                ) : (
+                  <span class="glass-box__repo-open">
+                    [OPEN: public repo/commits URL to be confirmed]
+                  </span>
+                )}
+              </p>
+            )
+          }
         </div>
       </li>
 
       {/* ── Ghosted "As it accrues" nodes (AC2) ──────────────────────── */}
-      {GHOST_NODES.map((ghost) => (
-        <li class="glass-box__spine-item glass-box__spine-item--ghost">
-          <div class="glass-box__dot-col">
-            <TimelineDot state="upcoming" />
-            <span class="glass-box__spine-line" aria-hidden="true" />
-          </div>
-          <div class="glass-box__card-col">
-            {/* Ghost nodes carry NO date (status is "As it accrues"); omitting
+      {
+        GHOST_NODES.map((ghost) => (
+          <li class="glass-box__spine-item glass-box__spine-item--ghost">
+            <div class="glass-box__dot-col">
+              <TimelineDot state="upcoming" />
+              <span class="glass-box__spine-line" aria-hidden="true" />
+            </div>
+            <div class="glass-box__card-col">
+              {/* Ghost nodes carry NO date (status is "As it accrues"); omitting
                 it keeps the static build deterministic (NFR-6 — no build-time now). */}
-            <ArtifactCard
-              type={ghost.type}
-              title={ghost.title}
-              ghost={true}
-            />
-          </div>
-        </li>
-      ))}
-
+              <ArtifactCard type={ghost.type} title={ghost.title} ghost={true} />
+            </div>
+          </li>
+        ))
+      }
     </ol>
   </section>
 </MirrorLayout>

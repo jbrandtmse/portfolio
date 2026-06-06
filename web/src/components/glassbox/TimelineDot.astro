@@ -8,20 +8,18 @@
  * shape are supplementary, never the sole carrier (AC6, NFR-2, DESIGN tokens).
  *
  * STATES (prop: `state`):
- *  • `resting`  — 13px circle, surface-raised fill, 1.5px solid accent ring.
- *  • `filled`   — accent fill (shipped / curated artifact).
- *  • `live`     — filled + 4px rgba(30,58,95,0.16) static halo (NO animation).
- *  • `upcoming` — surface-base fill, 1.5px DASHED accent, opacity 0.7.
- *
- * EXTENSIBILITY (Story 2.4 adds faint + milestone states):
- *  The `state` type union is open to extension. Style for `faint` and
- *  `milestone` will be added in 2.4; unknown states degrade to `resting` CSS.
+ *  • `resting`   — 13px circle, surface-raised fill, 1.5px solid accent ring.
+ *  • `filled`    — accent fill (shipped / curated artifact).
+ *  • `live`      — filled + 4px rgba(30,58,95,0.16) static halo (NO animation).
+ *  • `upcoming`  — surface-base fill, 1.5px DASHED accent, opacity 0.7.
+ *  • `faint`     — 11px circle, 1.5px #C0B49B ring (quiet runway ticks; decorative).
+ *  • `milestone` — 17px filled accent circle (flagship career milestone).
  *
  * 0 executable JS (NFR-1): all states are pure CSS classes. No client script.
  * Decorative: aria-hidden="true" — the meaning is in the adjacent label/text.
  */
 
-export type DotState = 'resting' | 'filled' | 'live' | 'upcoming';
+export type DotState = 'resting' | 'filled' | 'live' | 'upcoming' | 'faint' | 'milestone';
 
 interface Props {
   /** Visual state of the dot. Defaults to 'resting'. */
@@ -33,10 +31,7 @@ interface Props {
 const { state = 'resting', class: extraClass } = Astro.props;
 ---
 
-<span
-  class:list={['timeline-dot', `timeline-dot--${state}`, extraClass]}
-  aria-hidden="true"
-></span>
+<span class:list={['timeline-dot', `timeline-dot--${state}`, extraClass]} aria-hidden="true"></span>
 
 <style>
   /* Base dot — all states share this foundation (13px circle). */
@@ -74,5 +69,25 @@ const { state = 'resting', class: extraClass } = Astro.props;
     outline: 1.5px dashed var(--color-accent);
     outline-offset: 0;
     opacity: 0.7;
+  }
+
+  /* faint: 11px circle, 1.5px #C0B49B ring — quiet 30-year runway ticks.
+     Decorative span; color is spec-verbatim (DESIGN §timeline-dot).
+     Intentionally below AA contrast — purely decorative (aria-hidden). */
+  .timeline-dot--faint {
+    width: 11px;
+    height: 11px;
+    background-color: var(--color-surface-raised);
+    outline: 1.5px solid #c0b49b;
+    outline-offset: 0;
+    opacity: 0.6;
+  }
+
+  /* milestone: 17px filled accent circle — flagship career milestone node. */
+  .timeline-dot--milestone {
+    width: 17px;
+    height: 17px;
+    background-color: var(--color-accent);
+    outline: none;
   }
 </style>

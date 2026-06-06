@@ -40,9 +40,8 @@ function allScriptTags(html: string): string[] {
 
 /** Count EXECUTABLE scripts — every <script> that is NOT an ld+json data block. */
 function countExecutableScripts(html: string): number {
-  return allScriptTags(html).filter(
-    (tag) => !/type\s*=\s*["']application\/ld\+json["']/i.test(tag),
-  ).length;
+  return allScriptTags(html).filter((tag) => !/type\s*=\s*["']application\/ld\+json["']/i.test(tag))
+    .length;
 }
 
 // ─── Seeded artifacts from the Story 2.1 allowlist ───────────────────────────
@@ -164,7 +163,11 @@ describe('Story 2.2 AC6 — absent/malformed data degrades to [] (loader contrac
       'utf8',
     );
     try {
-      const out = execFileSync(tsxBin, [probe], { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+      const out = execFileSync(tsxBin, [probe], {
+        cwd,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
       const parsed = JSON.parse(out) as { isArray: boolean; length: number };
       return { ...parsed, threw: false };
     } catch {
@@ -180,7 +183,10 @@ describe('Story 2.2 AC6 — absent/malformed data degrades to [] (loader contrac
     const cwd = mkdtempSync(join(tmpdir(), 'glassbox-absent-'));
     try {
       const res = loadFromCwd(cwd);
-      expect(res.threw, 'loader must not throw on absent data (would crash getStaticPaths/build)').toBe(false);
+      expect(
+        res.threw,
+        'loader must not throw on absent data (would crash getStaticPaths/build)',
+      ).toBe(false);
       expect(res.isArray).toBe(true);
       expect(res.length).toBe(0);
     } finally {
@@ -238,7 +244,9 @@ describe('Story 2.2 AC2 — editorial reader components', () => {
 
   it.each(EXPECTED_SLUGS)('renders the date as a <time> element on /glass-box/%s/', (slug) => {
     const html = readFileSync(readerHtmlPath(slug), 'utf8');
-    expect(html).toMatch(/<time\b[^>]*class="[^"]*artifact-reader__date[^"]*"[^>]*datetime="[^"]+"/);
+    expect(html).toMatch(
+      /<time\b[^>]*class="[^"]*artifact-reader__date[^"]*"[^>]*datetime="[^"]+"/,
+    );
   });
 
   it.each(EXPECTED_SLUGS)('renders the body prose on /glass-box/%s/', (slug) => {
@@ -370,17 +378,25 @@ describe('Story 2.2 AC4 — 0 executable JS on every reader page (NFR-1)', () =>
   // the trusted boundary still holds for the REAL shipped pages: if a future
   // allowlisted artifact ever introduced raw HTML carrying a javascript: URL or an
   // on*= handler, marked would pass it through and THIS test would fail.
-  it.each(EXPECTED_SLUGS)('the rendered body carries NO javascript: URL on /glass-box/%s/', (slug) => {
-    const html = readFileSync(readerHtmlPath(slug), 'utf8');
-    expect(html).not.toMatch(/href\s*=\s*["']?\s*javascript:/i);
-    expect(html.toLowerCase()).not.toContain('javascript:');
-  });
+  it.each(EXPECTED_SLUGS)(
+    'the rendered body carries NO javascript: URL on /glass-box/%s/',
+    (slug) => {
+      const html = readFileSync(readerHtmlPath(slug), 'utf8');
+      expect(html).not.toMatch(/href\s*=\s*["']?\s*javascript:/i);
+      expect(html.toLowerCase()).not.toContain('javascript:');
+    },
+  );
 
-  it.each(EXPECTED_SLUGS)('the rendered body carries NO inline on*= event handler on /glass-box/%s/', (slug) => {
-    const html = readFileSync(readerHtmlPath(slug), 'utf8');
-    // Common executable inline-handler attributes that raw HTML could smuggle in.
-    expect(html).not.toMatch(/\son(?:click|load|error|mouseover|focus|blur|submit|change|input|keydown|keyup)\s*=/i);
-  });
+  it.each(EXPECTED_SLUGS)(
+    'the rendered body carries NO inline on*= event handler on /glass-box/%s/',
+    (slug) => {
+      const html = readFileSync(readerHtmlPath(slug), 'utf8');
+      // Common executable inline-handler attributes that raw HTML could smuggle in.
+      expect(html).not.toMatch(
+        /\son(?:click|load|error|mouseover|focus|blur|submit|change|input|keydown|keyup)\s*=/i,
+      );
+    },
+  );
 });
 
 // ─── AC4: the markdown RENDERER contract (synthetic adversarial body) ─────────
@@ -436,7 +452,9 @@ describe('Story 2.2 AC4/AC3 — the marked renderer contract (synthetic body)', 
     expect(out).toMatch(/<h5\b[^>]*>FR-1: Calm hero <code>\[S1\]<\/code><\/h5>/);
     expect(out).not.toMatch(/<h[1-6][^>]*>[^<]*`[^<]*<\/h[1-6]>/); // no literal backtick in any heading
     // Bold + link render inside the (demoted) <h3>.
-    expect(out).toMatch(/<h3\b[^>]*>A <strong>bold<\/strong> and a <a href="https:\/\/x\/">link<\/a><\/h3>/);
+    expect(out).toMatch(
+      /<h3\b[^>]*>A <strong>bold<\/strong> and a <a href="https:\/\/x\/">link<\/a><\/h3>/,
+    );
   });
 
   it('clamps demotion at <h6> (###### stays <h6>, never <h7>)', async () => {
@@ -462,7 +480,9 @@ describe('Story 2.2 AC4/AC3 — the marked renderer contract (synthetic body)', 
     // above) is what guarantees the REAL pages stay safe — because the allowlist
     // admits only trusted in-repo prose. If this expectation ever flips (e.g. a
     // sanitizing renderer is adopted), update the floor's rationale accordingly.
-    const out = await renderWithReaderConfig('<script>alert(1)</script>\n\n[x](javascript:alert(1))');
+    const out = await renderWithReaderConfig(
+      '<script>alert(1)</script>\n\n[x](javascript:alert(1))',
+    );
     expect(out).toContain('<script>alert(1)</script>'); // raw HTML survives → boundary matters
     expect(out).toContain('javascript:alert(1)'); // URL survives → boundary matters
   });
@@ -572,7 +592,9 @@ describe('Story 2.2 AC1 / Rule 2 — reader URL === canonical === sitemap <loc> 
   });
 
   it('the sitemap lists one <loc> per allowlisted artifact + the static routes (no missing reader page)', () => {
-    const readerLocs = [...sitemap.matchAll(/<loc>([^<]+\/glass-box\/[a-z-]+\/)<\/loc>/g)].map((m) => m[1]);
+    const readerLocs = [...sitemap.matchAll(/<loc>([^<]+\/glass-box\/[a-z-]+\/)<\/loc>/g)].map(
+      (m) => m[1],
+    );
     // Every expected slug has its reader <loc> (the /glass-box/ index stub is NOT
     // matched here — its path has no slug segment).
     for (const slug of EXPECTED_SLUGS) {
@@ -641,12 +663,15 @@ describe('Story 2.2 AC2 — long-form editorial-device CSS ships on the reader p
     expect(rule![0]).toMatch(/font-family:\s*var\(--font-family-base\)/);
   });
 
-  it.each(EXPECTED_SLUGS)('the drop-cap + pull-quote device CSS is present on /glass-box/%s/', (slug) => {
-    // The reserved long-form devices ship on every reader page (scoped inline).
-    const css = inlineCss(readFileSync(readerHtmlPath(slug), 'utf8'));
-    expect(css).toMatch(/first-letter\{[^}]*float:\s*left/);
-    expect(css).toMatch(/blockquote\{[^}]*border-left:\s*3px solid var\(--color-accent\)/);
-  });
+  it.each(EXPECTED_SLUGS)(
+    'the drop-cap + pull-quote device CSS is present on /glass-box/%s/',
+    (slug) => {
+      // The reserved long-form devices ship on every reader page (scoped inline).
+      const css = inlineCss(readFileSync(readerHtmlPath(slug), 'utf8'));
+      expect(css).toMatch(/first-letter\{[^}]*float:\s*left/);
+      expect(css).toMatch(/blockquote\{[^}]*border-left:\s*3px solid var\(--color-accent\)/);
+    },
+  );
 });
 
 // ─── AC2 — the YAML frontmatter block is stripped from the rendered body ──────
@@ -674,9 +699,10 @@ describe('Story 2.2 AC2 — YAML frontmatter is stripped from the rendered body'
     (slug, tokens) => {
       const body = artifactBodyHtml(readFileSync(readerHtmlPath(slug), 'utf8'))!;
       for (const token of tokens) {
-        expect(body, `frontmatter token "${token}" leaked into /glass-box/${slug}/ body`).not.toContain(
-          token,
-        );
+        expect(
+          body,
+          `frontmatter token "${token}" leaked into /glass-box/${slug}/ body`,
+        ).not.toContain(token);
       }
       // The body must not OPEN with a stray "---" fence (the strip removed it).
       expect(body.trimStart().startsWith('---')).toBe(false);

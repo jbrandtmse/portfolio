@@ -37,12 +37,12 @@ const orchestratorCode = orchestratorSource
   .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
 
 describe('content-pipeline orchestrator — registry state (AC1)', () => {
-  it('has exactly ONE generator registered: render-glassbox (Story 2.1 / AR-13)', () => {
-    // Story 2.1 is the first generator to land. The registry now has 1 entry.
-    // Next: Story 4.1 adds build-kb-index (the second entry).
+  it('has the expected generators registered, in order: render-glassbox (2.1), render-timeline (2.4)', () => {
+    // Story 2.1 landed render-glassbox (AR-13); Story 2.4 added render-timeline
+    // (FR-16, content/timeline/dots.ts → web/src/generated/timeline.json).
+    // Next: Story 4.1 adds build-kb-index.
     expect(Array.isArray(CONTENT_GENERATORS)).toBe(true);
-    expect(CONTENT_GENERATORS).toHaveLength(1);
-    expect(CONTENT_GENERATORS[0]!.name).toBe('render-glassbox');
+    expect(CONTENT_GENERATORS.map((g) => g.name)).toEqual(['render-glassbox', 'render-timeline']);
   });
 
   it('runs clean (resolves, no throw) with an injected empty registry', async () => {

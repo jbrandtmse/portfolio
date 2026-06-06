@@ -1,0 +1,84 @@
+---
+/**
+ * EraBand.astro — a labeled region on the Master Timeline spine (Story 2.4, Task 2).
+ *
+ * Renders a named era (e.g. "The Runway" or "The Agentic Turn") with:
+ *  • A kicker label (runway: ink-secondary; agentic-turn: accent).
+ *  • An optional italic meta-note (ink-meta-min, 11.5px).
+ *  • A 1px DASHED hairline divider between eras (only after the runway era).
+ *  • The era label is never color-alone — it is real text (AC6, WCAG 1.4.1).
+ *
+ * The host `<li>` carries aria-label so the era region is screen-reader
+ * navigable without relying on visual layout only.
+ *
+ * 0 executable JS: pure HTML + CSS.
+ */
+
+export type EraId = 'runway' | 'agentic-turn';
+
+interface Props {
+  id: EraId;
+  label: string;
+  metaNote?: string;
+  /**
+   * Whether to render the dashed hairline divider BEFORE this era-band.
+   * Typically set on the "agentic-turn" era (after the runway).
+   */
+  dividerBefore?: boolean;
+}
+
+const { id, label, metaNote, dividerBefore = false } = Astro.props;
+---
+
+{dividerBefore && <div class="era-band__divider" aria-hidden="true" />}
+
+<div class:list={['era-band', `era-band--${id}`]}>
+  <span class="era-band__kicker">{label}</span>
+  {metaNote && <span class="era-band__meta">{metaNote}</span>}
+</div>
+
+<style>
+  /* Era divider: 1px dashed hairline between eras. Decorative (aria-hidden). */
+  .era-band__divider {
+    width: 100%;
+    height: 0;
+    border-top: 1px dashed var(--color-border-hairline, #d1c5b0);
+    margin: var(--space-6) 0 var(--space-4);
+  }
+
+  /* Era-band wrapper */
+  .era-band {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding-bottom: var(--space-4);
+  }
+
+  /* Kicker label: runway → ink-secondary; agentic-turn → accent.
+     At 12px bold uppercase small-caps text: ink-secondary (5.63:1 AA pass);
+     accent (10.15:1 AA pass well above floor). */
+  .era-band__kicker {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .era-band--runway .era-band__kicker {
+    color: var(--color-ink-secondary);
+  }
+
+  .era-band--agentic-turn .era-band__kicker {
+    color: var(--color-accent);
+  }
+
+  /* Meta note: italic, ink-secondary, 12px (WCAG AA: 5.63:1 at normal size).
+     Using ink-secondary (5.63:1) instead of ink-meta-min at reduced size to
+     ensure AA contrast compliance (DESIGN §era-band allows this trade-off). */
+  .era-band__meta {
+    font-size: 12px;
+    font-style: italic;
+    color: var(--color-ink-secondary);
+    line-height: 1.4;
+  }
+</style>

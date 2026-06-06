@@ -30,9 +30,8 @@ beforeAll(async () => {
 });
 
 describe('TimelineDot.astro — every state renders (2.4 reuse contract)', () => {
-  // The four states the index + Master Timeline rely on. (2.4 adds faint /
-  // milestone; the union is extensible — these four are the 2.3 contract.)
-  const states = ['resting', 'filled', 'live', 'upcoming'] as const;
+  // The six states: the four 2.3 states + the two 2.4 extensions (faint / milestone).
+  const states = ['resting', 'filled', 'live', 'upcoming', 'faint', 'milestone'] as const;
 
   for (const state of states) {
     it(`renders the "${state}" state with its state class and is decorative`, async () => {
@@ -64,6 +63,33 @@ describe('TimelineDot.astro — every state renders (2.4 reuse contract)', () =>
     });
     expect(live).toContain('timeline-dot--live');
     expect(filled).not.toContain('timeline-dot--live');
+  });
+
+  // Story 2.4 — faint + milestone extension tests (additive; 2.3 states still green above).
+  it('the "faint" state carries the faint modifier (not resting, not filled)', async () => {
+    const html = await container.renderToString(TimelineDot, {
+      props: { state: 'faint' },
+    });
+    expect(html).toContain('timeline-dot--faint');
+    expect(html).not.toContain('timeline-dot--resting');
+    expect(html).not.toContain('timeline-dot--filled');
+    // Still decorative.
+    expect(html).toMatch(/aria-hidden="true"/);
+    // Still 0 JS.
+    expect(html).not.toMatch(/<script\b/i);
+  });
+
+  it('the "milestone" state carries the milestone modifier (not resting, not filled)', async () => {
+    const html = await container.renderToString(TimelineDot, {
+      props: { state: 'milestone' },
+    });
+    expect(html).toContain('timeline-dot--milestone');
+    expect(html).not.toContain('timeline-dot--resting');
+    expect(html).not.toContain('timeline-dot--filled');
+    // Still decorative.
+    expect(html).toMatch(/aria-hidden="true"/);
+    // Still 0 JS.
+    expect(html).not.toMatch(/<script\b/i);
   });
 });
 

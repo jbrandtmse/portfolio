@@ -473,7 +473,10 @@ describe('built CSS — tokens as the single source of truth (AC1 / IAC-2)', () 
       if (block.includes('--shadow-float')) return false;
       return true;
     });
-    expect(surfaceViolations, `box-shadow on surface (violating blocks): ${surfaceViolations.join('\n')}`).toHaveLength(0);
+    expect(
+      surfaceViolations,
+      `box-shadow on surface (violating blocks): ${surfaceViolations.join('\n')}`,
+    ).toHaveLength(0);
   });
 });
 

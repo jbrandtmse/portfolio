@@ -132,22 +132,16 @@ describe('render-glassbox SECURITY — default-deny is MUTATION-RESISTANT (AC3)'
       ).toBe(false);
 
       // (2) its derived slug (basename-ish) is not a rendered slug — identity, not substring
-      const baseSlug = neverPath
-        .split('/')
-        .pop()!
-        .replace(/^\./, '')
-        .replace(/\.md$/, '');
-      expect(
-        renderedSlugs.has(baseSlug),
-        `never-render slug leaked into output: ${baseSlug}`,
-      ).toBe(false);
+      const baseSlug = neverPath.split('/').pop()!.replace(/^\./, '').replace(/\.md$/, '');
+      expect(renderedSlugs.has(baseSlug), `never-render slug leaked into output: ${baseSlug}`).toBe(
+        false,
+      );
 
       // (3) its exact body is not a rendered body (full content identity)
       const body = readFileSync(join(repoRoot, neverPath), 'utf8');
-      expect(
-        renderedBodies.has(body),
-        `never-render body leaked into output: ${neverPath}`,
-      ).toBe(false);
+      expect(renderedBodies.has(body), `never-render body leaked into output: ${neverPath}`).toBe(
+        false,
+      );
     }
   });
 
