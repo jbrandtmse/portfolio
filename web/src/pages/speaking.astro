@@ -1,45 +1,47 @@
 ---
 /**
- * /speaking — the Speaker Surface Mirror route (Story 1.5 stub; AC2).
+ * /speaking — the Speaker Surface Mirror route (Story 3.1; fleshes the
+ * Story 1.5 stub).
  *
- * Answer-first, self-canonical, exactly one <h1> via MirrorLayout. RESOLVES the
- * forward-reference links from the 1.3 hero fork ("I'm here to book a talk") and
- * the 1.4 Speaker teaser (both → /speaking). Epic 3 (Speaker Surface) fills the
- * body with the reel, signature talks, bios, and the invite path. 0 JS.
+ * Layout: MirrorLayout (answer-first, self-canonical, exactly one <h1>). 0 JS.
  *
- * The lede's first sentence names "Joshua R. Brandt, MSE" (GEO floor).
+ * Structure:
+ *   1. Lede (answer-first; names "Joshua R. Brandt, MSE" in the first sentence)
+ *   2. Reel poster (READY 2026 — the lead item per AC1, UJ-2/SM-C1)
+ *   3. Signature talks section (TalkCard map; first expanded per AC3)
+ *   4. [FORWARD-REF: Story 3.2] bios + credibility strip (bio-blocks, metrics,
+ *      testimonials, logos) will be appended here by Story 3.2.
+ *
+ * JSON-LD: one Event per signature talk (via eventJsonLd + serializeJsonLd,
+ * performer = PERSON, deterministic [OPEN] constants) + VideoObject for any
+ * recorded talk (AC4). All in application/ld+json DATA, 0 executable JS (NFR-1).
+ *
+ * NFR-1 (0 executable JS), NFR-6 (deterministic), AA, positive-assertion voice.
+ * Rule 2: trailing-slash internal links.
  */
 import MirrorLayout from '../layouts/MirrorLayout.astro';
-import { eventJsonLd, serializeJsonLd } from '../lib/jsonld';
-import { PERSON } from '../lib/person';
+import ReelPoster from '../components/speaker/ReelPoster.astro';
+import TalkCard from '../components/speaker/TalkCard.astro';
+import { eventJsonLd, serializeJsonLd, videoObjectJsonLd } from '../lib/jsonld';
+import {
+  REEL,
+  SIGNATURE_TALKS,
+  talkEventInput,
+  talkRecordingVideoObjectInput,
+} from '../data/speaking';
 
 const LEDE =
-  'Joshua R. Brandt, MSE is a software engineer and speaker with thirty years of shipping experience. This page lists his signature talks, formats, and how to book him.';
+  'Joshua R. Brandt, MSE is a software engineer and speaker with thirty years of shipping experience. This page lists his signature talks, the READY 2026 reel, and how to book him.';
 
-// PLACEHOLDER Event JSON-LD (Story 1.6, AC1). Epic 3 (Speaker Surface) replaces
-// this with the real signature talks + their dates/venues. Until then this is a
-// clearly-flagged placeholder talk so the route emits a valid schema.org Event
-// (required fields per type) — name/startDate/location/organizer are [PLACEHOLDER].
-// performer is the REAL Person (shared web/src/lib/person.ts). Deterministic
-// startDate (a fixed constant, not new Date()) keeps the output byte-stable.
-const speakingJsonLd = serializeJsonLd(
-  eventJsonLd({
-    name: '[PLACEHOLDER] Signature talk — replaced with real talks in Epic 3',
-    startDate: '2026-01-01',
-    eventAttendanceMode: 'https://schema.org/MixedEventAttendanceMode',
-    location: {
-      '@type': 'VirtualLocation',
-      url: PERSON.url,
-    },
-    performer: PERSON,
-    organizer: {
-      '@type': 'Organization',
-      name: '[PLACEHOLDER organizer — set per real talk in Epic 3]',
-    },
-    description:
-      'Placeholder Event until Epic 3 publishes the real signature talks and their venues.',
-  }),
-);
+// Build the JSON-LD nodes: one Event per talk + VideoObject for recorded talks.
+// All values are fixed constants — deterministic across builds (NFR-6).
+const talkEventNodes = SIGNATURE_TALKS.map((talk) => eventJsonLd(talkEventInput(talk)));
+const talkRecordingNodes = SIGNATURE_TALKS.flatMap((talk) => {
+  const vid = talkRecordingVideoObjectInput(talk);
+  return vid ? [videoObjectJsonLd(vid)] : [];
+});
+// serializeJsonLd accepts an array — emits a JSON array with each entry carrying @context.
+const speakingJsonLd = serializeJsonLd([...talkEventNodes, ...talkRecordingNodes]);
 ---
 
 <MirrorLayout
@@ -49,21 +51,58 @@ const speakingJsonLd = serializeJsonLd(
   description="Signature talks, formats, and booking for Joshua R. Brandt, MSE — a software engineer and speaker with thirty years of shipping experience."
 >
   {
-    /* Structured data — PLACEHOLDER Event (real talks land in Epic 3). DATA, not
-      executable JS (NFR-1). */
+    /* Structured data — Event (per talk) + VideoObject (per recording). DATA,
+      not executable JS (NFR-1). */
   }
   <script type="application/ld+json" slot="jsonld" is:inline set:html={speakingJsonLd} />
-  <p class="stub-note">
-    The full speaker surface is on its way. Epic 3 fills this page with the reel, the signature
-    talks, the speaker bios, and a direct path to book a talk.
-  </p>
+
+  {/* ── Reel poster — the lead item below the lede (AC1, UJ-2/SM-C1) ── */}
+  <section class="speaking__reel" aria-label="Speaker reel">
+    <ReelPoster hostedVideoUrl={REEL.hostedVideoUrl} />
+  </section>
+
+  {/* ── Signature talks (AC3) ────────────────────────────────────────── */}
+  <section class="speaking__talks" aria-label="Signature talks">
+    <h2 class="speaking__section-heading">Signature talks</h2>
+    <div class="speaking__talks-list">
+      {SIGNATURE_TALKS.map((talk) => <TalkCard talk={talk} expanded={talk.expanded} />)}
+    </div>
+  </section>
+
+  {
+    /*
+     * [FORWARD-REF: Story 3.2] — bios + credibility strip (copy-paste bios,
+     * metrics, testimonials, logos) will be appended here by Story 3.2.
+     * Do not build them in this story (Decision 5).
+     */
+  }
 </MirrorLayout>
 
 <style>
-  .stub-note {
-    margin-top: var(--space-6);
-    font-size: var(--font-size-body);
-    line-height: var(--line-height-body);
-    color: var(--color-ink-secondary);
+  /* ─── Reel section ────────────────────────────────────────────────── */
+  .speaking__reel {
+    margin-top: var(--space-8, 32px);
+  }
+
+  /* ─── Signature talks section ──────────────────────────────────────── */
+  .speaking__talks {
+    margin-top: var(--space-10, 48px);
+  }
+
+  .speaking__section-heading {
+    margin-top: 0;
+    margin-bottom: var(--space-6, 24px);
+    font-family: var(--font-family-base);
+    font-size: clamp(24px, 3vw, 40px);
+    font-weight: 700;
+    line-height: 1.07;
+    letter-spacing: -0.01em;
+    color: var(--color-ink-primary);
+  }
+
+  .speaking__talks-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6, 24px);
   }
 </style>

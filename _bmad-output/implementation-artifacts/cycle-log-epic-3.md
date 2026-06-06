@@ -12,3 +12,10 @@
 2026-06-06T21:51:03Z	Story 3.0	qa_complete	spawn_at=2026-06-06T21:39:04Z model=claude-opus-4-8 tests_added=7 first_run_failures=0 clarifications=0 closing_sections_present=true note=full_test_all_green_eint0_158_e2e
 2026-06-06T22:08:03Z	Story 3.0	cr_complete	spawn_at=2026-06-06T21:51:11Z model=claude-opus-4-8 resolved=0 deferred=0 dismissed=0 high=0 med=0 low=0 clarifications=0 closing_sections_present=false note=review_complete_AC1-6_verified_mutation_tested_lead_finalized_writeup_after_agent_yielded_mid_gate
 2026-06-06T22:11:18Z	Story 3.0	smoke_complete	method=cli result=pass iterations=1 defects_caught=0 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-3.0-cleanup.md model=claude-opus-4-8
+2026-06-06T22:11:44Z	Story 3.0	committed	sha=e5a6cfa submodules=
+2026-06-06T22:16:39Z	Story 3.1	story_created	path=_bmad-output/implementation-artifacts/3-1-speaker-surface-reel-signature-talks.md spec_words=2794
+2026-06-06T22:49:55Z	Story 3.1	dev_complete	spawn_at=2026-06-06T22:17:04Z model=claude-sonnet-4-6 files=8 loc_added=1702 loc_removed=83 clarifications=0 nfr_tripwires=0 adr_violations_surfaced=0 cycle_iteration=1 closing_sections_present=true
+2026-06-06T22:49:55Z	Story 3.1	adr_verifications_complete	tool=none acs=none result=none_required evidence= model=claude-opus-4-8
+2026-06-06T23:04:16Z	Story 3.1	qa_complete	spawn_at=2026-06-06T22:49:55Z model=claude-opus-4-8 tests_added=15 first_run_failures=0 clarifications=0 closing_sections_present=true note=jsonld_schema_validity+reel_lead_order+credibility_floor_full_gate_green
+2026-06-06T23:18:17Z	Story 3.1	cr_complete	spawn_at=2026-06-06T23:04:16Z model=claude-opus-4-8 resolved=4 deferred=0 dismissed=3 high=0 med=1 low=3 clarifications=0 closing_sections_present=true note=med_reel_poster_self_link_fixed_posterHref_prop
+2026-06-06T23:22:53Z	Story 3.1	smoke_complete	method=browser result=pass iterations=1 defects_caught=0 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-3.1-speaker-surface.md model=claude-opus-4-8

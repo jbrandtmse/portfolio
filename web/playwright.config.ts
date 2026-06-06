@@ -135,5 +135,14 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
       testMatch: /loandemo\.spec\.ts/,
     },
+    // (Story 3.1) Speaker Surface — /speaking/ + /speaking/reel/. Asserts
+    // real-runtime render: reel poster is the lead item and is a followable <a>
+    // to /speaking/reel/ JS-off; collapsed talk abstracts are in the DOM;
+    // <details> toggles; WCAG 2.1 AA (axe); 0 executable scripts; voice.
+    {
+      name: 'speaking',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /speaking\.spec\.ts/,
+    },
   ],
 });

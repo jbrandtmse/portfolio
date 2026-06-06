@@ -1,61 +1,155 @@
 ---
 /**
- * /speaking/reel — the speaker-reel Mirror route (Story 1.5 stub; AC2; one of
- * the 3 GEO routes, UX-DR14). Answer-first, self-canonical, exactly one <h1> via
- * MirrorLayout. Epic 3 fills the body with the reel and its VideoObject
- * structured data. 0 JS.
+ * /speaking/reel — the speaker-reel Mirror route (Story 3.1; fleshes the
+ * Story 1.5 stub).
  *
- * The lede's first sentence names "Joshua R. Brandt, MSE" (GEO floor).
+ * Layout: MirrorLayout (answer-first, self-canonical, exactly one <h1>). 0 JS.
+ *
+ * Structure:
+ *   1. Lede (answer-first; names "Joshua R. Brandt, MSE" in the first sentence)
+ *   2. Reel poster (the lead visual — uses the same ReelPoster component; on
+ *      this page its primary <a> points at the hosted video [OPEN], not a
+ *      self-link, so the play affordance matches its aria-label)
+ *   3. Reel details (duration, upload date, static link to hosted video [OPEN])
+ *
+ * JSON-LD: the READY 2026 reel VideoObject (real name/description; ~90s
+ * duration PT1M30S; thumbnailUrl/contentUrl/embedUrl = [OPEN] absolute URLs;
+ * fixed uploadDate constant — NFR-6 determinism). DATA, 0 executable JS (NFR-1).
+ *
+ * NFR-1 (0 executable JS), NFR-6 (deterministic), AA, positive-assertion voice.
+ * Rule 2: trailing-slash internal links.
  */
 import MirrorLayout from '../../layouts/MirrorLayout.astro';
+import ReelPoster from '../../components/speaker/ReelPoster.astro';
 import { serializeJsonLd, videoObjectJsonLd } from '../../lib/jsonld';
-import { SITE_ORIGIN } from '../../lib/person';
+import { REEL, reelVideoObjectInput } from '../../data/speaking';
 
 const LEDE =
-  "Joshua R. Brandt, MSE's speaker reel previews how he presents the build, live. The full reel and its details live here.";
+  "Joshua R. Brandt, MSE's speaker reel previews how he presents the build, live — voice, pacing, and command of complex technical ideas for practitioner and executive audiences.";
 
-// PLACEHOLDER VideoObject JSON-LD (Story 1.6, AC1; one of the 3 GEO routes).
-// Epic 3 replaces this with the real reel's metadata. thumbnailUrl/contentUrl/
-// embedUrl are [OPEN] placeholders (valid absolute URLs at the site origin so
-// the schema validates) until the real asset lands. duration is the ~90s reel
-// target (PT1M30S). uploadDate is a deterministic fixed constant (not new
-// Date()) so the output stays byte-stable (NFR-6).
-const reelJsonLd = serializeJsonLd(
-  videoObjectJsonLd({
-    name: '[PLACEHOLDER] Speaker reel — replaced with the real reel in Epic 3',
-    description:
-      'Placeholder VideoObject until Epic 3 publishes the real speaker reel and its details.',
-    thumbnailUrl: `${SITE_ORIGIN}/reel-thumbnail.jpg`, // [OPEN: reel thumbnail]
-    uploadDate: '2026-01-01',
-    duration: 'PT1M30S',
-    contentUrl: `${SITE_ORIGIN}/reel.mp4`, // [OPEN: reel media URL]
-    embedUrl: `${SITE_ORIGIN}/reel-embed`, // [OPEN: reel embed URL]
-  }),
-);
+// Real reel VideoObject — deterministic constants (NFR-6: no new Date()).
+const reelJsonLd = serializeJsonLd(videoObjectJsonLd(reelVideoObjectInput()));
 ---
 
 <MirrorLayout
   heading="Speaker reel"
   lede={LEDE}
   title="Speaker reel — Joshua R. Brandt, MSE"
-  description="The speaker reel of Joshua R. Brandt, MSE — a preview of how he presents the build, live."
+  description="The READY 2026 speaker reel of Joshua R. Brandt, MSE — approximately 90 seconds previewing how he presents complex technical ideas live."
 >
-  {
-    /* Structured data — PLACEHOLDER VideoObject (real reel lands in Epic 3).
-      DATA, not executable JS (NFR-1). */
-  }
+  {/* Structured data — reel VideoObject. DATA, not executable JS (NFR-1). */}
   <script type="application/ld+json" slot="jsonld" is:inline set:html={reelJsonLd} />
-  <p class="stub-note">
-    The reel is on its way. Epic 3 fills this page with the speaker reel and its VideoObject
-    details.
-  </p>
+
+  {/* ── Reel poster — the lead visual ──────────────────────────────────── */}
+  {
+    /* On THIS page the poster must not self-link to /speaking/reel/; its play
+      affordance points at the hosted video ([OPEN] until the asset lands) so the
+      aria-label ("Watch …") matches what activating it does (AC2). */
+  }
+  <section class="reel__poster-section" aria-label="Speaker reel">
+    <ReelPoster
+      hostedVideoUrl={REEL.hostedVideoUrl}
+      posterHref={REEL.hostedVideoUrl}
+      ariaLabel="Watch the reel video — Joshua R. Brandt, MSE · READY 2026 · approximately 90 seconds · [OPEN: hosted video link pending]"
+    />
+  </section>
+
+  {/* ── Reel details ───────────────────────────────────────────────────── */}
+  <section class="reel__details" aria-label="Reel details">
+    <dl class="reel__details-list">
+      <div class="reel__detail-row">
+        <dt class="reel__detail-label">Duration</dt>
+        <dd class="reel__detail-value">~90 seconds</dd>
+      </div>
+      <div class="reel__detail-row">
+        <dt class="reel__detail-label">Series</dt>
+        <dd class="reel__detail-value">READY 2026</dd>
+      </div>
+      <div class="reel__detail-row">
+        <dt class="reel__detail-label">Hosted video</dt>
+        <dd class="reel__detail-value">
+          <a
+            class="reel__video-link"
+            href={REEL.hostedVideoUrl}
+            rel="noopener noreferrer"
+            aria-label="Watch the hosted reel video — [OPEN: link pending]"
+          >
+            Watch reel [OPEN: hosted video link pending]
+          </a>
+        </dd>
+      </div>
+    </dl>
+    <p class="reel__description">{REEL.description}</p>
+  </section>
 </MirrorLayout>
 
 <style>
-  .stub-note {
-    margin-top: var(--space-6);
-    font-size: var(--font-size-body);
-    line-height: var(--line-height-body);
+  /* ─── Reel poster section ──────────────────────────────────────────── */
+  .reel__poster-section {
+    margin-top: var(--space-8, 32px);
+  }
+
+  /* ─── Reel details section ─────────────────────────────────────────── */
+  .reel__details {
+    margin-top: var(--space-8, 32px);
+  }
+
+  .reel__details-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2, 6px);
+    margin: 0 0 var(--space-6, 24px) 0;
+    padding: 0;
+  }
+
+  .reel__detail-row {
+    display: flex;
+    gap: var(--space-3, 8px);
+    align-items: baseline;
+  }
+
+  .reel__detail-label {
+    font-family: var(--font-family-base);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink-primary);
+    flex-shrink: 0;
+    min-width: 90px;
+  }
+
+  .reel__detail-value {
+    font-family: var(--font-family-base);
+    font-size: 11.5px;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    color: var(--color-ink-secondary);
+    line-height: 1.4;
+  }
+
+  .reel__video-link {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  .reel__video-link:hover {
+    color: var(--color-accent-hover);
+    text-decoration: underline;
+  }
+
+  .reel__video-link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm, 2px);
+  }
+
+  /* ─── Reel description ─────────────────────────────────────────────── */
+  .reel__description {
+    font-family: var(--font-family-base);
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1.62;
     color: var(--color-ink-secondary);
   }
 </style>

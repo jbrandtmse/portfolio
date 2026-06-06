@@ -1,0 +1,251 @@
+---
+/**
+ * ReelPoster.astro — the READY 2026 speaker reel poster (Story 3.1, Task 2;
+ * AC1, Decision 3).
+ *
+ * DESIGN reel-poster tokens (DESIGN.md §reel-poster):
+ *  • 16/9 aspect ratio (mobile 16/10)
+ *  • Navy editorial gradient: linear-gradient(155deg,#24456B 0%,var(--color-accent)
+ *    34%,#16263F 70%,#101D31 100%)
+ *  • Faint rgba(246,240,230,0.06) 1px registration-grid overlay (aria-hidden)
+ *  • 88px cream play ring (1.5px ring, translucent cream fill, cream play triangle)
+ *  • Cream corner labels: "Speaker reel · READY 2026" (top-left) + "90s" (top-right)
+ *  • {typography.meta} caption + static link fallback
+ *  • radius 10px, flat (no shadow)
+ *
+ * NFR-1 (0 executable JS): no <script>, no autoplay, no player. The poster is
+ * a static <a> linking to /speaking/reel/ (works JS-off).
+ *
+ * AA: decorative gradient/grid are aria-hidden; the <a> carries an aria-label
+ * naming the reel + its ~90s duration; all text renders as real HTML
+ * (cream-on-navy 10.15:1 contrast); :focus-visible ring on the poster <a>.
+ *
+ * Matches ArtifactCard.astro conventions: Props interface, scoped <style>,
+ * var(--…) tokens.
+ */
+
+export interface ReelPosterProps {
+  /**
+   * The hosted video URL for the static link fallback caption.
+   * [OPEN] until the reel asset lands.
+   */
+  hostedVideoUrl: string;
+  /**
+   * Where the poster's primary <a> (the play-button affordance) points.
+   *  • On /speaking/ this is the reel sub-route ('/speaking/reel/') — AC1.
+   *  • On /speaking/reel/ this is the hosted video ([OPEN]) — AC2: the poster
+   *    must not self-link to the page it is already on (the play affordance
+   *    would otherwise be a no-op that contradicts its own aria-label).
+   * Defaults to the reel sub-route.
+   */
+  posterHref?: string;
+  /**
+   * Optional override for the accessible label. Defaults to a label naming
+   * the reel + its ~90s duration (AC1 requirement).
+   */
+  ariaLabel?: string;
+}
+
+type Props = ReelPosterProps;
+
+const {
+  hostedVideoUrl,
+  posterHref = '/speaking/reel/',
+  ariaLabel = 'Watch speaker reel — Joshua R. Brandt, MSE · READY 2026 · approximately 90 seconds',
+} = Astro.props;
+---
+
+<figure class="reel-poster">
+  {
+    /* The poster is a static <a> (posterHref) — works JS-off. On /speaking/ it
+      points at /speaking/reel/; on the reel page it points at the hosted
+      video so the play affordance is never a self-link no-op. */
+  }
+  <a class="reel-poster__link" href={posterHref} aria-label={ariaLabel}>
+    {
+      /* Decorative overlay: the navy editorial gradient + faint registration
+         grid. aria-hidden — meaning lives in the text/link, not the visual. */
+    }
+    <span class="reel-poster__bg" aria-hidden="true">
+      <span class="reel-poster__grid" aria-hidden="true"></span>
+    </span>
+
+    {/* Corner labels — cream text reversed out of navy. */}
+    <span class="reel-poster__label-tl" aria-hidden="true"> Speaker reel &middot; READY 2026 </span>
+    <span class="reel-poster__label-tr" aria-hidden="true">90s</span>
+
+    {/* 88px cream play ring (decorative; meaning is in the aria-label above). */}
+    <span class="reel-poster__play" aria-hidden="true">
+      <span class="reel-poster__play-triangle" aria-hidden="true"></span>
+    </span>
+  </a>
+
+  {
+    /* Caption: meta text + static link fallback to the hosted video.
+       The link fallback is [OPEN] until the asset lands — labeled in visible text. */
+  }
+  <figcaption class="reel-poster__caption">
+    Speaker reel &middot; READY 2026 &middot; ~90s &mdash;
+    <a
+      class="reel-poster__video-link"
+      href={hostedVideoUrl}
+      rel="noopener noreferrer"
+      aria-label="Watch reel video — [OPEN: hosted video link pending]"
+    >
+      Watch reel [OPEN: hosted video link pending]
+    </a>
+  </figcaption>
+</figure>
+
+<style>
+  /* ─── Figure wrapper ──────────────────────────────────────────────────── */
+  .reel-poster {
+    margin: 0;
+    width: 100%;
+  }
+
+  /* ─── Static link (the poster itself) ───────────────────────────────── */
+  .reel-poster__link {
+    display: block;
+    position: relative;
+    /* 16/9 default, 16/10 on mobile (below). */
+    aspect-ratio: 16 / 9;
+    border-radius: 10px; /* DESIGN: radius family lg, ~10px */
+    border: 1px solid var(--color-border-hairline);
+    overflow: hidden;
+    box-shadow: none; /* flat — no shadow (elevation.flat) */
+    text-decoration: none;
+    /* Smooth border on focus */
+    transition: border-color 0.15s ease;
+  }
+
+  .reel-poster__link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 10px;
+  }
+
+  .reel-poster__link:hover .reel-poster__play {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+
+  /* ─── Background: navy editorial gradient ──────────────────────────── */
+  .reel-poster__bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      155deg,
+      #24456b 0%,
+      var(--color-accent) 34%,
+      #16263f 70%,
+      #101d31 100%
+    );
+    display: block;
+  }
+
+  /* ─── Faint registration-grid overlay ──────────────────────────────── */
+  .reel-poster__grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, rgba(246, 240, 230, 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(246, 240, 230, 0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+    display: block;
+  }
+
+  /* ─── Corner labels (cream reversed out of navy) ───────────────────── */
+  .reel-poster__label-tl,
+  .reel-poster__label-tr {
+    position: absolute;
+    top: 14px;
+    font-family: var(--font-family-base);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    /* Cream text on navy — high contrast. */
+    color: var(--color-surface-base);
+    line-height: 1.4;
+    z-index: 1;
+  }
+
+  .reel-poster__label-tl {
+    left: 16px;
+  }
+
+  .reel-poster__label-tr {
+    right: 16px;
+  }
+
+  /* ─── 88px cream play ring ──────────────────────────────────────────── */
+  .reel-poster__play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    /* 1.5px cream ring with translucent cream fill */
+    border: 1.5px solid var(--color-surface-base);
+    background-color: rgba(246, 240, 230, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+      opacity 0.15s ease,
+      transform 0.15s ease;
+    z-index: 1;
+  }
+
+  /* ─── Cream play triangle ───────────────────────────────────────────── */
+  .reel-poster__play-triangle {
+    /* CSS border triangle — cream, pointing right. */
+    display: block;
+    width: 0;
+    height: 0;
+    border-top: 14px solid transparent;
+    border-bottom: 14px solid transparent;
+    /* Cream fill — pointing right */
+    border-left: 22px solid var(--color-surface-base);
+    /* Nudge slightly right to optically center within the circle. */
+    margin-left: 4px;
+  }
+
+  /* ─── Caption ─────────────────────────────────────────────────────── */
+  .reel-poster__caption {
+    margin-top: var(--space-3, 8px);
+    font-family: var(--font-family-base);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink-secondary);
+    line-height: 1.4;
+  }
+
+  .reel-poster__video-link {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  .reel-poster__video-link:hover {
+    color: var(--color-accent-hover);
+    text-decoration: underline;
+  }
+
+  .reel-poster__video-link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm, 2px);
+  }
+
+  /* ─── Mobile: 16/10 aspect ratio ───────────────────────────────────── */
+  @media (max-width: 600px) {
+    .reel-poster__link {
+      aspect-ratio: 16 / 10;
+    }
+  }
+</style>

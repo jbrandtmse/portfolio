@@ -1,0 +1,291 @@
+---
+/**
+ * TalkCard.astro — a signature talk card (Story 3.1, Task 3; AC3, Decision 3).
+ *
+ * DESIGN talk-card tokens (DESIGN.md §talk-card):
+ *  • {colors.surface-raised} background, 1px hairline border, radius 9px
+ *  • padding clamp(20px, 2.2vw, 28px), flat (no shadow)
+ *  • Outcome-oriented <h3> title
+ *  • Audience-level chip(s) top-right (artifact-card.chip style: 1px
+ *    --color-accent outlined small-caps, radius 2px)
+ *  • 150–200-word abstract
+ *  • 3–5 takeaways as hairline-tick list (11px × 1px --color-accent lead rule)
+ *  • Formats/durations as {rounded.full} pill tags (1px hairline, accent text
+ *    on surface-base)
+ *  • Logistics in {typography.meta} --color-ink-secondary, key terms in
+ *    --color-ink-primary
+ *
+ * `expanded` prop: true → abstract inline; false → <details>/<summary> collapse.
+ * Full abstract text always in the DOM for crawlers (AC3). Works JS-off.
+ *
+ * AA: chips/pills/links AA-contrast, visible :focus-visible on <details>
+ * <summary>, no info by color alone. Matches ArtifactCard.astro conventions.
+ */
+import type { SignatureTalk } from '../../data/speaking';
+
+export interface TalkCardProps {
+  talk: SignatureTalk;
+  /**
+   * When true, the abstract renders inline (expanded).
+   * When false, the abstract is behind a native <details>/<summary> (JS-off,
+   * keyboard-operable). Per AC3 the first talk is expanded, others collapsed.
+   */
+  expanded?: boolean;
+}
+
+type Props = TalkCardProps;
+
+const { talk, expanded = talk.expanded } = Astro.props;
+---
+
+<article class="talk-card">
+  {/* Header row: title + audience chips top-right */}
+  <div class="talk-card__header">
+    <h3 class="talk-card__title">{talk.title}</h3>
+    <div class="talk-card__chips" aria-label="Audience levels">
+      {
+        talk.audienceLevels.map((level) => (
+          <span class="talk-card__chip" aria-label={`Audience: ${level}`}>
+            {level}
+          </span>
+        ))
+      }
+    </div>
+  </div>
+
+  {/* Abstract: expanded inline or behind native <details> (JS-off, full text in DOM). */}
+  {
+    expanded ? (
+      <p class="talk-card__abstract">{talk.abstract}</p>
+    ) : (
+      <details class="talk-card__details">
+        <summary class="talk-card__summary">Read the abstract ▾</summary>
+        <p class="talk-card__abstract">{talk.abstract}</p>
+      </details>
+    )
+  }
+
+  {/* Takeaways: hairline-tick list */}
+  <ul class="talk-card__takeaways" aria-label="Key takeaways">
+    {talk.takeaways.map((takeaway) => <li class="talk-card__takeaway">{takeaway}</li>)}
+  </ul>
+
+  {/* Format pills */}
+  <div class="talk-card__formats" aria-label="Talk formats">
+    {
+      talk.formats.map((fmt) => (
+        <span class="talk-card__pill">
+          {fmt.label} &middot; {fmt.duration}
+        </span>
+      ))
+    }
+  </div>
+
+  {/* Logistics */}
+  <dl class="talk-card__logistics">
+    <div class="talk-card__logistics-row">
+      <dt class="talk-card__logistics-label">Travel</dt>
+      <dd class="talk-card__logistics-value">{talk.logistics.travel}</dd>
+    </div>
+    <div class="talk-card__logistics-row">
+      <dt class="talk-card__logistics-label">A/V</dt>
+      <dd class="talk-card__logistics-value">{talk.logistics.av}</dd>
+    </div>
+  </dl>
+</article>
+
+<style>
+  /* ─── Base card ──────────────────────────────────────────────────────── */
+  .talk-card {
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-border-hairline);
+    border-radius: 9px;
+    padding: clamp(20px, 2.2vw, 28px);
+    box-shadow: none; /* flat — elevation.flat */
+    transition: border-color 0.15s ease;
+  }
+
+  .talk-card:hover {
+    border-color: #c6b89e; /* deepen hairline on hover — same spec as ArtifactCard */
+  }
+
+  /* ─── Header row: title + chips ─────────────────────────────────────── */
+  .talk-card__header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3, 8px);
+    justify-content: space-between;
+  }
+
+  /* ─── Title (h3) ─────────────────────────────────────────────────────── */
+  .talk-card__title {
+    flex: 1;
+    margin: 0;
+    font-family: var(--font-family-base);
+    font-size: clamp(21px, 2.2vw, 28px);
+    font-weight: 700;
+    line-height: 1.13;
+    letter-spacing: -0.006em;
+    color: var(--color-ink-primary);
+  }
+
+  /* ─── Audience-level chips (top-right) ─────────────────────────────── */
+  .talk-card__chips {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1, 4px);
+    flex-shrink: 0;
+    align-items: flex-end;
+    margin-top: 2px;
+  }
+
+  .talk-card__chip {
+    display: inline-block;
+    padding: 2px var(--space-2, 6px);
+    border: 1px solid var(--color-accent);
+    border-radius: 2px; /* radius-sm */
+    font-family: var(--font-family-base);
+    font-size: 12px;
+    font-weight: 600;
+    font-variant: small-caps;
+    letter-spacing: 0.12em;
+    color: var(--color-accent);
+    text-transform: uppercase;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  /* ─── Abstract ────────────────────────────────────────────────────── */
+  .talk-card__abstract {
+    margin-top: var(--space-4, 12px);
+    font-family: var(--font-family-base);
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1.62;
+    color: var(--color-ink-primary);
+  }
+
+  /* ─── Details/Summary collapse (JS-off) ─────────────────────────── */
+  .talk-card__details {
+    margin-top: var(--space-4, 12px);
+  }
+
+  .talk-card__summary {
+    font-family: var(--font-family-base);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    cursor: pointer;
+    /* Remove the default disclosure marker (Firefox / spec list-style path). */
+    list-style: none;
+    display: inline-block;
+  }
+
+  /* Remove the default disclosure marker (WebKit/Blink pseudo-element). */
+  .talk-card__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .talk-card__summary:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  .talk-card__details .talk-card__abstract {
+    /* Spacing for expanded abstract within details. */
+    margin-top: var(--space-3, 8px);
+  }
+
+  /* ─── Takeaways: hairline-tick list ──────────────────────────────── */
+  .talk-card__takeaways {
+    margin-top: var(--space-4, 12px);
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2, 6px);
+  }
+
+  .talk-card__takeaway {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    font-family: var(--font-family-base);
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1.62;
+    color: var(--color-ink-primary);
+  }
+
+  /* The hairline-tick: 11px × 1px navy lead rule per item. */
+  .talk-card__takeaway::before {
+    content: '';
+    display: block;
+    flex-shrink: 0;
+    width: 11px;
+    height: 1px;
+    background-color: var(--color-accent);
+    margin-top: 0.75em; /* vertically center the tick against the first line */
+  }
+
+  /* ─── Format pills ───────────────────────────────────────────────── */
+  .talk-card__formats {
+    margin-top: var(--space-4, 12px);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2, 6px);
+  }
+
+  .talk-card__pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border: 1px solid var(--color-border-hairline);
+    border-radius: 9999px; /* rounded.full */
+    font-family: var(--font-family-base);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    background-color: var(--color-surface-base);
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  /* ─── Logistics ──────────────────────────────────────────────────── */
+  .talk-card__logistics {
+    margin-top: var(--space-4, 12px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1, 4px);
+  }
+
+  .talk-card__logistics-row {
+    display: flex;
+    gap: var(--space-3, 8px);
+    align-items: baseline;
+  }
+
+  .talk-card__logistics-label {
+    font-family: var(--font-family-base);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink-primary);
+    flex-shrink: 0;
+    min-width: 40px;
+  }
+
+  .talk-card__logistics-value {
+    font-family: var(--font-family-base);
+    font-size: 11.5px;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    color: var(--color-ink-secondary);
+    line-height: 1.4;
+  }
+</style>
