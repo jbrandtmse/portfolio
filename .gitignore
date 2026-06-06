@@ -16,6 +16,8 @@ tmp/
 .env
 .env.*
 *.local
+# ...but keep the committed, secret-free template
+!.env.example
 
 # Dependencies / build (in case code is added later)
 node_modules/
@@ -25,3 +27,23 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+
+# Astro generated types
+.astro/
+
+# Story 1.10 build-output test scratch dir (an env-set `astro build` outDir,
+# created+removed per run; ignored so a crashed run never leaves it tracked).
+.test-umami-build-*/
+
+# API runtime data (SQLite/Drizzle store added in later stories)
+api/data/
+
+# Test-harness artifacts (Story 1.9): Playwright e2e + Lighthouse CI outputs.
+# Generated on each run; never committed.
+test-results/
+playwright-report/
+.lighthouseci/
+# Playwright browser cache (only present if `npx playwright install` was used as
+# the fallback; the default channel:'chrome' uses the system browser and writes
+# nothing here).
+.cache/ms-playwright/

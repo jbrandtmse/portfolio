@@ -1,0 +1,23 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    // Node ESM service: emit JS for `pnpm build`/`start`, overriding the base's
+    // noEmit. NodeNext resolution matches the runtime (tsx + node).
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "types": ["node"],
+    "outDir": "dist",
+    "rootDir": "src",
+    "noEmit": false,
+    // tsx handles .ts execution in dev; for `tsc` builds we resolve to emitted
+    // .js, so disallow importing .ts extensions here.
+    "allowImportingTsExtensions": false
+  },
+  "include": ["src/**/*"],
+  // Test files are type-checked and run by Vitest (vitest.config.ts), not by
+  // the production `tsc` build/typecheck — so they never emit into dist/ and
+  // don't require vitest's types in the service compile. Vitest still discovers
+  // them independently via its `**/*.test.ts` glob (skill-rules Rule 8).
+  "exclude": ["dist", "node_modules", "src/**/*.test.ts"]
+}

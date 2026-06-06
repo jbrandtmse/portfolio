@@ -1,0 +1,128 @@
+---
+/**
+ * MirrorLayout — the shared shell for every Mirror route (Story 1.5, AC1).
+ *
+ * The Mirror is the static, crawlable, answer-first layer of the two-layer IA
+ * (UX-DR10): real HTML that search engines, answer engines, and JS-off visitors
+ * can read independent of the cinematic Stage or the Guide. Every Mirror page
+ * is composed through this layout so the SEO/GEO floor is uniform:
+ *
+ *   • Answer-first lede — the opening plain-text paragraph whose FIRST SENTENCE
+ *     names the entity "Joshua R. Brandt, MSE" (EXPERIENCE §"SEO/GEO floor";
+ *     UX-DR15). Passed as the `lede` prop (the per-route strings already lead
+ *     with the entity by convention).
+ *   • Exactly ONE <h1> — the page heading, from the `heading` prop (clean
+ *     hierarchy; NFR-2/SEO). Body sections use <h2>+.
+ *   • Self-canonical — a <link rel="canonical"> pointing at THIS page's own
+ *     absolute URL, built from Astro.url.pathname + Astro.site (UX-DR10: each
+ *     Mirror route is canonical to itself; teasers never duplicate Mirror body).
+ *     Astro.site is set in astro.config.mjs and also feeds Story 1.6's sitemap.
+ *
+ * The global static-fallback Footer (Story 1.7) is rendered by BaseLayout on
+ * every page, so Mirror routes inherit it automatically — no per-page wiring.
+ *
+ * Wraps BaseLayout (Story 1.2) for <html lang=en>, head/meta, and the JSON-LD
+ * slot. Forwards a `jsonld` slot up to BaseLayout's head
+ * (Story 1.6) so Mirror routes can emit structured data; the layout itself ships
+ * 0 executable JS: no <script>, no island (NFR-1) — this static layer IS the
+ * JS-off experience. (A `<script type="application/ld+json">` a route passes
+ * through the slot is DATA, not executable JS.) NO exclamation marks in any copy
+ * (positive-assertion voice).
+ *
+ * Consumed by: every Mirror route in this story (/about + the 7 stubs), and the
+ * Mirror content authored by Epics 2–4. /about, /speaking, /speaking/reel,
+ * /work/loandemo, and /faq pass JSON-LD through its slot (Story 1.6).
+ */
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  /** The single <h1> text for this page. Required (clean heading hierarchy). */
+  heading: string;
+  /**
+   * The answer-first opening paragraph. Its FIRST SENTENCE must name the entity
+   * "Joshua R. Brandt, MSE" (GEO floor). Required.
+   */
+  lede: string;
+  /** Document <title>. Defaults to the canonical name. */
+  title?: string;
+  /** Meta description. Optional; passed through to BaseLayout. */
+  description?: string;
+}
+
+const { heading, lede, title = 'Joshua R. Brandt, MSE', description } = Astro.props;
+
+// Self-canonical: this route's own absolute URL (UX-DR10). Astro.site is the
+// canonical origin from astro.config.mjs; Astro.url.pathname is this route's
+// path. new URL(path, origin) yields the absolute self URL.
+//
+// Astro.site is always set in production (astro.config.mjs) and during the real
+// `astro build` the build-output suite drives, so this branch is always taken
+// there — output is byte-identical (every route's exact canonical href is
+// asserted from that real build). The guard only matters in isolated rendering
+// where Astro.site is unset (Astro's Container API does NOT populate Astro.site
+// — withastro/astro#11585), where `new URL(path, undefined)` would otherwise
+// throw ERR_INVALID_URL; BaseLayout already omits the <link> when canonical is
+// undefined. This keeps the shared layout null-safe and unit-testable.
+const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined;
+---
+
+<BaseLayout title={title} description={description} canonical={canonical}>
+  {
+    /* Forward a page-supplied JSON-LD block up to BaseLayout's head slot (Story
+      1.6). Mirror routes that emit structured data (e.g. /about, /speaking)
+      pass a <script type="application/ld+json" slot="jsonld"> child; routes
+      without one render nothing here. */
+  }
+  <slot name="jsonld" slot="jsonld" />
+
+  <main class="mirror">
+    <article class="mirror__inner">
+      <h1 class="mirror__title">{heading}</h1>
+      {/* The answer-first lede — the opening plain-text paragraph (entity-first). */}
+      <p class="mirror__lede">{lede}</p>
+      {/* Page body — each route supplies its own content here. */}
+      <slot />
+    </article>
+  </main>
+</BaseLayout>
+
+<style>
+  /* The Mirror reading surface: a single calm long-form column, generous
+     whitespace, depth via tone + hairline only (the flat system). Token-driven
+     throughout — no hardcoded values a token covers. */
+  .mirror {
+    padding: var(--space-section-band) var(--space-margin-desktop);
+  }
+
+  .mirror__inner {
+    max-width: var(--measure-reading);
+    margin-inline: auto;
+  }
+
+  /* The single <h1> — the page heading beat. Source Serif 4, display-leaning via
+     the locked h1 ramp tokens. */
+  .mirror__title {
+    font: var(--text-h1);
+    font-family: var(--font-family-base);
+    letter-spacing: var(--letter-spacing-h1);
+    color: var(--color-ink-primary);
+    text-wrap: balance;
+  }
+
+  /* The answer-first lede — the opening paragraph, eased up from body for the
+     entity-first first sentence (the GEO floor). */
+  .mirror__lede {
+    margin-top: var(--space-5);
+    font-size: var(--font-size-lede);
+    font-weight: var(--font-weight-lede);
+    line-height: var(--line-height-lede);
+    letter-spacing: var(--letter-spacing-lede);
+    color: var(--color-ink-primary);
+  }
+
+  @media (max-width: 760px) {
+    .mirror {
+      padding: var(--space-6) var(--space-margin-mobile);
+    }
+  }
+</style>

@@ -1,0 +1,57 @@
+---
+/**
+ * Wordmark — the canonical name lockup (AC4; DESIGN §Components → Wordmark).
+ *
+ * Renders the exact canonical string `Joshua R. Brandt, MSE` in the kicker font
+ * at weight 600, tracked + uppercase, in --color-ink-primary. Pure markup +
+ * scoped style; 0 JS.
+ *
+ * - size="hero"    → wider 0.30em tracking (the hero-top lockup).
+ * - size="compact" → tighter 0.10em tracking (page-top / header use).
+ * The element tag is configurable via `as` (default <span>) so a page can place
+ * the wordmark inside the correct heading/landmark without restyling.
+ *
+ * The conversational short form "Joshua" is the Guide's voice only — never here.
+ */
+type WordmarkSize = 'hero' | 'compact';
+type WordmarkTag = 'span' | 'p' | 'div';
+
+interface Props {
+  size?: WordmarkSize;
+  as?: WordmarkTag;
+}
+
+const { size = 'compact', as: Tag = 'span' }: Props = Astro.props;
+
+// Canonical name string — exact casing, do not normalize (DESIGN locks this).
+const NAME = 'Joshua R. Brandt, MSE';
+---
+
+<Tag class:list={['wordmark', `wordmark--${size}`]}>{NAME}</Tag>
+
+<style>
+  .wordmark {
+    display: inline-block;
+    font-family: var(--font-family-base);
+    font-weight: var(--font-weight-semibold);
+    /* 13px is the wordmark's own pinned spec value (DESIGN §Components → wordmark
+       fontSize: '13px'), distinct from the kicker ramp's 12px — the wordmark
+       borrows the kicker FAMILY/weight, not its size. Not covered by any ramp
+       token, so it is a DESIGN-pinned component one-off (cf. Button's 15px). */
+    font-size: 13px;
+    line-height: var(--line-height-kicker);
+    text-transform: uppercase;
+    color: var(--color-ink-primary);
+    /* No exclamation, no decoration — calm, set, confident. */
+  }
+
+  /* Hero-top lockup: the wide tracked-out treatment from the mock. */
+  .wordmark--hero {
+    letter-spacing: var(--letter-spacing-kicker); /* 0.30em */
+  }
+
+  /* Compact page-top / header treatment: tighter tracking, same family/weight. */
+  .wordmark--compact {
+    letter-spacing: 0.1em; /* within the 0.06-0.16em compact band (DESIGN) */
+  }
+</style>

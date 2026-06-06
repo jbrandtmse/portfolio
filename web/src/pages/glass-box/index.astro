@@ -1,0 +1,38 @@
+---
+/**
+ * /glass-box — the Glass Box index Mirror route (Story 1.5 stub; AC2).
+ *
+ * Answer-first, self-canonical, exactly one <h1> via MirrorLayout. RESOLVES the
+ * forward-reference from the 1.4 Glass Box teaser ("Open the Glass Box" →
+ * /glass-box). Epic 2 fills the body with the curated build-story index; the
+ * per-artifact reader /glass-box/[artifact] is also Epic 2 (out of scope here).
+ * 0 JS.
+ *
+ * The lede's first sentence names "Joshua R. Brandt, MSE" (GEO floor).
+ */
+import MirrorLayout from '../../layouts/MirrorLayout.astro';
+
+const LEDE =
+  'Joshua R. Brandt, MSE builds in the open. The Glass Box is the curated, read-only record of the real BMAD Method artifacts behind this work.';
+---
+
+<MirrorLayout
+  heading="The Glass Box"
+  lede={LEDE}
+  title="The Glass Box — Joshua R. Brandt, MSE"
+  description="The Glass Box — the curated, read-only record of the real BMAD Method artifacts behind the work of Joshua R. Brandt, MSE."
+>
+  <p class="stub-note">
+    The build-story index is on its way. Epic 2 fills this page with the curated, chronological
+    record of the real artifacts behind this work.
+  </p>
+</MirrorLayout>
+
+<style>
+  .stub-note {
+    margin-top: var(--space-6);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+  }
+</style>

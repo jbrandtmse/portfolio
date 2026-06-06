@@ -1,0 +1,95 @@
+/*
+ * Global baseline — the flat/hairline identity applied site-wide (AC3).
+ * Imported by BaseLayout after tokens.css + fonts.css. Everything references the
+ * locked tokens via var(--…); no hardcoded hex/size a token covers.
+ *
+ * Realizes the flat system: depth via tonal layering (surface-raised on
+ * surface-base) + hairline borders only — NO shadow anywhere (the single
+ * --shadow-float is reserved for the Guide, applied to no surface here).
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Honor system text-size preferences; respect reduced motion at the root. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-surface-base);
+  color: var(--color-ink-primary);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-body);
+  line-height: var(--line-height-body);
+  /* Exercise the Source Serif 4 optical-size axis (UX-DR2): auto maps opsz to
+   * font-size, easing toward text for body and toward display for headings. */
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Headings inherit the family; size/weight are set by component or utilities.
+ * Reset default margins so layout spacing is deliberate (token-driven). */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure,
+blockquote {
+  margin: 0;
+}
+
+img,
+picture,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* Links: the single chromatic accent; hairline underline that deepens on hover. */
+a {
+  color: var(--color-accent);
+  text-decoration-color: var(--color-border-hairline);
+  text-underline-offset: 0.15em;
+}
+
+a:hover {
+  color: var(--color-accent-hover);
+  text-decoration-color: var(--color-accent);
+}
+
+/* Visible keyboard-focus everywhere — a navy ring with offset (AC3/AA).
+ * :focus-visible only (no ring on mouse click), with a :focus fallback for
+ * engines lacking :focus-visible. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Honor prefers-reduced-motion at the baseline (NFR-2). No motion ships in this
+ * story, but the gate is established here so later scenes inherit it. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

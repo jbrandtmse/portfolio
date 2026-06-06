@@ -1,0 +1,15 @@
+# Build artifacts & deps
+node_modules
+**/dist
+**/.astro
+api/data
+pnpm-lock.yaml
+
+# Pre-existing BMAD tooling, planning artifacts, and docs are owned by their
+# own workflows and authored in their own style — Prettier governs only the
+# application scaffold (web/api/shared + root config), not these.
+.claude/
+_bmad/
+_bmad-output/
+docs/
+epic-cycle-workflow-creation.md

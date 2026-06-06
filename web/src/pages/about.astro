@@ -1,0 +1,331 @@
+---
+/**
+ * /about — the canonical Person home (Story 1.5, AC3; one of the 3 GEO routes,
+ * UX-DR14). Fully authored here (not a stub): the canonical long bio + headshot
+ * + sameAs channel links. Answer-first, self-canonical, exactly one <h1> via
+ * MirrorLayout. 0 JS.
+ *
+ * Bios are set VERBATIM from the approved copy (Story Dev Notes — flagged
+ * [ASSUMPTION] until Josh confirms): the 50-word short form and the 126-word
+ * long form, with NO exclamation marks and the lowercase "— seasoned, building
+ * at the frontier." running-sentence tail kept AS WRITTEN (it is the bio prose
+ * form, deliberately NOT the Title-case hero <h1> form). The bios live in JS
+ * string constants so the text reaches the DOM character-for-character (no smart
+ * quotes / entity rewriting).
+ *
+ * The sameAs links (YouTube, GitHub, Suno) are real HTML <a>s with placeholder
+ * hrefs flagged [OPEN] until the channel URLs are supplied — these are the same
+ * channels Story 1.6's Person.sameAs JSON-LD will mirror.
+ *
+ * The headshot is a styled [OPEN] placeholder reusing the 1.3 hero's museum-mat
+ * treatment (a "JRB" monogram on a raised cream mat with corner registration
+ * ticks + a museum-style label). CSS only — not stock, not AI imagery (NFR-1).
+ */
+import MirrorLayout from '../layouts/MirrorLayout.astro';
+import { personJsonLd, profilePageJsonLd, serializeJsonLd } from '../lib/jsonld';
+import { PERSON, SITE_ORIGIN } from '../lib/person';
+
+// /about JSON-LD (Story 1.6, AC1; this is the canonical Person home, UX-DR14):
+// the REAL Person + a ProfilePage whose mainEntity is that Person. Uses the SAME
+// canonical Person facts as the home (one source — web/src/lib/person.ts), so
+// the Person data is byte-identical across both GEO routes. Person.sameAs
+// mirrors the visible channel links below; both are [OPEN] until the real URLs
+// land. ProfilePage url is this page's own canonical. dateModified omitted for
+// deterministic output (NFR-6). Serialized into BaseLayout's jsonld slot (passed
+// through MirrorLayout).
+const aboutJsonLd = serializeJsonLd([
+  personJsonLd(PERSON),
+  // Trailing slash so the ProfilePage url matches this page's own canonical
+  // (Astro directory build → ".../about/"; Story 1.5 self-canonical).
+  profilePageJsonLd({ mainEntity: PERSON, url: `${SITE_ORIGIN}/about/` }),
+]);
+
+// Answer-first lede — first sentence names the entity (GEO floor).
+const LEDE =
+  'Joshua R. Brandt, MSE is a software engineer with thirty years of shipping experience, now building at the frontier of agentic engineering. This page is the canonical home for his bio and channels.';
+
+// VERBATIM approved bios ([ASSUMPTION] until Josh confirms). Do NOT edit the
+// wording, punctuation, or the lowercase tail. No exclamation marks.
+const BIO_SHORT =
+  'Joshua R. Brandt, MSE is a software engineer with 30 years of shipping experience, now building at the frontier of agentic engineering. He speaks on the patterns that outlast hype cycles and on running real software through disciplined, auditable agent workflows — seasoned, building at the frontier.';
+
+const BIO_LONG =
+  'Joshua R. Brandt, MSE is a software engineer with three decades of shipping experience who has gone deep on agentic engineering — seasoned, building at the frontier. Having engineered through every "this changes everything" wave from distributed objects to Kubernetes, he now focuses on what experienced ICs actually need: how to tell durable architecture from fashion, and how to make AI agents dependable teammates rather than party tricks. He works in the open, publishing the real, disciplined process behind his projects so the method is auditable, not asserted — including a portfolio built entirely as a public agentic-engineering project, documented as it ships. His talks pair a veteran\'s skepticism with hands-on practice, and aim to leave senior audiences with patterns they can use the next morning.';
+
+// sameAs channels — real <a>s, hrefs [OPEN] until supplied. Story 1.6's
+// Person.sameAs JSON-LD mirrors these same channels.
+const CHANNELS = [
+  { label: 'YouTube', href: '#', open: '[OPEN: YouTube channel URL]' },
+  { label: 'GitHub', href: '#', open: '[OPEN: GitHub profile URL]' },
+  { label: 'Suno', href: '#', open: '[OPEN: Suno profile URL]' },
+];
+---
+
+<MirrorLayout
+  heading="About Joshua R. Brandt, MSE"
+  lede={LEDE}
+  title="About — Joshua R. Brandt, MSE"
+  description="Joshua R. Brandt, MSE is a software engineer with thirty years of shipping experience, now building at the frontier of agentic engineering."
+>
+  {
+    /* Structured data — Person + ProfilePage (REAL), forwarded through
+      MirrorLayout into BaseLayout's head. DATA, not executable JS (NFR-1). */
+  }
+  <script type="application/ld+json" slot="jsonld" is:inline set:html={aboutJsonLd} />
+
+  <div class="about">
+    <div class="about__body">
+      {/* The canonical bio — short form, then long form. Set verbatim. */}
+      <section class="about__bio" aria-labelledby="about-bio-title">
+        <h2 id="about-bio-title" class="about__h2">Bio</h2>
+        <p class="about__assumption">
+          <span class="about__flag">[ASSUMPTION]</span> Bio copy pending Josh&rsquo;s confirmation.
+        </p>
+        <p class="about__bio-short">{BIO_SHORT}</p>
+        <p class="about__bio-long">{BIO_LONG}</p>
+      </section>
+
+      {/* sameAs channels — real <a>s with [OPEN]-flagged placeholder hrefs. */}
+      <section class="about__channels" aria-labelledby="about-channels-title">
+        <h2 id="about-channels-title" class="about__h2">Channels</h2>
+        <ul class="about__channel-list">
+          {
+            /* Each channel link carries the cookieless Umami click event
+              (Story 1.10, AC2 / IAC-2) as 0-JS data attributes: Umami's own
+              script records `channel-clicked` with a `channel` prop on click —
+              no app JS, so the 0-JS floor (NFR-1) holds. The prop is the channel
+              label only (no PII; NFR-7). The other 5 funnel events fire in their
+              own epics (Guide → Epic 4, invite/reel → Epic 3). */
+          }
+          {
+            CHANNELS.map((c) => (
+              <li class="about__channel">
+                <a
+                  class="about__channel-link"
+                  href={c.href}
+                  rel="me"
+                  data-umami-event="channel-clicked"
+                  data-umami-event-channel={c.label}
+                >
+                  {c.label}
+                </a>
+                <span class="about__flag about__flag--inline">{c.open}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+    </div>
+
+    {
+      /* [OPEN: headshot asset] — styled placeholder reusing the hero museum-mat
+       treatment. A "JRB" monogram on a raised cream mat with corner registration
+       ticks + a museum-style label. CSS only (NFR-1); the real headshot will
+       carry a meaningful alt. */
+    }
+    <figure class="about__portrait">
+      <div
+        class="about__mat"
+        role="img"
+        aria-label="Portrait of Joshua R. Brandt (placeholder — headshot to come)"
+      >
+        <span class="about__mat-ticks" aria-hidden="true"></span>
+        <span class="about__monogram" aria-hidden="true">JRB</span>
+        <span class="about__mat-cap" aria-hidden="true">Portrait</span>
+      </div>
+      <figcaption class="about__label">
+        <span class="about__label-name">Joshua R. Brandt</span><span class="about__label-meta"
+          >Portrait</span
+        >
+      </figcaption>
+    </figure>
+  </div>
+</MirrorLayout>
+
+<style>
+  /* Two-column on desktop (bio + portrait); stacked on mobile. Token-driven,
+     flat (tone + hairline, no shadow). */
+  .about {
+    display: grid;
+    grid-template-columns: 1fr minmax(212px, 286px);
+    gap: clamp(36px, 4.6vw, 72px);
+    align-items: start;
+    margin-top: var(--space-7);
+  }
+
+  .about__h2 {
+    font-size: var(--font-size-h2);
+    font-weight: var(--font-weight-h2);
+    line-height: var(--line-height-h2);
+    letter-spacing: var(--letter-spacing-h2);
+    color: var(--color-ink-primary);
+  }
+
+  .about__channels {
+    margin-top: var(--space-7);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-border-hairline);
+  }
+
+  .about__bio-short,
+  .about__bio-long {
+    margin-top: var(--space-5);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-primary);
+  }
+
+  .about__bio-long {
+    color: var(--color-ink-secondary);
+  }
+
+  /* The [ASSUMPTION]/[OPEN] flags are real text (never color alone) — a quiet
+     monospace-ish meta treatment so they read as provisional markers. */
+  .about__assumption {
+    margin-top: var(--space-4);
+    font-size: var(--font-size-meta);
+    letter-spacing: var(--letter-spacing-meta);
+    color: var(--color-ink-secondary);
+  }
+
+  .about__flag {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-accent);
+  }
+
+  .about__flag--inline {
+    margin-left: var(--space-3);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-regular);
+    color: var(--color-ink-secondary);
+  }
+
+  .about__channel-list {
+    margin: var(--space-5) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .about__channel {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: var(--space-3) 0;
+    border-top: 1px solid var(--color-border-hairline);
+  }
+
+  .about__channel:first-child {
+    border-top: none;
+  }
+
+  /* The channel link — a real <a> (followable JS-off), the single accent with a
+     hairline underline that deepens on hover. */
+  .about__channel-link {
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-accent);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-accent);
+    padding-bottom: 1px;
+    border-radius: var(--radius-sm);
+  }
+
+  .about__channel-link:hover {
+    color: var(--color-accent-hover);
+    border-bottom-color: var(--color-accent-hover);
+  }
+
+  .about__channel-link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* PORTRAIT — the museum-mat placeholder, reused from the hero treatment. */
+  .about__portrait {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+  }
+
+  .about__mat {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 4 / 5;
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-lg);
+  }
+
+  .about__mat-ticks {
+    position: absolute;
+    inset: 13px;
+    pointer-events: none;
+    background:
+      linear-gradient(var(--color-border-hairline), var(--color-border-hairline)) left 0 top 0 /
+        15px 1px no-repeat,
+      linear-gradient(var(--color-border-hairline), var(--color-border-hairline)) left 0 top 0 / 1px
+        15px no-repeat,
+      linear-gradient(var(--color-border-hairline), var(--color-border-hairline)) right 0 bottom 0 /
+        15px 1px no-repeat,
+      linear-gradient(var(--color-border-hairline), var(--color-border-hairline)) right 0 bottom 0 /
+        1px 15px no-repeat;
+  }
+
+  .about__monogram {
+    font-family: var(--font-family-base);
+    font-size: clamp(40px, 4.4vw, 60px);
+    font-weight: var(--font-weight-regular);
+    letter-spacing: 0.04em;
+    color: var(--color-ink-meta-min);
+  }
+
+  .about__mat-cap {
+    position: absolute;
+    bottom: 16px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-family: var(--font-family-base);
+    font-size: 10px;
+    letter-spacing: var(--letter-spacing-kicker);
+    text-transform: uppercase;
+    color: var(--color-ink-meta-min);
+  }
+
+  .about__label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border-hairline);
+    font-size: var(--font-size-meta);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-ink-secondary);
+  }
+
+  .about__label-name {
+    color: var(--color-ink-primary);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  @media (max-width: 760px) {
+    .about {
+      grid-template-columns: 1fr;
+      gap: var(--space-5);
+    }
+
+    /* Lift the portrait above the bio on mobile (the face-first lockup). */
+    .about__portrait {
+      order: -1;
+    }
+
+    .about__mat {
+      max-width: 220px;
+    }
+  }
+</style>

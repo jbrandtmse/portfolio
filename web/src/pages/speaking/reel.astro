@@ -1,0 +1,61 @@
+---
+/**
+ * /speaking/reel — the speaker-reel Mirror route (Story 1.5 stub; AC2; one of
+ * the 3 GEO routes, UX-DR14). Answer-first, self-canonical, exactly one <h1> via
+ * MirrorLayout. Epic 3 fills the body with the reel and its VideoObject
+ * structured data. 0 JS.
+ *
+ * The lede's first sentence names "Joshua R. Brandt, MSE" (GEO floor).
+ */
+import MirrorLayout from '../../layouts/MirrorLayout.astro';
+import { serializeJsonLd, videoObjectJsonLd } from '../../lib/jsonld';
+import { SITE_ORIGIN } from '../../lib/person';
+
+const LEDE =
+  "Joshua R. Brandt, MSE's speaker reel previews how he presents the build, live. The full reel and its details live here.";
+
+// PLACEHOLDER VideoObject JSON-LD (Story 1.6, AC1; one of the 3 GEO routes).
+// Epic 3 replaces this with the real reel's metadata. thumbnailUrl/contentUrl/
+// embedUrl are [OPEN] placeholders (valid absolute URLs at the site origin so
+// the schema validates) until the real asset lands. duration is the ~90s reel
+// target (PT1M30S). uploadDate is a deterministic fixed constant (not new
+// Date()) so the output stays byte-stable (NFR-6).
+const reelJsonLd = serializeJsonLd(
+  videoObjectJsonLd({
+    name: '[PLACEHOLDER] Speaker reel — replaced with the real reel in Epic 3',
+    description:
+      'Placeholder VideoObject until Epic 3 publishes the real speaker reel and its details.',
+    thumbnailUrl: `${SITE_ORIGIN}/reel-thumbnail.jpg`, // [OPEN: reel thumbnail]
+    uploadDate: '2026-01-01',
+    duration: 'PT1M30S',
+    contentUrl: `${SITE_ORIGIN}/reel.mp4`, // [OPEN: reel media URL]
+    embedUrl: `${SITE_ORIGIN}/reel-embed`, // [OPEN: reel embed URL]
+  }),
+);
+---
+
+<MirrorLayout
+  heading="Speaker reel"
+  lede={LEDE}
+  title="Speaker reel — Joshua R. Brandt, MSE"
+  description="The speaker reel of Joshua R. Brandt, MSE — a preview of how he presents the build, live."
+>
+  {
+    /* Structured data — PLACEHOLDER VideoObject (real reel lands in Epic 3).
+      DATA, not executable JS (NFR-1). */
+  }
+  <script type="application/ld+json" slot="jsonld" is:inline set:html={reelJsonLd} />
+  <p class="stub-note">
+    The reel is on its way. Epic 3 fills this page with the speaker reel and its VideoObject
+    details.
+  </p>
+</MirrorLayout>
+
+<style>
+  .stub-note {
+    margin-top: var(--space-6);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+  }
+</style>

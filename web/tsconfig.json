@@ -1,0 +1,15 @@
+{
+  "extends": ["astro/tsconfigs/strict", "../tsconfig.base.json"],
+  "compilerOptions": {
+    // Astro runs in the browser: keep modern frontend lib/target rather than
+    // the Node-oriented ES2022 defaults from the shared base. DOM lib types are
+    // provided by Astro/Vite; jsx:preserve comes from the Astro strict preset.
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
+  },
+  "include": [".astro/types.d.ts", "**/*"],
+  "exclude": ["dist"]
+}

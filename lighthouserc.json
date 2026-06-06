@@ -1,0 +1,27 @@
+{
+  "ci": {
+    "collect": {
+      "startServerCommand": "pnpm --filter @portfolio/web preview --port 4321 --host 127.0.0.1",
+      "startServerReadyPattern": "http://127.0.0.1:4321",
+      "startServerReadyTimeout": 60000,
+      "url": ["http://127.0.0.1:4321/", "http://127.0.0.1:4321/about"],
+      "numberOfRuns": 1,
+      "settings": {
+        "chromePath": "/usr/bin/google-chrome-stable",
+        "chromeFlags": "--headless=new --no-sandbox"
+      }
+    },
+    "assert": {
+      "assertions": {
+        "resource-summary:script:size": ["error", { "maxNumericValue": 256000 }],
+        "total-byte-weight": ["error", { "maxNumericValue": 400000 }],
+        "first-contentful-paint": ["error", { "maxNumericValue": 2500 }],
+        "categories:performance": ["error", { "minScore": 0.9 }]
+      }
+    },
+    "upload": {
+      "target": "filesystem",
+      "outputDir": "./.lighthouseci"
+    }
+  }
+}

@@ -1,0 +1,14 @@
+packages:
+  - web
+  - api
+  - shared
+  - scripts
+# esbuild (Vite/Astro bundler) and sharp (Astro image optimization) ship
+# native postinstall build scripts. Both are trusted, essential build-chain
+# deps, so their builds are explicitly allowed.
+allowBuilds:
+  esbuild: true
+  sharp: true
+minimumReleaseAgeExclude:
+  - '@types/node@25.9.2'
+  - '@types/react@19.2.17'

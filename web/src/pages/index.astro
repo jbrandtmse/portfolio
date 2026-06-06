@@ -1,0 +1,303 @@
+---
+/**
+ * Home (`/`) — the cold-landing first impression (FR-1) and the locked 7-scene
+ * arc (Story 1.4, AC1). Story 1.3 built the calm, credible hero + the audience
+ * fork (the #hero scene); Story 1.4 lays the remaining six scenes and the
+ * persistent scene-rail (the FR-2 skip/progress affordance).
+ *
+ * Locked scene order (EXPERIENCE §"Scene order (Stage 1, locked)"; spine wins):
+ *   #hero → #thesis → #timeline → #speaker → #flagship → #glass-box → #close.
+ * DOM order = the locked order. #hero is the 1.3 HeroStatic.
+ *
+ * Scene content rules (Story 1.4 Dev Notes):
+ *   • Thesis (#thesis) — the ONE fully-authored non-hero scene. Carries the
+ *     canonical thesis line "The medium is the message." + a calm framing AND the
+ *     answer-first, entity-named first sentence for `/` (GEO/SEO substance —
+ *     names "Joshua R. Brandt, MSE" in the first sentence; EXPERIENCE §Voice →
+ *     Answer-first ledes).
+ *   • Teasers (#timeline/#speaker/#flagship/#glass-box) — each a Kicker + a 1–2
+ *     sentence summary + a real link to its Mirror route. Summarize-and-link
+ *     ONLY — never duplicate the Mirror body (UX-DR10; the clean Mirror wins the
+ *     citation). Each scene is a slot its epic fills (Epic 2: Timeline/Flagship/
+ *     Glass-Box; Epic 3: Speaker).
+ *   • Close (#close) — a shell: a calm closing line + a real /invite link. The
+ *     invite/follow CTAs themselves are Epic 3 (no form here).
+ *
+ * Mirror routes (/timeline, /speaking, /work/loandemo, /glass-box, /invite) are
+ * created in Story 1.5 — the hrefs are correct now and 404 until then (forward
+ * reference, not a defect).
+ *
+ * Headings: exactly ONE <h1> (the hero positioning line, owned by HeroStatic);
+ * every scene title here is an <h2> — clean hierarchy (NFR-2/SEO).
+ *
+ * 0-JS-by-default holds (NFR-1): the page itself ships no JS; the ONE tiny
+ * scene-rail enhancement script (gated behind a two-layer reduced-motion gate)
+ * is the single, sub-1KB exception, scoped to SceneRail. No React island here.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HeroStatic from '../components/hero/HeroStatic.astro';
+import Kicker from '../components/common/Kicker.astro';
+import SceneRail from '../components/scene/SceneRail.astro';
+import { personJsonLd, profilePageJsonLd, serializeJsonLd } from '../lib/jsonld';
+import { PERSON, SITE_ORIGIN } from '../lib/person';
+
+// Home JSON-LD (Story 1.6, AC1; EXPERIENCE §"SEO/GEO floor"): the REAL Person +
+// a ProfilePage whose mainEntity is that Person. Same canonical Person facts as
+// /about (one source — web/src/lib/person.ts), serialized into the BaseLayout
+// `jsonld` slot below. The ProfilePage url is the site root (the home is the
+// person's canonical home). dateModified is intentionally omitted to keep the
+// output deterministic (NFR-6; Story 1.8 verifies byte-stability).
+const homeJsonLd = serializeJsonLd([
+  personJsonLd(PERSON),
+  profilePageJsonLd({ mainEntity: PERSON, url: `${SITE_ORIGIN}/` }),
+]);
+---
+
+<BaseLayout
+  title="Joshua R. Brandt, MSE"
+  description="A warm, structured, editorial portfolio for a 30-year engineer building at the frontier."
+>
+  {
+    /* Structured data — Person + ProfilePage (REAL), rendered server-side in
+      <head> via BaseLayout's jsonld slot. DATA, not executable JS (NFR-1). */
+  }
+  <script type="application/ld+json" slot="jsonld" is:inline set:html={homeJsonLd} />
+  {
+    /* The persistent scene-rail — the FR-2 skip/progress/jump affordance. It is
+     fixed chrome overlaying the scroll-native arc, so the scene DOM order below
+     is the locked order, untouched. */
+  }
+  <SceneRail />
+
+  <main class="home">
+    {/* ── Scene 1 — Hero (the 1.3 HeroStatic; carries the single <h1>) ─────── */}
+    <section id="hero" aria-label="Introduction">
+      <HeroStatic />
+    </section>
+
+    {/* ── Scene 2 — Thesis (authored here; the one full non-hero scene) ─────── */}
+    <section id="thesis" class="scene scene--thesis" aria-labelledby="thesis-title">
+      <div class="scene__inner">
+        <Kicker>The thesis</Kicker>
+        <h2 id="thesis-title" class="scene__thesis-line">The medium is the message.</h2>
+        {/* Answer-first, entity-named lede for `/` (GEO/SEO; EXPERIENCE §Voice). */}
+        <p class="scene__lede">
+          Joshua R. Brandt, MSE is a software engineer with about thirty years of shipping
+          experience, now building at the frontier of agentic engineering.
+        </p>
+        <p class="scene__body">
+          This site is not a description of the work. It is the work — built in the open as a BMAD
+          Method project, so the proof and the portfolio are the same artifact. Everything below is
+          a way into that record.
+        </p>
+      </div>
+    </section>
+
+    {/* ── Scene 3 — Master Timeline (teaser; Epic 2 fills it) ──────────────── */}
+    <section id="timeline" class="scene" aria-labelledby="timeline-title">
+      <div class="scene__inner">
+        <Kicker>Master Timeline</Kicker>
+        <h2 id="timeline-title" class="scene__title">Thirty years, on one spine</h2>
+        <p class="scene__summary">
+          A single craft-arc from the early shipping years to the agentic turn — the runway that
+          earns the frontier.
+        </p>
+        <p class="scene__more">
+          <a class="scene__link" href="/timeline">
+            See the Master Timeline<span class="scene__arrow" aria-hidden="true">&rarr;</span>
+          </a>
+        </p>
+      </div>
+    </section>
+
+    {/* ── Scene 4 — Speaker (teaser; Epic 3 fills it; early–mid by design, SM-C1) */}
+    <section id="speaker" class="scene" aria-labelledby="speaker-title">
+      <div class="scene__inner">
+        <Kicker>Speaking</Kicker>
+        <h2 id="speaker-title" class="scene__title">Talks that show the build, live</h2>
+        <p class="scene__summary">
+          Signature talks and the reel, plus a direct way to book — for organizers who want the
+          frontier explained on a stage.
+        </p>
+        <p class="scene__more">
+          <a class="scene__link" href="/speaking">
+            See speaking and book a talk<span class="scene__arrow" aria-hidden="true">&rarr;</span>
+          </a>
+        </p>
+      </div>
+    </section>
+
+    {/* ── Scene 5 — Flagship / loandemo (teaser; Epic 2 fills it) ──────────── */}
+    <section id="flagship" class="scene" aria-labelledby="flagship-title">
+      <div class="scene__inner">
+        <Kicker>Flagship</Kicker>
+        <h2 id="flagship-title" class="scene__title">loandemo, end to end</h2>
+        <p class="scene__summary">
+          The flagship case study: a real product taken from intent to working software with agentic
+          methods.
+        </p>
+        <p class="scene__more">
+          <a class="scene__link" href="/work/loandemo">
+            Read the loandemo case study<span class="scene__arrow" aria-hidden="true">&rarr;</span>
+          </a>
+        </p>
+      </div>
+    </section>
+
+    {/* ── Scene 6 — Glass Box (teaser; Epic 2 fills it) ────────────────────── */}
+    <section id="glass-box" class="scene" aria-labelledby="glass-box-title">
+      <div class="scene__inner">
+        <Kicker>Glass Box</Kicker>
+        <h2 id="glass-box-title" class="scene__title">The build, with the lid off</h2>
+        <p class="scene__summary">
+          The curated, chronological build-story behind this site — the actual artifacts, in the
+          order they were made.
+        </p>
+        <p class="scene__more">
+          <a class="scene__link" href="/glass-box">
+            Open the Glass Box<span class="scene__arrow" aria-hidden="true">&rarr;</span>
+          </a>
+        </p>
+      </div>
+    </section>
+
+    {/* ── Scene 7 — Close (shell; the invite/follow CTAs are Epic 3) ───────── */}
+    <section id="close" class="scene scene--close" aria-labelledby="close-title">
+      <div class="scene__inner">
+        <Kicker>The close</Kicker>
+        <h2 id="close-title" class="scene__title">If the work fits what you are building</h2>
+        <p class="scene__summary">
+          The shortest way to start a conversation is to ask. The full invite and follow options
+          land here next.
+        </p>
+        <p class="scene__more">
+          <a class="scene__link" href="/invite">
+            Invite me to speak<span class="scene__arrow" aria-hidden="true">&rarr;</span>
+          </a>
+        </p>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  /* The scenes are plain, sequential sections (AC4 — fully functional JS-off).
+     Each is a calm editorial band with generous whitespace; depth is tone +
+     hairline, never shadow (DESIGN §Elevation, the flat system). On desktop the
+     fixed scene-rail occupies the right 208px, so the scene content reserves
+     that gutter; on mobile the rail is a sticky top bar and no gutter is needed. */
+  .scene {
+    padding: var(--space-section-band) var(--space-margin-mobile);
+    border-top: 1px solid var(--color-border-hairline);
+  }
+
+  .scene__inner {
+    max-width: var(--measure-reading);
+    margin-inline: auto;
+  }
+
+  /* Scene titles — the <h2> beat. Source Serif 4 display-leaning. */
+  .scene__title,
+  .scene__thesis-line {
+    margin: var(--space-4) 0 0;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-h2);
+    font-weight: var(--font-weight-h2);
+    line-height: var(--line-height-h2);
+    letter-spacing: var(--letter-spacing-h2);
+    color: var(--color-ink-primary);
+    text-wrap: balance;
+  }
+
+  /* The thesis line is the focal sentence of its scene — eased up a touch. */
+  .scene--thesis .scene__thesis-line {
+    font-size: clamp(28px, 3.4vw, 44px);
+  }
+
+  .scene__lede {
+    margin: var(--space-5) 0 0;
+    max-width: 54ch;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-lede);
+    font-weight: var(--font-weight-lede);
+    line-height: var(--line-height-lede);
+    color: var(--color-ink-primary);
+  }
+
+  .scene__body,
+  .scene__summary {
+    margin: var(--space-4) 0 0;
+    max-width: 60ch;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+  }
+
+  .scene__more {
+    margin: var(--space-5) 0 0;
+  }
+
+  /* The teaser link — a quiet inline accent link (DESIGN inline-link pattern):
+     hairline underline that deepens on hover, an arrow that nudges. NOT a button
+     (the scenes summarize-and-link; the Mirror route is the destination). */
+  .scene__link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    font-family: var(--font-family-base);
+    font-size: 15px;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.01em;
+    color: var(--color-accent);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-border-hairline);
+    padding-bottom: 1px;
+    border-radius: var(--radius-sm);
+  }
+
+  .scene__link:hover {
+    color: var(--color-accent-hover);
+    border-bottom-color: var(--color-accent);
+  }
+
+  .scene__link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .scene__arrow {
+    transition: transform 120ms ease;
+  }
+
+  .scene__link:hover .scene__arrow {
+    transform: translateX(3px);
+  }
+
+  /* The Close scene gets a touch more breathing room as the final beat. */
+  .scene--close {
+    padding-bottom: var(--space-7);
+  }
+
+  /* Desktop: reserve the fixed scene-rail's 208px gutter + widen the side
+     margins to the desktop scale. The scene-rail itself is position:fixed, so
+     this padding keeps content clear of it. The hero (#hero) manages its own
+     internal padding, so we only reserve the rail gutter on its right edge. */
+  @media (min-width: 1024px) {
+    .scene {
+      padding-right: calc(208px + var(--space-margin-desktop));
+      padding-left: var(--space-margin-desktop);
+    }
+
+    .home > #hero {
+      padding-right: 208px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scene__arrow {
+      transition: none;
+    }
+  }
+</style>

@@ -1,0 +1,142 @@
+/*
+ * Design tokens — the locked DESIGN.md identity as code.
+ * Source of truth: _bmad-output/planning-artifacts/ux-designs/ux-portfolio-2026-06-03/DESIGN.md
+ * (the DESIGN TOKENS block). DESIGN.md wins on any conflict with mocks/wireframes.
+ *
+ * Authored ONCE here as kebab-namespaced CSS custom properties, grouped by
+ * concern: color, font/text, radius, space, and shadow.
+ * Components reference these via var(--…) and NEVER hardcode a hex/size a token
+ * covers (architecture.md §Naming-Patterns CSS; AC1).
+ *
+ * One base mode only (warm light). The light/dark toggle is out of v1 scope per
+ * the PRD, so there is no [data-theme] layer here.
+ */
+
+:root {
+  /* ── Colors ───────────────────────────────────────────────────────────────
+   * Two ideas: warm cream paper + Prussian navy, over a warm-neutral ink/hairline
+   * spine. 8 core semantic tokens + 2 AA-safe muted-ink variants for quiet text.
+   * AA contrast on surface-base noted per token (from DESIGN §Colors).
+   *
+   * USAGE RULE (not a token): color is never the SOLE carrier of meaning — status
+   * is always also stated in text + weight + shape. The muted inks below
+   * (--color-ink-ghost, --color-ink-meta-min) exist precisely so meaningful quiet
+   * text stays >= 4.5:1 (AA); only purely decorative marks may drop below that.
+   */
+  --color-surface-base: #f6f0e6; /* warm ivory / cream paper — the page & stage, edge to edge */
+  --color-surface-raised: #fbf7ef; /* slightly lifted cream — cards, panels, mats, header sheets */
+  --color-ink-primary: #211b14; /* warm espresso near-black — headlines & body (15.04:1 on base) */
+  --color-ink-secondary: #6b5d4a; /* muted warm gray-brown — meta, captions, ledes, kickers (5.63:1) */
+  --color-border-hairline: #d8cab3; /* warm hairline — rules, borders, button outlines, rail edge */
+  --color-grid-line: #ece3d3; /* very faint drafting-grid ruling — decorative order, never content */
+  --color-accent: #1e3a5f; /* Prussian navy — primary action, links, ticks, nodes, citations (10.15:1) */
+  --color-accent-hover: #162b47; /* deeper navy — hover / pressed / active (12.76:1 on base) */
+  --color-ink-ghost: #776b55; /* muted ink for MEANINGFUL "still to come" text (4.61:1 base / 4.89:1 raised, AA) */
+  --color-ink-meta-min: #756b56; /* quietest ink for meaningful fine print (4.64:1 base / 4.92:1 raised, AA floor) */
+
+  /* ── Typography ───────────────────────────────────────────────────────────
+   * ALL Source Serif 4 — display, headings, body, meta. Roman is the workhorse;
+   * the opsz axis is pushed to display for the headline, eased to text for reading.
+   * Build: self-hosted, subset to Latin, weights 400/600/700, font-display: swap.
+   */
+  --font-family-base: 'Source Serif 4', 'Spectral', Georgia, 'Times New Roman', serif;
+
+  --font-weight-regular: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Type ramp — granular axes (size / weight / line-height / letter-spacing).
+   * Components compose these; --text-* shorthands below bundle the common set. */
+  --font-size-display: clamp(46px, 6.6vw, 96px);
+  --font-weight-display: var(--font-weight-bold);
+  --line-height-display: 0.99;
+  --letter-spacing-display: -0.014em;
+
+  --font-size-h1: clamp(34px, 4.4vw, 52px);
+  --font-weight-h1: var(--font-weight-bold);
+  --line-height-h1: 1.05;
+  --letter-spacing-h1: -0.012em;
+
+  --font-size-h2: clamp(24px, 3vw, 40px);
+  --font-weight-h2: var(--font-weight-bold);
+  --line-height-h2: 1.07;
+  --letter-spacing-h2: -0.01em;
+
+  --font-size-h3: clamp(21px, 2.2vw, 28px);
+  --font-weight-h3: var(--font-weight-bold);
+  --line-height-h3: 1.13;
+  --letter-spacing-h3: -0.006em;
+
+  --font-size-body: 18px; /* long-form reading; UI body eases to 14.5-15px */
+  --font-weight-body: var(--font-weight-regular);
+  --line-height-body: 1.62;
+
+  --font-size-lede: clamp(17px, 1.5vw, 19px);
+  --font-weight-lede: var(--font-weight-regular);
+  --line-height-lede: 1.6;
+  --letter-spacing-lede: 0;
+
+  --font-size-meta: 11.5px; /* range 10.5-13.5px by density; UPPERCASE usage */
+  --font-weight-meta: var(--font-weight-semibold);
+  --line-height-meta: 1.4;
+  --letter-spacing-meta: 0.12em;
+
+  --font-size-kicker: 12px; /* range 10.5-15px; true small-caps via font-variant in long-form */
+  --font-weight-kicker: var(--font-weight-semibold);
+  --line-height-kicker: 1.3;
+  --letter-spacing-kicker: 0.3em; /* tracked-out, UPPERCASE */
+
+  /* Convenience shorthands for the `font` family/weight + size/line-height set. */
+  --text-display: var(--font-weight-display) var(--font-size-display) / var(--line-height-display)
+    var(--font-family-base);
+  --text-h1: var(--font-weight-h1) var(--font-size-h1) / var(--line-height-h1)
+    var(--font-family-base);
+  --text-h2: var(--font-weight-h2) var(--font-size-h2) / var(--line-height-h2)
+    var(--font-family-base);
+  --text-h3: var(--font-weight-h3) var(--font-size-h3) / var(--line-height-h3)
+    var(--font-family-base);
+  --text-body: var(--font-weight-body) var(--font-size-body) / var(--line-height-body)
+    var(--font-family-base);
+  --text-lede: var(--font-weight-lede) var(--font-size-lede) / var(--line-height-lede)
+    var(--font-family-base);
+  --text-meta: var(--font-weight-meta) var(--font-size-meta) / var(--line-height-meta)
+    var(--font-family-base);
+  --text-kicker: var(--font-weight-kicker) var(--font-size-kicker) / var(--line-height-kicker)
+    var(--font-family-base);
+
+  /* ── Radius ───────────────────────────────────────────────────────────────
+   * Climbs with surface size; nodes + the Guide pill are the only fully-round forms. */
+  --radius-sm: 2px; /* type/level chips, small-caps tags */
+  --radius-md: 6px; /* inputs, CTAs, secondary controls */
+  --radius-lg: 8px; /* cards, panels, recursion aside, metric grid, posters */
+  --radius-panel: 12px; /* the Guide panel — the one elevated surface */
+  --radius-full: 9999px; /* the Guide pill, citation chips, format pills, all dot nodes */
+
+  /* ── Spacing ──────────────────────────────────────────────────────────────
+   * 8px base unit with derived steps; section rhythm + measures from the mocks. */
+  --space-unit: 8px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-card-pad: 20px 24px; /* artifact / talk / bio card interior */
+  --space-gutter: 26px; /* grid / arc gutter */
+  --space-margin-mobile: 16px; /* phone side margins */
+  --space-margin-desktop: clamp(20px, 4vw, 56px); /* page side margins */
+  --space-section-band: clamp(38px, 4.2vw, 64px); /* gap between major content bands */
+
+  /* Reading measures (max content widths). */
+  --measure-reading: 680px; /* long-form column (Glass Box reader, case studies) */
+  --measure-content: 1040px; /* standard page content column */
+
+  /* ── Elevation ────────────────────────────────────────────────────────────
+   * FLAT / hairline system. Depth comes from tonal layering (surface-raised on
+   * surface-base) + hairline borders, NOT shadow. There is exactly ONE soft
+   * shadow site-wide, reserved for the Guide panel & pill (the single elevated
+   * surface). It is DEFINED here but applied to no surface in this story. */
+  --shadow-flat: none;
+  --shadow-float: 0 18px 44px -22px rgba(33, 27, 20, 0.42), 0 4px 12px -8px rgba(33, 27, 20, 0.2);
+}

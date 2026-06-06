@@ -1,0 +1,38 @@
+{
+  "name": "portfolio",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.5.2",
+  "engines": {
+    "node": ">=22.12.0",
+    "pnpm": ">=11.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel --if-present run dev",
+    "build": "tsx scripts/build-content.ts && pnpm --filter web build",
+    "build:content": "tsx scripts/build-content.ts",
+    "check-deterministic": "tsx scripts/check-deterministic.ts",
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "test": "pnpm -r --if-present run test",
+    "test:e2e": "pnpm --filter @portfolio/web test:e2e",
+    "lh": "pnpm build && lhci autorun",
+    "test:perf": "pnpm run lh",
+    "test:all": "pnpm run typecheck && pnpm run lint && pnpm run format:check && pnpm run test && pnpm run test:e2e && pnpm run lh",
+    "launch-check": "pnpm run test:all",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@lhci/cli": "^0.15.1",
+    "eslint": "^10.4.1",
+    "eslint-plugin-astro": "^1.7.0",
+    "prettier": "^3.8.3",
+    "prettier-plugin-astro": "^0.14.1",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.60.1"
+  }
+}

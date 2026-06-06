@@ -1,0 +1,69 @@
+---
+/**
+ * /speaking — the Speaker Surface Mirror route (Story 1.5 stub; AC2).
+ *
+ * Answer-first, self-canonical, exactly one <h1> via MirrorLayout. RESOLVES the
+ * forward-reference links from the 1.3 hero fork ("I'm here to book a talk") and
+ * the 1.4 Speaker teaser (both → /speaking). Epic 3 (Speaker Surface) fills the
+ * body with the reel, signature talks, bios, and the invite path. 0 JS.
+ *
+ * The lede's first sentence names "Joshua R. Brandt, MSE" (GEO floor).
+ */
+import MirrorLayout from '../layouts/MirrorLayout.astro';
+import { eventJsonLd, serializeJsonLd } from '../lib/jsonld';
+import { PERSON } from '../lib/person';
+
+const LEDE =
+  'Joshua R. Brandt, MSE is a software engineer and speaker with thirty years of shipping experience. This page lists his signature talks, formats, and how to book him.';
+
+// PLACEHOLDER Event JSON-LD (Story 1.6, AC1). Epic 3 (Speaker Surface) replaces
+// this with the real signature talks + their dates/venues. Until then this is a
+// clearly-flagged placeholder talk so the route emits a valid schema.org Event
+// (required fields per type) — name/startDate/location/organizer are [PLACEHOLDER].
+// performer is the REAL Person (shared web/src/lib/person.ts). Deterministic
+// startDate (a fixed constant, not new Date()) keeps the output byte-stable.
+const speakingJsonLd = serializeJsonLd(
+  eventJsonLd({
+    name: '[PLACEHOLDER] Signature talk — replaced with real talks in Epic 3',
+    startDate: '2026-01-01',
+    eventAttendanceMode: 'https://schema.org/MixedEventAttendanceMode',
+    location: {
+      '@type': 'VirtualLocation',
+      url: PERSON.url,
+    },
+    performer: PERSON,
+    organizer: {
+      '@type': 'Organization',
+      name: '[PLACEHOLDER organizer — set per real talk in Epic 3]',
+    },
+    description:
+      'Placeholder Event until Epic 3 publishes the real signature talks and their venues.',
+  }),
+);
+---
+
+<MirrorLayout
+  heading="Speaking"
+  lede={LEDE}
+  title="Speaking — Joshua R. Brandt, MSE"
+  description="Signature talks, formats, and booking for Joshua R. Brandt, MSE — a software engineer and speaker with thirty years of shipping experience."
+>
+  {
+    /* Structured data — PLACEHOLDER Event (real talks land in Epic 3). DATA, not
+      executable JS (NFR-1). */
+  }
+  <script type="application/ld+json" slot="jsonld" is:inline set:html={speakingJsonLd} />
+  <p class="stub-note">
+    The full speaker surface is on its way. Epic 3 fills this page with the reel, the signature
+    talks, the speaker bios, and a direct path to book a talk.
+  </p>
+</MirrorLayout>
+
+<style>
+  .stub-note {
+    margin-top: var(--space-6);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+  }
+</style>

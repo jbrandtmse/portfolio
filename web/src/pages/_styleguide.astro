@@ -1,0 +1,117 @@
+---
+/**
+ * Dev-only style guide — NOT routed or built (the leading underscore makes Astro
+ * skip it as a page, so it never ships to dist). A backstage surface to eyeball
+ * the tokens + shared chrome together during development.
+ *
+ * Run `pnpm --filter @portfolio/web dev` and open /\_styleguide while iterating.
+ * Safe to keep checked in; it adds zero bytes to the production build.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Wordmark from '../components/common/Wordmark.astro';
+import Kicker from '../components/common/Kicker.astro';
+import Button from '../components/common/Button.astro';
+
+const colorTokens = [
+  'surface-base',
+  'surface-raised',
+  'ink-primary',
+  'ink-secondary',
+  'border-hairline',
+  'grid-line',
+  'accent',
+  'accent-hover',
+  'ink-ghost',
+  'ink-meta-min',
+];
+---
+
+<BaseLayout title="Style guide (dev)">
+  <main class="sg">
+    <Kicker>Design system</Kicker>
+    <h1>Tokens and shared chrome</h1>
+
+    <section class="sg__block">
+      <h2>Wordmark</h2>
+      <Wordmark size="hero" />
+      <br />
+      <Wordmark size="compact" />
+    </section>
+
+    <section class="sg__block">
+      <h2>Kicker</h2>
+      <Kicker>Proof as process</Kicker>
+    </section>
+
+    <section class="sg__block">
+      <h2>Buttons</h2>
+      <div class="sg__row">
+        <Button variant="primary">Primary action</Button>
+        <Button variant="secondary">Secondary action</Button>
+        <Button href="/" variant="primary">Primary link</Button>
+        <Button href="/" variant="secondary">Secondary link</Button>
+      </div>
+    </section>
+
+    <section class="sg__block">
+      <h2>Type ramp</h2>
+      <p style="font: var(--text-display);">Display</p>
+      <p style="font: var(--text-h1);">Heading 1</p>
+      <p style="font: var(--text-h2);">Heading 2</p>
+      <p style="font: var(--text-h3);">Heading 3</p>
+      <p style="font: var(--text-body);">Body — the long-form reading size.</p>
+      <p style="font: var(--text-lede); color: var(--color-ink-secondary);">Lede deck.</p>
+    </section>
+
+    <section class="sg__block">
+      <h2>Colors</h2>
+      <div class="sg__swatches">
+        {
+          colorTokens.map((t) => (
+            <figure class="sg__swatch">
+              <span
+                class="sg__chip"
+                style={`background: var(--color-${t}); border: 1px solid var(--color-border-hairline);`}
+              />
+              <figcaption>{t}</figcaption>
+            </figure>
+          ))
+        }
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .sg {
+    max-width: var(--measure-content);
+    margin-inline: auto;
+    padding: var(--space-section-band) var(--space-margin-desktop);
+  }
+  .sg__block {
+    margin-top: var(--space-section-band);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-border-hairline);
+  }
+  .sg__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+  .sg__swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: var(--space-4);
+  }
+  .sg__chip {
+    display: block;
+    height: 56px;
+    border-radius: var(--radius-md);
+  }
+  .sg__swatch figcaption {
+    margin-top: var(--space-2);
+    font: var(--text-meta);
+    letter-spacing: var(--letter-spacing-meta);
+    color: var(--color-ink-secondary);
+  }
+</style>

@@ -1,0 +1,34 @@
+{
+  "name": "@portfolio/web",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro check",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/react": "^5.0.7",
+    "@portfolio/shared": "workspace:*",
+    "astro": "^6.4.4",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9",
+    "@axe-core/playwright": "^4.11.3",
+    "@playwright/test": "^1.60.0",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
+  }
+}
