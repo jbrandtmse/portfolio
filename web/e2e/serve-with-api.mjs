@@ -97,40 +97,66 @@ for (const sig of ['SIGTERM', 'SIGINT', 'SIGHUP']) {
 // 1) Start the real Hono API from source (api/.env loaded; real Postgres).
 // ---------------------------------------------------------------------------
 const apiEnvFile = loadApiEnv();
+
+// Whether a REAL Postgres URL is available (from api/.env or the ambient env).
+// This gates ONLY the DB-dependent invite integration test (which skips-with-
+// warning when false), NOT whether the API boots — see below.
+const hasRealDb = Boolean(apiEnvFile.DATABASE_URL || process.env.DATABASE_URL);
+
+// Surface a REAL DATABASE_URL to the Playwright worker process so the JS-off DB
+// test can read+clean up the persisted row (it only RUNS when the WORKER sees
+// this set). A placeholder is NEVER surfaced to the worker, so the invite DB
+// test still correctly skips-with-warning in a no-DB environment.
+if (apiEnvFile.DATABASE_URL) {
+  process.env.DATABASE_URL = apiEnvFile.DATABASE_URL;
+}
+
 const apiEnv = {
   ...process.env,
   ...apiEnvFile,
   // Force the API onto the internal e2e port (never the dev 8787).
   API_PORT: String(E2E_API_PORT),
+  // Guide e2e runs with the deterministic LLM stub — no live LLM call in tests
+  // (Story 4.3, Rule 4: test both branches; stub engaged here for the e2e run).
+  // GUIDE_LLM_STUB=1 can also be overridden from the caller's env if needed.
+  GUIDE_LLM_STUB: process.env.GUIDE_LLM_STUB ?? '1',
 };
-// Surface DATABASE_URL to the Playwright worker process too, so the JS-off DB
-// test can read+clean up the persisted row (it only RUNS when this is set).
-if (apiEnvFile.DATABASE_URL) {
-  process.env.DATABASE_URL = apiEnvFile.DATABASE_URL;
+
+// ALWAYS start the Hono API — the guide endpoint (POST /api/guide, Story 4.3,
+// the canonical Rule-7 SSE e2e) does NOT touch Postgres, so it must run
+// independent of DATABASE_URL (CI has no DB). env.ts hard-requires DATABASE_URL
+// to be present (a non-empty string) to boot, so when no REAL DB is configured
+// we feed the API child a clearly-marked PLACEHOLDER connection string. The
+// guide path never queries Postgres, so the placeholder is never dialed; the
+// node-postgres Pool connects lazily (only on a real query), so the API boots
+// and serves /api/guide fine. The invite DB integration test keys its skip off
+// the WORKER's process.env.DATABASE_URL (set above only from a REAL url), which
+// stays unset here — so it still skips-with-warning rather than dialing a dead
+// placeholder. This closes the Story-4.3 Rule-7 gap: the guide e2e previously
+// FAILED with 502 in a no-DB env because the API was never started.
+if (!hasRealDb) {
+  apiEnv.DATABASE_URL =
+    'postgresql://placeholder:placeholder@127.0.0.1:1/placeholder_no_db_e2e?connect_timeout=1';
+  console.warn(
+    '[e2e-serve] No real DATABASE_URL — starting the Hono API with a PLACEHOLDER DB url so ' +
+      'the guide SSE e2e (POST /api/guide, no Postgres) runs. The invite DB integration test ' +
+      'skips-with-warning (the worker sees no real DATABASE_URL).',
+  );
 }
 
-const apiHasDb = Boolean(apiEnv.DATABASE_URL);
-if (!apiHasDb) {
-  // No DB → the API would fail fast (env.ts). Don't start it; the static site
-  // still serves and the JS-off DB test skips-with-warning. Log a clear notice.
-  console.warn(
-    '[e2e-serve] DATABASE_URL not set (api/.env missing it) — NOT starting the Hono API. ' +
-      'The JS-off native-POST DB test will skip-with-warning; all JS-on (mocked) + static tests run.',
-  );
-} else {
-  const api = spawn('pnpm', ['--filter', '@portfolio/api', 'exec', 'tsx', 'src/index.ts'], {
-    cwd: repoRoot,
-    env: apiEnv,
-    stdio: ['ignore', 'inherit', 'inherit'],
-  });
-  api.on('exit', (code) => {
-    if (!shuttingDown) {
-      console.error(`[e2e-serve] Hono API exited unexpectedly (code ${code})`);
-      shutdown(1);
-    }
-  });
-  children.push(api);
-}
+const api = spawn('pnpm', ['--filter', '@portfolio/api', 'exec', 'tsx', 'src/index.ts'], {
+  cwd: repoRoot,
+  env: apiEnv,
+  stdio: ['ignore', 'inherit', 'inherit'],
+});
+api.on('exit', (code) => {
+  if (!shuttingDown) {
+    console.error(`[e2e-serve] Hono API exited unexpectedly (code ${code})`);
+    shutdown(1);
+  }
+});
+children.push(api);
+const apiHasDb = hasRealDb;
 
 // ---------------------------------------------------------------------------
 // 2) Start astro preview (serves dist/) on the internal preview port.
@@ -188,7 +214,7 @@ const server = http.createServer((req, res) => {
 server.listen(PUBLIC_PORT, HOST, () => {
   console.log(
     `[e2e-serve] proxy on http://${HOST}:${PUBLIC_PORT} → preview :${PREVIEW_PORT} (static) + ` +
-      `Hono :${E2E_API_PORT} (/api/*)${apiHasDb ? '' : ' [API disabled: no DATABASE_URL]'}`,
+      `Hono :${E2E_API_PORT} (/api/*)${apiHasDb ? '' : ' [placeholder DB: invite DB test skips, guide runs]'}`,
   );
 });
 server.on('error', (err) => {

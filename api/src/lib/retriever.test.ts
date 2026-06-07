@@ -56,15 +56,17 @@ describe('import isolation — @orama/orama only in retriever.ts (AC4)', () => {
     }
 
     const retrieverTestPath = join(apiSrcDir, 'lib', 'retriever.test.ts');
+    const llmClientTestPath = join(apiSrcDir, 'lib', 'llm-client.test.ts');
     const matchingFiles = grepOutput ? grepOutput.split('\n').filter(Boolean) : [];
 
     // The ONLY files that may reference @orama/orama are:
     //   - retriever.ts (the seam — imports it)
     //   - retriever.test.ts (this file — mentions it in a string literal for the grep check)
+    //   - llm-client.test.ts (mentions it in a string literal verifying non-import)
     // Any other file is a violation of the seam isolation rule.
+    const ALLOWED = new Set([retrieverPath, retrieverTestPath, llmClientTestPath]);
     for (const file of matchingFiles) {
-      const isAllowed = file === retrieverPath || file === retrieverTestPath;
-      expect(isAllowed).toBe(true);
+      expect(ALLOWED.has(file)).toBe(true);
     }
 
     // retriever.ts MUST actually import @orama/orama (sanity check)

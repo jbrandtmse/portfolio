@@ -23,6 +23,38 @@ const envSchema = z.object({
    */
   DATABASE_URL: z.string().min(1),
 
+  // ---------------------------------------------------------------------------
+  // Guide LLM config (Story 4.3, Rule 4 env-gate).
+  // All optional/defaulted — the service starts without a live LLM; tests use
+  // the deterministic stub (GUIDE_LLM_STUB=1 or auto when no key resolves).
+  // NFR-5: these are server-side only; never exported to web.
+  // ---------------------------------------------------------------------------
+
+  /**
+   * OpenAI-compatible LLM base URL for the Guide endpoint.
+   * Default: VM's routellm endpoint.
+   */
+  GUIDE_LLM_BASE_URL: z.string().url().default('https://routellm.abacus.ai/v1'),
+
+  /**
+   * LLM model ID to use for the Guide stream.
+   * Default: gpt-4o-mini (confirmed current mid-tier streaming model on the VM).
+   */
+  GUIDE_LLM_MODEL: z.string().default('gpt-4o-mini'),
+
+  /**
+   * When set to "1", the llm-client uses a deterministic stub — no live LLM
+   * calls. Automatically engaged when no API key resolves. Used in tests/CI.
+   */
+  GUIDE_LLM_STUB: z.string().optional(),
+
+  /**
+   * ABACUS_API_KEY — may be set directly, or resolved from IMDSv2 at runtime.
+   * Optional here: the llm-client resolves it lazily (env → IMDSv2 → none).
+   * NFR-5: server-side only. Never committed or returned to the client.
+   */
+  ABACUS_API_KEY: z.string().optional(),
+
   /**
    * Hono service listen port.
    * Validated as a positive integer; default 8787 is the ONE canonical default

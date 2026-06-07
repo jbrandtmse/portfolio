@@ -219,5 +219,16 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
       testMatch: /faq\.spec\.ts/,
     },
+    // (Story 4.3) Guide endpoint SSE e2e — POST /api/guide through the proxy.
+    // Rule 7: proven to EXECUTE (not skipped); exercises (a) fail-closed path
+    // (nonsense query → canned "I don't have that documented." SSE, no model call)
+    // and (b) grounded path (KB-answerable query → token+citation+done events)
+    // both via the serve-with-api.mjs prod-faithful proxy (GUIDE_LLM_STUB=1).
+    // Canonical Epic-4 Rule-7 case (retro A3).
+    {
+      name: 'guide',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /guide\.spec\.ts/,
+    },
   ],
 });
