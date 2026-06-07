@@ -83,6 +83,26 @@ Durable rules for AI dev + code-review agents working on this project. Rules are
 
 **How to apply:** for a doc/runbook story, the smoke method is "follow the doc as written"; assert each claimed outcome; flag any step that is stale, wrong, incomplete, or out-of-order as a smoke defect (not deferrable). Mechanism tests verify the doc *can* be true; the doc-follow smoke verifies the doc *is* true.
 
+## 7. Integration / cross-service e2e must be PROVEN to execute — a silent skip is not a pass
+
+**Context:** Any story whose verification includes an integration or cross-service end-to-end test for a *stated guarantee* — a UI talking to the api, a JS-off native form post, an SSE stream, anything spanning web↔api or relying on a runtime prerequisite (a proxy, a DB, an env var).
+
+**Rule:** The integration e2e MUST be proven to actually RUN — assert it is NOT skipped (or surface the skip loudly as an uncovered gap). A test that `test.skip()`s because a prerequisite is absent (no `/api` proxy under the test server, `DATABASE_URL`/key unset, etc.) MUST NOT be counted as a passing verification of the guarantee it claims to protect. For api-backed e2e, provide a **production-faithful harness** (reverse-proxy `/api/*` → the real service, mirroring the prod nginx topology — the `web/e2e/serve-with-api.mjs` pattern) so the integration path genuinely exercises end to end; do NOT rely on a dev-only proxy the test runner doesn't honor (e.g. Vite `server.proxy` / Astro `preview`). The QA stage and the lead smoke each confirm the integration test executed.
+
+**Why:** Epic 3 Story 3.4's headline JS-off resilience test (native form POST → persisted row → `/invite/thanks/`) **silently `test.skip()`'d** — `astro preview` does not proxy `/api` and `DATABASE_URL` was unset in the Playwright env — so "198 pass, 1 skipped" MASKED a completely unverified resilience guarantee (the story's #1 promise). QA caught it only by building the `serve-with-api.mjs` reverse-proxy harness, after which it ran and passed against real Postgres. A skipped integration test reads as green while the path it guards is untested. (Epic 3 retro, 2026-06-07.)
+
+**How to apply:** for any cross-service/integration AC, wire a prod-faithful harness for the service path; assert the e2e is not-skipped (count expected vs run, or fail on a missing prerequisite in CI-relevant envs); treat a skip-on-missing-prereq as a coverage GAP surfaced in QA/smoke, never as a pass. Epic 4's `/api/guide` SSE e2e inherits this directly (same proxy + env-gate + skip risk).
+
+## 8. Tests assert against the REAL module + a SCOPED surface — never an inline copy or a whole-document match
+
+**Context:** Any test verifying a value or behavior owned by a specific module, or rendered into a specific element/surface.
+
+**Rule:** A test MUST exercise the REAL exported module/surface and SCOPE its assertion to the specific element/value it claims to check. Never test an inline COPY of the logic (it passes even when the real module drifts), and never use a whole-document / whole-output `toContain`-style match that a DIFFERENT surface can satisfy (a false positive). Mutation-verify every load-bearing assertion: break the real source, confirm the test reds, revert.
+
+**Why:** Epic 3 surfaced two vacuous tests that passed the dev stage — Story 3.3's `env.test.ts` asserted an inline COPY of the Zod env schema (would stay green if the real `env.ts` drifted; QA added a real-module child-process test), and Story 3.2's AC5 "the visible short bio === `PERSON.description`" used a whole-**document** `toContain` that the `Event` JSON-LD's `performer.description` ALSO satisfied — so the *visible* bio could drift and the test stayed green (QA re-scoped it to the `.bio-block__text` element). Both were caught only by QA mutation-testing. A test that doesn't bind to the real, specific surface verifies nothing. (Epic 3 retro, 2026-06-07.)
+
+**How to apply:** import + exercise the real module (use a child-process/real-import if module-load side-effects matter); scope DOM/output assertions to the owning element (a class/test-id selector), not the whole document; mutation-verify each assertion reds on a real-source break.
+
 ---
 
 ## Project configuration notes (not rules — durable decisions the next epic-cycle run should honor)

@@ -47,3 +47,6 @@
 2026-06-07T03:51:04Z	Story 3.5	qa_complete	spawn_at=2026-06-07T03:38:21Z model=claude-opus-4-8 tests_added=5 first_run_failures=0 clarifications=0 closing_sections_present=true note=caught_uncovered_invitesubmitted_event_added_nopii+creativetouch_no_liveread_213_e2e_green
 2026-06-07T04:04:18Z	Story 3.5	cr_complete	spawn_at=2026-06-07T03:51:04Z model=claude-opus-4-8 resolved=0 deferred=2 dismissed=2 high=0 med=0 low=2 clarifications=0 closing_sections_present=true note=approve_fr23_guardrail_verified_no_liveread+home_island_carveout+invitesubmitted_nopii_213_e2e
 2026-06-07T04:05:49Z	Story 3.5	smoke_complete	method=browser result=pass iterations=1 defects_caught=0 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-3.5-the-close.md model=claude-opus-4-8
+2026-06-07T04:06:24Z	Story 3.5	committed	sha=88c3455 submodules=
+2026-06-07T04:06:24Z	Epic 3	epic_summary	stories=6 total_high=0 total_med=3 total_low_deferred=11 total_smoke_defects=1 rework_events=0 sonnet_stage_count=6 opus_stage_count=12 commits=3.0:e5a6cfa,3.1:6c19dc4,3.2:9f1ac20,3.3:55b503b,3.4:f0e9a66,3.5:88c3455
+2026-06-07T07:53:36Z	Epic 3	retrospective_complete	doc=_bmad-output/implementation-artifacts/epic-3-retro-2026-06-07.md rules_codified=7,8 action_items=5 model=claude-opus-4-8
