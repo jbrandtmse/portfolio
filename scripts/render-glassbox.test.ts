@@ -17,14 +17,14 @@ import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
   GLASSBOX_ALLOWLIST,
   type GlassboxEntry,
   type GlassboxType,
 } from '../content/glassbox.allowlist.ts';
-import { renderGlassbox, type GlassboxArtifact } from './render-glassbox.ts';
+import { byCodeUnit, renderGlassbox, type GlassboxArtifact } from './render-glassbox.ts';
 
 const scriptsDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(scriptsDir, '..');
@@ -227,5 +227,116 @@ describe('render-glassbox — source-level no-network guard (mirrors build-conte
     expect(renderCode).not.toMatch(/\bimport\b[^;]*\bnode:https?\b/);
     expect(renderCode).not.toMatch(/\b(?:axios|got|undici|node-fetch)\b/);
     expect(renderCode).not.toMatch(/https?:\/\//);
+  });
+});
+
+// ─── Story 4.0 AC1/AC3: locale-independent code-unit sort (determinism hardening) ─
+//
+// The old localeCompare() was ICU/host-locale-sensitive for non-ASCII strings —
+// a latent NFR-6 surface once a non-ASCII slug entered the allowlist (secondary
+// key). byCodeUnit() replaces it with a fully-deterministic code-unit compare.
+//
+// Non-vacuousness guarantee: an ASCII-only set produces the same sort order under
+// any locale; we MUST use non-ASCII slugs to distinguish byCodeUnit() from
+// localeCompare() (the case the old code was latent on). The tests below use a
+// fixture with a non-ASCII slug so a revert to bare localeCompare() does NOT
+// vacuously pass.
+//
+// Rule 8 compliance: tests import the REAL byCodeUnit from render-glassbox.ts
+// (not an inline copy), and renderGlassbox is called with a synthetic allowlist
+// so the sort behaviour is isolated from git IO.
+
+describe('Story 4.0 AC1/AC3 — byCodeUnit: locale-independent comparator', () => {
+  // byCodeUnit must return the same sign as code-unit order, regardless of locale.
+
+  it('returns negative when a < b in code-unit order', () => {
+    expect(byCodeUnit('abc', 'abd')).toBeLessThan(0);
+  });
+
+  it('returns zero when a === b', () => {
+    expect(byCodeUnit('abc', 'abc')).toBe(0);
+  });
+
+  it('returns positive when a > b in code-unit order', () => {
+    expect(byCodeUnit('abd', 'abc')).toBeGreaterThan(0);
+  });
+
+  // The non-ASCII cases that distinguish byCodeUnit from locale-sensitive localeCompare.
+  // Swedish locale treats 'ä' (U+00E4) as coming after 'z', but German locale places it
+  // near 'a'. Code-unit order: 'a' < 'z' < 'ä' (U+00E4 = 228 > 'z' = 122).
+  it('orders non-ASCII slugs by code-unit value, not locale (ä > z in code-unit)', () => {
+    // U+00E4 'ä' = 228, 'z' = 122 → 'ä' > 'z' by code-unit
+    expect(byCodeUnit('ä', 'z')).toBeGreaterThan(0);
+    expect(byCodeUnit('z', 'ä')).toBeLessThan(0);
+  });
+
+  it('is consistent: byCodeUnit(a,b) and byCodeUnit(b,a) are opposite signs', () => {
+    expect(byCodeUnit('café', 'cafe') * byCodeUnit('cafe', 'café')).toBeLessThan(0);
+  });
+});
+
+describe('Story 4.0 AC1/AC3 — renderGlassbox sort is locale-independent for non-ASCII slugs', () => {
+  // Synthetic minimal allowlist with a mix of ASCII and non-ASCII slugs on the SAME
+  // date. The non-ASCII slug 'ñoño' (U+00F1 = 241) sorts AFTER all ASCII slugs in
+  // code-unit order. Under some locale-collation rules it would sort differently.
+  // This test asserts that renderGlassbox places it LAST — which is correct under
+  // code-unit ordering, and would differ under e.g. Spanish locale-collation.
+  //
+  // We inject a fake repoRoot path that resolves to the real fixture directory so
+  // that readFileSync + gitCommitterDate can find real files. We use the fixture
+  // pattern (write temp files + pass their real paths) to keep IO minimal.
+
+  const tmpDir = '/tmp/rg-nonascii-test-' + process.pid;
+
+  beforeAll(async () => {
+    const { mkdirSync, writeFileSync } = await import('node:fs');
+    mkdirSync(`${tmpDir}/content`, { recursive: true });
+    // Write three minimal markdown files: ASCII slugs 'alpha', 'zeta', plus 'ñoño'.
+    writeFileSync(`${tmpDir}/content/alpha.md`, '# Alpha\nContent alpha.\n', 'utf8');
+    writeFileSync(`${tmpDir}/content/zeta.md`, '# Zeta\nContent zeta.\n', 'utf8');
+    writeFileSync(`${tmpDir}/content/nonascii.md`, '# Ñoño\nContent ñoño.\n', 'utf8');
+  });
+
+  afterAll(async () => {
+    const { rmSync } = await import('node:fs');
+    rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('sorts a non-ASCII slug after ASCII slugs on the same date (code-unit order, not locale)', () => {
+    // All three entries share the same FALLBACK date (no git log in tmpDir),
+    // so order is determined entirely by the slug secondary key.
+    const allowlist: import('../content/glassbox.allowlist.ts').GlassboxEntry[] = [
+      {
+        sourceFile: 'content/nonascii.md',
+        type: 'brief',
+        slug: 'ñoño', // U+00F1 = 241 → code-unit sorts AFTER 'z' (122) and 'alpha'
+        title: 'Ñoño',
+        curatorNote: 'Non-ASCII slug fixture.',
+      },
+      {
+        sourceFile: 'content/zeta.md',
+        type: 'brief',
+        slug: 'zeta', // 'z' = 122 → code-unit sorts after 'alpha'
+        title: 'Zeta',
+        curatorNote: 'ASCII slug zeta.',
+      },
+      {
+        sourceFile: 'content/alpha.md',
+        type: 'brief',
+        slug: 'alpha', // 'a' = 97 → code-unit sorts first
+        title: 'Alpha',
+        curatorNote: 'ASCII slug alpha.',
+      },
+    ];
+
+    const result = renderGlassbox(allowlist, tmpDir);
+    const slugOrder = result.map((a) => a.slug);
+
+    // Code-unit order: 'alpha' (a=97) < 'zeta' (z=122) < 'ñoño' (ñ=241)
+    expect(slugOrder).toEqual(['alpha', 'zeta', 'ñoño']);
+
+    // Mutation-check anchor: if byCodeUnit were reverted to localeCompare() with a
+    // Spanish locale ('ñ' near 'n'), 'ñoño' would sort BEFORE 'zeta', breaking
+    // this assertion. The non-ASCII fixture is what makes this test non-vacuous.
   });
 });
