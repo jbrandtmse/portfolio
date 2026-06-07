@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
 /**
@@ -10,6 +11,9 @@ import { expect, test } from '@playwright/test';
  * aria-current tracking RUNS when motion is allowed (the shared motion.ts gate,
  * Layer 2 — the positive counterpart to reduced-motion.spec.ts); and a Mirror
  * route (/about) loads as a real answer-first page.
+ *
+ * Story 3.5 additions: the home Close scene — embedded InviteForm island,
+ * follow/subscribe CTAs, creative touch — are verified here in real-browser e2e.
  */
 
 test.describe('home / — hero, fork, footer (normal, JS on)', () => {
@@ -102,5 +106,486 @@ test.describe('a Mirror route loads as a real answer-first page', () => {
     // The first paragraph (the answer-first lede) names the entity first.
     const lede = page.locator('main p').first();
     await expect(lede).toContainText(/^Joshua R\. Brandt, MSE/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Story 3.5 — home #close: InviteForm island + follow CTAs + creative touch
+// ---------------------------------------------------------------------------
+
+test.describe('home #close — InviteForm island (Story 3.5, AC1)', () => {
+  test('the Close scene embeds the InviteForm — the SSR-emitted <form action="/api/invite"> is present', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    // The SSR'd form is in the DOM immediately (JS-off baseline).
+    const form = page.locator('section#close form[action="/api/invite"]');
+    await expect(form).toHaveCount(1);
+  });
+
+  test('the Close form submits JS-on → aria-live success (via mocked /api/invite)', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    // Mock the /api/invite endpoint (avoids DB writes in this JS-on test).
+    await page.route('/api/invite', (route) => {
+      if (route.request().method() === 'POST') {
+        void route.fulfill({
+          status: 201,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            id: 'test-home-close-mock-id',
+            mailStatus: 'skipped',
+            message: 'Thank you.',
+          }),
+        });
+      } else {
+        void route.continue();
+      }
+    });
+
+    // Scroll the Close form into view (client:visible triggers hydration).
+    // The Close is at the bottom of the 7-scene page — scroll fully into view.
+    await page.locator('section#close').scrollIntoViewIfNeeded();
+    // Explicitly wait for the astro-island to hydrate. The form is SSR'd but the
+    // React island (client:visible) hydrates asynchronously after the
+    // IntersectionObserver fires. We wait for the noValidate attribute — it is set
+    // only AFTER hydration (the `hydrated` useEffect in InviteForm). This is the
+    // same hydration signal the invite spec relies on implicitly.
+    await page.waitForFunction(
+      () => {
+        const form = document.querySelector(
+          'section#close form[action="/api/invite"]',
+        ) as HTMLFormElement | null;
+        return form !== null && form.noValidate === true;
+      },
+      { timeout: 10000 },
+    );
+
+    // Fill required fields and submit.
+    const form = page.locator('section#close form[action="/api/invite"]');
+    await form.locator('input[name="name"]').fill('E2E Close Test User');
+    await form.locator('input[name="email"]').fill('home-close-e2e@test.example.invalid');
+    await form
+      .locator('textarea[name="message"]')
+      .fill('Close form e2e test submission — please ignore.');
+    await form.locator('select[name="attribution"]').selectOption('other');
+    await form.locator('button[type="submit"]').click();
+
+    // Success aria-live region must appear (the island replaces the form on success).
+    const successRegion = page
+      .locator('[role="status"]')
+      .filter({ hasText: 'Your inquiry has been received' });
+    await expect(successRegion).toBeVisible({ timeout: 10000 });
+  });
+
+  test('the Close form native POST JS-off → /invite/thanks/ (reuses the api harness; AC1)', async ({
+    browser,
+  }) => {
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) {
+      test.skip(true, '[SKIP] DATABASE_URL not set — skipping home Close JS-off native POST test');
+    }
+
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    try {
+      await page.goto('/');
+      const form = page.locator('section#close form[action="/api/invite"][method="POST"]');
+      await expect(form).toHaveCount(1);
+
+      await page.locator('section#close input[name="name"]').fill('E2E Home Close JS-off User');
+      await page
+        .locator('section#close input[name="email"]')
+        .fill('home-close-jsoff-e2e@test.example.invalid');
+      await page
+        .locator('section#close textarea[name="message"]')
+        .fill('Home Close JS-off e2e test — please ignore.');
+      await page.locator('section#close select[name="attribution"]').selectOption('other');
+
+      await Promise.all([
+        page.waitForURL('/invite/thanks/'),
+        form.locator('button[type="submit"]').click(),
+      ]);
+
+      await expect(page).toHaveURL('/invite/thanks/');
+      await expect(page.locator('h1')).toContainText('Your message is on its way');
+
+      // Clean up test row.
+      if (databaseUrl) {
+        const { Client } = await import('pg');
+        const client = new Client({ connectionString: databaseUrl });
+        await client.connect();
+        try {
+          await client.query('DELETE FROM inquiries WHERE email = $1', [
+            'home-close-jsoff-e2e@test.example.invalid',
+          ]);
+        } finally {
+          await client.end();
+        }
+      }
+    } finally {
+      await context.close();
+    }
+  });
+});
+
+test.describe('home #close — follow CTAs (Story 3.5, AC1, 0-JS analytics)', () => {
+  test('the channel CTAs are present as real <a> links with data-umami-event="channel-clicked"', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const closeSection = page.locator('section#close');
+
+    // Each channel CTA is a real link with the 0-JS event attribute.
+    const channelLinks = closeSection.locator('a[data-umami-event="channel-clicked"]');
+    await expect(channelLinks).not.toHaveCount(0);
+
+    // At least the 3 canonical channels (youtube, github, suno).
+    for (const channel of ['youtube', 'github', 'suno'] as const) {
+      await expect(closeSection.locator(`a[data-umami-event-channel="${channel}"]`)).toHaveCount(1);
+    }
+  });
+
+  test('the CTAs are keyboard-operable and have a visible :focus-visible ring (AC1/NFR-2)', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page.locator('section#close').scrollIntoViewIfNeeded();
+
+    // Tab to the first channel CTA link; it must be reachable via keyboard.
+    const firstCta = page.locator('section#close a[data-umami-event="channel-clicked"]').first();
+    await firstCta.focus();
+    const outline = await page.evaluate(() => {
+      const el = document.activeElement as Element | null;
+      if (!el) return null;
+      const s = getComputedStyle(el);
+      return { style: s.outlineStyle, width: s.outlineWidth };
+    });
+    expect(outline).not.toBeNull();
+    expect(outline!.style).not.toBe('none');
+    expect(parseFloat(outline!.width)).toBeGreaterThan(0);
+  });
+
+  test('[OPEN] handle placeholder text is visible in the CTA labels (no fabrication; AC1)', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const closeSection = page.locator('section#close');
+    // The channel handle is [OPEN]-flagged in visible text.
+    await expect(closeSection).toContainText('[OPEN:');
+  });
+});
+
+test.describe('home #close — curated creative touch (Story 3.5, AC2)', () => {
+  test('the creative-touch <a> link is present and followable JS-off (static poster)', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const closeSection = page.locator('section#close');
+    // The creative-touch <a> has a class and accessible name.
+    const creativeLink = closeSection.locator('a.close__creative-link');
+    await expect(creativeLink).toHaveCount(1);
+    // Has an href (followable).
+    const href = await creativeLink.getAttribute('href');
+    expect(href).not.toBeNull();
+    expect(href!.length).toBeGreaterThan(0);
+    // Has an accessible name via aria-label.
+    const ariaLabel = await creativeLink.getAttribute('aria-label');
+    expect(ariaLabel).not.toBeNull();
+    expect(ariaLabel!.length).toBeGreaterThan(0);
+  });
+
+  test('the creative-touch poster is a CSS block — no autoplay, no iframe, no video (FR-23)', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const closeSection = page.locator('section#close');
+    // No autoplay attribute anywhere in Close.
+    const autoplays = await closeSection.locator('[autoplay]').count();
+    expect(autoplays).toBe(0);
+    // No iframe in Close.
+    const iframes = await closeSection.locator('iframe').count();
+    expect(iframes).toBe(0);
+    // No video in Close.
+    const videos = await closeSection.locator('video').count();
+    expect(videos).toBe(0);
+  });
+
+  test('the creative-touch link has a visible :focus-visible ring (NFR-2/AA)', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('section#close').scrollIntoViewIfNeeded();
+    const creativeLink = page.locator('a.close__creative-link');
+    await creativeLink.focus();
+    const outline = await page.evaluate(() => {
+      const el = document.activeElement as Element | null;
+      if (!el) return null;
+      const s = getComputedStyle(el);
+      return { style: s.outlineStyle, width: s.outlineWidth };
+    });
+    expect(outline).not.toBeNull();
+    expect(outline!.style).not.toBe('none');
+    expect(parseFloat(outline!.width)).toBeGreaterThan(0);
+  });
+});
+
+test.describe('home #close — invite-submitted conversion event (Story 3.5, AC1/AC4)', () => {
+  // The headline conversion event for the SM-1 path (FR-36). Story 3.4 DEFERRED
+  // this wiring to 3.5; these tests are the real-runtime proof that the embedded
+  // island actually fires track('invite-submitted', { source }) on a SUCCESSFUL
+  // submit — AND that the payload carries NO PII (only the non-identifying
+  // `source` primitive). Mutation: deleting the track() call in InviteForm.tsx's
+  // success handler reds the first test; widening the payload to include any of
+  // name/email/message/org/topic/attribution reds the no-PII assertion.
+
+  /** Field names whose values are PII — must NEVER appear in an analytics payload. */
+  const PII_KEYS = ['name', 'email', 'message', 'org', 'topic', 'attribution'] as const;
+
+  test('fires umami track("invite-submitted", { source: "close" }) on a successful home submit — NO PII (AC1/AC4)', async ({
+    page,
+  }) => {
+    // Install a capturing window.umami.track BEFORE the page (and the island)
+    // load — addInitScript runs before any page script on every navigation, so
+    // it is present the moment the island hydrates and fires the event. We record
+    // every (event, data) pair into window.__umamiCalls for read-back.
+    await page.addInitScript(() => {
+      (window as unknown as { __umamiCalls: Array<[string, unknown]> }).__umamiCalls = [];
+      window.umami = {
+        track: (event: string, data?: Record<string, string | number | boolean>) => {
+          (window as unknown as { __umamiCalls: Array<[string, unknown]> }).__umamiCalls.push([
+            event,
+            data,
+          ]);
+        },
+      };
+    });
+
+    await page.goto('/');
+
+    // Mock the endpoint so the success path runs without a DB write (the success
+    // handler is where track('invite-submitted') fires).
+    await page.route('/api/invite', (route) => {
+      if (route.request().method() === 'POST') {
+        void route.fulfill({
+          status: 201,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            id: 'test-invite-submitted-event',
+            mailStatus: 'skipped',
+            message: 'Thank you.',
+          }),
+        });
+      } else {
+        void route.continue();
+      }
+    });
+
+    // Drive the embedded island to a successful submit (wait for hydration via the
+    // noValidate signal, the same pattern the success test uses).
+    await page.locator('section#close').scrollIntoViewIfNeeded();
+    await page.waitForFunction(
+      () => {
+        const form = document.querySelector(
+          'section#close form[action="/api/invite"]',
+        ) as HTMLFormElement | null;
+        return form !== null && form.noValidate === true;
+      },
+      { timeout: 10000 },
+    );
+
+    const form = page.locator('section#close form[action="/api/invite"]');
+    await form.locator('input[name="name"]').fill('Event E2E User');
+    await form.locator('input[name="email"]').fill('invite-submitted-e2e@test.example.invalid');
+    await form
+      .locator('textarea[name="message"]')
+      .fill('invite-submitted event e2e — please ignore.');
+    await form.locator('select[name="attribution"]').selectOption('other');
+    await form.locator('button[type="submit"]').click();
+
+    // Success must render (confirms we reached the success handler that fires track()).
+    await expect(
+      page.locator('[role="status"]').filter({ hasText: 'Your inquiry has been received' }),
+    ).toBeVisible({ timeout: 10000 });
+
+    // The event must have been recorded. Poll because track() fires in the same
+    // tick as the success state transition.
+    await expect
+      .poll(
+        async () =>
+          page.evaluate(
+            () =>
+              (window as unknown as { __umamiCalls: Array<[string, unknown]> }).__umamiCalls.length,
+          ),
+        { timeout: 5000 },
+      )
+      .toBeGreaterThan(0);
+
+    const calls = (await page.evaluate(
+      () => (window as unknown as { __umamiCalls: Array<[string, unknown]> }).__umamiCalls,
+    )) as Array<[string, Record<string, unknown> | undefined]>;
+
+    // Exactly the invite-submitted event was fired (the only event on this path).
+    const inviteCalls = calls.filter(([event]) => event === 'invite-submitted');
+    expect(inviteCalls, 'invite-submitted fired exactly once on success').toHaveLength(1);
+
+    const payload = inviteCalls[0]![1] ?? {};
+    // source disambiguates the home embed (Decision 2): home `/` ⇒ 'close'.
+    expect(payload.source, 'source attributes the conversion to the home Close embed').toBe(
+      'close',
+    );
+
+    // NO PII: none of the inquiry field values may appear as a key, and every
+    // value present must be a primitive (no nested object that could smuggle PII).
+    for (const key of PII_KEYS) {
+      expect(
+        payload,
+        `analytics payload must NOT carry the "${key}" field (NFR-7)`,
+      ).not.toHaveProperty(key);
+    }
+    for (const [, value] of Object.entries(payload)) {
+      expect(['string', 'number', 'boolean']).toContain(typeof value);
+    }
+    // And the submitted PII strings must not leak anywhere in the serialized payload.
+    const serialized = JSON.stringify(payload);
+    expect(serialized).not.toContain('invite-submitted-e2e@test.example.invalid');
+    expect(serialized).not.toContain('Event E2E User');
+  });
+
+  test('the success submit is a silent no-op without Umami — track() does not throw (AC4/NFR-5)', async ({
+    page,
+  }) => {
+    // The DEFAULT served build ships NO Umami tracker, so window.umami is
+    // undefined. The island's track('invite-submitted') call must be a safe no-op
+    // (analytics.ts guards window.umami?.track) — submitting must still succeed and
+    // surface no page error. Mutation: an unguarded window.umami.track(...) would
+    // throw a TypeError here, breaking the success transition.
+    const pageErrors: string[] = [];
+    page.on('pageerror', (err) => pageErrors.push(err.message));
+
+    await page.goto('/');
+
+    // Confirm the gate is genuinely closed: no umami tracker installed by the build.
+    const hasUmami = await page.evaluate(() => typeof window.umami !== 'undefined');
+    expect(hasUmami, 'default build must not install window.umami (Rule 4 gate closed)').toBe(
+      false,
+    );
+
+    await page.route('/api/invite', (route) => {
+      if (route.request().method() === 'POST') {
+        void route.fulfill({
+          status: 201,
+          contentType: 'application/json',
+          body: JSON.stringify({ id: 'noop-umami', mailStatus: 'skipped', message: 'Thank you.' }),
+        });
+      } else {
+        void route.continue();
+      }
+    });
+
+    await page.locator('section#close').scrollIntoViewIfNeeded();
+    await page.waitForFunction(
+      () => {
+        const form = document.querySelector(
+          'section#close form[action="/api/invite"]',
+        ) as HTMLFormElement | null;
+        return form !== null && form.noValidate === true;
+      },
+      { timeout: 10000 },
+    );
+
+    const form = page.locator('section#close form[action="/api/invite"]');
+    await form.locator('input[name="name"]').fill('No-Umami E2E User');
+    await form.locator('input[name="email"]').fill('noop-umami-e2e@test.example.invalid');
+    await form.locator('textarea[name="message"]').fill('no-op umami e2e — please ignore.');
+    await form.locator('select[name="attribution"]').selectOption('other');
+    await form.locator('button[type="submit"]').click();
+
+    // Success still renders (track() no-op did not break the success path)…
+    await expect(
+      page.locator('[role="status"]').filter({ hasText: 'Your inquiry has been received' }),
+    ).toBeVisible({ timeout: 10000 });
+    // …and no uncaught page error was raised by the track() call.
+    expect(
+      pageErrors,
+      `no uncaught error from the no-op track(): ${pageErrors.join('; ')}`,
+    ).toEqual([]);
+  });
+});
+
+test.describe('home #close — creative touch performs NO live runtime read (Story 3.5, AC2/FR-23)', () => {
+  test('loads no network request and references no script/iframe to youtube/suno/github (Guardrail §9.1)', async ({
+    page,
+  }) => {
+    // FR-23 / Guardrail §9.1: the curated creative touch is a static poster + a
+    // hardcoded curated <a>. The PAGE itself must perform NO live read of a media
+    // provider — no XHR/fetch/script/iframe to youtube/suno/github at load or on
+    // reveal. (The curated <a> href points AT suno.com, but a link target is NOT a
+    // request — only an actual network call / embedded sub-resource counts.)
+    const PROVIDER_HOST =
+      /(?:youtube\.com|youtu\.be|ytimg\.com|googlevideo\.com|suno\.com|github\.com|githubusercontent\.com)/i;
+
+    const providerRequests: string[] = [];
+    page.on('request', (req) => {
+      const url = req.url();
+      if (PROVIDER_HOST.test(url)) providerRequests.push(`${req.method()} ${url}`);
+    });
+
+    await page.goto('/');
+    // Reveal the Close so any reveal-triggered embed (there must be none) would fire.
+    await page.locator('section#close').scrollIntoViewIfNeeded();
+    // Let the island hydrate + give any deferred embed a chance to (wrongly) load.
+    await page.waitForFunction(
+      () => {
+        const form = document.querySelector(
+          'section#close form[action="/api/invite"]',
+        ) as HTMLFormElement | null;
+        return form !== null && form.noValidate === true;
+      },
+      { timeout: 10000 },
+    );
+    await page.waitForLoadState('networkidle');
+
+    // No request to any media-provider host was made by the page.
+    expect(
+      providerRequests,
+      `page must make NO live request to a media provider (FR-23): ${providerRequests.join(', ')}`,
+    ).toEqual([]);
+
+    // And the Close DOM embeds no provider sub-resource (no <script src>/<iframe>/<img>
+    // pointing at a provider) — the creative touch is a pure CSS poster.
+    const closeEmbeds = await page.locator('section#close').evaluate((section, hostSrc) => {
+      const re = new RegExp(hostSrc, 'i');
+      const out: string[] = [];
+      section.querySelectorAll('script[src], iframe[src], img[src], source[src]').forEach((el) => {
+        const src = el.getAttribute('src') ?? '';
+        if (re.test(src)) out.push(`${el.tagName.toLowerCase()} ${src}`);
+      });
+      return out;
+    }, PROVIDER_HOST.source);
+    expect(
+      closeEmbeds,
+      `Close must embed no provider sub-resource (static poster only): ${closeEmbeds.join(', ')}`,
+    ).toEqual([]);
+  });
+});
+
+test.describe('home #close — WCAG 2.1 AA axe audit with the island present (Story 3.5, AC5)', () => {
+  test('has zero axe-core wcag2a/wcag2aa violations on home / (with the Close island and CTAs)', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    // Scroll Close into view to ensure island content is in DOM for axe.
+    await page.locator('section#close').scrollIntoViewIfNeeded();
+    // Wait for the island to be present (SSR'd immediately).
+    await expect(page.locator('section#close form[action="/api/invite"]')).toHaveCount(1);
+
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+
+    const summary = results.violations.map(
+      (v) => `${v.id} (${v.impact}): ${v.nodes.length} node(s) — ${v.help}`,
+    );
+    expect(summary, summary.join('\n')).toEqual([]);
   });
 });

@@ -29,6 +29,7 @@
  */
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { InviteInput } from '@portfolio/shared/schemas';
+import { track } from '../lib/analytics';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -227,6 +228,17 @@ function InviteFormInner() {
 
         if (response.ok) {
           // --- Success state ---
+          // Fire the invite-submitted conversion event (FR-36, Story 3.5 Task 2).
+          // SSR-safe, env-gated: no-op without Umami (Rule 4). NO PII — only the
+          // non-identifying `source` primitive. Fires wherever the island is embedded
+          // (home Close + /invite). `source` disambiguates the two embed surfaces so
+          // funnel analytics can attribute conversion to the right scene.
+          track('invite-submitted', {
+            source:
+              typeof window !== 'undefined' && window.location.pathname === '/'
+                ? 'close'
+                : 'invite-page',
+          });
           setState('success');
         } else {
           let msg = 'Your message could not be sent. Please try again.';

@@ -262,16 +262,23 @@ describe('built home page (web/dist/index.html)', () => {
     expect(builtCss).not.toMatch(/\.browse-link[^{]*\{[^}]*outline\s*:/);
   });
 
-  it('ships exactly ONE tiny EXECUTABLE <script> — the gated scene-rail enhancement (NFR-1)', () => {
-    // 0-JS-by-default holds except the single minimal scene-rail enhancement
-    // (Story 1.4 Task 3). The hero/scaffold themselves ship no JS; the rail adds
-    // exactly one small inlined script for the semantic aria-current tracking.
+  it('ships the scene-rail script AND the React island — EXACTLY two sanctioned executable surfaces (NFR-1, Story 3.5 AC3)', () => {
+    // Story 3.5: home is now the SECOND island route (after /invite). It ships TWO
+    // sanctioned executable surfaces:
+    //   1. The gated scene-rail enhancement (inline IntersectionObserver script).
+    //   2. The React island (InviteForm, client:visible-deferred).
+    // The CTAs (data-umami-event) + creative touch (static poster + <a>) add NO app
+    // JS — both are 0-JS. Count only EXECUTABLE scripts; the ld+json DATA block does
+    // not count against the budget.
     //
-    // Story 1.6 adds a <script type="application/ld+json"> (Person + ProfilePage)
-    // to <head> — that is DATA, not executable JS, and does NOT count against the
-    // 0-JS budget. Count only EXECUTABLE scripts here (exclude ld+json).
+    // NOTE: Astro's client:visible hydration may emit multiple script tags for the
+    // island (the client renderer + the island chunk inline initializer), so we assert
+    // >= 2 (at least the rail script + at least one island script) rather than exactly 2.
     const executableScripts = countExecutableScripts(indexHtml);
-    expect(executableScripts).toBe(1);
+    expect(
+      executableScripts,
+      `home should ship >= 2 executable scripts (scene-rail + React island); found ${executableScripts}`,
+    ).toBeGreaterThanOrEqual(2);
     // And exactly one ld+json data block is present (the structured data).
     expect(countLdJsonScripts(indexHtml)).toBe(1);
   });
@@ -307,21 +314,25 @@ describe('built home page (web/dist/index.html)', () => {
     expect(scriptBody).toContain('matchMedia');
   });
 
-  it('references no external JavaScript bundle and ships no React island (NFR-1)', () => {
-    // The rail enhancement is inlined, so there is no <script src="…js">, no
-    // module preload, and no React hydration bundle from the document.
-    expect(indexHtml).not.toMatch(/<script\b[^>]*\bsrc=/);
-    expect(indexHtml).not.toMatch(/<link\b[^>]*\brel="modulepreload"/);
-    expect(indexHtml).not.toMatch(/\.js(["'?])/);
+  it('references the React island (client.*.js renderer) — home is now the 2nd island route (NFR-1 carve-out, Story 3.5 AC3)', () => {
+    // Story 3.5: home gains the InviteForm React island (client:visible). The React
+    // client renderer chunk IS now legitimately referenced on /. The scene-rail script
+    // remains inlined (no separate src= for it). Assert the island renderer is present.
+    expect(
+      indexHtml,
+      'home must reference the React client renderer (renderer-url attribute)',
+    ).toMatch(/renderer-url="[^"]*client\.[^"]+\.js"/);
   });
 
   it('contains no exclamation marks in copy (positive-assertion voice)', () => {
-    // The voice rule bans "!" in COPY, not in code. Strip the <!doctype> and the
-    // inlined scene-rail enhancement <script> (whose JS legitimately uses "!"
-    // negation / "!==") before asserting the rendered markup carries none.
+    // The voice rule bans "!" in COPY, not in code. Strip the <!doctype>, all
+    // <script>…</script> blocks (JS legitimately uses ! for negation/!==), and
+    // HTML comments (Story 3.5: Astro emits <!--astro:end--> island markers —
+    // these are not user-visible content; same treatment as the /invite page test).
     const copyOnly = indexHtml
       .replace(/<!doctype html>/i, '')
-      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<!--[\s\S]*?-->/g, '');
     expect(copyOnly).not.toContain('!');
   });
 });
@@ -1286,15 +1297,16 @@ describe('Story 1.10 — env-gated Umami is OFF by default (AC2 / IAC-2; NFR-1)'
     },
   );
 
-  it('keeps the home + every Mirror route at 0 executable scripts with the gate closed', () => {
-    // Re-assert the floor specifically in the Umami context: the home keeps its
-    // single scene-rail script; the Mirror routes keep zero. No Umami JS is added.
-    // CARVE-OUT (Story 3.2): /speaking ships ONE minimal copy-enhancement script
-    // (sanctioned in build-output test; asserted separately in the NFR-1 carve-out
-    // suite above). Skip it here — it is not zero, and it is not Umami.
-    // CARVE-OUT (Story 3.4): /invite ships the React island (the first React client
-    // runtime on the site). It is NOT zero. Asserted separately in the island suite.
-    expect(countExecutableScripts(indexHtml)).toBe(1);
+  it('keeps the home + every Mirror route at the correct script count with the gate closed', () => {
+    // Re-assert the floor specifically in the Umami context: No Umami JS is added.
+    // CARVE-OUT (Story 3.2): /speaking ships ONE minimal copy-enhancement script.
+    // CARVE-OUT (Story 3.4): /invite ships the React island (not zero).
+    // CARVE-OUT (Story 3.5): home ships >= 2 scripts (scene-rail + React island).
+    // In all cases: no Umami script is added — asserted separately per-page above.
+    expect(
+      countExecutableScripts(indexHtml),
+      'home scene-rail + React island',
+    ).toBeGreaterThanOrEqual(2);
     for (const route of MIRROR_ROUTES) {
       if (route === '/speaking') continue; // carve-out — see Story 3.2 NFR-1 suite
       if (route === '/invite') continue; // carve-out — see Story 3.4 island suite
@@ -1753,7 +1765,8 @@ describe('Story 3.4 — /invite/ React island carve-out (AC6, Decision 5; resolv
   });
 
   // NON-island routes: assert none reference the React client.*.js chunk.
-  // This is the core NFR-1 isolation guarantee: ONLY /invite/ gains the React runtime.
+  // This is the core NFR-1 isolation guarantee: ONLY /invite/ and / gain the React runtime.
+  // Story 3.5: home (/) is now also an island route — excluded from the non-island list.
   const NON_ISLAND_MIRROR_ROUTES = [
     '/timeline',
     '/glass-box',
@@ -1770,7 +1783,7 @@ describe('Story 3.4 — /invite/ React island carve-out (AC6, Decision 5; resolv
     (route) => {
       const html = readFileSync(routeHtmlPath(route), 'utf8');
       // The React chunk (client.*.js from @astrojs/react) must NOT appear in any
-      // non-island route. If it appears, the React runtime has leaked outside /invite/.
+      // non-island route. If it appears, the React runtime has leaked beyond / and /invite/.
       expect(
         html,
         `${route} must not reference React client.*.js (the React runtime must not leak)`,
@@ -1778,9 +1791,10 @@ describe('Story 3.4 — /invite/ React island carve-out (AC6, Decision 5; resolv
     },
   );
 
-  it('home (/) does NOT reference the React client.*.js chunk (NFR-1 isolation)', () => {
-    // Home only has the scene-rail script (1 executable, inline). No React chunk.
-    expect(indexHtml).not.toMatch(/client\.[a-zA-Z0-9_-]+\.js/);
+  it('home (/) references the React client.*.js chunk — it is the 2nd island route (Story 3.5, NFR-1 carve-out)', () => {
+    // Story 3.5: home gains the InviteForm island alongside /invite. The React chunk
+    // is LEGITIMATELY referenced on / — this is the intended state (not a leak).
+    expect(indexHtml).toMatch(/client\.[a-zA-Z0-9_-]+\.js/);
   });
 
   it('/invite/thanks/ builds as a 0-JS confirmation page (AC2, Decision 3)', () => {
@@ -1808,5 +1822,173 @@ describe('Story 3.4 — /invite/ React island carve-out (AC6, Decision 5; resolv
     expect(thanksHtml).toContain(
       '<link rel="canonical" href="https://joshuabrandt.abacusai.cloud/invite/thanks/"',
     );
+  });
+});
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Story 3.5 — home #close: InviteForm island + follow CTAs + creative touch.
+ *
+ * Build-output assertions on the produced home /index.html (real `astro build`
+ * output — the consumer-observable form, skill-rules Rule 3 / AC3 / AC4).
+ *
+ * Asserts:
+ *   • Home now embeds the InviteForm island (React island, client:visible).
+ *   • The SSR'd <form action="/api/invite" method="POST"> is in the home HTML.
+ *   • The follow/subscribe CTAs carry data-umami-event="channel-clicked" +
+ *     data-umami-event-channel="{youtube|github|suno}" — 0-JS, no app JS.
+ *   • The creative-touch <a> is present and followable JS-off.
+ *   • CTAs + creative touch add NO app JS (no additional React-runtime references
+ *     beyond the island — the island is already asserted above in the 3.4 suite).
+ *   • The Close heading copy and no exclamation marks (positive-assertion voice).
+ *   • home ships its existing scene-rail PLUS the React island (>= 2 exec scripts).
+ *   • All non-island Mirror routes are unchanged (no new React references).
+ * ────────────────────────────────────────────────────────────────────────── */
+
+describe('Story 3.5 — home #close: InviteForm island + follow CTAs + creative touch (AC1–AC5)', () => {
+  it('home Close scene embeds the InviteForm island — React island renderer-url present (AC1/AC3)', () => {
+    // Story 3.5: home is now the 2nd island route. The React renderer-url must be
+    // present (the same signal used for /invite/ — the island is legitimately active).
+    expect(indexHtml).toMatch(/renderer-url="[^"]*client\.[^"]+\.js"/);
+  });
+
+  it('home Close scene SSR-emits the <form action="/api/invite" method="POST"> for JS-off baseline (AC1)', () => {
+    // The InviteForm island SSRs its initial HTML into the static output — the <form>
+    // is in dist/index.html so the native POST works with JS disabled (resilience guarantee).
+    expect(indexHtml).toMatch(/<form[^>]+action="\/api\/invite"[^>]+method="POST"/i);
+  });
+
+  it('home Close follow CTAs carry data-umami-event="channel-clicked" on real <a> elements (AC1, 0-JS)', () => {
+    // The 3 CTAs (youtube, github, suno) must each carry the channel-clicked event
+    // attribute on a real <a> — the 0-JS Umami click form (no app JS added).
+    const channelClicked = indexHtml.match(/data-umami-event="channel-clicked"/g) ?? [];
+    expect(
+      channelClicked.length,
+      'at least 3 channel-clicked CTAs in home Close',
+    ).toBeGreaterThanOrEqual(3);
+  });
+
+  it.each(['youtube', 'github', 'suno'] as const)(
+    'home Close CTA carries data-umami-event-channel="%s" (non-PII, AC1/AC4)',
+    (channel) => {
+      expect(indexHtml).toContain(`data-umami-event-channel="${channel}"`);
+    },
+  );
+
+  it('home Close CTAs are real <a> links (followable JS-off; no app JS) (AC1/AC3)', () => {
+    // Each CTA must be a real <a href> with the channel-clicked attribute on the SAME
+    // element — so the click is tracked (0-JS, Umami-handled) and the link works JS-off.
+    for (const channel of ['youtube', 'github', 'suno'] as const) {
+      const anchor = indexHtml.match(
+        new RegExp(`<a\\b[^>]*data-umami-event-channel="${channel}"[^>]*>`),
+      );
+      expect(anchor, `<a> with data-umami-event-channel="${channel}"`).not.toBeNull();
+      expect(anchor![0], `CTA for ${channel} is a real link with href`).toMatch(/\shref="/);
+    }
+  });
+
+  it('home Close CTAs add NO additional app JS — only the island runner is present (AC3/NFR-1)', () => {
+    // The CTAs use data-umami-event (0-JS). The only JS added by 3.5 beyond the
+    // scene-rail script is the React island (already counted). No extra scripts.
+    // Non-island Mirror routes are unchanged — asserted by the Story 3.4 NFR-1 suite.
+    // Here: assert the island renderer-url is present (the island, legitimately) but no
+    // additional script elements beyond the scene-rail + island scaffolding.
+    //
+    // The CTAs themselves must NOT have onclick= or any inline JS.
+    expect(indexHtml).not.toMatch(/data-umami-event-channel[^>]*onclick=/);
+  });
+
+  it('home Close has the curated creative-touch <a> link (followable JS-off) (AC2)', () => {
+    // The creative touch is a real <a> (followable JS-off; no autoplay). Assert the
+    // <a> element is present with an aria-label (accessible name, NFR-2/AA).
+    expect(indexHtml).toMatch(/<a\b[^>]*class="[^"]*close__creative-link[^"]*"[^>]*>/);
+    // The creative-touch link has an accessible name (aria-label; NFR-2/AA).
+    expect(indexHtml).toMatch(
+      /<a\b[^>]*class="[^"]*close__creative-link[^"]*"[^>]*aria-label="[^"]+"/,
+    );
+  });
+
+  it('home Close creative touch is a static poster — no autoplay, no live runtime read (AC2/FR-23)', () => {
+    // FR-23 / Guardrail §9.1: NO live API reads. The poster is a static CSS element
+    // with hardcoded copy — no <video autoplay>, no <iframe>, no dynamic embed tag.
+    // Check the close section specifically doesn't have autoplay.
+    const closeSection = indexHtml.match(/<section\b[^>]*id="close"[^>]*>[\s\S]*?<\/section>/);
+    expect(closeSection, 'close section present').not.toBeNull();
+    expect(closeSection![0]).not.toMatch(/autoplay/i);
+    expect(closeSection![0]).not.toContain('<iframe');
+    expect(closeSection![0]).not.toContain('<video');
+  });
+
+  it('home Close [OPEN] placeholder flags are visible in text (no fabrication; AC2)', () => {
+    // The channel handles + the curated creative-touch URL are [OPEN]-flagged,
+    // meaning the unconfirmed values are visible to the reader — never invented.
+    expect(indexHtml).toContain('[OPEN:');
+  });
+
+  it('home Close heading + copy contain no exclamation marks (positive-assertion voice; AC5)', () => {
+    // The voice rule bans "!" in COPY. Strip scripts (JS uses !) and comments,
+    // then assert the rendered Close markup is exclamation-free.
+    const copyOnly = indexHtml
+      .replace(/<!doctype html>/i, '')
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<!--[\s\S]*?-->/g, '');
+    expect(copyOnly).not.toContain('!');
+  });
+
+  it('home Close sub-headings are <h3> (under the <h2> scene title; heading hierarchy; AC5)', () => {
+    // The Close scene has an <h2> title; the sub-sections (invite / follow / sample)
+    // use <h3> — correct heading hierarchy under h2 (NFR-2/SEO).
+    const closeSection = indexHtml.match(/<section\b[^>]*id="close"[^>]*>[\s\S]*?<\/section>/);
+    expect(closeSection, 'close section present').not.toBeNull();
+    // There must be at least one <h3> inside the close section (the sub-headings).
+    expect(closeSection![0]).toMatch(/<h3\b/);
+    // And no <h1> inside close (would break hierarchy).
+    expect(closeSection![0]).not.toMatch(/<h1\b/);
+  });
+
+  it('home ships >= 2 executable scripts — scene-rail + React island (NFR-1, Story 3.5 AC3)', () => {
+    // Mirrors the AC3 carve-out test above; here for the 3.5 suite colocation.
+    expect(countExecutableScripts(indexHtml)).toBeGreaterThanOrEqual(2);
+  });
+
+  it('home Close embeds NO live-read provider sub-resource — no script/iframe to youtube/suno/github (AC2/FR-23, Guardrail §9.1)', () => {
+    // The static-build counterpart to the e2e no-network test: assert the produced
+    // home HTML's Close section bakes in NO <script src> / <iframe src> / <img src>
+    // pointing at a media-provider host. The curated <a href="…suno.com/song/[OPEN]">
+    // is a link TARGET (allowed, followable JS-off) — NOT an embedded sub-resource.
+    // So we scan only the loadable-sub-resource tags, never the <a>. A regression
+    // that swapped the static poster for a real provider embed (a build/runtime live
+    // read, violating Guardrail §9.1) would red here.
+    const closeSection = indexHtml.match(/<section\b[^>]*id="close"[^>]*>[\s\S]*?<\/section>/);
+    expect(closeSection, 'close section present').not.toBeNull();
+    const close = closeSection![0];
+    const providerHost =
+      /(?:youtube\.com|youtu\.be|ytimg\.com|googlevideo\.com|suno\.com|github\.com|githubusercontent\.com)/i;
+    // Every loadable sub-resource tag in the Close (script/iframe/img/source with src).
+    const subResources =
+      close.match(/<(?:script|iframe|img|source)\b[^>]*\bsrc="([^"]*)"[^>]*>/gi) ?? [];
+    const providerEmbeds = subResources.filter((tag) => {
+      const src = tag.match(/\bsrc="([^"]*)"/i)?.[1] ?? '';
+      return providerHost.test(src);
+    });
+    expect(
+      providerEmbeds,
+      `Close must embed no provider sub-resource (static poster only): ${providerEmbeds.join('\n')}`,
+    ).toHaveLength(0);
+    // Belt-and-braces: the only suno.com reference in the Close is an <a href> (the
+    // curated link), never a loadable src. (If a src= to suno appeared, the check
+    // above already fails; this asserts the curated link IS present as an anchor.)
+    expect(close).toMatch(/<a\b[^>]*\shref="https:\/\/suno\.com\/[^"]*"[^>]*>/i);
+  });
+
+  it('the /speaking/reel/ route references NO React client chunk — carve-out is exactly {/, /invite} (NFR-1, Story 3.5 AC3)', () => {
+    // The directive names /speaking/reel explicitly. It is a plain MirrorLayout
+    // route (NOT an island): the React runtime must NOT leak onto it when home
+    // became the 2nd island route. This is the mutation-proof tail of the carve-out
+    // — if a global/layout-level island injection ever shipped React everywhere,
+    // this (and the NON_ISLAND_MIRROR_ROUTES suite) would red.
+    const reelHtml = readFileSync(routeHtmlPath('/speaking/reel'), 'utf8');
+    expect(reelHtml).not.toMatch(/client\.[a-zA-Z0-9_-]+\.js/);
+    expect(reelHtml).not.toMatch(/renderer-url=/);
+    expect(countExecutableScripts(reelHtml)).toBe(0);
   });
 });

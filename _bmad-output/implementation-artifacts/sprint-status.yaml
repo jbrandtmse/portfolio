@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-06T02:19:05Z
-last_updated: 2026-06-07T02:59:32Z
+last_updated: 2026-06-07T04:04:18Z
 project: portfolio
 project_key: NOKEY
 tracking_system: file-system
@@ -76,7 +76,7 @@ development_status:
   3-2-copy-paste-bios-social-proof: done
   3-3-invite-me-capture-data-model-endpoint-email: done
   3-4-invite-me-form-accessible-resilient: done
-  3-5-the-close-follow-subscribe-ctas-curated-creative-touch: backlog
+  3-5-the-close-follow-subscribe-ctas-curated-creative-touch: done
   epic-3-retrospective: optional
 
   # Epic 4: The Guide — Grounded Advocate (capstone)

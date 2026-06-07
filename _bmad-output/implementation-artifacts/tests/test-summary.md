@@ -509,3 +509,94 @@ tier** here is the CLI/library tier: the mechanism test invokes the REAL `render
   file a HIGH for "no browser test."
 - The QA additions are pure test/guard code in `scripts/` (Prettier-clean); no production code,
   no `content/` manifest, and no render function was changed (both render files are byte-clean).
+
+---
+
+# Story 3.5 — The Close: follow/subscribe CTAs + curated creative touch (QA)
+
+QA stage for the FINAL Epic-3 story. The home `#close` scene gained the embedded
+Story-3.4 `InviteForm` island (`client:visible`), follow/subscribe CTAs with the 0-JS
+`data-umami-event="channel-clicked"` form, and a single curated creative touch (static
+CSS poster + `[OPEN]` Suno `<a>`). Home `/` becomes the 2nd island route (NFR-1
+carve-out). This closes the SM-1 conversion path. **User-facing surface → Rule 3
+real-runtime REQUIRED** and satisfied (Playwright against the served build + real Hono
+API/Postgres; axe AA). The dev shipped 17 e2e + 10 build-output assertions; QA
+mutation-verified the highest-value ones and filled the genuine gaps the directive named.
+
+## Genuine gaps filled (QA-added)
+
+### E2E — `web/e2e/home.spec.ts` (+3, under the `desktop` project; Rule 8 discoverable)
+
+1. **`invite-submitted` fires on a successful home submit with NO PII (AC1/AC4) — the
+   headline conversion event, previously UNCOVERED.** Installs a capturing
+   `window.umami.track` via `addInitScript` (present before the island hydrates), drives
+   the embedded Close form to a successful (mocked `/api/invite`) submit, and asserts the
+   island fired `track('invite-submitted', { source: 'close' })` EXACTLY once —
+   `source === 'close'` (home embed, per Decision 2), the payload carries NONE of
+   `name/email/message/org/topic/attribution`, every value is a primitive, and the
+   submitted PII strings are absent from the serialized payload. (The existing
+   `analytics.test.ts` only tested the generic `track()` helper — nothing verified
+   `InviteForm` actually calls it; this was the directive's #1 target and the resolved
+   Story-3.4 forward-ref.)
+2. **The success submit is a silent no-op without Umami (AC4/NFR-5).** Confirms the
+   default served build installs no `window.umami`, submits successfully, and asserts
+   the success state still renders with zero uncaught page errors — proving the `track()`
+   call is a safe env-gated no-op (Rule 4) that never blocks conversion.
+3. **Creative touch performs NO live runtime read (AC2/FR-23, Guardrail §9.1).** Listens
+   for any request to a media-provider host (youtube/youtu.be/ytimg/googlevideo/suno/
+   github/githubusercontent), loads `/`, reveals the Close, waits for hydration +
+   `networkidle`, and asserts ZERO provider requests AND that the Close DOM embeds no
+   provider sub-resource (`script[src]/iframe[src]/img[src]/source[src]`). The curated
+   `<a href>` to suno is a link target (allowed, JS-off-followable), not a request.
+
+### Build-output — `web/test/build-output.test.ts` (+2, in the Story 3.5 suite)
+
+4. **Home Close embeds NO live-read provider sub-resource (AC2/FR-23).** Static-build
+   counterpart to (3): scans the produced `#close` HTML for any loadable sub-resource tag
+   pointing at a provider host (never the `<a>`), asserts none, and asserts the curated
+   suno `<a href>` IS present.
+5. **`/speaking/reel/` references NO React client chunk (NFR-1 carve-out, AC3).** The
+   directive named the reel route; asserts the carve-out tail — no `client.*.js`, no
+   `renderer-url=`, 0 executable scripts — so home becoming the 2nd island route did not
+   leak the React runtime onto a plain Mirror route.
+
+## Mutation verification (the high-value tests are NOT vacuous)
+
+- Commented out the `track('invite-submitted', …)` call in `InviteForm.tsx`'s success
+  handler → test (1) FAILED (recorded calls = 0). Reverted byte-clean → GREEN.
+- Added `email: values.email` to the `invite-submitted` payload → test (1)'s NO-PII
+  assertion FAILED (`must NOT carry the "email" field`). Reverted byte-clean → GREEN.
+- Injected `<iframe src="…youtube…">` into the Close → build-output test (4) FAILED
+  (`Close must embed no provider sub-resource`). Reverted byte-clean → GREEN.
+
+## Real counts (canonical `pnpm test:all`, run whole)
+
+- `test` (vitest) → scripts **107** + api **68** + web **630** (was 628; +2 QA
+  build-output assertions) — all GREEN.
+- `test:e2e` (Playwright, all projects) → **213 passed** (was 210; +3 QA `desktop`
+  tests). The home Close JS-off native POST ran against the REAL Hono API
+  (`[email] skipped: RESEND_API_KEY not set`; `[invite] inquiry persisted`) with the row
+  cleaned up; axe AA on `/` with the island present = 0 violations.
+- `typecheck` → 0 errors (all packages). `lint` → 0. `format:check`
+  (`prettier --check .`, ROOT) → GREEN. `lh` → see gate (final stage).
+
+## Coverage vs ACs
+
+- AC1 (Close presents invite/follow/join; embeds the form posting to `/api/invite`; CTAs
+  fire `channel-clicked`; form fires `invite-submitted`) ✓ — dev form/CTA tests + QA
+  `invite-submitted` firing/no-PII (1) · AC2 (single curated creative touch; static
+  poster; JS-off-followable `<a>`; no autoplay; NO live read) ✓ — dev no-iframe/video +
+  QA no-network/no-embed (3),(4) · AC3 (NFR-1: home = scene-rail + island only; CTAs +
+  creative touch 0-JS; non-island routes unchanged) ✓ — dev carve-out + QA reel test (5)
+  · AC4 (env-gated; inert without Umami; no PII) ✓ — QA (1),(2) · AC5 (axe AA 0 on `/`;
+  deterministic; no exclamation marks) ✓ — dev axe + voice tests, green in the gate.
+
+## Notes for code review
+
+- No defects found in the dev's implementation. The conversion event is correctly wired
+  (`source` primitive only, no PII), env-gated (no-op without Umami), and the creative
+  touch performs no live read (verified both at build and against the served runtime).
+- Rule 3 (real-runtime, user-facing surface): SATISFIED — Playwright drives the hydrated
+  island against the served build + real Hono API/Postgres and asserts observable DOM /
+  captured analytics calls / network behavior, not existence-only.
+- `api/.env` NOT committed. Changes left uncommitted for the lead's smoke + commit.
