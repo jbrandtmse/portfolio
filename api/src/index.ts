@@ -1,11 +1,13 @@
 import { serve } from '@hono/node-server';
 
 import app from './app.js';
+import { env } from './env.js';
 
-// API_PORT keeps the Hono port in one place; the Astro dev proxy reads the same
-// var (.env.example default 8787).
-const port = Number(process.env.API_PORT ?? 8787);
-
-serve({ fetch: app.fetch, port }, (info) => {
+// API_PORT is now validated + defaulted in env.ts (resolves deferred [1.1] items:
+// "API_PORT no validation" and "API_PORT default duplicated as a literal").
+// This is the production entrypoint: `node dist/index.js` binds the port.
+// Tests import app.ts directly (not this file), so they never call serve() and
+// never bind a socket (Story-3.0 EADDRINUSE invariant).
+serve({ fetch: app.fetch, port: env.API_PORT }, (info) => {
   console.log(`[api] Hono listening on http://localhost:${info.port}/api`);
 });

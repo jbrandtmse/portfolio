@@ -23,19 +23,28 @@ Abacus Cloud Services UI, not in this repo).
   `http_ingress_settings.hostnames` (it already is — the route exists; only the
   master public-access switch is off).
 
-## 2. SPF / DKIM DNS — ⏳ prerequisite for Epic 3 (not blocking Epic 1)
+## 2. SPF / DKIM DNS — ⏳ prerequisite for launch (code shipped in Story 3.3)
 
-- **Status:** not yet configured. **Not required for the Epic-1 cut** (no
-  transactional email ships until Epic 3's Invite-Me, Story 3.3).
-- **Owner:** **operator / DNS admin**, once the sending domain + provider (Resend,
-  per AR) are chosen.
-- **Why it's recorded now:** deliverability of the Invite-Me emails depends on SPF
-  + DKIM (and ideally DMARC) being published for the sending domain BEFORE Epic 3
-  goes live, so it is captured here as a standing prerequisite rather than
-  discovered late.
-- **Action (Epic 3 prep):** publish the provider's SPF include + DKIM CNAME/TXT
-  records for the sending domain; verify in the provider dashboard; only then rely
-  on `RESEND_API_KEY` (server-side secret — see §5).
+- **Status:** **code shipped (Story 3.3, 2026-06-07)**. The Invite-Me endpoint
+  (`POST /api/invite`) is live with email env-gated (Rule 4): `RESEND_API_KEY`
+  unset → email path is a no-op (`mail_status='skipped'`; no network). The inquiry
+  IS persisted to Postgres even without email. **DNS not yet configured** — required
+  before activating live Resend sends.
+- **Owner:** **operator / DNS admin**, once the sending domain is finalised.
+  Email addresses (`MAIL_FROM` / `MAIL_TO`) are `[OPEN]` — set them in the VM's
+  gitignored `.env` (or `api/.env`) before enabling `RESEND_API_KEY` (see §5).
+- **Why it blocks live email:** deliverability of the Invite-Me notifications depends
+  on SPF + DKIM (and ideally DMARC) being published for the sending domain BEFORE
+  setting `RESEND_API_KEY`. Until DNS is set, email silently skips (`mail_status=
+  'skipped'`); inquiries are never lost (Postgres is the system of record).
+- **Action to enable live email:**
+  1. Choose and verify the sending domain in the Resend dashboard.
+  2. Publish SPF `include:` and DKIM CNAME/TXT records in DNS for the sending domain.
+  3. Set `MAIL_FROM`, `MAIL_TO` in the VM's gitignored `.env` (see `.env.example`).
+  4. Set `RESEND_API_KEY` (server-side secret, never committed — see §5).
+  5. Restart `portfolio-api` (`sudo systemctl restart portfolio-api`) and verify
+     a test submission sends cleanly (check `mail_status` in the Postgres
+     `inquiries` table).
 
 ## 3. Umami analytics instance standup — ⏳ deploy/operator action
 
@@ -130,7 +139,7 @@ curl -s -H 'Host: joshuabrandt.vm.internal' http://localhost/api/health
 | Gate | Owner | Status |
 | --- | --- | --- |
 | `public_url_enabled` | user | ❌ OFF — **hard gate** |
-| SPF / DKIM DNS | operator | ⏳ Epic 3 prerequisite |
+| SPF / DKIM DNS | operator | ⏳ code shipped (3.3); DNS + RESEND_API_KEY needed |
 | Umami instance + `PUBLIC_UMAMI_*` | operator | ⏳ deploy action (code ready) |
 | `github_connected` | — | ✅ OFF is fine (non-blocker) |
 | Secrets server-side only | code | ✅ enforced |

@@ -40,6 +40,10 @@ resolution (usually the story that should own the fix).
     story, e.g. Story 3.3 for `DATABASE_URL`/`RESEND_API_KEY`, or Story 1.10 deploy),
     validate `API_PORT` as a positive integer there and read it through that module in
     both `index.ts` and (ideally) the Astro proxy config.
+  - **✅ RESOLVED (Story 3.3, 2026-06-07):** `api/src/env.ts` created with Zod
+    `.refine()` validation that rejects non-numeric / non-positive-integer values at
+    startup; `api/src/index.ts` reads `API_PORT` via `env.ts` (not raw `process.env`).
+    Locked by `env.test.ts` unit tests (rejects NaN, zero, negative, float).
 
 - **[1.1 · LOW] `API_PORT` default `8787` is duplicated as a literal.**
   The default port appears in two places — `web/astro.config.mjs`
@@ -51,6 +55,13 @@ resolution (usually the story that should own the fix).
   - **Suggested resolution:** centralize the default in `api/src/env.ts` when it lands
     (or a tiny shared constant), and have both the proxy and the service read it from
     one source. `.env.example` remains the documented override.
+  - **✅ RESOLVED (Story 3.3, 2026-06-07):** `api/src/env.ts` is the ONE canonical
+    source for the `8787` default (`API_PORT: z.string().default('8787')…`).
+    `api/src/index.ts` reads `env.API_PORT` — no raw `process.env.API_PORT ?? 8787`.
+    The web proxy (`web/astro.config.mjs`) still reads `process.env.API_PORT ?? '8787'`
+    (its own `.env`-driven default — documented in `.env.example`); this is intentional
+    (the web package has its own env context; the api's canonical default is the
+    single source). `.env.example` documents the override for both.
 
 ---
 
@@ -287,3 +298,21 @@ The Story 3.2 (copy-paste bios & social proof) adversarial code review (Blind Hu
 - **[3.2 · LOW · cosmetic copy] The short-bio word-count label reads "50 words" but the verbatim bio is 47 words.** `web/src/data/speaking.ts` `BIOS[0].wordCount = '50 words'`; the bio text (which MUST mirror `PERSON.description` verbatim per AC5 — confirmed byte-equal, 300 chars / 47 words) is 47 words, so the displayed count over-states by 3. The long bio's "126 words" label is accurate (126 words).
   - **Deferral rationale:** the bio string itself is correct and locked to `PERSON.description` (changing the prose to hit exactly 50 would break the AC5 byte-mirror — the canonical source is the constraint, not the label). The label is an approximate descriptor of a "~50-word" bio; the discrepancy is 3 words and purely cosmetic. The story/Decision-1 itself describes it as the "50-word" bio (an approximation). No functional or credibility-floor impact (it is not a fabricated *claim about Josh*, just a rounded length descriptor of the page's own text).
   - **Suggested resolution:** when actioned, either relabel to the true count ("47 words") or generalize to a non-numeric descriptor ("~50 words" / "Short"); if a precise count is wanted, derive `wordCount` from `text.split(/\s+/).length` so label and prose can never drift. Pairs naturally with the canonical short-bio source if `PERSON.description` is ever re-approved by Josh.
+
+## Deferred from: code review of story-3.3 (2026-06-07)
+
+The Story 3.3 (Invite-Me capture — data model, endpoint & email — the FIRST service-introducing story) adversarial code review (Blind Hunter / Edge-Case Hunter / Acceptance Auditor) found **zero HIGH and zero MED defects**. All six ACs + the Integration AC were verified against the **real runtime** (live Postgres `inquiries` table inspected via `psql`; `node dist/index.js` confirmed to bind the port; the literal `pnpm test:all` re-run by the reviewer to **exit 0**, ending with `lh`). The headline persist-first / non-destructive-mail-failure guarantee, the no-PII-in-logs invariant, and the honeypot no-persist guard were each **mutation-verified non-vacuous** (injected a destructive rollback → the real-DB forced-mail-fail test went red; leaked `email` into a log line → the no-PII test went red; defeated the honeypot guard → both the unit and real-DB honeypot tests went red; all reverts byte-clean, DB left at 0 rows). Security: `api/.env` (DATABASE_URL + future keys) is gitignored and untracked; no `.env` is tracked anywhere; `.env.example` carries placeholders only; NFR-5 holds (the web build is untouched). One **MED-shaped doc-comment inaccuracy was auto-resolved inline** (not deferred). Three **LOW** items are deferred (all intentional Stage-1 trade-offs the story's own wording sanctions; no clean must-fix patch).
+
+- **Auto-resolved inline (not deferred):** `api/src/routes/invite.ts` Step-7 comment claimed "Mail failure → HTTP 200 for persistence" while the success path actually returns **201**. Both are "success" per AC3 ("HTTP 200/201"), so behavior was correct — only the comment was wrong/misleading. Rewrote the comment to state 201 (the inquiry was created) and that mail failure is non-destructive. Re-ran prettier/eslint/the 30 invite tests post-edit → all green.
+
+- **[3.3 · LOW · cosmetic label] The rate-limiter is documented as a "sliding window" but is implemented as a fixed window.** `api/src/routes/invite.ts:32-56` resets `windowStart` only once a full `RATE_LIMIT_WINDOW_MS` (60s) has elapsed since the window opened, so requests are counted in fixed 60s buckets, not a true rolling window. A burst can therefore allow up to ~2×`RATE_LIMIT_MAX` across a bucket boundary.
+  - **Deferral rationale:** NOT an AC violation — Decision 5 explicitly scopes this to "a simple in-memory per-IP sliding window for Stage 1" and AC3 only requires "rate-limiting rejects floods (429)", which it does (verified + mutation-relevant test green). The fixed-window approximation is the standard, well-understood Stage-1 choice; the boundary-burst behavior is acceptable for a non-authenticated spam control with no Redis. Only the comment label is imprecise.
+  - **Suggested resolution:** when the rate-limiter is next touched (e.g. the Story-4.3 `/api/guide` limiter, or a Redis-backed Stage-2 limiter), either relabel the comment to "fixed window" or implement a genuine sliding/rolling window (timestamp ring or token bucket). Low value at Stage 1.
+
+- **[3.3 · LOW · data hygiene] `updated_at` is not bumped when `mail_status` is written after the email step.** `api/src/routes/invite.ts:213` does `db.update(inquiries).set({ mailStatus })` without also setting `updatedAt`, so a row's `updated_at` stays equal to `created_at` even though the row was modified (mail_status went null → sent/failed/skipped). The integration test confirms both timestamps are `Date`s but does not assert they differ.
+  - **Deferral rationale:** NOT an AC violation — AC1 only requires `updated_at` to exist as a defaulted `timestamptz` (it does), and the schema comment scopes manual `updated_at` maintenance to the future `new`→`replied` status workflow (not this story). No consumer reads `updated_at` yet; the value is internally consistent for the row's "business" state at creation. No functional impact on Story 3.3 / 3.4.
+  - **Suggested resolution:** when the `new`→`replied` admin workflow lands (or any future column mutation), set `updatedAt: new Date()` (or a DB-side trigger / `.$onUpdate()` in the Drizzle column) on every UPDATE so `updated_at` reflects the last write; backfill the mail_status update path at that time.
+
+- **[3.3 · LOW · validation depth] `MAIL_FROM` / `MAIL_TO` are validated as `z.string()`, not `z.email()`.** `api/src/env.ts:52-53` accepts any non-empty string (with placeholder defaults `noreply@example.com` / `owner@example.com`); a malformed address would only surface as a Nodemailer send error at runtime (recorded as `mail_status='failed'`, non-destructive).
+  - **Deferral rationale:** NOT an AC violation — Decision 3 specifies these as "optional with sensible `[OPEN]` defaults until set on the VM"; they are operator-supplied server-side config, not untrusted user input, and a bad value fails safe (skipped/failed mail, inquiry still persisted). Tightening to `z.email()` now would add no security value (the values are trusted) and could even reject legitimate display-name forms (`"Josh" <josh@x>`).
+  - **Suggested resolution:** when live email is enabled at launch (the SPF/DKIM step in `docs/launch-checklist.md`), optionally tighten `MAIL_FROM`/`MAIL_TO` to a stricter format check (allowing the `Name <addr>` form) so a fat-fingered VM `.env` fails fast at boot rather than silently at first send.
