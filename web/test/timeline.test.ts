@@ -104,18 +104,28 @@ describe('Story 2.4 AC3 — one <h1>, semantic <ol>, 0 executable JS', () => {
     expect(html).toMatch(/<ol\b[^>]*class="[^"]*timeline-spine[^"]*"[^>]*>/);
   });
 
-  it('ships 0 executable scripts (0-JS, NFR-1)', () => {
+  it('ships exactly 2 executable scripts — Guide pill only (NFR-1, Story 4.4 carve-out)', () => {
+    // Story 4.4: ALL routes ship the site-wide Guide pill (2 exec scripts).
+    // /timeline/ has no InviteForm chunk, no GuidePanel chunk, no external src= scripts.
     const html = readFileSync(timelineHtmlPath, 'utf8');
-    expect(countExecutableScripts(html)).toBe(0);
+    expect(
+      countExecutableScripts(html),
+      '/timeline/ must have exactly 2 exec scripts (Guide pill only)',
+    ).toBe(2);
     expect(html).not.toMatch(/<script\b[^>]*\bsrc=/);
     expect(html).not.toMatch(/<link\b[^>]*\brel="modulepreload"/);
-    expect(html).not.toMatch(/\.js(["'?])/);
+    expect(html).not.toMatch(/InviteForm\.[a-zA-Z0-9_-]+\.js/);
+    expect(html).not.toMatch(/GuidePanel\.[a-zA-Z0-9_-]+\.js/);
   });
 
   it('carries no exclamation marks in copy (positive-assertion voice)', () => {
     const html = readFileSync(timelineHtmlPath, 'utf8');
-    // Strip HTML comments (which Astro emits) and doctype before asserting.
-    const noComments = html.replace(/<!--[\s\S]*?-->/g, '').replace(/<!doctype html>/i, '');
+    // Strip doctype, scripts (JS uses ! for negation), HTML comments.
+    // Story 4.4: the site-wide Guide pill adds inline Astro hydration scripts.
+    const noComments = html
+      .replace(/<!doctype html>/i, '')
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<!--[\s\S]*?-->/g, '');
     expect(noComments).not.toContain('!');
   });
 });

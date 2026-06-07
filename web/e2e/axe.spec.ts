@@ -28,6 +28,14 @@ for (const route of ROUTES) {
   test.describe(`WCAG 2.1 AA — ${route}`, () => {
     test('has zero axe-core wcag2a/wcag2aa violations', async ({ page }) => {
       await page.goto(route);
+      // Story 4.4: wait for the Guide pill island to mount and inject its inline CSS
+      // before running axe. The pill is client:only — it renders after page load and
+      // injects inline styles. Without this wait, axe may catch a transient contrast
+      // issue during the brief window between DOM insertion and CSS injection.
+      await page
+        .locator('[data-testid="guide-pill"]')
+        .waitFor({ state: 'visible', timeout: 8000 })
+        .catch(() => {});
       const results = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
         .analyze();

@@ -28,6 +28,8 @@
 import { Marked } from 'marked';
 import type { RendererThis, Tokens } from 'marked';
 
+import { stripFrontmatter } from '../../../../scripts/lib/markdown.ts';
+
 interface Props {
   type: string;
   curatorNote: string;
@@ -60,8 +62,11 @@ const articleMarked = new Marked({
 });
 
 // Strip leading YAML frontmatter (--- ... ---) if present so it doesn't
-// appear as literal text in the rendered body.
-const strippedBody = body.replace(/^---[\s\S]*?---\n?/, '');
+// appear as literal text in the rendered body. Uses the shared hardened
+// stripFrontmatter helper (Story 4.0) which requires the opening fence to
+// be followed by a `key:` shaped line — so a bare `---` thematic break
+// at the start of the body is NOT mistaken for frontmatter (no over-strip).
+const strippedBody = stripFrontmatter(body);
 
 const bodyHtml: string = articleMarked.parse(strippedBody) as string;
 

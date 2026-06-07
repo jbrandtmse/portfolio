@@ -131,6 +131,11 @@ test.describe('/speaking/ — Speaker Surface', () => {
 
   test('WCAG 2.1 AA — zero axe violations on /speaking/ (AC5)', async ({ page }) => {
     await page.goto('/speaking/');
+    // Story 4.4: wait for Guide pill CSS before axe (client:only timing)
+    await page
+      .locator('[data-testid="guide-pill"]')
+      .waitFor({ state: 'visible', timeout: 8000 })
+      .catch(() => {});
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
       .analyze();
@@ -145,17 +150,21 @@ test.describe('/speaking/ — Speaker Surface', () => {
     await expect(page.locator('h1')).toHaveCount(1);
   });
 
-  test('/speaking/ ships exactly ONE executable script — the vanilla copy-button enhancement (NFR-1 carve-out, Story 3.2 AC3)', async ({
+  test('/speaking/ ships exactly 3 executable scripts — Guide pill (2) + copy enhancement (1) (NFR-1, Story 3.2 + 4.4)', async ({
     page,
   }) => {
-    // Story 3.2 Decision 2: /speaking is the SECOND sanctioned progressive-enhancement
-    // route. It ships ONE minimal vanilla script — NOT zero and NOT more than one.
+    // Story 3.2: /speaking has ONE vanilla copy enhancement script.
+    // Story 4.4: ALL routes ship the site-wide Guide pill (2 exec scripts).
+    // Total: exactly 3 executable scripts.
     await page.goto('/speaking/');
     const scripts = await page.evaluate(() =>
       Array.from(document.querySelectorAll('script')).map((s) => s.type),
     );
     const execScripts = scripts.filter((t) => t !== 'application/ld+json');
-    expect(execScripts).toHaveLength(1);
+    expect(
+      execScripts,
+      `/speaking/ must ship exactly 3 exec scripts (2 Guide pill + 1 copy enhancement)`,
+    ).toHaveLength(3);
   });
 
   test('the Copy button copies the bio text and announces "Copied ✓" (Story 3.2, AC1, AC5 — JS-on)', async ({
@@ -296,6 +305,14 @@ test.describe('/speaking/reel/ — Speaker reel', () => {
 
   test('WCAG 2.1 AA — zero axe violations on /speaking/reel/ (AC5)', async ({ page }) => {
     await page.goto('/speaking/reel/');
+    // Story 4.4: wait for the Guide pill island to mount and inject its inline CSS
+    // before running axe. Without this wait, the pill button may be in the DOM
+    // but its inline <style> tag not yet processed — causing a transient contrast
+    // violation that disappears once the CSS is applied (timing-specific to Playwright).
+    await page
+      .locator('[data-testid="guide-pill"]')
+      .waitFor({ state: 'visible', timeout: 8000 })
+      .catch(() => {});
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
       .analyze();
@@ -312,13 +329,19 @@ test.describe('/speaking/reel/ — Speaker reel', () => {
     await expect(page.locator('h1')).toHaveCount(1);
   });
 
-  test('/speaking/reel/ ships 0 executable JS (NFR-1)', async ({ page }) => {
+  test('/speaking/reel/ ships exactly 2 executable scripts — Guide pill only (NFR-1, Story 4.4 carve-out)', async ({
+    page,
+  }) => {
+    // Story 4.4: ALL routes ship the site-wide Guide pill (2 exec scripts).
     await page.goto('/speaking/reel/');
     const scripts = await page.evaluate(() =>
       Array.from(document.querySelectorAll('script')).map((s) => s.type),
     );
     const execScripts = scripts.filter((t) => t !== 'application/ld+json');
-    expect(execScripts).toHaveLength(0);
+    expect(
+      execScripts,
+      `/speaking/reel/ must ship exactly 2 exec scripts (Guide pill only)`,
+    ).toHaveLength(2);
   });
 });
 

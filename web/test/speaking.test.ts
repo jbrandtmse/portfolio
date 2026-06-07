@@ -383,20 +383,29 @@ describe('Build output — /speaking/ and /speaking/reel/', () => {
     expect(existsSync(path)).toBe(true);
   });
 
-  it('/speaking ships exactly ONE executable script — the vanilla copy-button enhancement (NFR-1 carve-out, Story 3.2 AC3)', () => {
+  it('/speaking ships exactly 3 executable scripts — Guide pill (2) + copy enhancement (1) (NFR-1 carve-out, Story 3.2 + 4.4)', () => {
     if (!speakingHtml) return;
-    // Story 3.2 Decision 2: /speaking is the SECOND sanctioned progressive-enhancement
-    // route. It ships ONE minimal vanilla script (BioBlock copy enhancement) —
-    // NOT zero and NOT more than one. No external <script src>, no .js bundle.
-    expect(countExecutableScripts(speakingHtml)).toBe(1);
+    // Story 3.2 Decision 2: /speaking has ONE vanilla copy enhancement script.
+    // Story 4.4: ALL routes ship the site-wide Guide pill (2 exec scripts).
+    // Total: 3. No external <script src>, no InviteForm chunk.
+    expect(
+      countExecutableScripts(speakingHtml),
+      '/speaking must ship exactly 3 exec scripts (2 Guide pill + 1 copy enhancement)',
+    ).toBe(3);
     expect(speakingHtml).not.toMatch(/<script\b[^>]*\bsrc=/);
-    expect(speakingHtml).not.toMatch(/client\.[a-zA-Z0-9]+\.js/);
+    expect(speakingHtml).not.toMatch(/InviteForm\.[a-zA-Z0-9_-]+\.js/);
   });
 
-  it('/speaking/reel ships 0 executable JS (NFR-1)', () => {
+  it('/speaking/reel ships exactly 2 executable scripts — Guide pill only (NFR-1, Story 4.4 carve-out)', () => {
     if (!reelHtml) return;
-    expect(countExecutableScripts(reelHtml)).toBe(0);
+    // Story 4.4: ALL routes ship the site-wide Guide pill (2 exec scripts).
+    // /speaking/reel/ has no additional app JS.
+    expect(
+      countExecutableScripts(reelHtml),
+      '/speaking/reel/ must ship exactly 2 exec scripts (Guide pill only)',
+    ).toBe(2);
     expect(reelHtml).not.toMatch(/<script\b[^>]*\bsrc=/);
+    expect(reelHtml).not.toMatch(/InviteForm\.[a-zA-Z0-9_-]+\.js/);
   });
 
   // ── QA gap-fill (Story 3.2 AC2): credibility floor — placeholders are VISIBLE
@@ -566,11 +575,13 @@ describe('Build output — /speaking/ and /speaking/reel/', () => {
 
   it('/speaking contains no exclamation marks in copy (positive-assertion voice)', () => {
     if (!speakingHtml) return;
-    // Strip the inline copy-button script (JS legitimately uses ! for
-    // negation / !== etc.) — same pattern as build-output.test.ts home check.
+    // Strip the inline copy-button script, HTML comments (including Astro/React
+    // SSR markers like <!--$--><!--/$-->), and doctype before checking copy.
+    // Story 4.4: the site-wide Guide pill adds React SSR markers with HTML comments.
     const copyOnly = speakingHtml
       .replace(/<!doctype html>/i, '')
-      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<!--[\s\S]*?-->/g, '');
     expect(copyOnly).not.toContain('!');
   });
 
@@ -586,9 +597,14 @@ describe('Build output — /speaking/ and /speaking/reel/', () => {
     expect(text.startsWith('Joshua R. Brandt, MSE')).toBe(true);
   });
 
-  it('/speaking/reel contains no exclamation marks', () => {
+  it('/speaking/reel contains no exclamation marks in copy', () => {
     if (!reelHtml) return;
-    const copyOnly = reelHtml.replace(/<!doctype html>/i, '');
+    // Strip doctype, scripts (JS uses ! for negation), HTML comments.
+    // Story 4.4: site-wide Guide pill adds inline Astro hydration scripts.
+    const copyOnly = reelHtml
+      .replace(/<!doctype html>/i, '')
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<!--[\s\S]*?-->/g, '');
     expect(copyOnly).not.toContain('!');
   });
 });

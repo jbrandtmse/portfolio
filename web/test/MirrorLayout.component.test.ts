@@ -1,4 +1,6 @@
+import { getContainerRenderer } from '@astrojs/react';
 import { experimental_AstroContainer as AstroContainer } from 'astro/container';
+import { loadRenderers } from 'astro:container';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import MirrorLayout from '../src/layouts/MirrorLayout.astro';
@@ -27,7 +29,7 @@ import MirrorLayout from '../src/layouts/MirrorLayout.astro';
  *   - the `lede` prop becomes the opening <p>, AFTER the <h1> (answer-first
  *     order: the entity-first paragraph leads the body);
  *   - the default <slot> body renders after the lede;
- *   - the layout adds no <script> of its own (NFR-1).
+ *   - the layout adds no <script> from analytics (NFR-1 Umami gate).
  *
  * NOTE on the self-canonical <link>: its per-route href value is asserted by the
  * build-output suite against real `astro build` output (where Astro.site is set
@@ -35,6 +37,10 @@ import MirrorLayout from '../src/layouts/MirrorLayout.astro';
  * experimental Container API does not populate Astro.site (withastro/astro#11585),
  * so the layout correctly omits the <link> in isolated rendering. Asserting it
  * here would test the harness limitation, not the contract.
+ *
+ * Story 4.4: MirrorLayout composes through BaseLayout which now mounts GuidePill
+ * (client:idle). The Container API requires the React renderer to be loaded to
+ * avoid "no renderer for .tsx" errors.
  *
  * Real-runtime evidence for a user-facing shared component (skill-rules Rule 3);
  * discoverable under the default suite (Rule 8: a co-located *.test.ts file,
@@ -53,7 +59,10 @@ const BODY_SENTINEL = 'MirrorBodySlotSentinel';
 let html = '';
 
 beforeAll(async () => {
-  const container = await AstroContainer.create();
+  // Story 4.4: MirrorLayout → BaseLayout now imports GuidePill (a React island).
+  // The Container API needs the React renderer to avoid "no renderer for .tsx" errors.
+  const renderers = await loadRenderers([getContainerRenderer()]);
+  const container = await AstroContainer.create({ renderers });
   html = await container.renderToString(MirrorLayout, {
     props: { heading: HEADING, lede: LEDE },
     slots: { default: `<p class="probe-body">${BODY_SENTINEL}</p>` },
@@ -100,7 +109,12 @@ describe('MirrorLayout.astro — prop -> DOM contract in isolation (AC1 / IAC-1)
     expect(html.indexOf('sentinel lede paragraph')).toBeLessThan(html.indexOf(BODY_SENTINEL));
   });
 
-  it('adds no <script> from the layout — 0-JS static shell (NFR-1)', () => {
-    expect(html.match(/<script\b/g) ?? []).toHaveLength(0);
+  it('adds no Umami analytics script from the layout (NFR-1 Umami gate)', () => {
+    // Story 4.4: BaseLayout now mounts GuidePill (client:idle) which may emit
+    // island markup via the Container API. The NFR-1 Umami invariant: no Umami
+    // tracker script is emitted when PUBLIC_UMAMI_* is unset (the default/CI build).
+    // The broader NFR-1 per-route script-count floor is proven by build-output.test.ts.
+    expect(html).not.toMatch(/<script\b[^>]*data-website-id/i);
+    expect(html).not.toMatch(/<script\b[^>]*umami/i);
   });
 });

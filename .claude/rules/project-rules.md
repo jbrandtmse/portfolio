@@ -103,6 +103,36 @@ Durable rules for AI dev + code-review agents working on this project. Rules are
 
 **How to apply:** import + exercise the real module (use a child-process/real-import if module-load side-effects matter); scope DOM/output assertions to the owning element (a class/test-id selector), not the whole document; mutation-verify each assertion reds on a real-source break.
 
+## 9. LLM-authored Mirror/KB content gets explicit fabrication guardrails up front + a BROAD credibility audit
+
+**Context:** Any story whose deliverable is human/agent-facing PROSE authored by the LLM dev — KB docs, Mirror page copy, FAQ answers, bios, any content asserting facts about the person/work/project (distinct from code).
+
+**Rule:** (a) The STORY hands the dev an explicit, enumerated list of the project's fabrication classes to NOT commit (e.g. for this project: no "every/all planning artifacts are published in the Glass Box" — only the allowlisted set is; no portfolio "recorded in ADRs" — there is no `docs/adr/`; no invented BMAD acronym expansion; every claim traces to a Mirror source or carries an `[OPEN]`/`[ASSUMPTION]` flag verbatim). (b) QA/code-review/smoke run a BROAD credibility audit of EVERY claim against the allowlist + the Mirror sources — not a narrow per-incident spot test — and lock the class with a line-scoped regression test (Rule 8), mutation-verified. The credibility floor ("zero invented facts") is a HIGH finding when violated.
+
+**Why:** Epic 4's LLM-authored KB/Mirror prose introduced a fabrication in EVERY content story until the guardrails were explicit: an invented BMAD acronym (QA caught it, 4.1), a fabricated tech-stack + a false "the architecture doc is readable in the Glass Box" (code-review caught it, 4.1), and a SYSTEMIC "every planning artifact is published" across THREE docs (the lead SMOKE caught it, past QA *and* code-review, 4.1). Each narrow per-incident regression test missed the *next* instance of the same class. Story 4.2 then shipped **0 fabrications** — precisely because the story baked the enumerated fabrication-class guardrails in up front. Content fabrication is the highest-risk, lowest-visibility failure for an LLM author. (Epic 4 retro, 2026-06-07.)
+
+**How to apply:** in `create-story` for any content-authoring story, enumerate the known fabrication classes + the Mirror sources of truth in the story; in QA/code-review, audit every claim against those sources (broad, not spot) + add a class-level line-scoped regression test; the lead smoke greps the served/built content for the fabrication classes. Treat an unflagged claim absent from the Mirror as HIGH.
+
+## 10. A hung / interrupted pipeline stage is verified FRESH — never assumed complete
+
+**Context:** Any `/epic-cycle` pipeline stage (dev/QA/code-review) whose sub-agent hangs, is interrupted, backgrounds-and-yields, or otherwise ends WITHOUT its closing summary — even if the canonical gate is green.
+
+**Rule:** A stage that did not cleanly complete is treated as INCOMPLETE regardless of how "done" it looks. The lead recovers the mechanical state (re-run the gate, reconstruct the File List from `git status`, populate the record) BUT the downstream stage(s) MUST verify the work FRESH — re-deriving the ACs against the real artifacts, not trusting that named guarantees were actually implemented/asserted. A green gate proves the tests that EXIST pass; it does not prove the right tests exist.
+
+**Why:** Epic 4 Story 4.4's dev sub-agent hung on its final `pnpm test:all` call (interrupted, no closing summary). The implementation *looked* complete and the gate was green — but when QA verified fresh, it found the dev's e2e **named** two load-bearing guarantees (focus-NOT-trapped, NFR-2 per-message-not-per-token) in comments/titles but never actually **asserted** them; code-review then found a third (a post-citation skip-link pointing at an id that existed on no Mirror route — a dangling AC promise). All three were invisible to the green gate. (Epic 4 retro, 2026-06-07.)
+
+**How to apply:** when a stage hangs/yields incomplete, the lead logs the recovery (`closing_sections_present=false` + a note), re-runs the canonical gate, and the next stage's spawn prompt explicitly says "the prior stage was interrupted — verify fresh, do not assume completeness." Mutation-verify the load-bearing assertions actually exist + red on a real break.
+
+## 11. Every spawned stage runs SYNCHRONOUSLY to completion — no background-and-yield
+
+**Context:** Every `/epic-cycle` spawned pipeline stage (dev/QA/code-review), in its spawn prompt.
+
+**Rule:** EVERY stage's spawn prompt MUST carry the directive: "Run all verification SYNCHRONOUSLY in THIS run. Do NOT start a background process (Monitor/`&`) and yield; do NOT wait for any notification. Run each gate inline, read the result, THEN write the closing summary before the turn ends." This directive belongs on ALL spawned stages — not just code-review.
+
+**Why:** Epic 3's retro added this directive to the *code-review* spawn after the 3.0 CR agent backgrounded a gate run and yielded its findings unwritten. In Epic 4 the SAME anti-pattern recurred at the **QA** stage (Story 4.2) — because the directive was on the CR prompt but NOT the QA prompt. The QA agent backgrounded `pnpm test:all` and yielded with no closing summary, leaving the lead to complete the verification + clean up orphaned `astro preview` processes. The fix is to put the synchronous-completion directive on every spawned stage uniformly. (Epic 4 retro, 2026-06-07.)
+
+**How to apply:** the `/epic-cycle` spawn-prompt skeleton carries the synchronous-completion directive for dev, QA, AND code-review identically; treat a stage that yields without its closing summary as an incomplete stage (Rule 10).
+
 ---
 
 ## Project configuration notes (not rules — durable decisions the next epic-cycle run should honor)

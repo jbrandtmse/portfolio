@@ -1,9 +1,7 @@
 import { z } from 'zod';
 
-// TODO(Story 4.3): finalize GuideQuery fields.
-// This is a PLACEHOLDER contract schema. The real shape lands with its
-// first consumer:
-//   - GuideQuery → Story 4.3 (POST /api/guide) + Story 4.4 (GuidePanel island)
+// GuideQuery contract finalized in Story 4.3 (retro A5 / [1.1]).
+// First consumer: Story 4.3 (POST /api/guide) + Story 4.4 (GuidePanel island).
 // `shared/` is the only cross-package surface (AR-15) — never import package
 // internals across web/api; import from @portfolio/shared/schemas instead.
 
@@ -26,8 +24,26 @@ export const InviteInput = z.object({
 });
 export type InviteInput = z.infer<typeof InviteInput>;
 
-/** Placeholder Guide query contract (finalized in Story 4.3). */
+/**
+ * Guide query contract — finalized in Story 4.3 (retro A5 / [1.1]).
+ * Consumed by:
+ *   - api (Story 4.3): POST /api/guide body validation
+ *   - web (Story 4.4): GuidePanel island client-side construction
+ *
+ * `query` is trimmed (leading/trailing whitespace stripped) and bounded to
+ * prevent runaway prompt injection via query length.
+ * `threadContext` carries prior turns for multi-turn continuity (optional,
+ * capped in the handler to bound prompt size).
+ */
 export const GuideQuery = z.object({
-  question: z.string().min(1),
+  query: z.string().trim().min(1).max(1000),
+  threadContext: z
+    .array(
+      z.object({
+        role: z.enum(['user', 'guide']),
+        content: z.string(),
+      }),
+    )
+    .optional(),
 });
 export type GuideQuery = z.infer<typeof GuideQuery>;

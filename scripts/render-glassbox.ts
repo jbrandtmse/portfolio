@@ -38,6 +38,19 @@ const FALLBACK_DATE = '2026-06-06T00:00:00+00:00';
 const ISO_8601 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/;
 
 /**
+ * Locale-independent, fully-deterministic string comparator.
+ *
+ * Returns a negative number if a < b, 0 if a === b, positive if a > b,
+ * using JavaScript's code-unit ordering — identical under any host locale
+ * or ICU version (NFR-6, Story 4.0). Use in place of bare localeCompare()
+ * for sort keys that must produce the same order regardless of the build
+ * host's locale settings.
+ */
+export function byCodeUnit(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
+/**
  * Return the deterministic committer date for one source file.
  *
  * Replicates the `web/src/lib/lastmod.ts` pattern — cannot import directly
@@ -136,10 +149,16 @@ export function renderGlassbox(
   }
 
   // Sort deterministically: by date ascending, then slug (stable secondary key).
+  // Use a locale-independent code-unit comparison (NFR-6, Story 4.0): bare
+  // localeCompare() is ICU/host-locale-sensitive for non-ASCII strings and
+  // would produce different orderings across build hosts when slugs contain
+  // non-ASCII characters. The plain code-unit compare is identical across
+  // all locales for the current ASCII slug set and stays deterministic for
+  // any future non-ASCII slug.
   artifacts.sort((a, b) => {
-    const dateCmp = a.date.localeCompare(b.date);
+    const dateCmp = byCodeUnit(a.date, b.date);
     if (dateCmp !== 0) return dateCmp;
-    return a.slug.localeCompare(b.slug);
+    return byCodeUnit(a.slug, b.slug);
   });
 
   return artifacts;

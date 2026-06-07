@@ -45,6 +45,7 @@
  */
 import { fileURLToPath } from 'node:url';
 
+import { buildKbIndexGenerator } from './build-kb-index.ts';
 import { renderGlassboxGenerator } from './render-glassbox.ts';
 import { renderTimelineGenerator } from './render-timeline.ts';
 
@@ -83,7 +84,10 @@ export const CONTENT_GENERATORS: readonly Generator[] = [
   // Story 2.4: Master Timeline hand-curated manifest (FR-16).
   // Reads content/timeline/dots.ts → writes web/src/generated/timeline.json.
   renderTimelineGenerator,
-  // TODO(Story 4.1): build-kb-index generator (content/kb/*.md → Orama index → api/data/)
+  // Story 4.1: build-kb-index generator (content/kb/*.md → Orama corpus → api/data/).
+  // Reads content/kb/*.md (default-deny, sorted) → chunks at heading boundaries →
+  // writes api/data/kb-index.json (gitignored, deterministic chunk corpus).
+  buildKbIndexGenerator,
 ];
 
 /** Options for {@link runPipeline} (a logger seam keeps it unit-testable). */
