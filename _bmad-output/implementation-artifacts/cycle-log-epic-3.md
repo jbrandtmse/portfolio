@@ -50,3 +50,4 @@
 2026-06-07T04:06:24Z	Story 3.5	committed	sha=88c3455 submodules=
 2026-06-07T04:06:24Z	Epic 3	epic_summary	stories=6 total_high=0 total_med=3 total_low_deferred=11 total_smoke_defects=1 rework_events=0 sonnet_stage_count=6 opus_stage_count=12 commits=3.0:e5a6cfa,3.1:6c19dc4,3.2:9f1ac20,3.3:55b503b,3.4:f0e9a66,3.5:88c3455
 2026-06-07T07:53:36Z	Epic 3	retrospective_complete	doc=_bmad-output/implementation-artifacts/epic-3-retro-2026-06-07.md rules_codified=7,8 action_items=5 model=claude-opus-4-8
+2026-06-07T07:54:38Z	Epic 3	epic_merged_to_feature	repos=. feature_sha=830570b merge_sha=830570b submodules=
