@@ -660,7 +660,12 @@ export function GuidePanel({ pillRef }: { pillRef?: React.RefObject<HTMLButtonEl
           right: 20px;
           z-index: 1000;
           width: min(400px, calc(100vw - 40px));
-          max-height: min(600px, calc(100vh - 100px));
+          /* Definite height (not just max-height) so the column flex resolves and
+             the transcript (flex:1 1 0; min-height:0; overflow-y:auto) fills the
+             remaining space and SCROLLS. With only max-height + a flex-basis:0
+             transcript, the panel never grows past its non-transcript children, so
+             only ~one line of an answer showed and nothing scrolled. */
+          height: min(600px, calc(100vh - 100px));
           display: flex;
           flex-direction: column;
           background: var(--color-surface-base);
@@ -669,6 +674,17 @@ export function GuidePanel({ pillRef }: { pillRef?: React.RefObject<HTMLButtonEl
           box-shadow: var(--shadow-float);
           overflow: hidden;
           /* No backdrop/scrim — non-modal (Decision 4) */
+        }
+
+        /* Desktop home only: the SceneRail is a fixed 208px right sidebar, so
+           anchor the panel to the LEFT of it (clear of the rail) — matches the
+           pill's offset so the two stay aligned. body:has(.rail-d) targets the
+           home page (the only page that renders the SceneRail); the rail is the
+           right sidebar at >=1024px. */
+        @media (min-width: 1024px) {
+          body:has(.rail-d) .guide-panel {
+            right: 228px;
+          }
         }
 
         @media (prefers-reduced-motion: no-preference) {
@@ -793,6 +809,10 @@ export function GuidePanel({ pillRef }: { pillRef?: React.RefObject<HTMLButtonEl
         /* Transcript — role="log" aria-live="polite" */
         .guide-panel__transcript {
           flex: 1 1 0;
+          /* min-height:0 lets this flex item shrink below its content size so
+             overflow-y:auto actually scrolls (the flex min-height:auto default
+             would otherwise keep it as tall as its content — no scroll). */
+          min-height: 0;
           overflow-y: auto;
           padding: 14px;
           display: flex;

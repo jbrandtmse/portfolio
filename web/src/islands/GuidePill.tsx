@@ -170,6 +170,17 @@ function GuidePillInner() {
           }
         }
 
+        /* Desktop home only: the SceneRail is a fixed 208px right sidebar whose
+           foot holds "Skip to the end" + "Jump: book a talk". Offset the pill to
+           the LEFT of the rail so it never covers those controls. body:has(.rail-d)
+           targets the home page (the only SceneRail consumer); the rail is the
+           right sidebar at >=1024px. */
+        @media (min-width: 1024px) {
+          body:has(.rail-d) .guide-pill {
+            right: 228px;
+          }
+        }
+
         @media (max-width: 480px) {
           .guide-pill {
             bottom: 16px;
