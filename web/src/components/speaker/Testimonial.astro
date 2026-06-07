@@ -1,0 +1,85 @@
+---
+/**
+ * Testimonial.astro — an organizer / attendee testimonial block in the
+ * credibility strip (Story 3.2, Task 3; AC2, Decision 3).
+ *
+ * DESIGN testimonial tokens (DESIGN.md §testimonial, lines 295–302):
+ *  • {colors.surface-raised} background
+ *  • border: 1px {colors.border-hairline} (right/top/bottom sides)
+ *  • border-left: 2px {colors.accent}  — the navy quote rule
+ *  • radius: 0 8px 8px 0
+ *  • padding: 18px 20px
+ *  • quote: italic {typography.body} in {colors.ink-primary}
+ *  • attribution: {typography.meta} weight 400 in {colors.ink-secondary},
+ *    name in {colors.ink-primary}
+ *
+ * Static, 0 JS. [OPEN] in visible text, not color alone (AC4).
+ */
+import type { TestimonialDatum } from '../../data/speaking';
+
+export interface TestimonialProps {
+  testimonial: TestimonialDatum;
+}
+
+type Props = TestimonialProps;
+
+const { testimonial } = Astro.props;
+---
+
+<blockquote class="testimonial">
+  <p class="testimonial__quote">{testimonial.quote}</p>
+  <footer class="testimonial__attribution">
+    <strong class="testimonial__name">{testimonial.name}</strong>
+    <span class="testimonial__role">{testimonial.role}</span>
+    <span class="testimonial__event">{testimonial.event}</span>
+  </footer>
+</blockquote>
+
+<style>
+  .testimonial {
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-border-hairline);
+    border-left: 2px solid var(--color-accent);
+    border-radius: 0 8px 8px 0;
+    padding: 18px 20px;
+    box-shadow: none; /* flat — elevation.flat */
+    margin: 0;
+  }
+
+  .testimonial__quote {
+    font-family: var(--font-family-base);
+    font-size: 15px;
+    font-style: italic;
+    line-height: 1.55;
+    color: var(--color-ink-primary);
+    margin: 0 0 13px;
+  }
+
+  .testimonial__attribution {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-family: var(--font-family-base);
+    font-size: 12.5px;
+    font-weight: 400;
+    color: var(--color-ink-secondary);
+    line-height: 1.45;
+  }
+
+  .testimonial__name {
+    font-weight: 600;
+    color: var(--color-ink-primary);
+    font-style: normal;
+  }
+
+  .testimonial__role {
+    display: block;
+    color: var(--color-ink-secondary);
+  }
+
+  .testimonial__event {
+    display: block;
+    color: var(--color-ink-meta-min, #8a8273);
+    font-style: italic;
+  }
+</style>

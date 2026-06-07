@@ -4,7 +4,7 @@
       "startServerCommand": "pnpm --filter @portfolio/web preview --port 4321 --host 127.0.0.1",
       "startServerReadyPattern": "http://127.0.0.1:4321",
       "startServerReadyTimeout": 60000,
-      "url": ["http://127.0.0.1:4321/", "http://127.0.0.1:4321/about"],
+      "url": ["http://127.0.0.1:4321/", "http://127.0.0.1:4321/about/"],
       "numberOfRuns": 1,
       "settings": {
         "chromePath": "/usr/bin/google-chrome-stable",

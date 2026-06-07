@@ -1,4 +1,41 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { defineConfig, devices } from '@playwright/test';
+
+/**
+ * Surface api/.env's DATABASE_URL into the RUNNER's env (Story 3.4) so it is
+ * inherited by every Playwright worker. The JS-off native-POST integration test
+ * (invite.spec.ts) reads process.env.DATABASE_URL to decide whether to verify +
+ * clean up the persisted row against real Postgres; it skips-with-warning when
+ * unset (skill-rules Rule 3 — never fail the suite for a missing local DB).
+ *
+ * The webServer launcher (e2e/serve-with-api.mjs) also reads api/.env to start
+ * the Hono API, but a webServer child's env does NOT propagate to the worker
+ * processes — so the value must be set HERE, in the runner, as well. Loading is
+ * a no-op when api/.env is absent (CI without a DB), preserving the skip path.
+ * Only DATABASE_URL is lifted; secrets (RESEND_API_KEY etc.) stay api-side.
+ */
+function loadDatabaseUrlFromApiEnv(): void {
+  if (process.env.DATABASE_URL) return; // already set (CI/secret manager) — respect it.
+  const envPath = join(dirname(fileURLToPath(import.meta.url)), '..', 'api', '.env');
+  if (!existsSync(envPath)) return;
+  for (const rawLine of readFileSync(envPath, 'utf8').split('\n')) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) continue;
+    const eq = line.indexOf('=');
+    if (eq === -1) continue;
+    if (line.slice(0, eq).trim() !== 'DATABASE_URL') continue;
+    let val = line.slice(eq + 1).trim();
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+      val = val.slice(1, -1);
+    }
+    if (val) process.env.DATABASE_URL = val;
+    return;
+  }
+}
+loadDatabaseUrlFromApiEnv();
 
 /**
  * Playwright config — the browser real-runtime tier (Story 1.9, AC2 / IAC-2;
@@ -44,12 +81,29 @@ export default defineConfig({
     trace: 'on-first-retry',
   },
 
-  // Build the site and serve dist/ for the whole run; tear it down after.
+  // Build the site, then serve it the way PRODUCTION does (Story 3.4): a single
+  // public port that serves the static dist/ via `astro preview` AND reverse-
+  // proxies /api/* to the real Hono API — mirroring nginx (architecture AR-8).
+  // This is what lets the JS-OFF native form POST (<form action="/api/invite">)
+  // reach the real endpoint end-to-end during the run (the headline AC2
+  // resilience guarantee). `astro preview` ALONE does NOT proxy /api — it 404s
+  // every /api/* request (vite.server.proxy is dev-only; verified empirically),
+  // so a preview-only webServer could never actually exercise the native POST.
+  //
+  // The launcher (e2e/serve-with-api.mjs) starts the Hono API from SOURCE with
+  // api/.env loaded (real Postgres; RESEND unset ⇒ mail skipped), starts astro
+  // preview internally, and proxies in front. Non-/api requests pass straight
+  // through to astro preview so its EXACT trailing-slash/redirect behavior is
+  // preserved (every prior url-form/glassbox/timeline spec stays green); only
+  // /api/* is diverted to Hono. Playwright polls BASE_URL and treats the
+  // proxy's transient 502 (preview still starting) as not-ready, so there is no
+  // startup race. The launcher forwards SIGTERM to both children on teardown.
+  //
   // `pnpm build` is the deterministic content+astro build (root script, Story
-  // 1.8); `pnpm preview` serves web/dist. reuseExistingServer locally avoids a
-  // rebuild when a preview is already up.
+  // 1.8). reuseExistingServer locally avoids a rebuild when a server is already
+  // up.
   webServer: {
-    command: 'pnpm --dir .. build && pnpm preview --port ' + PORT + ' --host 127.0.0.1',
+    command: 'pnpm --dir .. build && node e2e/serve-with-api.mjs',
     url: BASE_URL,
     timeout: 180_000,
     reuseExistingServer: !process.env.CI,
@@ -134,6 +188,25 @@ export default defineConfig({
       name: 'loandemo',
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
       testMatch: /loandemo\.spec\.ts/,
+    },
+    // (Story 3.1) Speaker Surface — /speaking/ + /speaking/reel/. Asserts
+    // real-runtime render: reel poster is the lead item and is a followable <a>
+    // to /speaking/reel/ JS-off; collapsed talk abstracts are in the DOM;
+    // <details> toggles; WCAG 2.1 AA (axe); 0 executable scripts; voice.
+    {
+      name: 'speaking',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /speaking\.spec\.ts/,
+    },
+    // (Story 3.4) Invite-Me form — the FIRST React island. Three groups:
+    // (a) JS-off native POST → /invite/thanks/ + real DB row (cleanup in afterAll);
+    // (b) JS-on island interactions: invalid → error summary + aria-invalid;
+    //     valid → aria-live success; network failure → role=alert + values preserved;
+    // (c) WCAG 2.1 AA axe audit on /invite/ (form + island).
+    {
+      name: 'invite',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /invite\.spec\.ts/,
     },
   ],
 });

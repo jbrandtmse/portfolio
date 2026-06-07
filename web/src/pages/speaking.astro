@@ -1,45 +1,57 @@
 ---
 /**
- * /speaking — the Speaker Surface Mirror route (Story 1.5 stub; AC2).
+ * /speaking — the Speaker Surface Mirror route (Story 3.1; fleshes the
+ * Story 1.5 stub). Extended in Story 3.2 with copy-paste bios + credibility
+ * strip (bio-blocks, metrics, testimonials, logos).
  *
- * Answer-first, self-canonical, exactly one <h1> via MirrorLayout. RESOLVES the
- * forward-reference links from the 1.3 hero fork ("I'm here to book a talk") and
- * the 1.4 Speaker teaser (both → /speaking). Epic 3 (Speaker Surface) fills the
- * body with the reel, signature talks, bios, and the invite path. 0 JS.
+ * Layout: MirrorLayout (answer-first, self-canonical, exactly one <h1>).
  *
- * The lede's first sentence names "Joshua R. Brandt, MSE" (GEO floor).
+ * Structure:
+ *   1. Lede (answer-first; names "Joshua R. Brandt, MSE" in the first sentence)
+ *   2. Reel poster (READY 2026 — the lead item per AC1, UJ-2/SM-C1)
+ *   3. Signature talks section (TalkCard map; first expanded per AC3)
+ *   4. Bios section (two BioBlock components — Story 3.2)
+ *   5. Social proof / credibility strip (metrics, testimonials, logos — Story 3.2)
+ *
+ * JSON-LD: one Event per signature talk (via eventJsonLd + serializeJsonLd,
+ * performer = PERSON, deterministic [OPEN] constants) + VideoObject for any
+ * recorded talk (AC4). All in application/ld+json DATA.
+ *
+ * NFR-1: /speaking ships exactly ONE minimal vanilla copy-button enhancement
+ * script (the BioBlock component <script> — Decision 2 / Story 3.2 AC3).
+ * Every other Mirror route stays 0 executable JS.
+ * NFR-6 (deterministic), AA, positive-assertion voice. Rule 2: trailing-slash.
  */
 import MirrorLayout from '../layouts/MirrorLayout.astro';
-import { eventJsonLd, serializeJsonLd } from '../lib/jsonld';
-import { PERSON } from '../lib/person';
+import ReelPoster from '../components/speaker/ReelPoster.astro';
+import TalkCard from '../components/speaker/TalkCard.astro';
+import BioBlock from '../components/speaker/BioBlock.astro';
+import Metric from '../components/speaker/Metric.astro';
+import Testimonial from '../components/speaker/Testimonial.astro';
+import { eventJsonLd, serializeJsonLd, videoObjectJsonLd } from '../lib/jsonld';
+import {
+  REEL,
+  SIGNATURE_TALKS,
+  BIOS,
+  METRICS,
+  TESTIMONIALS,
+  LOGOS,
+  talkEventInput,
+  talkRecordingVideoObjectInput,
+} from '../data/speaking';
 
 const LEDE =
-  'Joshua R. Brandt, MSE is a software engineer and speaker with thirty years of shipping experience. This page lists his signature talks, formats, and how to book him.';
+  'Joshua R. Brandt, MSE is a software engineer and speaker with thirty years of shipping experience. This page lists his signature talks, the READY 2026 reel, and how to book him.';
 
-// PLACEHOLDER Event JSON-LD (Story 1.6, AC1). Epic 3 (Speaker Surface) replaces
-// this with the real signature talks + their dates/venues. Until then this is a
-// clearly-flagged placeholder talk so the route emits a valid schema.org Event
-// (required fields per type) — name/startDate/location/organizer are [PLACEHOLDER].
-// performer is the REAL Person (shared web/src/lib/person.ts). Deterministic
-// startDate (a fixed constant, not new Date()) keeps the output byte-stable.
-const speakingJsonLd = serializeJsonLd(
-  eventJsonLd({
-    name: '[PLACEHOLDER] Signature talk — replaced with real talks in Epic 3',
-    startDate: '2026-01-01',
-    eventAttendanceMode: 'https://schema.org/MixedEventAttendanceMode',
-    location: {
-      '@type': 'VirtualLocation',
-      url: PERSON.url,
-    },
-    performer: PERSON,
-    organizer: {
-      '@type': 'Organization',
-      name: '[PLACEHOLDER organizer — set per real talk in Epic 3]',
-    },
-    description:
-      'Placeholder Event until Epic 3 publishes the real signature talks and their venues.',
-  }),
-);
+// Build the JSON-LD nodes: one Event per talk + VideoObject for recorded talks.
+// All values are fixed constants — deterministic across builds (NFR-6).
+const talkEventNodes = SIGNATURE_TALKS.map((talk) => eventJsonLd(talkEventInput(talk)));
+const talkRecordingNodes = SIGNATURE_TALKS.flatMap((talk) => {
+  const vid = talkRecordingVideoObjectInput(talk);
+  return vid ? [videoObjectJsonLd(vid)] : [];
+});
+// serializeJsonLd accepts an array — emits a JSON array with each entry carrying @context.
+const speakingJsonLd = serializeJsonLd([...talkEventNodes, ...talkRecordingNodes]);
 ---
 
 <MirrorLayout
@@ -49,21 +61,201 @@ const speakingJsonLd = serializeJsonLd(
   description="Signature talks, formats, and booking for Joshua R. Brandt, MSE — a software engineer and speaker with thirty years of shipping experience."
 >
   {
-    /* Structured data — PLACEHOLDER Event (real talks land in Epic 3). DATA, not
-      executable JS (NFR-1). */
+    /* Structured data — Event (per talk) + VideoObject (per recording). DATA,
+      not executable JS (NFR-1). */
   }
   <script type="application/ld+json" slot="jsonld" is:inline set:html={speakingJsonLd} />
-  <p class="stub-note">
-    The full speaker surface is on its way. Epic 3 fills this page with the reel, the signature
-    talks, the speaker bios, and a direct path to book a talk.
-  </p>
+
+  {/* ── Reel poster — the lead item below the lede (AC1, UJ-2/SM-C1) ── */}
+  <section class="speaking__reel" aria-label="Speaker reel">
+    <ReelPoster hostedVideoUrl={REEL.hostedVideoUrl} />
+  </section>
+
+  {/* ── Signature talks (AC3) ────────────────────────────────────────── */}
+  <section class="speaking__talks" aria-label="Signature talks">
+    <h2 class="speaking__section-heading">Signature talks</h2>
+    <div class="speaking__talks-list">
+      {SIGNATURE_TALKS.map((talk) => <TalkCard talk={talk} expanded={talk.expanded} />)}
+    </div>
+  </section>
+
+  {/* ── Copy-paste bios (Story 3.2, AC1) ────────────────────────────────── */}
+  {/* [FORWARD-REF resolved by Story 3.2] */}
+  <section class="speaking__bios" aria-labelledby="speaking-bios-heading">
+    <h2 class="speaking__section-heading" id="speaking-bios-heading">Copy-paste bios</h2>
+    <p class="speaking__section-note">
+      [ASSUMPTION: bio prose verbatim from the approved mock — pending Josh's confirmation.] Bios
+      are selectable plain text; the Copy button writes directly to your clipboard.
+    </p>
+    <div class="speaking__bios-grid">
+      {BIOS.map((bio, i) => <BioBlock bio={bio} bioId={`bio-${i}`} />)}
+    </div>
+  </section>
+
+  {/* ── Social proof / credibility strip (Story 3.2, AC2) ─────────────── */}
+  <section class="speaking__social-proof" aria-labelledby="speaking-proof-heading">
+    <h2 class="speaking__section-heading" id="speaking-proof-heading">Why organizers book me</h2>
+
+    {/* Audience-draw metrics grid — 4-up desktop / 2-up mobile */}
+    <div class="speaking__metrics-grid" aria-label="Audience-draw metrics">
+      {METRICS.map((m) => <Metric metric={m} />)}
+    </div>
+
+    {/* Logo wall — [OPEN] text-labeled placeholders */}
+    <div class="speaking__logo-wall" aria-label="Conference and company logos">
+      <span class="speaking__logo-wall-label">Stages</span>
+      {LOGOS.map((logo) => <span class="speaking__logo-placeholder">{logo.label}</span>)}
+    </div>
+
+    {/* Testimonials */}
+    <div class="speaking__testimonials" aria-label="Organizer and attendee testimonials">
+      {TESTIMONIALS.map((t) => <Testimonial testimonial={t} />)}
+    </div>
+
+    <p class="speaking__proof-note">
+      Metrics, conference logos, and testimonials above are <strong>placeholders</strong> — real audience
+      numbers and approved quotes are pending. Every figure is marked so nothing reads as a claim before
+      it is real.
+    </p>
+  </section>
 </MirrorLayout>
 
 <style>
-  .stub-note {
-    margin-top: var(--space-6);
-    font-size: var(--font-size-body);
-    line-height: var(--line-height-body);
+  /* ─── Reel section ────────────────────────────────────────────────── */
+  .speaking__reel {
+    margin-top: var(--space-8, 32px);
+  }
+
+  /* ─── Signature talks section ──────────────────────────────────────── */
+  .speaking__talks {
+    margin-top: var(--space-10, 48px);
+  }
+
+  .speaking__section-heading {
+    margin-top: 0;
+    margin-bottom: var(--space-6, 24px);
+    font-family: var(--font-family-base);
+    font-size: clamp(24px, 3vw, 40px);
+    font-weight: 700;
+    line-height: 1.07;
+    letter-spacing: -0.01em;
+    color: var(--color-ink-primary);
+  }
+
+  .speaking__talks-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6, 24px);
+  }
+
+  /* ─── Bios section ─────────────────────────────────────────────────────── */
+  .speaking__bios {
+    margin-top: var(--space-10, 48px);
+  }
+
+  .speaking__section-note {
+    margin-top: calc(var(--space-3, 8px) * -1);
+    margin-bottom: var(--space-5, 16px);
+    font-family: var(--font-family-base);
+    font-size: 12.5px;
+    font-style: italic;
     color: var(--color-ink-secondary);
+    line-height: 1.5;
+  }
+
+  .speaking__bios-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-5, 18px);
+    align-items: start;
+  }
+
+  @media (max-width: 700px) {
+    .speaking__bios-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ─── Social proof section ─────────────────────────────────────────────── */
+  .speaking__social-proof {
+    margin-top: var(--space-10, 48px);
+  }
+
+  /* Metrics grid — 4-up desktop / 2-up mobile, hairline cell gaps */
+  .speaking__metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background-color: var(--color-border-hairline);
+    border: 1px solid var(--color-border-hairline);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: var(--space-5, 18px);
+  }
+
+  @media (max-width: 700px) {
+    .speaking__metrics-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  /* Logo wall */
+  .speaking__logo-wall {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3, 8px);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-5, 18px);
+  }
+
+  .speaking__logo-wall-label {
+    font-family: var(--font-family-base);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-ink-secondary);
+    flex-shrink: 0;
+    margin-right: var(--space-1, 4px);
+  }
+
+  .speaking__logo-placeholder {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 38px;
+    min-width: 96px;
+    padding: 0 var(--space-3, 16px);
+    border: 1px dashed var(--color-border-hairline);
+    border-radius: 5px;
+    background-color: var(--color-surface-raised);
+    font-family: var(--font-family-base);
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--color-ink-secondary);
+  }
+
+  /* Testimonials: 3-up desktop / 1-up mobile */
+  .speaking__testimonials {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-4, 16px);
+    margin-bottom: var(--space-4, 16px);
+  }
+
+  @media (max-width: 800px) {
+    .speaking__testimonials {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .speaking__proof-note {
+    font-family: var(--font-family-base);
+    font-size: 12.5px;
+    font-style: italic;
+    color: var(--color-ink-secondary);
+    line-height: 1.5;
+    margin-top: var(--space-4, 16px);
   }
 </style>

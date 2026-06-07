@@ -116,6 +116,93 @@ test.describe('Master Timeline — flagship nodes (AC2)', () => {
   });
 });
 
+/**
+ * Story 3.0 (AC5) — visible flagship/cluster date labels are the deterministic
+ * "Mon YYYY" form, and the <time datetime> attr carries the VERBATIM manifest
+ * ISO string.
+ *
+ * Why this is the real-runtime delta for 3.0: FlagshipNode.astro used to format
+ * the visible date with `new Date(iso).toLocaleDateString(...)` (TZ-dependent —
+ * a UTC-midnight date could render the prior month west of UTC). It now routes
+ * BOTH the milestone date and every cluster-dot date through the shared
+ * `formatDotDate()` helper (timeZone:'UTC', deterministic). The unit test
+ * (web/test/timeline-format.test.ts) pins the helper across TZ settings; THIS
+ * test proves the built /timeline/ page actually shows the deterministic label
+ * to a real browser, and that the machine-readable datetime is still the raw
+ * manifest value (not the human label). The existing JS-off block only asserts
+ * the <time> elements are *attached* — it never checks the rendered label text,
+ * so a regression to a TZ-shifted or mis-formatted visible label would slip past
+ * it. These assertions FAIL if formatDotDate is reverted or bypassed.
+ *
+ * Manifest source of truth (content/timeline/dots.ts → generated/timeline.json):
+ *   milestone dates: loandemo "2026-06", portfolio "2026-06-06"  → both "Jun 2026"
+ *   cluster dates:   "2026-06" / "2026-06-02" / "2026-06-03" / "2026-06-06" → all "Jun 2026"
+ * (Runway ticks render their "~YYYY" date verbatim via the page, NOT via
+ *  FlagshipNode/formatDotDate — out of scope here.)
+ */
+test.describe('Master Timeline — deterministic "Mon YYYY" date labels (Story 3.0, AC5)', () => {
+  test('flagship milestone dates render the "Mon YYYY" label (not a full/locale date)', async ({
+    page,
+  }) => {
+    await page.goto(TIMELINE_PATH);
+    const milestoneDates = page.locator('.flagship-node__date');
+    // Two flagships in the agentic-turn band: loandemo + portfolio.
+    await expect(milestoneDates).toHaveCount(2);
+    for (const d of await milestoneDates.all()) {
+      // Both manifest dates fall in June 2026, so the deterministic label is "Jun 2026".
+      await expect(d).toHaveText(/^\s*Jun 2026\s*$/);
+      // A regression to the old toLocaleDateString full-style label would include
+      // a day number (e.g. "June 6, 2026") — assert no day-of-month leaks in.
+      await expect(d).not.toHaveText(/\d{1,2},/);
+    }
+  });
+
+  test('flagship milestone <time datetime> carries the VERBATIM manifest ISO (not the human label)', async ({
+    page,
+  }) => {
+    await page.goto(TIMELINE_PATH);
+    // The two milestone datetime attrs are the raw manifest strings, distinct
+    // from each other and from the shared visible "Jun 2026" label.
+    await expect(page.locator('time.flagship-node__date[datetime="2026-06"]')).toHaveCount(1);
+    await expect(page.locator('time.flagship-node__date[datetime="2026-06-06"]')).toHaveCount(1);
+    // The portfolio milestone proves label≠datetime: datetime is the full ISO
+    // "2026-06-06" while the visible text is the short "Jun 2026".
+    const portfolioMilestone = page.locator('time.flagship-node__date[datetime="2026-06-06"]');
+    await expect(portfolioMilestone).toHaveText(/^\s*Jun 2026\s*$/);
+  });
+
+  test('every cluster-dot date renders "Mon YYYY" with a verbatim ISO datetime', async ({
+    page,
+  }) => {
+    await page.goto(TIMELINE_PATH);
+    const dotDates = page.locator('.flagship-node__dot-date');
+    // loandemo cluster (3) + portfolio cluster (7) = 10 dated cluster dots.
+    await expect(dotDates).toHaveCount(10);
+    for (const d of await dotDates.all()) {
+      // All cluster manifest dates are in June 2026 → deterministic "Jun 2026".
+      await expect(d).toHaveText(/^\s*Jun 2026\s*$/);
+      // The machine-readable datetime must be a raw ISO date-only string
+      // (YYYY-MM or YYYY-MM-DD), i.e. the verbatim manifest value — NOT the
+      // human "Jun 2026" label.
+      const dt = await d.getAttribute('datetime');
+      expect(dt, 'cluster <time> must carry a datetime attribute').not.toBeNull();
+      expect(dt!).toMatch(/^\d{4}-\d{2}(-\d{2})?$/);
+    }
+  });
+
+  test('a day-precise cluster date (2026-06-02) keeps its full ISO datetime but shows "Jun 2026"', async ({
+    page,
+  }) => {
+    await page.goto(TIMELINE_PATH);
+    // The brainstorm/PRD-era cluster dots carry datetime="2026-06-02"; their
+    // visible label collapses to the month form. This pins label≠datetime at the
+    // cluster tier (the day part is in the attr, absent from the label).
+    const dayPrecise = page.locator('time.flagship-node__dot-date[datetime="2026-06-02"]').first();
+    await expect(dayPrecise).toBeAttached();
+    await expect(dayPrecise).toHaveText(/^\s*Jun 2026\s*$/);
+  });
+});
+
 test.describe('Master Timeline — portfolio Dot links (AC5)', () => {
   test('each portfolio Dot links to a real /glass-box/{slug}/ (no 404)', async ({ page }) => {
     await page.goto(TIMELINE_PATH);

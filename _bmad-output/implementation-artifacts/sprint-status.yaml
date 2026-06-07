@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-06T02:19:05Z
-last_updated: 2026-06-06T20:53:18Z
+last_updated: 2026-06-07T07:53:36Z
 project: portfolio
 project_key: NOKEY
 tracking_system: file-system
@@ -70,13 +70,14 @@ development_status:
   epic-2-retrospective: done
 
   # Epic 3: Speaker Surface & Conversion
-  epic-3: backlog
-  3-1-speaker-surface-reel-signature-talks: backlog
-  3-2-copy-paste-bios-social-proof: backlog
-  3-3-invite-me-capture-data-model-endpoint-email: backlog
-  3-4-invite-me-form-accessible-resilient: backlog
-  3-5-the-close-follow-subscribe-ctas-curated-creative-touch: backlog
-  epic-3-retrospective: optional
+  epic-3: done
+  3-0-epic-2-deferred-cleanup: done
+  3-1-speaker-surface-reel-signature-talks: done
+  3-2-copy-paste-bios-social-proof: done
+  3-3-invite-me-capture-data-model-endpoint-email: done
+  3-4-invite-me-form-accessible-resilient: done
+  3-5-the-close-follow-subscribe-ctas-curated-creative-touch: done
+  epic-3-retrospective: done
 
   # Epic 4: The Guide — Grounded Advocate (capstone)
   epic-4: backlog

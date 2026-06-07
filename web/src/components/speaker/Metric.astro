@@ -1,0 +1,71 @@
+---
+/**
+ * Metric.astro — a single audience-draw figure in the credibility strip
+ * (Story 3.2, Task 3; AC2, Decision 3).
+ *
+ * DESIGN metric tokens (DESIGN.md §metric, lines 287–293):
+ *  • {colors.surface-raised} background
+ *  • figure: Source Serif 700, clamp(26px,3vw,34px), {colors.accent}, lineHeight 1
+ *  • label: {typography.meta} uppercase in {colors.ink-secondary}
+ *  • source: italic 11.5px in {colors.ink-meta-min} (AA-safe, 4.64:1)
+ *  • grid: 1px {colors.border-hairline} cell gaps, 1px outer border, radius {rounded.lg}
+ *
+ * Rendered in a hairline-gridded grid (4-up desktop / 2-up mobile) assembled
+ * by the parent speaking.astro. Static, 0 JS.
+ *
+ * AA: navy figure on cream ≥ 10:1; label AA-safe; source line 4.64:1;
+ * [OPEN]/[ph] in visible text not color alone (AC4).
+ */
+import type { MetricDatum } from '../../data/speaking';
+
+export interface MetricProps {
+  metric: MetricDatum;
+}
+
+type Props = MetricProps;
+
+const { metric } = Astro.props;
+---
+
+<div class="metric">
+  <div class="metric__figure">{metric.figure}</div>
+  <div class="metric__label">{metric.label}</div>
+  <div class="metric__source">{metric.source}</div>
+</div>
+
+<style>
+  .metric {
+    background-color: var(--color-surface-raised);
+    padding: 18px 20px;
+    /* No box-shadow — flat system. Grid border handled by parent grid. */
+  }
+
+  .metric__figure {
+    font-family: var(--font-family-base);
+    font-size: clamp(26px, 3vw, 34px);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--color-accent);
+    line-height: 1;
+  }
+
+  .metric__label {
+    margin-top: 9px;
+    font-family: var(--font-family-base);
+    font-size: 12.5px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink-secondary);
+    line-height: 1.3;
+  }
+
+  .metric__source {
+    margin-top: 3px;
+    font-family: var(--font-family-base);
+    font-size: 11.5px;
+    font-style: italic;
+    color: var(--color-ink-meta-min, #8a8273);
+    line-height: 1.4;
+  }
+</style>

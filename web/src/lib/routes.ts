@@ -97,7 +97,7 @@ export const NAV_ROUTES: RouteEntry[] = [
     path: '/invite',
     label: 'Invite Josh',
     description: 'Send a short note to invite Josh to speak or collaborate.',
-    sourceFile: 'web/src/pages/invite.astro',
+    sourceFile: 'web/src/pages/invite/index.astro',
   },
   {
     path: '/browse',
@@ -108,12 +108,28 @@ export const NAV_ROUTES: RouteEntry[] = [
 ];
 
 /**
- * Sitemap view of the registry (Story 1.6 consumer). Identical set/order to
- * NAV_ROUTES — kept as a named export so sitemap.xml.ts and its tests read an
- * explicit "these are the sitemap routes" list. Adding a route to NAV_ROUTES
- * above automatically extends the sitemap (now 10 routes with /browse).
+ * Utility / confirmation pages — built pages that are NOT primary navigation
+ * destinations (no footer link, no /browse entry) but ARE real live URLs that
+ * belong in the sitemap. Added as routes gain confirmation/utility companions.
+ *
+ * Story 3.4: /invite/thanks/ — the JS-off native-POST confirmation page.
  */
-export const SITEMAP_ROUTES: RouteEntry[] = NAV_ROUTES;
+const UTILITY_ROUTES: RouteEntry[] = [
+  {
+    path: '/invite/thanks',
+    label: 'Inquiry received',
+    description: 'Confirmation that your speaking or collaboration inquiry has been received.',
+    sourceFile: 'web/src/pages/invite/thanks.astro',
+  },
+];
+
+/**
+ * Sitemap view of the registry (Story 1.6 consumer). Contains ALL live pages:
+ * NAV_ROUTES (the 10 navigable Mirror routes) + UTILITY_ROUTES (confirmation/
+ * utility pages that are real built URLs but not primary navigation).
+ * Adding a route to NAV_ROUTES or UTILITY_ROUTES above extends the sitemap.
+ */
+export const SITEMAP_ROUTES: RouteEntry[] = [...NAV_ROUTES, ...UTILITY_ROUTES];
 
 /**
  * Derive the trailing-slash href for a route path (project-rules.md Rule 2).

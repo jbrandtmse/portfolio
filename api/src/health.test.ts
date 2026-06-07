@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import app from './index.ts';
+import app from './app.ts';
 
 // Real-runtime integration test for the /api/health endpoint (Story 1.1).
 //
@@ -9,6 +9,10 @@ import app from './index.ts';
 // same code path the @hono/node-server runtime exercises, minus the socket.
 // This is a genuine runtime assertion (status code + response body), not a
 // structural/mock check (skill-rules Rule 3 form for a service/API).
+//
+// Imports from app.ts (not index.ts) so that importing the module does NOT run
+// serve() and does NOT attempt to bind port 8787 — which is held by the live
+// systemd api on the deploy VM (Story 3.0, AC1).
 //
 // Routes are mounted under `.basePath('/api')`, so the health route is reached
 // at `/api/health` — the same path the dev proxy and prod nginx forward (AR-8).

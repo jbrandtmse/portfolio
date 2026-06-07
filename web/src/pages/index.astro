@@ -3,7 +3,9 @@
  * Home (`/`) — the cold-landing first impression (FR-1) and the locked 7-scene
  * arc (Story 1.4, AC1). Story 1.3 built the calm, credible hero + the audience
  * fork (the #hero scene); Story 1.4 lays the remaining six scenes and the
- * persistent scene-rail (the FR-2 skip/progress affordance).
+ * persistent scene-rail (the FR-2 skip/progress affordance). Story 3.5 fills
+ * the #close scene: the embedded InviteForm island + follow/subscribe CTAs +
+ * a curated creative touch.
  *
  * Locked scene order (EXPERIENCE §"Scene order (Stage 1, locked)"; spine wins):
  *   #hero → #thesis → #timeline → #speaker → #flagship → #glass-box → #close.
@@ -20,8 +22,10 @@
  *     ONLY — never duplicate the Mirror body (UX-DR10; the clean Mirror wins the
  *     citation). Each scene is a slot its epic fills (Epic 2: Timeline/Flagship/
  *     Glass-Box; Epic 3: Speaker).
- *   • Close (#close) — a shell: a calm closing line + a real /invite link. The
- *     invite/follow CTAs themselves are Epic 3 (no form here).
+ *   • Close (#close) — filled in Story 3.5: the embedded InviteForm island
+ *     (client:visible, deferred until visible — FCP unaffected), follow/subscribe
+ *     CTAs (0-JS data-umami-event, sourced from CHANNEL_SAMEAS), and a curated
+ *     Stage-1 creative touch (static poster + real <a>, no live runtime reads).
  *
  * Mirror routes (/timeline, /speaking, /work/loandemo, /glass-box, /invite) are
  * created in Story 1.5 — the hrefs are correct now and 404 until then (forward
@@ -30,16 +34,46 @@
  * Headings: exactly ONE <h1> (the hero positioning line, owned by HeroStatic);
  * every scene title here is an <h2> — clean hierarchy (NFR-2/SEO).
  *
- * 0-JS-by-default holds (NFR-1): the page itself ships no JS; the ONE tiny
- * scene-rail enhancement script (gated behind a two-layer reduced-motion gate)
- * is the single, sub-1KB exception, scoped to SceneRail. No React island here.
+ * NFR-1: home ships TWO sanctioned executable surfaces: the one tiny scene-rail
+ * enhancement script (gated behind a two-layer reduced-motion gate, scoped to
+ * SceneRail) AND the React island (InviteForm, client:visible-deferred). The
+ * follow/subscribe CTAs (data-umami-event) and the creative-touch static poster
+ * are 0-JS — they add no app JS.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import HeroStatic from '../components/hero/HeroStatic.astro';
 import Kicker from '../components/common/Kicker.astro';
 import SceneRail from '../components/scene/SceneRail.astro';
+import InviteForm from '../islands/InviteForm';
 import { personJsonLd, profilePageJsonLd, serializeJsonLd } from '../lib/jsonld';
-import { PERSON, SITE_ORIGIN } from '../lib/person';
+import { CHANNEL_SAMEAS, PERSON, SITE_ORIGIN } from '../lib/person';
+
+/**
+ * Follow/subscribe CTAs — sourced from CHANNEL_SAMEAS (the same [OPEN] channel
+ * roots used for Person.sameAs on /about). Labels and channel keys [OPEN] until
+ * Josh confirms the real handles. The `channel` value is the non-PII prop passed
+ * to data-umami-event-channel (0-JS, Umami handles the click — no app JS).
+ */
+const CHANNEL_CTAS = [
+  {
+    href: CHANNEL_SAMEAS[0] ?? 'https://www.youtube.com/',
+    label: 'Subscribe on YouTube [OPEN: handle]',
+    channel: 'youtube',
+    rel: 'me noopener',
+  },
+  {
+    href: CHANNEL_SAMEAS[1] ?? 'https://github.com/',
+    label: 'Follow on GitHub [OPEN: handle]',
+    channel: 'github',
+    rel: 'me noopener',
+  },
+  {
+    href: CHANNEL_SAMEAS[2] ?? 'https://suno.com/',
+    label: 'Listen on Suno [OPEN: handle]',
+    channel: 'suno',
+    rel: 'me noopener',
+  },
+] as const;
 
 // Home JSON-LD (Story 1.6, AC1; EXPERIENCE §"SEO/GEO floor"): the REAL Person +
 // a ProfilePage whose mainEntity is that Person. Same canonical Person facts as
@@ -161,20 +195,88 @@ const homeJsonLd = serializeJsonLd([
       </div>
     </section>
 
-    {/* ── Scene 7 — Close (shell; the invite/follow CTAs are Epic 3) ───────── */}
+    {/* ── Scene 7 — Close (Story 3.5: embed, CTAs, creative touch) ──────── */}
     <section id="close" class="scene scene--close" aria-labelledby="close-title">
       <div class="scene__inner">
         <Kicker>The close</Kicker>
         <h2 id="close-title" class="scene__title">If the work fits what you are building</h2>
         <p class="scene__summary">
-          The shortest way to start a conversation is to ask. The full invite and follow options
-          land here next.
+          The shortest path is a direct ask. Send an inquiry below, follow the work in progress, or
+          sample what is already out there.
         </p>
-        <p class="scene__more">
-          <a class="scene__link" href="/invite/">
-            Invite me to speak<span class="scene__arrow" aria-hidden="true">&rarr;</span>
+
+        {/* ── Invite: embedded InviteForm island (client:visible, FR-32/FR-36) ── */}
+        {
+          /*
+           * client:visible defers React hydration until the Close scrolls into view,
+           * so the cold-landing FCP is unaffected (NFR-1). The SSR'd <form> is in the
+           * HTML immediately (JS-off native POST → /invite/thanks/ baseline). The island
+           * adds the enhanced fetch path + inline aria-live confirmation. invite-submitted
+           * fires on success (wired in InviteForm.tsx, Story 3.5 Task 2).
+           */
+        }
+        <div class="close__invite">
+          <h3 class="close__sub-heading">Send an inquiry</h3>
+          <InviteForm client:visible />
+        </div>
+
+        {/* ── Follow: channel CTAs (0-JS, data-umami-event, sourced from CHANNEL_SAMEAS) ── */}
+        {
+          /*
+           * Real <a> links (followable JS-off). data-umami-event="channel-clicked" is
+           * the 0-JS analytics form: Umami's own script handles the click — no app JS
+           * added (NFR-1). Env-gated: inert without Umami (Rule 4). No PII (NFR-7).
+           */
+        }
+        <div class="close__follow">
+          <h3 class="close__sub-heading">Follow the work</h3>
+          <ul class="close__channel-list" role="list">
+            {
+              CHANNEL_CTAS.map(({ href, label, channel, rel }) => (
+                <li>
+                  <a
+                    class="close__channel-link"
+                    href={href}
+                    rel={rel}
+                    data-umami-event="channel-clicked"
+                    data-umami-event-channel={channel}
+                  >
+                    {label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        {/* ── Creative touch: curated Stage-1 track (FR-23, Guardrail §9.1) ─── */}
+        {
+          /*
+           * A single curated piece — hardcoded [OPEN] URL (no live runtime reads of
+           * Suno/YouTube/GitHub; FR-23 / Guardrail §9.1). Static poster with a real
+           * <a> that works JS-off. The poster is a pure CSS block (no image asset,
+           * deterministic; NFR-6). Accessible name via aria-label on the link.
+           * Visible :focus-visible ring (NFR-2/AA). No autoplay.
+           */
+        }
+        <div class="close__creative">
+          <h3 class="close__sub-heading">A sample of the work</h3>
+          <a
+            class="close__creative-link"
+            href="https://suno.com/song/[OPEN: curated-track-id]"
+            rel="noopener"
+            aria-label="Listen to a curated track by Joshua R. Brandt, MSE on Suno [OPEN: track title]"
+            target="_blank"
+          >
+            <div class="close__creative-poster" aria-hidden="true">
+              <span class="close__creative-label">Listen on Suno</span>
+              <span class="close__creative-title">[OPEN: track title]</span>
+            </div>
+            <span class="close__creative-caption">
+              A curated track — Stage-1 creative output [OPEN: track title]
+            </span>
           </a>
-        </p>
+        </div>
       </div>
     </section>
   </main>
@@ -278,6 +380,134 @@ const homeJsonLd = serializeJsonLd([
   /* The Close scene gets a touch more breathing room as the final beat. */
   .scene--close {
     padding-bottom: var(--space-7);
+  }
+
+  /* ── Close scene sub-sections ──────────────────────────────────────────── */
+
+  .close__sub-heading {
+    margin: var(--space-6) 0 var(--space-3);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-ink-secondary);
+  }
+
+  .close__invite {
+    margin-top: var(--space-5);
+  }
+
+  /* ── Follow channel CTAs (0-JS; data-umami-event handled by Umami) ─────── */
+
+  .close__follow {
+    margin-top: var(--space-6);
+  }
+
+  .close__channel-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .close__channel-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 9px 16px;
+    font-family: var(--font-family-base);
+    font-size: 14px;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-accent);
+    text-decoration: none;
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-base);
+    transition:
+      border-color 0.1s ease,
+      color 0.1s ease;
+  }
+
+  .close__channel-link:hover {
+    color: var(--color-accent-hover);
+    border-color: var(--color-accent);
+  }
+
+  .close__channel-link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* ── Creative touch — static poster + curated <a> (0-JS; no autoplay) ─── */
+
+  .close__creative {
+    margin-top: var(--space-6);
+  }
+
+  .close__creative-link {
+    display: block;
+    max-width: 340px;
+    text-decoration: none;
+    color: inherit;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--color-border-hairline);
+  }
+
+  .close__creative-link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .close__creative-poster {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    padding: var(--space-5);
+    min-height: 140px;
+    background: linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--color-accent) 12%, var(--color-surface-base)) 0%,
+      color-mix(in srgb, var(--color-accent) 4%, var(--color-surface-base)) 100%
+    );
+  }
+
+  .close__creative-label {
+    display: block;
+    font-size: 11px;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+  }
+
+  .close__creative-title {
+    display: block;
+    font-size: 16px;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-ink-primary);
+    line-height: 1.3;
+  }
+
+  .close__creative-caption {
+    display: block;
+    padding: var(--space-3) var(--space-4);
+    font-size: 13px;
+    color: var(--color-ink-secondary);
+    background: var(--color-surface-base);
+    border-top: 1px solid var(--color-border-hairline);
+  }
+
+  .close__creative-link:hover .close__creative-poster {
+    background: linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--color-accent) 16%, var(--color-surface-base)) 0%,
+      color-mix(in srgb, var(--color-accent) 6%, var(--color-surface-base)) 100%
+    );
   }
 
   /* Desktop: reserve the fixed scene-rail's 208px gutter + widen the side
