@@ -208,5 +208,16 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
       testMatch: /invite\.spec\.ts/,
     },
+    // (Story 4.2) FAQ Mirror route — /faq/. Asserts real-runtime render of the
+    // crawlable Q&A: six visible <h3> questions scoped to .faq (Rule 8 — not a
+    // whole-doc match the JSON-LD could satisfy); FAQPage JSON-LD present + valid;
+    // single-source Q&A↔JSON-LD consistency; WCAG 2.1 AA (axe); 0 executable
+    // scripts; no exclamation marks; JS-off readable (server-rendered HTML);
+    // resolves the Story 4.1 /faq/ citation target (Rule 3).
+    {
+      name: 'faq',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /faq\.spec\.ts/,
+    },
   ],
 });
