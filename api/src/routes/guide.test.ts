@@ -464,7 +464,7 @@ describe('POST /api/guide — full handler tests (Story 4.3)', () => {
       vi.restoreAllMocks();
     });
 
-    it('slow stream exceeding the ~10s ceiling → abort → in-voice fallback (AC5 ceiling)', async () => {
+    it('slow stream exceeding the ~15s ceiling → abort → in-voice fallback (AC5 ceiling)', async () => {
       // AC5: "the hard ceiling + abort are implemented and tested with a stub
       // that simulates slowness." This exercises the ROUTE's ceiling branch
       // (controller.signal.aborted after the loop → emitError(FALLBACK_DEGRADED)),
@@ -519,8 +519,8 @@ describe('POST /api/guide — full handler tests (Story 4.3)', () => {
           }),
         );
 
-        // Advance past the 10s ceiling → fires the route's setTimeout → abort.
-        await vi.advanceTimersByTimeAsync(11_000);
+        // Advance past the 15s ceiling → fires the route's setTimeout → abort.
+        await vi.advanceTimersByTimeAsync(16_000);
 
         const res = await resPromise;
         expect(res.status).toBe(200);

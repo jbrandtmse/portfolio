@@ -10,7 +10,7 @@
  *   6. Threshold gate (fail-closed) — empty/below-threshold → canned SSE (NO model call).
  *   7. Ground                       — assemble grounded prompt (Decision 3).
  *   8. Stream                       — llm-client → SSE token/citation/done/error events.
- *   9. ~10s ceiling + abort         — AbortController → in-voice fallback on timeout.
+ *   9. ~15s ceiling + abort         — AbortController → in-voice fallback on timeout.
  *
  * Security:
  *   - CORS-closed (same-origin guard, Step 1).
@@ -26,7 +26,7 @@
  *   token+done WITHOUT calling the model. Log retrieval_miss.
  *
  * Latency (NFR-4):
- *   Retrieval < ~200ms. ~10s AbortController ceiling on LLM call.
+ *   Retrieval < ~200ms. ~15s AbortController ceiling on LLM call.
  *   Graceful in-voice fallback + Mirror links on timeout/endpoint-down.
  */
 import type { Context } from 'hono';
@@ -51,8 +51,13 @@ export const RETRIEVAL_THRESHOLD = 0.5;
 /** Number of chunks to retrieve (architecture §Retriever abstraction: 3–6). */
 const K = 5;
 
-/** Hard ceiling on LLM streaming (ms). */
-const LLM_CEILING_MS = 10_000;
+/**
+ * Hard ceiling on LLM streaming (ms). Raised 10s → 15s to absorb the tail
+ * latency of reasoning-class mid-tier models (gpt-5-mini's first token can run
+ * past 10s, tripping the abort → in-voice fallback). 15s keeps a graceful upper
+ * bound while letting slow-but-valid grounded answers complete (NFR-4).
+ */
+const LLM_CEILING_MS = 15_000;
 
 /** Canned fail-closed response (in-voice, no exclamation). */
 export const CANNED_NO_CONTEXT = "I don't have that documented.";
@@ -242,7 +247,7 @@ guideRouter.post('/guide', async (c: Context) => {
   const messages = assembleGroundedPrompt(query, chunks, threadContext);
   const citations = extractCitations(chunks);
 
-  // ~10s hard ceiling on the LLM call (NFR-4)
+  // ~15s hard ceiling on the LLM call (NFR-4)
   const controller = new AbortController();
   const ceiling = setTimeout(() => controller.abort(), LLM_CEILING_MS);
 
