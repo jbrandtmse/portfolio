@@ -547,6 +547,47 @@ const TOTAL = SCENES.length;
       );
 
       for (const section of sections) observer.observe(section);
+
+      // Bottom-of-page fallback (Story 5.0, [1.4]/[1.9]): the last scene (#close)
+      // may not cross the interior rootMargin band before the page bottoms out.
+      // A normal-flow (NOT absolutely-positioned) 1px sentinel appended as the last
+      // child of document.body naturally sits at the true document foot regardless of
+      // any ancestor's CSS positioning. A second IntersectionObserver fires
+      // setActive(lastId) when this sentinel enters the viewport.
+      //
+      // IMPORTANT: do NOT use position:absolute;bottom:0 on a sentinel appended to a
+      // non-positioned container — absolute positioning resolves against the nearest
+      // positioned ancestor, which for a static <main> is the initial containing block
+      // (the viewport box), placing the sentinel ~3000px above the true document foot.
+      // A normal-flow sentinel at the end of <body> is the only reliable approach.
+      //
+      // This stays entirely inside onMotionAllowed (the ONE shared gate) so it is a
+      // no-op under reduced motion and adds no new scroll handlers.
+      const lastId = order[order.length - 1] ?? '';
+      const sentinel = document.createElement('div');
+      sentinel.setAttribute('aria-hidden', 'true');
+      // Normal-flow: no position, no dimensions except 1px height so it occupies a
+      // real position at the end of the document without affecting layout visually.
+      sentinel.style.cssText = 'height:1px;pointer-events:none;overflow:hidden;';
+      // Append as last child of body — a normal-flow element at the end of <body>
+      // sits at the true document foot, regardless of ancestor positioning.
+      document.body.appendChild(sentinel);
+      const footObserver = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) setActive(lastId);
+          }
+        },
+        // rootMargin '0px 0px 20px 0px' — extend the bottom of the intersection root by
+        // 20px so the sentinel counts as "visible" when it is within ~20px of the viewport
+        // bottom edge. Without this, a 1px sentinel sitting exactly at the viewport's bottom
+        // pixel has intersectionRatio ≈ 0 and the observer may not fire consistently
+        // (sub-pixel precision issue at the exact edge).
+        // A 20px slack is tight enough that it only fires at true page-bottom scroll, not
+        // before the visitor is near the end.
+        { rootMargin: '0px 0px 20px 0px', threshold: 0 },
+      );
+      footObserver.observe(sentinel);
     }
   });
 </script>

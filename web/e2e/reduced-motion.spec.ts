@@ -67,4 +67,35 @@ test.describe('home / under prefers-reduced-motion: the scene-rail stays static'
       await expect(rail.locator(`a[href="#${id}"]`).first()).toHaveCount(1);
     }
   });
+
+  test('Story 5.0 AC2: the bottom-of-page sentinel fallback does NOT activate under reduced motion (static baseline holds)', async ({
+    page,
+  }) => {
+    // Story 5.0 AC2: the sentinel and footObserver are created ONLY inside
+    // onMotionAllowed — so under reduced motion the baseline stands: aria-current
+    // stays on #hero even after scrolling to the document foot.
+    await page.goto('/');
+
+    // Guard: confirm the preference is actually emulated (anti-vacuity check).
+    expect(
+      await page.evaluate(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches),
+    ).toBe(true);
+
+    // Baseline: aria-current is on #hero.
+    await expect(page.locator('.rail-d a[aria-current="true"]')).toHaveCount(1);
+    await expect(page.locator('.rail-d a[aria-current="true"]')).toHaveAttribute('href', '#hero');
+
+    // Scroll to the absolute document foot — the footObserver would fire here if it
+    // had been created (but under reduced motion it must NOT have been created).
+    await page.evaluate(() =>
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }),
+    );
+    await page.waitForTimeout(800);
+
+    // aria-current must STILL be on #hero (the fallback did NOT activate under reduced motion).
+    await expect(page.locator('.rail-d a[aria-current="true"]')).toHaveCount(1);
+    await expect(page.locator('.rail-d a[aria-current="true"]')).toHaveAttribute('href', '#hero');
+    // The meter label must still read "Scene 1 of 7" (static baseline unchanged).
+    await expect(page.locator('.rail-d__lab')).toContainText('Scene 1 of 7');
+  });
 });

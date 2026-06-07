@@ -33,7 +33,11 @@ export type InviteInput = z.infer<typeof InviteInput>;
  * `query` is trimmed (leading/trailing whitespace stripped) and bounded to
  * prevent runaway prompt injection via query length.
  * `threadContext` carries prior turns for multi-turn continuity (optional,
- * capped in the handler to bound prompt size).
+ * capped in the handler to bound prompt size — count cap: MAX_THREAD_TURNS=6
+ * in api/src/lib/grounding.ts; per-turn content cap: .max(2000) below).
+ * Per-turn content is bounded at 2000 chars (Story 5.0, [4.3]): 6 turns ×
+ * 2000 + query 1000 is a sane prompt ceiling; prevents a client from inflating
+ * the assembled prompt well beyond the query.max(1000) cap suggests.
  */
 export const GuideQuery = z.object({
   query: z.string().trim().min(1).max(1000),
@@ -41,7 +45,7 @@ export const GuideQuery = z.object({
     .array(
       z.object({
         role: z.enum(['user', 'guide']),
-        content: z.string(),
+        content: z.string().max(2000),
       }),
     )
     .optional(),

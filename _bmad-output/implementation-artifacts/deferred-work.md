@@ -142,6 +142,22 @@ resolution (usually the story that should own the fix).
     `web/src/lib/motion.ts`), add a bottom-of-page fallback that activates the last scene
     when `scrollY + innerHeight` is within a small epsilon of `scrollHeight` (or observe a
     sentinel at the page foot), so the final scene reliably lights at the end of scroll.
+  - **✅ RESOLVED (Story 5.0, 2026-06-07, AC1/AC4a).** A bottom-of-page fallback was added
+    INSIDE the existing `onMotionAllowed` gate in `web/src/components/scene/SceneRail.astro`
+    (the sentinel approach, not the `scrollY` epsilon): a normal-flow 1px `<div>` appended as
+    the LAST child of `document.body` (sits at the true document foot regardless of ancestor
+    positioning) is observed by a second `IntersectionObserver` (`rootMargin: '0px 0px 20px
+    0px'`) that fires `setActive(order[order.length - 1])` (== `'close'`) when the sentinel
+    enters the viewport. No scroll handler, no `preventDefault`, no new `<script>` tag — stays
+    entirely under the ONE shared reduced-motion gate (no-op under reduced motion). The
+    interior `rootMargin: '-30% 0px -60% 0px'` heuristic is unchanged (interior scenes still
+    track). Locked by a NON-VACUOUS e2e (`web/e2e/home.spec.ts` — forces `#close` SHORT +
+    below the interior active band so ONLY the foot sentinel can activate it; asserts
+    `aria-current` on `#close` + `[data-scene-current]`=`7` + exactly one current entry) plus a
+    reduced-motion no-op e2e (`web/e2e/reduced-motion.spec.ts`). Mutation-verified by
+    code-review: removing `footObserver.observe(sentinel)` reds the AC1 e2e (`Expected
+    "#close" / Received "#hero"`); reverted byte-clean. `check-deterministic` PASS (tree hash
+    `7e52bb03…`; the sentinel is runtime-only, NOT in static `web/dist` — NFR-6/NFR-1 intact).
 
 - **[1.4 · LOW] Current-tick halo color is a literal `rgba(30,58,95,0.2)` rather than token-derived.**
   `web/src/components/scene/SceneRail.astro:266` renders the current-tick "soft halo" as
@@ -210,6 +226,7 @@ resolution (usually the story that should own the fix).
   The Story 1.4 code-review deferral (`[1.4 · LOW]`, above) *suggested* Story 1.9 as a candidate home for a bottom-of-page fallback that lights the last scene (`#close`) when `scrollY + innerHeight` reaches `scrollHeight`, on the theory that 1.9 would "consolidate the gate + observer into `web/src/lib/motion.ts`". In practice Story 1.9 consolidated only the reduced-motion GATE (`onMotionAllowed`) into `motion.ts`; the `IntersectionObserver` + its `rootMargin: '-30% 0px -60% 0px'` active-band heuristic stayed inline in `SceneRail.astro`'s `<script>`. So the `#close` nuance is unchanged and remains open.
   - **Deferral rationale:** NOT a Story 1.9 AC failure. Story 1.9's ACs (AC1/IAC-1) scope the consolidation to the shared *gate* utility (the two-layer reduced-motion gate), explicitly "not re-implemented per component" — they do not mandate relocating the observer logic or changing its active-band heuristic. The 1.4 deferral named 1.9 only as a *suggested* candidate, not a hard assignment. The static baseline + the FR-2 "Skip to the end" → `#close` control are unaffected; only the enhancement's last-scene highlight at the very bottom of scroll is impacted (interior scenes track correctly — re-confirmed by the normal Playwright pass that `aria-current` moves off `#hero`).
   - **Suggested resolution:** carry forward to **Epic 5** (the Stage-2 cinematic camera path / Master Timeline work, where the scroll/observer logic is revisited and a natural place to centralize it), OR a dedicated scene-rail polish story: add a page-foot sentinel (or the `scrollY + innerHeight ≈ scrollHeight` epsilon check) so `#close` reliably lights at the end of scroll, and add a Playwright assertion that scrolling to the document bottom puts `aria-current` on the `#close` rail entry. Low priority (enhancement-quality, not a floor/AC issue).
+  - **✅ RESOLVED (Story 5.0, 2026-06-07, AC1/AC4a).** Same fix as the `[1.4]` entry above (this `[1.9]` row only re-confirmed the same `#close` nuance was still open after 1.9 consolidated the gate but not the observer). The Epic-5 cleanup story (5.0) added the page-foot sentinel + second `IntersectionObserver` inside `onMotionAllowed`, with the mutation-verified non-vacuous Playwright assertion exactly as suggested here. See the `[1.4]` RESOLVED note for the full mechanism + verification.
 
 ## Deferred from: code review of story-1.10 (2026-06-06)
 
@@ -375,6 +392,7 @@ The Story 4.3 (`POST /api/guide` — retrieve → ground → stream; the SECURIT
 - **[4.3 · LOW · latent] `threadContext[].content` is not length-bounded per turn.** `shared/src/schemas.ts:44` — `content: z.string()` has no `.max()`; only the turn COUNT is capped (`MAX_THREAD_TURNS=6` in `grounding.ts`). A client could send 6 turns of very large content, inflating the assembled prompt beyond the implicit budget the `query` cap (1000) suggests.
   - **Deferral rationale:** NOT a current defect. `threadContext` is constructed by our own GuidePanel island (Story 4.4), not an arbitrary external client, and the turn-count cap (6) bounds the dominant growth term — so the AC's "capped in length to bound prompt size" is satisfied literally. The same-origin guard + per-IP rate-limit further bound abuse. No functional impact today.
   - **Suggested resolution:** in Story 4.4 (or when the endpoint is exposed beyond the island), add a per-turn `.max(~2000)` to the `threadContext` content schema and/or a total-prompt-size guard in `assembleGroundedPrompt`. Add a Zod-rejection test. Low priority; co-own with the GuidePanel owner.
+  - **✅ RESOLVED (Story 5.0, 2026-06-07, AC3/AC4b).** Added `.max(2000)` to `threadContext[].content` in the REAL shared contract `shared/src/schemas.ts` `GuideQuery` (the single cross-package source of truth, AR-15), with the doc-comment updated to state the per-turn cap alongside the count cap (6 × 2000 + query 1000 = sane prompt ceiling). The api `/api/guide` route's existing `GuideQuery.safeParse` → 400 path now also rejects an over-cap turn (no consumer change needed). Backward-compatible: the real GuidePanel turns are short (verified — the `guide` + `guide-panel` prod-faithful e2e stay green through `serve-with-api.mjs`). Locked by 6 tests in `api/src/lib/grounding.test.ts` (the runner-bearing package — `shared` has no test runner, Rule 8) importing the REAL `GuideQuery` from `@portfolio/shared/schemas`: at-cap (2000) passes, over-cap (2001) fails with the error scoped to the `threadContext[0].content` path, large over-cap (10 000) fails, short real-world turns + no-threadContext + multi-turn nominal all pass. Mutation-verified by code-review: removing `.max(2000)` reds the over-cap rejection tests (2001 + 10 000); reverted byte-clean.
 
 ## Deferred from: lead per-story smoke of story-4.3 (2026-06-07)
 

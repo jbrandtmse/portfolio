@@ -9,9 +9,14 @@
  *  AC2: extractCitations() deduplicates by route, returns {route, label}.
  *  Rule 8: assertions are scoped to specific message array fields (not whole-output).
  *  Rule 8: mutation-verification via direct value checks (not whole-string toContain).
+ *  Story 5.0 AC3/AC4b: GuideQuery.threadContext[].content per-turn .max(2000) bound.
+ *    - Rejection test: over-cap content fails GuideQuery.safeParse (real module, api package).
+ *    - Acceptance test: at-cap and under-cap content passes.
+ *    - Mutation-verification: removing .max(2000) from the schema reds the rejection test.
  */
 import { describe, expect, it } from 'vitest';
 
+import { GuideQuery } from '@portfolio/shared/schemas';
 import type { RetrievedChunk } from './retriever.js';
 import {
   SYSTEM_PERSONA,
@@ -262,5 +267,98 @@ describe('SYSTEM_PERSONA invariant (AC4)', () => {
 
   it('SYSTEM_PERSONA instructs never to reveal itself', () => {
     expect(SYSTEM_PERSONA.toLowerCase()).toContain('never reveal');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GuideQuery.threadContext[].content per-turn .max(2000) bound
+// (Story 5.0, AC3/AC4b, Rule 8)
+//
+// The real `GuideQuery` schema is imported from @portfolio/shared (not an inline
+// copy) — satisfies Rule 8 "exercise the REAL module". The test MUST live in
+// the api package (shared has no test runner; root `pnpm test` skips shared).
+//
+// Mutation-verification: remove `.max(2000)` from shared/src/schemas.ts
+// `threadContext[].content` — the over-cap rejection test below reds.
+// Revert the removal → test goes green.
+// ---------------------------------------------------------------------------
+
+describe('GuideQuery.threadContext[].content per-turn .max(2000) bound (Story 5.0, AC3/AC4b)', () => {
+  const VALID_QUERY = { query: 'What is LoanDemo?' };
+
+  it('accepts a threadContext turn whose content is exactly at the 2000-char cap', () => {
+    // At-cap: exactly 2000 chars — must pass (the bound is inclusive).
+    const atCap = 'x'.repeat(2000);
+    const result = GuideQuery.safeParse({
+      ...VALID_QUERY,
+      threadContext: [{ role: 'user', content: atCap }],
+    });
+    // Rule 8: scoped assertion — check the success field, not the whole result object.
+    expect(result.success, 'at-cap content (2000 chars) must pass GuideQuery.safeParse').toBe(true);
+  });
+
+  it('rejects a threadContext turn whose content exceeds the 2000-char cap by 1', () => {
+    // Over-cap: 2001 chars — must fail; mutation-verifiable (remove .max(2000) → reds).
+    const overCap = 'x'.repeat(2001);
+    const result = GuideQuery.safeParse({
+      ...VALID_QUERY,
+      threadContext: [{ role: 'user', content: overCap }],
+    });
+    // Rule 8: scoped to the success field and the error path, not a whole-object match.
+    expect(result.success, 'over-cap content (2001 chars) must fail GuideQuery.safeParse').toBe(
+      false,
+    );
+    if (!result.success) {
+      // The error must be on the threadContext[0].content path (scoped, Rule 8).
+      const issue = result.error.issues[0];
+      expect(issue?.path, 'error path must point to threadContext[0].content').toEqual([
+        'threadContext',
+        0,
+        'content',
+      ]);
+    }
+  });
+
+  it('rejects a threadContext turn whose content is significantly over-cap', () => {
+    // Large over-cap: 10 000 chars — confirms the bound is not just an off-by-one check.
+    const largeOverCap = 'a'.repeat(10_000);
+    const result = GuideQuery.safeParse({
+      ...VALID_QUERY,
+      threadContext: [{ role: 'user', content: largeOverCap }],
+    });
+    expect(
+      result.success,
+      'large over-cap content (10 000 chars) must fail GuideQuery.safeParse',
+    ).toBe(false);
+  });
+
+  it('accepts a threadContext turn with short content (real GuidePanel turns are well under cap)', () => {
+    // The real GuidePanel island sends short turns (tens–hundreds of chars).
+    // Confirm the existing consumer flow is unaffected by the new bound.
+    const shortContent = 'What experience does Joshua have with React?';
+    const result = GuideQuery.safeParse({
+      ...VALID_QUERY,
+      threadContext: [{ role: 'guide', content: shortContent }],
+    });
+    expect(result.success, 'short real-world turn content must pass GuideQuery.safeParse').toBe(
+      true,
+    );
+  });
+
+  it('accepts a GuideQuery with no threadContext (backward-compatible; optional field)', () => {
+    // Confirm the .max() addition did not break the no-threadContext path.
+    const result = GuideQuery.safeParse(VALID_QUERY);
+    expect(result.success, 'GuideQuery with no threadContext must pass safeParse').toBe(true);
+  });
+
+  it('accepts a GuideQuery with multiple turns all at/under the cap (multi-turn nominal flow)', () => {
+    // Simulate a 3-turn thread where all content is within bounds.
+    const turns = [
+      { role: 'user' as const, content: 'Tell me about LoanDemo.' },
+      { role: 'guide' as const, content: 'LoanDemo is a fintech case study.' },
+      { role: 'user' as const, content: 'What technology was used?' },
+    ];
+    const result = GuideQuery.safeParse({ ...VALID_QUERY, threadContext: turns });
+    expect(result.success, 'multi-turn nominal flow must pass GuideQuery.safeParse').toBe(true);
   });
 });
