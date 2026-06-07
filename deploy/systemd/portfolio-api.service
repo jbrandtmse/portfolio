@@ -40,7 +40,12 @@ Environment=API_PORT=8787
 # Optional gitignored env file for server-side secrets (DATABASE_URL, RESEND_API_KEY,
 # …). The leading `-` makes it optional: the unit still starts if .env is absent
 # (e.g. when all secrets come from IMDSv2). NEVER commit this file (.gitignore).
-EnvironmentFile=-/home/ubuntu/git/portfolio/.env
+# Path is api/.env — the api package's gitignored env (where Story 3.3 placed
+# DATABASE_URL and the e2e serve-with-api harness reads it). This MUST match the
+# api package dir, not the repo root: env.ts hard-requires DATABASE_URL, so a
+# root-.env path that doesn't exist silently boots the api without it → exit 1
+# crash-loop (the "activating (auto-restart)" failure mode).
+EnvironmentFile=-/home/ubuntu/git/portfolio/api/.env
 
 # Resilience: always bring the api back if it exits/crashes (auto-restart).
 Restart=always
