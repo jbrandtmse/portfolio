@@ -43,3 +43,4 @@
 2026-06-07T15:34:48Z	Story 4.4	committed	sha=e130b47 submodules=
 2026-06-07T15:35:21Z	Epic 4	epic_summary	stories=5 total_high=1 total_med=5 total_low_deferred=6 total_smoke_defects=1 rework_events=0 dev_hangs_recovered=1 sonnet_stage_count=5 opus_stage_count=10 commits=4.0:f827fe6,4.1:ec0429b,4.2:2db7acd,4.3:5440304,4.4:e130b47
 2026-06-07T17:49:38Z	Epic 4	retrospective_complete	doc=_bmad-output/implementation-artifacts/epic-4-retro-2026-06-07.md rules_codified=9,10,11 action_items=5 model=claude-opus-4-8
+2026-06-07T17:51:06Z	Epic 4	epic_merged_to_feature	repos=. feature_sha=6e17184 merge_sha=6e17184 submodules=
