@@ -38,9 +38,11 @@ const envSchema = z.object({
 
   /**
    * LLM model ID to use for the Guide stream.
-   * Default: gpt-4o-mini (confirmed current mid-tier streaming model on the VM).
+   * Default: gpt-5-mini (current mid-tier streaming model on the VM's RouteLLM
+   * endpoint; confirmed available + verified live on /api/guide). Override per
+   * deployment via GUIDE_LLM_MODEL in api/.env.
    */
-  GUIDE_LLM_MODEL: z.string().default('gpt-4o-mini'),
+  GUIDE_LLM_MODEL: z.string().default('gpt-5-mini'),
 
   /**
    * When set to "1", the llm-client uses a deterministic stub — no live LLM
