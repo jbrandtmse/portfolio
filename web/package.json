@@ -17,9 +17,11 @@
   },
   "dependencies": {
     "@astrojs/react": "^5.0.7",
+    "@nanostores/react": "^1.1.0",
     "@portfolio/shared": "workspace:*",
     "astro": "^6.4.4",
     "marked": "^18.0.5",
+    "nanostores": "^1.3.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },

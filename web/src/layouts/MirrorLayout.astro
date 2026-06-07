@@ -75,7 +75,12 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : un
   }
   <slot name="jsonld" slot="jsonld" />
 
-  <main class="mirror">
+  {
+    /* id + tabindex=-1 so the Guide panel's post-citation skip-link (Story 4.4,
+      AC4 — "a skip-link can move focus to the routed Mirror content") has a real,
+      focusable target on every Mirror route a citation can route to. */
+  }
+  <main id="guide-skip-target" tabindex="-1" class="mirror">
     <article class="mirror__inner">
       <h1 class="mirror__title">{heading}</h1>
       {/* The answer-first lede — the opening plain-text paragraph (entity-first). */}
@@ -92,6 +97,14 @@ const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : un
      throughout — no hardcoded values a token covers. */
   .mirror {
     padding: var(--space-section-band) var(--space-margin-desktop);
+  }
+
+  /* The <main> is a programmatic skip-link target (tabindex=-1, Story 4.4 AC4):
+     focused via the Guide's post-citation skip-link, never via keyboard Tab, so
+     it carries no visible focus ring (the ring is reserved for tab-reachable
+     controls — global.css). Focus still moves here for screen-reader continuity. */
+  .mirror:focus {
+    outline: none;
   }
 
   .mirror__inner {

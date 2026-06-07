@@ -579,6 +579,11 @@ test.describe('home #close — WCAG 2.1 AA axe audit with the island present (St
     // Wait for the island to be present (SSR'd immediately).
     await expect(page.locator('section#close form[action="/api/invite"]')).toHaveCount(1);
 
+    // Story 4.4: wait for Guide pill CSS before axe (client:only timing)
+    await page
+      .locator('[data-testid="guide-pill"]')
+      .waitFor({ state: 'visible', timeout: 8000 })
+      .catch(() => {});
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
       .analyze();

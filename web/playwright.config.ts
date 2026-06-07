@@ -230,5 +230,20 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
       testMatch: /guide\.spec\.ts/,
     },
+    // (Story 4.4) Guide island e2e — the GuidePill + GuidePanel React islands.
+    // Rule 7: proven to EXECUTE (not skipped); exercises:
+    //   (a) pill opens the NON-modal dialog (role="dialog" aria-modal="false")
+    //   (b) hero entry opens the Guide (progressive enhancement)
+    //   (c) chip query → real SSE from /api/guide renders (GUIDE_LLM_STUB=1)
+    //   (d) citation click → page routes behind + conversation persists
+    //   (e) Esc → focus returns to pill
+    //   (f) axe WCAG 2.1 AA → 0 violations
+    //   (g) JS-off → hero entry navigates to /faq/ (the static fallback)
+    // All via the serve-with-api.mjs prod-faithful proxy.
+    {
+      name: 'guide-panel',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /guide-panel\.spec\.ts/,
+    },
   ],
 });

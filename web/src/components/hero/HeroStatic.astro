@@ -88,16 +88,54 @@ const HEADSHOT_LABEL = 'Joshua R. Brandt'; // museum-label name (the wordmark ca
       </div>
 
       {
-        /* The quiet, understated Guide entry — distinct from the two fork buttons.
-          Links to /faq now; Epic 4 switches it to open the Guide island. */
+        /*
+        The quiet, understated Guide entry — distinct from the two fork buttons.
+        href="/faq/" is the JS-off fallback (navigates to the real /faq page).
+        When the GuidePill island is loaded (JS on), a small inline script
+        progressive-enhances the click to open the Guide instead (Decision 3,
+        AC1). The link remains a real <a> — followable JS-off, no regression.
+        (Story 4.4 wires this live; resolves the Epic-1 1.3 forward-reference.)
+      */
       }
       <p class="hero__guide-entry">
-        <a class="hero__guide-link" href="/faq/">
+        <a class="hero__guide-link" href="/faq/" id="hero-guide-entry" data-guide-entry>
           <span class="hero__guide-lead">Or </span><span class="hero__guide-underline"
             >ask my Guide about the work</span
           ><span class="hero__guide-arrow" aria-hidden="true">&rarr;</span>
         </a>
       </p>
+
+      {
+        /*
+        Progressive enhancement: intercept the hero guide-entry click when the
+        island is available. Uses is:inline so it ships as a tiny inline script
+        (identical to the scene-rail pattern). Guards typeof window + the
+        nanostores import — if nanostores fails to load (unlikely), the /faq
+        fallback remains intact (graceful degradation).
+
+        Technique: import the store atom from the module map, then addEventListener.
+        Using a module script avoids globals and is SSR-safe (only runs client-side).
+        The module import is lazy — this script fires after page load, not blocking.
+      */
+      }
+      <script>
+        // Progressive enhancement: hero guide entry → open Guide instead of /faq.
+        // JS-off: the <a href="/faq/"> still navigates normally (no change needed).
+        // JS-on: dispatch a custom 'guide:open' event; GuidePill listens for it
+        // and sets $guideOpen = true. If the island is not yet booted, the event
+        // is ignored and the browser navigates to /faq/ via the href fallback.
+        (function () {
+          const link = document.getElementById('hero-guide-entry');
+          if (!link) return;
+          link.addEventListener('click', function (e) {
+            // Only intercept if the GuidePill island is ready (it marks itself
+            // by setting a data attribute on the document element when booted).
+            if (!document.documentElement.dataset.guideReady) return;
+            e.preventDefault();
+            window.dispatchEvent(new CustomEvent('guide:open'));
+          });
+        })();
+      </script>
     </div>
 
     {

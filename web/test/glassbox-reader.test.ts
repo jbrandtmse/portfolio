@@ -352,14 +352,25 @@ describe('Story 2.2 AC1 — each reader page is self-canonical to its trailing-s
 
 // ─── AC4: 0 executable JS ─────────────────────────────────────────────────────
 
-describe('Story 2.2 AC4 — 0 executable JS on every reader page (NFR-1)', () => {
-  it.each(EXPECTED_SLUGS)('ships 0 executable scripts on /glass-box/%s/', (slug) => {
-    const html = readFileSync(readerHtmlPath(slug), 'utf8');
-    expect(countExecutableScripts(html)).toBe(0);
-    expect(html).not.toMatch(/<script\b[^>]*\bsrc=/);
-    expect(html).not.toMatch(/<link\b[^>]*\brel="modulepreload"/);
-    expect(html).not.toMatch(/\.js(["'?])/);
-  });
+describe('Story 2.2 AC4 — Guide pill (site-wide carve-out) + no InviteForm/panel on reader pages (NFR-1)', () => {
+  it.each(EXPECTED_SLUGS)(
+    'ships exactly 2 exec scripts on /glass-box/%s/ — Guide pill only (Story 4.4 carve-out)',
+    (slug) => {
+      // Story 4.4: ALL routes now ship the site-wide Guide pill (2 exec scripts).
+      // Reader pages carry NO InviteForm chunk, NO GuidePanel chunk, NO external src= scripts.
+      const html = readFileSync(readerHtmlPath(slug), 'utf8');
+      expect(
+        countExecutableScripts(html),
+        `/glass-box/${slug}/ must have exactly 2 exec scripts (Guide pill only)`,
+      ).toBe(2);
+      // No external src= scripts (all pill init is inline)
+      expect(html).not.toMatch(/<script\b[^>]*\bsrc=/);
+      expect(html).not.toMatch(/<link\b[^>]*\brel="modulepreload"/);
+      // No InviteForm or GuidePanel chunks on reader pages
+      expect(html).not.toMatch(/InviteForm\.[a-zA-Z0-9_-]+\.js/);
+      expect(html).not.toMatch(/GuidePanel\.[a-zA-Z0-9_-]+\.js/);
+    },
+  );
 
   it.each(EXPECTED_SLUGS)('code fences render as static <pre><code> on /glass-box/%s/', (slug) => {
     const html = readFileSync(readerHtmlPath(slug), 'utf8');

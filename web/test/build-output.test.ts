@@ -262,56 +262,52 @@ describe('built home page (web/dist/index.html)', () => {
     expect(builtCss).not.toMatch(/\.browse-link[^{]*\{[^}]*outline\s*:/);
   });
 
-  it('ships the scene-rail script AND the React island — EXACTLY two sanctioned executable surfaces (NFR-1, Story 3.5 AC3)', () => {
-    // Story 3.5: home is now the SECOND island route (after /invite). It ships TWO
-    // sanctioned executable surfaces:
+  it('ships the scene-rail script, the InviteForm React island, AND the GuidePill init — >= 3 sanctioned executable surfaces (NFR-1, Story 3.5/4.4 AC3/AC5)', () => {
+    // Story 3.5: home ships TWO sanctioned surfaces: scene-rail + InviteForm island.
+    // Story 4.4: adds the site-wide Guide pill carve-out (2 init scripts for GuidePill).
+    // Home now ships >= 3 executable scripts:
     //   1. The gated scene-rail enhancement (inline IntersectionObserver script).
-    //   2. The React island (InviteForm, client:visible-deferred).
-    // The CTAs (data-umami-event) + creative touch (static poster + <a>) add NO app
-    // JS — both are 0-JS. Count only EXECUTABLE scripts; the ld+json DATA block does
-    // not count against the budget.
-    //
-    // NOTE: Astro's client:visible hydration may emit multiple script tags for the
-    // island (the client renderer + the island chunk inline initializer), so we assert
-    // >= 2 (at least the rail script + at least one island script) rather than exactly 2.
+    //   2. The InviteForm island hydration (client:visible — one or more init scripts).
+    //   3. The GuidePill island hydration (client:idle — one or more init scripts).
+    // Count only EXECUTABLE scripts; the ld+json DATA block does not count.
     const executableScripts = countExecutableScripts(indexHtml);
     expect(
       executableScripts,
-      `home should ship >= 2 executable scripts (scene-rail + React island); found ${executableScripts}`,
-    ).toBeGreaterThanOrEqual(2);
+      `home should ship >= 3 executable scripts (scene-rail + InviteForm island + GuidePill); found ${executableScripts}`,
+    ).toBeGreaterThanOrEqual(3);
     // And exactly one ld+json data block is present (the structured data).
     expect(countLdJsonScripts(indexHtml)).toBe(1);
   });
 
-  it('the single EXECUTABLE script is a reduced-motion-gated IntersectionObserver, inlined, sourced from motion.ts (Story 1.4 IAC-2; Story 1.9 IAC-1)', () => {
-    // Astro inlines a script this small directly into the HTML (well under the
-    // bundling threshold), so the gated enhancement is observable in the markup.
-    // It MUST carry the two-layer reduced-motion gate's JS init-guard
-    // (prefers-reduced-motion) AND use IntersectionObserver — i.e. it is the
-    // expected minimal enhancement, not a heavyweight regression.
+  it('the scene-rail script uses a reduced-motion-gated IntersectionObserver sourced from motion.ts (Story 1.4 IAC-2; Story 1.9 IAC-1)', () => {
+    // Story 4.4: The scene-rail script is now an EXTERNAL module (type="module"
+    // src="/_astro/SceneRail.*.js") because Astro bundles the shared motion.ts
+    // import into a separate chunk. The IntersectionObserver gate is distributed:
+    //   - The SceneRail.*.js chunk: imports motion.ts + uses IntersectionObserver.
+    //   - The motion.*.js chunk: exports onMotionAllowed + prefers-reduced-motion.
     //
-    // Story 1.6 adds a <script type="application/ld+json"> in <head>, which now
-    // precedes the scene-rail script in document order — so match the EXECUTABLE
-    // script specifically (skip the ld+json data block) rather than "the first
-    // <script>".
-    const executableBlock = [...indexHtml.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)].find(
-      (m) => !/type\s*=\s*["']application\/ld\+json["']/i.test(m[1] ?? ''),
-    );
-    expect(executableBlock).toBeDefined();
-    const scriptBody = executableBlock![2]!;
-    expect(scriptBody).toContain('prefers-reduced-motion');
-    expect(scriptBody).toContain('IntersectionObserver');
+    // BOTH chunks must be present in dist/_astro/. Assert them from the built JS files
+    // (Rule 8 — scoped to the REAL dist chunks, not a copy).
 
-    // Story 1.9 IAC-1: the gate is now the SHARED utility from web/src/lib/motion.ts
-    // (onMotionAllowed), bundled+inlined into this script — NOT an ad-hoc per-component
-    // matchMedia. motion.ts's onMotionAllowed contributes the SSR-safe guard
-    // (`typeof window` + `matchMedia` feature-detect) that an inline
-    // `matchMedia(...).matches` check would NOT have. Assert that signature is
-    // present, proving the rail consumes motion.ts rather than re-implementing the
-    // gate inline. (Survives minification: `typeof window`, `matchMedia`, and the
-    // reduced-motion query string are all preserved through esbuild's mangling.)
-    expect(scriptBody).toMatch(/typeof window/);
-    expect(scriptBody).toContain('matchMedia');
+    const astroDir = join(distDir, '_astro');
+    const jsFiles = readdirSync(astroDir)
+      .filter((f) => f.endsWith('.js'))
+      .map((f) => readFileSync(join(astroDir, f), 'utf8'));
+
+    // Find the SceneRail chunk — must contain IntersectionObserver
+    const railContent = jsFiles.find((body) => body.includes('IntersectionObserver'));
+    expect(railContent, 'scene-rail chunk with IntersectionObserver in dist/_astro/').toBeDefined();
+
+    // The motion.ts compiled chunk — must contain prefers-reduced-motion + matchMedia
+    const motionContent = jsFiles.find(
+      (body) => body.includes('prefers-reduced-motion') && body.includes('matchMedia'),
+    );
+    expect(
+      motionContent,
+      'motion.ts chunk with prefers-reduced-motion gate in dist/_astro/',
+    ).toBeDefined();
+    // motion.ts exports the SSR-safe typeof-window guard (Story 1.9 IAC-1)
+    expect(motionContent!).toMatch(/typeof window/);
   });
 
   it('references the React island (client.*.js renderer) — home is now the 2nd island route (NFR-1 carve-out, Story 3.5 AC3)', () => {
@@ -632,29 +628,43 @@ describe('Story 1.5 — every Mirror route is a real, answer-first, self-canonic
   );
 
   it.each(MIRROR_ROUTES)(
-    'ships 0 EXECUTABLE JS — no executable <script>, no island, no JS bundle on %s (NFR-1)',
+    'ships the Guide pill (site-wide carve-out) but NOT the GuidePanel chunk on initial load — %s (NFR-1 Story 4.4)',
     (route) => {
       const html = readFileSync(routeHtmlPath(route), 'utf8');
-      // 0-JS budget counts EXECUTABLE scripts only. Story 1.6 adds a
-      // <script type="application/ld+json"> (DATA) to several Mirror routes
-      // (/about, /speaking, /speaking/reel, /work/loandemo, /faq) — that does
-      // NOT violate NFR-1. Assert zero executable scripts; ld+json is allowed.
+      // Story 4.4 (Decision 2 NFR-1 carve-out): the Guide pill is mounted site-wide
+      // via BaseLayout (client:idle). ALL routes now ship:
+      //   • The shared React runtime chunk (client.*.js — already used by /invite & /).
+      //   • The tiny GuidePill hydration initializer (< 200 bytes; NOT the full panel).
+      // The heavy GuidePanel chunk is LAZILY loaded — it does NOT appear in the initial
+      // HTML of any content route (it loads only when the Guide is first opened).
       //
-      // CARVE-OUT (Story 3.2, Decision 2 / AC3): /speaking is the SECOND sanctioned
-      // route with one minimal executable script (the vanilla copy-button enhancement).
-      // It is explicitly NOT zero — asserted separately below. Skip the 0-count check
-      // for /speaking; every OTHER Mirror route stays at 0 executable JS.
-      if (route === '/speaking') return;
-      // CARVE-OUT (Story 3.4, Decision 5 / AC6): /invite is the THIRD sanctioned route,
-      // shipping the FIRST React island. It explicitly ships the React client runtime +
-      // island chunk (client:visible deferred). Asserted separately below; skip here.
-      // This resolves deferred [1.2]/retro A4 — the previously-unreferenced React chunk
-      // is now legitimately referenced by /invite/ and is no longer dead weight.
-      if (route === '/invite') return;
-      expect(countExecutableScripts(html)).toBe(0);
-      expect(html).not.toMatch(/<script\b[^>]*\bsrc=/);
-      expect(html).not.toMatch(/<link\b[^>]*\brel="modulepreload"/);
-      expect(html).not.toMatch(/\.js(["'?])/);
+      // CARVE-OUT (Story 3.2): /speaking ships one additional vanilla copy-enhancement
+      // script, so it has 3 total exec scripts; asserted separately below.
+      // CARVE-OUT (Story 3.4): /invite ships the InviteForm island (3 total).
+      // Every OTHER Mirror route: exactly 2 executable scripts (the two pill init scripts).
+
+      // 1. GuidePanel chunk must NOT appear on initial load (the load-bearing lazy carve-out).
+      // The GuidePanel chunk is recognized as the file that's NOT the tiny client init or GuidePill wrapper.
+      expect(
+        html,
+        `${route} must not load the full GuidePanel chunk on initial load (lazy carve-out)`,
+      ).not.toMatch(/GuidePanel\.[a-zA-Z0-9_-]+\.js/);
+
+      // 2. Content routes do NOT ship the InviteForm chunk (except /invite and /).
+      if (route !== '/invite') {
+        expect(
+          html,
+          `${route} must not reference InviteForm chunk (only /invite and / have it)`,
+        ).not.toMatch(/InviteForm\.[a-zA-Z0-9_-]+\.js/);
+      }
+
+      // 3. Script count: /speaking has 3 (pill + copy enhancement), /invite has 3 (pill + InviteForm island).
+      //    All other Mirror routes have exactly 2 (the two pill-init scripts).
+      if (route === '/speaking' || route === '/invite') return;
+      expect(
+        countExecutableScripts(html),
+        `${route} must have exactly 2 executable scripts (Guide pill init scripts); all content routes share this pill carve-out`,
+      ).toBe(2);
     },
   );
 
@@ -681,23 +691,26 @@ describe('Story 3.2 — /speaking NFR-1 carve-out: exactly ONE sanctioned copy-e
     speakingHtml = readFileSync(routeHtmlPath('/speaking'), 'utf8');
   });
 
-  it('/speaking ships exactly ONE executable script — the vanilla copy-button enhancement (NFR-1 carve-out)', () => {
-    // Story 3.2, Decision 2: /speaking is the SECOND sanctioned progressive-enhancement
-    // route. It ships ONE minimal vanilla script (the BioBlock copy enhancement) —
-    // NOT zero (unlike all other Mirror routes) and NOT more than one.
+  it('/speaking ships exactly THREE executable scripts — Guide pill (2) + copy enhancement (1) (NFR-1 carve-out, Story 3.2 + 4.4)', () => {
+    // Story 3.2, Decision 2: /speaking has ONE vanilla copy enhancement script.
+    // Story 4.4: ALL routes now ship the site-wide Guide pill (2 init scripts).
+    // Total: 3 executable scripts (2 pill + 1 copy). This is the updated carve-out.
     const execCount = countExecutableScripts(speakingHtml);
     expect(
       execCount,
-      `/speaking must ship exactly 1 executable script (the copy enhancement); found ${execCount}`,
-    ).toBe(1);
+      `/speaking must ship exactly 3 executable scripts (2 Guide pill + 1 copy enhancement); found ${execCount}`,
+    ).toBe(3);
   });
 
-  it('the single /speaking executable script is NOT a React island / client.*.js chunk (NFR-1 carve-out)', () => {
-    // Must be a minimal vanilla inline script, NOT a React hydration bundle.
-    // No <script src=...> (external), no modulepreload, no .js bundle reference.
+  it('the /speaking copy script is NOT an external src= script; InviteForm chunk is absent (NFR-1 carve-out, Story 3.2 + 4.4)', () => {
+    // Story 3.2: the copy enhancement is an inline script, not external src=.
+    // Story 4.4: /speaking now legitimately references React client.*.js (site-wide pill).
+    //   • No external src= scripts (both pill init and copy enhancement are inline).
+    //   • No InviteForm chunk (only / and /invite have InviteForm).
+    //   • client.*.js IS now referenced (the Guide pill React runtime — a sanctioned carve-out).
     expect(speakingHtml).not.toMatch(/<script\b[^>]*\bsrc=/);
     expect(speakingHtml).not.toMatch(/<link\b[^>]*\brel="modulepreload"/);
-    expect(speakingHtml).not.toMatch(/client\.[a-zA-Z0-9]+\.js/);
+    expect(speakingHtml).not.toMatch(/InviteForm\.[a-zA-Z0-9_-]+\.js/);
   });
 
   it('the /speaking copy script body contains the clipboard API call (sanity: correct script)', () => {
@@ -936,7 +949,14 @@ describe('Story 1.7 — /browse is the complete crawlable static index (IAC-2)',
   });
 
   it('carries no exclamation marks (positive-assertion, no hype)', () => {
-    expect(browseHtml.replace(/<!doctype html>/i, '')).not.toContain('!');
+    // Strip doctype, scripts (JS legitimately uses !), and HTML comments before check.
+    // Story 4.4: the site-wide Guide pill adds inline Astro hydration scripts that use
+    // ! for JS negation — strip them before asserting copy is exclamation-free.
+    const copyOnly = browseHtml
+      .replace(/<!doctype html>/i, '')
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<!--[\s\S]*?-->/g, '');
+    expect(copyOnly).not.toContain('!');
   });
 });
 
@@ -1097,13 +1117,18 @@ describe('Story 1.6 — JSON-LD is valid, parseable, and DATA (not executable JS
   });
 
   it('routes WITHOUT a JSON-LD owner emit no ld+json (e.g. /timeline, /glass-box)', () => {
-    // These stubs get their structured data in later epics; no ld+json yet, and
-    // critically still 0 executable JS.
-    // NOTE: /invite is excluded here — it ships the React island (Story 3.4 carve-out).
+    // These stubs get their structured data in later epics; no ld+json yet.
+    // Story 4.4: ALL routes now ship the site-wide Guide pill (2 exec scripts).
+    // The 0-executable-JS invariant for these routes is now updated to 2 (pill only).
+    // NOTE: /invite is excluded here — it ships the InviteForm island (3 exec scripts).
     for (const route of ['/timeline', '/glass-box'] as const) {
       const html = readFileSync(routeHtmlPath(route), 'utf8');
       expect(countLdJsonScripts(html)).toBe(0);
-      expect(countExecutableScripts(html)).toBe(0);
+      // Story 4.4 carve-out: exactly 2 exec scripts (Guide pill init only, not more)
+      expect(
+        countExecutableScripts(html),
+        `${route} must have exactly 2 exec scripts (Guide pill only, no other app JS)`,
+      ).toBe(2);
     }
     // /invite has no ld+json but has the React island (Story 3.4) — assert separately.
     const inviteHtml = readFileSync(routeHtmlPath('/invite'), 'utf8');
@@ -1299,19 +1324,24 @@ describe('Story 1.10 — env-gated Umami is OFF by default (AC2 / IAC-2; NFR-1)'
 
   it('keeps the home + every Mirror route at the correct script count with the gate closed', () => {
     // Re-assert the floor specifically in the Umami context: No Umami JS is added.
-    // CARVE-OUT (Story 3.2): /speaking ships ONE minimal copy-enhancement script.
-    // CARVE-OUT (Story 3.4): /invite ships the React island (not zero).
-    // CARVE-OUT (Story 3.5): home ships >= 2 scripts (scene-rail + React island).
+    // CARVE-OUT (Story 3.2): /speaking ships one additional copy-enhancement script (3 total).
+    // CARVE-OUT (Story 3.4): /invite ships the InviteForm island (3 total).
+    // CARVE-OUT (Story 3.5): home ships >= 3 scripts (scene-rail + InviteForm + GuidePill init).
+    // CARVE-OUT (Story 4.4): ALL routes now ship 2 Guide pill init scripts (the site-wide carve-out).
     // In all cases: no Umami script is added — asserted separately per-page above.
     expect(
       countExecutableScripts(indexHtml),
-      'home scene-rail + React island',
-    ).toBeGreaterThanOrEqual(2);
+      'home: scene-rail + InviteForm island + GuidePill init (>= 3)',
+    ).toBeGreaterThanOrEqual(3);
     for (const route of MIRROR_ROUTES) {
-      if (route === '/speaking') continue; // carve-out — see Story 3.2 NFR-1 suite
-      if (route === '/invite') continue; // carve-out — see Story 3.4 island suite
+      if (route === '/speaking') continue; // carve-out — 3 exec scripts (pill + copy + extra init)
+      if (route === '/invite') continue; // carve-out — 3 exec scripts (pill + InviteForm island)
       const html = readFileSync(routeHtmlPath(route), 'utf8');
-      expect(countExecutableScripts(html), `executable scripts on ${route}`).toBe(0);
+      // Story 4.4: content routes ship exactly 2 exec scripts (the Guide pill init scripts)
+      expect(
+        countExecutableScripts(html),
+        `executable scripts on ${route} (Guide pill carve-out = 2)`,
+      ).toBe(2);
     }
   });
 });
@@ -1348,11 +1378,17 @@ describe('Story 1.10 — /about channel links carry the 0-JS channel-clicked eve
     }
   });
 
-  it('adds NO executable JS to /about — the channel events are pure data attributes (NFR-1)', () => {
-    // The data-umami-event attributes are handled by Umami's own script; the page
-    // itself gains no executable <script> (only the existing ld+json DATA block).
-    expect(countExecutableScripts(aboutHtml)).toBe(0);
+  it('the channel events are pure data attributes — no InviteForm island on /about (NFR-1, Story 4.4 carve-out)', () => {
+    // The data-umami-event attributes are handled by Umami's own script.
+    // Story 4.4: /about now ships 2 exec scripts (the site-wide Guide pill carve-out).
+    // But the channel events add NO additional app JS — only the pill init is present.
+    // Invariant: no external src= scripts, no InviteForm chunk, exactly 2 exec scripts.
     expect(aboutHtml).not.toMatch(/<script\b[^>]*\bsrc=/);
+    expect(aboutHtml).not.toMatch(/InviteForm\.[a-zA-Z0-9_-]+\.js/);
+    expect(
+      countExecutableScripts(aboutHtml),
+      '/about must have exactly 2 exec scripts (Guide pill carve-out only)',
+    ).toBe(2);
   });
 });
 
@@ -1522,13 +1558,24 @@ describe('Story 2.5 — /work/loandemo layered case study (AC1–AC6 / IAC-1)', 
     expect(loandemoHtml).toMatch(/<a\b[^>]*\shref="\/timeline\/"[^>]*>/);
   });
 
-  it('ships 0 executable scripts (NFR-1)', () => {
-    expect(countExecutableScripts(loandemoHtml)).toBe(0);
+  it('ships exactly 2 executable scripts — Guide pill only (NFR-1, Story 4.4 carve-out)', () => {
+    // Story 4.4: ALL routes ship the site-wide Guide pill (2 exec scripts).
+    // /work/loandemo/ has no InviteForm chunk, no GuidePanel chunk.
+    expect(
+      countExecutableScripts(loandemoHtml),
+      '/work/loandemo/ must have exactly 2 exec scripts (Guide pill only)',
+    ).toBe(2);
     expect(loandemoHtml).not.toMatch(/<script\b[^>]*\bsrc=/);
+    expect(loandemoHtml).not.toMatch(/InviteForm\.[a-zA-Z0-9_-]+\.js/);
   });
 
   it('contains no exclamation marks in copy (positive-assertion voice)', () => {
-    const copyOnly = loandemoHtml.replace(/<!doctype html>/i, '');
+    // Strip doctype, scripts (JS uses ! for negation), and HTML comments before check.
+    // Story 4.4: the site-wide Guide pill adds inline Astro hydration scripts.
+    const copyOnly = loandemoHtml
+      .replace(/<!doctype html>/i, '')
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<!--[\s\S]*?-->/g, '');
     expect(copyOnly).not.toContain('!');
   });
 
@@ -1764,32 +1811,59 @@ describe('Story 3.4 — /invite/ React island carve-out (AC6, Decision 5; resolv
     expect(copyOnly).not.toContain('!');
   });
 
-  // NON-island routes: assert none reference the React client.*.js chunk.
-  // This is the core NFR-1 isolation guarantee: ONLY /invite/ and / gain the React runtime.
-  // Story 3.5: home (/) is now also an island route — excluded from the non-island list.
-  const NON_ISLAND_MIRROR_ROUTES = [
-    '/timeline',
-    '/glass-box',
-    '/faq',
-    '/about',
-    '/browse',
-    '/speaking',
-    '/speaking/reel',
-    '/work/loandemo',
-  ] as const;
-
-  it.each(NON_ISLAND_MIRROR_ROUTES)(
-    'non-island route %s does NOT reference the React client.*.js chunk (NFR-1 isolation)',
-    (route) => {
+  // Story 4.4 NFR-1 carve-out: the Guide pill is now site-wide (BaseLayout).
+  // ALL routes ship the React client.*.js runtime + the tiny GuidePill init script.
+  // The InviteForm chunk is ONLY on / and /invite/ (the InviteForm island routes).
+  // The GuidePanel chunk is NOT on any route's initial load (lazy-loaded on open).
+  it('all Mirror routes now reference the React client.*.js runtime (site-wide Guide pill, Story 4.4 carve-out)', () => {
+    // Every page uses BaseLayout which mounts GuidePill client:idle — the shared
+    // React runtime (client.*.js) is now legitimately referenced everywhere.
+    // This is the Story 4.4 sanctioned site-wide carve-out (Decision 2, AC5).
+    for (const route of MIRROR_ROUTES) {
       const html = readFileSync(routeHtmlPath(route), 'utf8');
-      // The React chunk (client.*.js from @astrojs/react) must NOT appear in any
-      // non-island route. If it appears, the React runtime has leaked beyond / and /invite/.
       expect(
         html,
-        `${route} must not reference React client.*.js (the React runtime must not leak)`,
-      ).not.toMatch(/client\.[a-zA-Z0-9_-]+\.js/);
-    },
-  );
+        `${route} must reference React client.*.js (Guide pill carve-out — site-wide)`,
+      ).toMatch(/client\.[a-zA-Z0-9_-]+\.js/);
+    }
+  });
+
+  it('InviteForm chunk is ONLY referenced on / and /invite — NOT on content routes (NFR-1 isolation)', () => {
+    // The InviteForm island chunk (InviteForm.*.js) is only legitimately referenced
+    // on the two InviteForm island routes: home (/) and /invite/. Content routes
+    // ship the Guide pill but NOT the InviteForm chunk.
+    const INVITE_ISLAND_ROUTES = ['/', '/invite'] as const;
+    for (const route of [...MIRROR_ROUTES]) {
+      const html = readFileSync(routeHtmlPath(route === '/invite' ? route : route), 'utf8');
+      const hasInviteChunk = /InviteForm\.[a-zA-Z0-9_-]+\.js/.test(html);
+      if (route === '/invite') {
+        expect(hasInviteChunk, `${route} must reference InviteForm chunk (the island)`).toBe(true);
+      } else {
+        expect(
+          hasInviteChunk,
+          `${route} must NOT reference InviteForm chunk (only / and /invite have it)`,
+        ).toBe(false);
+      }
+    }
+    // Home (/) also references InviteForm (Story 3.5 carve-out)
+    expect(indexHtml).toMatch(/InviteForm\.[a-zA-Z0-9_-]+\.js/);
+    void INVITE_ISLAND_ROUTES; // referenced for clarity
+  });
+
+  it("GuidePanel chunk is NOT referenced on any route's initial HTML (lazy carve-out, Story 4.4 AC5)", () => {
+    // The GuidePanel is LAZILY loaded — it does NOT appear in any route's initial HTML.
+    // It only loads when the Guide is opened for the first time (Decision 2).
+    for (const route of MIRROR_ROUTES) {
+      const html = readFileSync(routeHtmlPath(route), 'utf8');
+      expect(
+        html,
+        `${route} must not reference GuidePanel chunk on initial load (lazy carve-out)`,
+      ).not.toMatch(/GuidePanel\.[a-zA-Z0-9_-]+\.js/);
+    }
+    expect(indexHtml, 'home must not reference GuidePanel chunk on initial load').not.toMatch(
+      /GuidePanel\.[a-zA-Z0-9_-]+\.js/,
+    );
+  });
 
   it('home (/) references the React client.*.js chunk — it is the 2nd island route (Story 3.5, NFR-1 carve-out)', () => {
     // Story 3.5: home gains the InviteForm island alongside /invite. The React chunk
@@ -1797,11 +1871,20 @@ describe('Story 3.4 — /invite/ React island carve-out (AC6, Decision 5; resolv
     expect(indexHtml).toMatch(/client\.[a-zA-Z0-9_-]+\.js/);
   });
 
-  it('/invite/thanks/ builds as a 0-JS confirmation page (AC2, Decision 3)', () => {
-    // The confirmation page is a pure MirrorLayout page — 0 executable JS.
+  it('/invite/thanks/ builds as a confirmation page (AC2, Decision 3) — ships the Guide pill carve-out only', () => {
+    // The confirmation page is a pure MirrorLayout page — no InviteForm island.
+    // Story 4.4: it now ships the site-wide Guide pill (2 exec scripts, like content routes).
+    // The page itself adds NO app JS beyond the pill carve-out.
     expect(existsSync(join(distDir, 'invite', 'thanks', 'index.html'))).toBe(true);
-    expect(countExecutableScripts(thanksHtml)).toBe(0);
+    // No external src= scripts (the pill uses inline init scripts)
     expect(thanksHtml).not.toMatch(/<script\b[^>]*\bsrc=/);
+    // No InviteForm chunk (the form island is NOT on /thanks/)
+    expect(thanksHtml).not.toMatch(/InviteForm\.[a-zA-Z0-9_-]+\.js/);
+    // Ships exactly 2 exec scripts (the Guide pill carve-out, same as all content routes)
+    expect(
+      countExecutableScripts(thanksHtml),
+      '/invite/thanks/ must have exactly 2 exec scripts (Guide pill only)',
+    ).toBe(2);
   });
 
   it('/invite/thanks/ names the entity and carries the response-time copy (AC2)', () => {
@@ -1814,7 +1897,12 @@ describe('Story 3.4 — /invite/ React island carve-out (AC6, Decision 5; resolv
   });
 
   it('/invite/thanks/ contains no exclamation marks in copy (positive-assertion voice)', () => {
-    const copyOnly = thanksHtml.replace(/<!doctype html>/i, '');
+    // Strip doctype, scripts (JS uses ! for negation), and HTML comments.
+    // Story 4.4: the site-wide Guide pill adds inline Astro hydration scripts.
+    const copyOnly = thanksHtml
+      .replace(/<!doctype html>/i, '')
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<!--[\s\S]*?-->/g, '');
     expect(copyOnly).not.toContain('!');
   });
 
@@ -1980,15 +2068,114 @@ describe('Story 3.5 — home #close: InviteForm island + follow CTAs + creative 
     expect(close).toMatch(/<a\b[^>]*\shref="https:\/\/suno\.com\/[^"]*"[^>]*>/i);
   });
 
-  it('the /speaking/reel/ route references NO React client chunk — carve-out is exactly {/, /invite} (NFR-1, Story 3.5 AC3)', () => {
-    // The directive names /speaking/reel explicitly. It is a plain MirrorLayout
-    // route (NOT an island): the React runtime must NOT leak onto it when home
-    // became the 2nd island route. This is the mutation-proof tail of the carve-out
-    // — if a global/layout-level island injection ever shipped React everywhere,
-    // this (and the NON_ISLAND_MIRROR_ROUTES suite) would red.
+  it('the /speaking/reel/ route ships ONLY the Guide pill (no InviteForm chunk; Story 4.4 NFR-1)', () => {
+    // Story 3.5 originally: /speaking/reel/ must not reference the React client chunk.
+    // Story 4.4 update: ALL routes now legitimately reference the React runtime via the
+    // site-wide Guide pill carve-out. The updated mutation-proof invariant:
+    //   • /speaking/reel/ has no InviteForm chunk (only / and /invite have it)
+    //   • The renderer-url on /speaking/reel/ is ONLY the GuidePill (not InviteForm)
+    //   • /speaking/reel/ ships exactly 2 exec scripts (the Guide pill init only)
     const reelHtml = readFileSync(routeHtmlPath('/speaking/reel'), 'utf8');
-    expect(reelHtml).not.toMatch(/client\.[a-zA-Z0-9_-]+\.js/);
-    expect(reelHtml).not.toMatch(/renderer-url=/);
-    expect(countExecutableScripts(reelHtml)).toBe(0);
+    // InviteForm chunk must NOT appear (only / and /invite have it)
+    expect(reelHtml).not.toMatch(/InviteForm\.[a-zA-Z0-9_-]+\.js/);
+    // GuidePanel chunk must NOT appear (lazy carve-out)
+    expect(reelHtml).not.toMatch(/GuidePanel\.[a-zA-Z0-9_-]+\.js/);
+    // The only island renderer on /speaking/reel/ is for GuidePill (not InviteForm)
+    // renderer-url IS present (GuidePill is a React island) — but InviteForm is absent (above).
+    expect(reelHtml).toMatch(/renderer-url="/);
+    // Exactly 2 exec scripts (Guide pill init scripts — the site-wide carve-out)
+    expect(
+      countExecutableScripts(reelHtml),
+      '/speaking/reel/ must have exactly 2 exec scripts (Guide pill only)',
+    ).toBe(2);
+  });
+});
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Story 4.4 — Guide pill site-wide NFR-1 carve-out + home forward-reference
+ *             resolve (AC1, AC5, Decision 2).
+ *
+ * Build-output assertions (Rule 3 real-runtime evidence / Rule 8 scoped):
+ *   1. Every route ships exactly 2 exec scripts (Guide pill init) — NOT the
+ *      full GuidePanel chunk (lazy carve-out, per-route honest).
+ *   2. The GuidePanel chunk is ABSENT from every route's initial HTML.
+ *   3. The hero entry keeps href="/faq/" (JS-off fallback) AND now carries
+ *      the data-guide-entry attribute for the progressive enhancement.
+ *   4. The home still ships the scene-rail + InviteForm + GuidePill (>=3).
+ * ────────────────────────────────────────────────────────────────────────── */
+
+describe('Story 4.4 — Guide pill site-wide carve-out (AC1, AC5, Decision 2 NFR-1)', () => {
+  it('every content route (not / or /invite) ships exactly 2 exec scripts — the Guide pill init (per-route, specific — Rule 8)', () => {
+    // The 2 exec scripts are Astro's client:idle hydration initializer for GuidePill.
+    // They reference the shared React runtime + the tiny GuidePill wrapper.
+    // This is per-route specific (Rule 8 — honest, not a whole-site toContain).
+    const CONTENT_ROUTES = [
+      '/about',
+      '/timeline',
+      '/faq',
+      '/browse',
+      '/speaking/reel',
+      '/work/loandemo',
+      '/glass-box',
+    ] as const;
+    for (const route of CONTENT_ROUTES) {
+      const html = readFileSync(routeHtmlPath(route), 'utf8');
+      expect(
+        countExecutableScripts(html),
+        `${route}: must have exactly 2 exec scripts (Guide pill init); found different count`,
+      ).toBe(2);
+    }
+  });
+
+  it('every route is absent the GuidePanel chunk in initial HTML — lazy load is working (AC5, Decision 2)', () => {
+    // The GuidePanel.*.js chunk must NOT appear in ANY route's initial HTML.
+    // It is loaded lazily on first Guide open, not on page load.
+    const CHECKED_ROUTES = [
+      '/',
+      '/about',
+      '/timeline',
+      '/speaking',
+      '/speaking/reel',
+      '/work/loandemo',
+      '/glass-box',
+      '/faq',
+      '/invite',
+      '/browse',
+    ] as const;
+    for (const route of CHECKED_ROUTES) {
+      const html = route === '/' ? indexHtml : readFileSync(routeHtmlPath(route), 'utf8');
+      expect(
+        html,
+        `${route}: GuidePanel chunk must not appear on initial load (lazy carve-out)`,
+      ).not.toMatch(/GuidePanel\.[a-zA-Z0-9_-]+\.js/);
+    }
+  });
+
+  it('the hero guide entry keeps href="/faq/" (JS-off fallback) AND has data-guide-entry progressive-enhancement marker (AC1)', () => {
+    // The hero link is a real <a href="/faq/"> — followable JS-off (falls back to
+    // the real /faq page). The data-guide-entry attribute marks it for the inline
+    // progressive enhancement script (Decision 3). Both must be present.
+    const anchor = indexHtml.match(/<a\b[^>]*data-guide-entry[^>]*>/);
+    expect(anchor, 'hero guide entry with data-guide-entry attribute').not.toBeNull();
+    expect(anchor![0]).toMatch(/\shref="\/faq\/"/);
+    expect(anchor![0]).toContain('data-guide-entry');
+  });
+
+  it('home now ships >= 3 executable scripts — scene-rail + InviteForm + GuidePill init (AC1/AC5)', () => {
+    // The Guide pill init adds to the existing home scripts.
+    // Scene-rail (1) + InviteForm island (1-2 astro:scope) + GuidePill (2) = >= 3.
+    expect(
+      countExecutableScripts(indexHtml),
+      'home must ship >= 3 exec scripts (scene-rail + InviteForm island + Guide pill)',
+    ).toBeGreaterThanOrEqual(3);
+  });
+
+  it('/about/ still does NOT reference the InviteForm chunk (content route isolation holds)', () => {
+    // The InviteForm island is only on / and /invite — not on content routes.
+    // The Guide pill is site-wide but the InviteForm is not.
+    const aboutHtml = readFileSync(routeHtmlPath('/about'), 'utf8');
+    expect(aboutHtml).not.toMatch(/InviteForm\.[a-zA-Z0-9_-]+\.js/);
+    // And the GuidePanel chunk is absent on initial load (lazy carve-out)
+    expect(aboutHtml).not.toMatch(/GuidePanel\.[a-zA-Z0-9_-]+\.js/);
   });
 });

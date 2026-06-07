@@ -162,15 +162,21 @@ test.describe('Glass Box reader — /glass-box/product-brief/', () => {
     await expect(footer.locator('a[href="/glass-box/"]')).toHaveCount(1);
   });
 
-  test('ships 0 executable scripts (0-JS, NFR-1)', async ({ page }) => {
+  test('ships exactly 2 executable scripts — Guide pill only (NFR-1, Story 4.4 carve-out)', async ({
+    page,
+  }) => {
     await page.goto(READER_PATH);
-    // Count executable <script> tags (exclude ld+json data blocks).
+    // Story 4.4: ALL routes ship the site-wide Guide pill (2 exec scripts).
+    // Reader pages have no InviteForm chunk, no GuidePanel chunk — only the pill init.
     const executableScripts = await page.evaluate(() => {
       const scripts = Array.from(document.querySelectorAll('script'));
       return scripts.filter((s) => s.type !== 'application/ld+json' && s.type !== 'importmap')
         .length;
     });
-    expect(executableScripts).toBe(0);
+    expect(
+      executableScripts,
+      `Glass Box reader must ship exactly 2 exec scripts (Guide pill only); found ${executableScripts}`,
+    ).toBe(2);
   });
 
   test('the body has a blockquote (pull-quote candidate) styled with a left border', async ({
@@ -238,6 +244,11 @@ test.describe('Glass Box reader — WCAG 2.1 AA (axe audit on product-brief)', (
     page,
   }) => {
     await page.goto(READER_PATH);
+    // Story 4.4: wait for Guide pill CSS before axe (client:only timing)
+    await page
+      .locator('[data-testid="guide-pill"]')
+      .waitFor({ state: 'visible', timeout: 8000 })
+      .catch(() => {});
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
       .analyze();

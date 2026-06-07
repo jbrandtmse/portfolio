@@ -119,9 +119,11 @@ describe('Story 2.3 AC6 — one <h1> and 0 executable JS', () => {
     expect(h1Matches).toHaveLength(1);
   });
 
-  it('ships 0 executable JS (NFR-1)', () => {
+  it('ships exactly 2 executable scripts — the Guide pill init only (Story 4.4 NFR-1 carve-out)', () => {
+    // Story 4.4: ALL routes now ship the site-wide Guide pill (2 exec scripts).
+    // /glass-box/ has NO InviteForm chunk, NO GuidePanel chunk — only the pill.
     const execCount = countExecutableScripts(indexHtml);
-    expect(execCount).toBe(0);
+    expect(execCount, '/glass-box/ must have exactly 2 exec scripts (Guide pill only)').toBe(2);
   });
 
   it('has exactly one <h1> — card titles are h3, not h1', () => {
@@ -155,10 +157,14 @@ describe('Story 2.3 AC3 — recursion beat + Glass-Box-vs-Timeline cross-link', 
   });
 
   it('contains no exclamation marks in visible copy (positive-assertion voice)', () => {
-    // Only DOCTYPE exclamation is expected; strip HTML then check body copy.
-    const bodyMatch = indexHtml.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    // Strip doctype, scripts (JS uses ! for negation), comments, then check body copy.
+    // Story 4.4: the site-wide Guide pill adds inline Astro hydration scripts.
+    const copyOnly = indexHtml
+      .replace(/<!doctype html>/i, '')
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<!--[\s\S]*?-->/g, '');
+    const bodyMatch = copyOnly.match(/<body[^>]*>([\s\S]*)<\/body>/i);
     if (!bodyMatch) return;
-    // Strip all HTML tags to get text content.
     const textContent = bodyMatch[1]!.replace(/<[^>]+>/g, '');
     expect(textContent).not.toContain('!');
   });

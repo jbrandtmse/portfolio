@@ -371,6 +371,11 @@ test.describe('Invite form — WCAG 2.1 AA axe audit (AC7, NFR-2)', () => {
     await page.goto('/invite/');
     // Wait for the island to be present in the DOM (SSR'd immediately; island may hydrate).
     await expect(page.locator('form[action="/api/invite"]')).toHaveCount(1);
+    // Story 4.4: wait for Guide pill CSS before axe (client:only timing)
+    await page
+      .locator('[data-testid="guide-pill"]')
+      .waitFor({ state: 'visible', timeout: 8000 })
+      .catch(() => {});
 
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -411,6 +416,11 @@ test.describe('Invite form — WCAG 2.1 AA axe audit (AC7, NFR-2)', () => {
 
   test('/invite/thanks/ has zero axe violations (0-JS confirmation page)', async ({ page }) => {
     await page.goto('/invite/thanks/');
+    // Story 4.4: wait for Guide pill CSS before axe (client:only timing)
+    await page
+      .locator('[data-testid="guide-pill"]')
+      .waitFor({ state: 'visible', timeout: 8000 })
+      .catch(() => {});
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
       .analyze();
