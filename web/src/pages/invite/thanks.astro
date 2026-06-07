@@ -1,0 +1,60 @@
+---
+/**
+ * /invite/thanks/ — JS-off confirmation page (Story 3.4, Decision 3, AC2).
+ *
+ * Served after a successful native form POST (form-encoded → 303-redirect here).
+ * 0 JS — pure MirrorLayout static page (no island, no script).
+ * Answer-first lede naming "Joshua R. Brandt, MSE" (GEO floor).
+ * Response-time copy uses [OPEN: N] pending confirmation.
+ * No exclamation marks (positive-assertion voice).
+ * Trailing-slash URL: /invite/thanks/ (Rule 2).
+ */
+import MirrorLayout from '../../layouts/MirrorLayout.astro';
+
+const LEDE = 'Joshua R. Brandt, MSE has received your inquiry and will reply personally.';
+---
+
+<MirrorLayout
+  heading="Your message is on its way"
+  lede={LEDE}
+  title="Message received — Joshua R. Brandt, MSE"
+  description="Your speaking or collaboration inquiry has been received by Joshua R. Brandt, MSE."
+>
+  <section class="thanks-body">
+    <p class="thanks-note">
+      Your inquiry is persisted and a notification has been sent — never an auto-responder. Joshua
+      replies within <strong>[OPEN: N]</strong> business days.
+    </p>
+
+    <p class="thanks-return">
+      <a href="/">Return to the site</a>
+    </p>
+  </section>
+</MirrorLayout>
+
+<style>
+  .thanks-body {
+    margin-top: var(--space-6);
+  }
+
+  .thanks-note {
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-primary);
+    max-width: var(--measure-reading);
+  }
+
+  .thanks-return {
+    margin-top: var(--space-6);
+  }
+
+  .thanks-return a {
+    color: var(--color-accent);
+    text-decoration: underline;
+  }
+
+  .thanks-return a:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+</style>

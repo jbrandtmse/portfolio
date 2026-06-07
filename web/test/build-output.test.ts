@@ -634,6 +634,12 @@ describe('Story 1.5 — every Mirror route is a real, answer-first, self-canonic
       // It is explicitly NOT zero — asserted separately below. Skip the 0-count check
       // for /speaking; every OTHER Mirror route stays at 0 executable JS.
       if (route === '/speaking') return;
+      // CARVE-OUT (Story 3.4, Decision 5 / AC6): /invite is the THIRD sanctioned route,
+      // shipping the FIRST React island. It explicitly ships the React client runtime +
+      // island chunk (client:visible deferred). Asserted separately below; skip here.
+      // This resolves deferred [1.2]/retro A4 — the previously-unreferenced React chunk
+      // is now legitimately referenced by /invite/ and is no longer dead weight.
+      if (route === '/invite') return;
       expect(countExecutableScripts(html)).toBe(0);
       expect(html).not.toMatch(/<script\b[^>]*\bsrc=/);
       expect(html).not.toMatch(/<link\b[^>]*\brel="modulepreload"/);
@@ -647,9 +653,12 @@ describe('Story 1.5 — every Mirror route is a real, answer-first, self-canonic
       const html = readFileSync(routeHtmlPath(route), 'utf8');
       const copyOnly = html
         .replace(/<!doctype html>/i, '')
-        // Strip the inline copy-button script block (JS legitimately uses ! for
+        // Strip all <script>…</script> blocks (JS legitimately uses ! for
         // negation, !== etc.) — same pattern as the home scene-rail strip.
-        .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+        .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+        // Strip HTML comments — Astro emits <!--astro:end--> island markers
+        // (not copy) and these are not user-visible content.
+        .replace(/<!--[\s\S]*?-->/g, '');
       expect(copyOnly).not.toContain('!');
     },
   );
@@ -1076,14 +1085,18 @@ describe('Story 1.6 — JSON-LD is valid, parseable, and DATA (not executable JS
     expect(countLdJsonScripts(headOnly)).toBeGreaterThanOrEqual(1);
   });
 
-  it('routes WITHOUT a JSON-LD owner emit no ld+json (e.g. /timeline, /glass-box, /invite)', () => {
+  it('routes WITHOUT a JSON-LD owner emit no ld+json (e.g. /timeline, /glass-box)', () => {
     // These stubs get their structured data in later epics; no ld+json yet, and
     // critically still 0 executable JS.
-    for (const route of ['/timeline', '/glass-box', '/invite'] as const) {
+    // NOTE: /invite is excluded here — it ships the React island (Story 3.4 carve-out).
+    for (const route of ['/timeline', '/glass-box'] as const) {
       const html = readFileSync(routeHtmlPath(route), 'utf8');
       expect(countLdJsonScripts(html)).toBe(0);
       expect(countExecutableScripts(html)).toBe(0);
     }
+    // /invite has no ld+json but has the React island (Story 3.4) — assert separately.
+    const inviteHtml = readFileSync(routeHtmlPath('/invite'), 'utf8');
+    expect(countLdJsonScripts(inviteHtml)).toBe(0); // still no structured data
   });
 });
 
@@ -1094,8 +1107,8 @@ describe('Story 1.6 — generated sitemap.xml (AC3 / IAC-2)', () => {
     sitemap = readFileSync(sitemapPath, 'utf8');
   });
 
-  // Every current Mirror route the sitemap must enumerate. Story 1.7 adds
-  // /browse → the sitemap is now 10 routes (the count assertion below guards it).
+  // Every route the sitemap must enumerate. Story 1.7: 10 Mirror routes.
+  // Story 3.4: /invite/thanks/ added as a utility confirmation page.
   const SITEMAP_ROUTES = [
     '/',
     '/about',
@@ -1107,6 +1120,7 @@ describe('Story 1.6 — generated sitemap.xml (AC3 / IAC-2)', () => {
     '/faq',
     '/invite',
     '/browse',
+    '/invite/thanks',
   ] as const;
 
   it('builds a sitemap.xml', () => {
@@ -1139,12 +1153,12 @@ describe('Story 1.6 — generated sitemap.xml (AC3 / IAC-2)', () => {
   });
 
   it('enumerates exactly the current route set (count guards against stale routes)', () => {
-    // Story 2.2: the sitemap now includes the 10 static Mirror routes PLUS one
-    // entry per allowlisted Glass Box artifact (/glass-box/{slug}/). The dynamic
-    // reader pages are added by sitemap.xml.ts from glassbox.json. The test
-    // asserts count >= 10 (the static floor) and that the 10 static routes are
-    // all present (the per-route `it.each` above). The exact artifact count
-    // depends on the allowlist and may grow as artifacts are added.
+    // Story 2.2: the sitemap includes the 10 static Mirror routes PLUS one entry
+    // per allowlisted Glass Box artifact (/glass-box/{slug}/). Story 3.4 adds
+    // /invite/thanks/ as a utility confirmation page (11 static routes total).
+    // The test asserts count >= SITEMAP_ROUTES.length (the static floor) and that
+    // all static routes are present (the per-route `it.each` above). The exact
+    // artifact count depends on the allowlist and may grow as artifacts are added.
     const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
     expect(locs.length).toBeGreaterThanOrEqual(SITEMAP_ROUTES.length);
   });
@@ -1278,9 +1292,12 @@ describe('Story 1.10 — env-gated Umami is OFF by default (AC2 / IAC-2; NFR-1)'
     // CARVE-OUT (Story 3.2): /speaking ships ONE minimal copy-enhancement script
     // (sanctioned in build-output test; asserted separately in the NFR-1 carve-out
     // suite above). Skip it here — it is not zero, and it is not Umami.
+    // CARVE-OUT (Story 3.4): /invite ships the React island (the first React client
+    // runtime on the site). It is NOT zero. Asserted separately in the island suite.
     expect(countExecutableScripts(indexHtml)).toBe(1);
     for (const route of MIRROR_ROUTES) {
       if (route === '/speaking') continue; // carve-out — see Story 3.2 NFR-1 suite
+      if (route === '/invite') continue; // carve-out — see Story 3.4 island suite
       const html = readFileSync(routeHtmlPath(route), 'utf8');
       expect(countExecutableScripts(html), `executable scripts on ${route}`).toBe(0);
     }
@@ -1629,5 +1646,167 @@ describe('Story 2.5 — /work/loandemo layered case study (AC1–AC6 / IAC-1)', 
       }
     }
     expect(leaks, `fabricated metric(s) shipped as fact:\n${leaks.join('\n')}`).toEqual([]);
+  });
+});
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Story 3.4 — /invite/ React island carve-out + NFR-1 isolation (AC6, Decision 5).
+ *
+ * [1.2]/retro-A4 RESOLVED: the previously-unreferenced React chunk is now
+ * legitimately referenced by /invite/ — the first route to ship a React island.
+ * This suite asserts:
+ *   • /invite/ ships the React island (client.*.js runtime + island chunk referenced,
+ *     SSR'd <form> present for JS-off baseline).
+ *   • NO other Mirror route references the React client.*.js chunk.
+ *   • /invite/thanks/ is a 0-JS confirmation page with the right content.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+describe('Story 3.4 — /invite/ React island carve-out (AC6, Decision 5; resolves [1.2]/A4)', () => {
+  let inviteHtml = '';
+  let thanksHtml = '';
+
+  beforeAll(() => {
+    inviteHtml = readFileSync(routeHtmlPath('/invite'), 'utf8');
+    thanksHtml = readFileSync(join(distDir, 'invite', 'thanks', 'index.html'), 'utf8');
+  });
+
+  it('/invite/ ships executable scripts — the React island is the FIRST island (NFR-1 carve-out)', () => {
+    // /invite/ is the third sanctioned progressive-enhancement route (after home
+    // scene-rail and /speaking copy). It ships the React client runtime + island
+    // chunk. The exact count depends on Astro's island hydration scaffolding —
+    // assert at least 1 and that the React client chunk is referenced.
+    const execCount = countExecutableScripts(inviteHtml);
+    expect(
+      execCount,
+      `/invite/ must ship at least 1 executable script (the island + hydration); found ${execCount}`,
+    ).toBeGreaterThanOrEqual(1);
+  });
+
+  it('/invite/ references the React client.*.js runtime chunk (island legitimately active)', () => {
+    // The React island requires the client renderer — assert the renderer-url is
+    // present in the astro-island element's renderer-url attribute (the canonical
+    // signal that the React runtime chunk is used, not dead weight). This resolves
+    // the deferred [1.2]/retro-A4 "unreferenced React chunk" item.
+    expect(
+      inviteHtml,
+      '/invite/ must reference the React client renderer (renderer-url attribute)',
+    ).toMatch(/renderer-url="[^"]*client\.[^"]+\.js"/);
+  });
+
+  it('/invite/ SSR-emits the real <form action="/api/invite" method="POST"> for JS-off baseline (AC1)', () => {
+    // The island SSRs its initial HTML into the static output — the <form> is in the
+    // dist HTML so the native POST works with JS disabled (the resilience guarantee).
+    expect(inviteHtml).toMatch(/<form[^>]+action="\/api\/invite"[^>]+method="POST"/i);
+  });
+
+  it('/invite/ SSR form has labeled fields with name= matching the InviteInput contract (AC1)', () => {
+    // All required field names must be present in the SSR'd HTML.
+    for (const fieldName of ['name', 'email', 'message', 'attribution']) {
+      expect(inviteHtml, `form field name="${fieldName}" in SSR'd HTML`).toContain(
+        `name="${fieldName}"`,
+      );
+    }
+    // Honeypot field is present (server checks it).
+    expect(inviteHtml).toContain('name="website"');
+  });
+
+  it('/invite/ SSR form has visible labels for required fields (AC1/NFR-2)', () => {
+    // Every required field carries a <label> in the SSR'd HTML (NFR-2 / WCAG AA).
+    expect(inviteHtml).toMatch(/<label[^>]*>[\s\S]*?Your name[\s\S]*?<\/label>/i);
+    expect(inviteHtml).toMatch(/<label[^>]*>[\s\S]*?Your email[\s\S]*?<\/label>/i);
+    expect(inviteHtml).toMatch(/<label[^>]*>[\s\S]*?Message[\s\S]*?<\/label>/i);
+    expect(inviteHtml).toMatch(/<label[^>]*>[\s\S]*?How did you hear[\s\S]*?<\/label>/i);
+  });
+
+  it('/invite/ SSR form marks required fields in text — not asterisk/color alone (AC1/NFR-2)', () => {
+    // Required-in-text markers (the "(required)" pattern) for the required fields.
+    const requiredTextCount = (inviteHtml.match(/\(required\)/gi) ?? []).length;
+    expect(
+      requiredTextCount,
+      'at least 3 required-in-text markers (name, email, message, attribution)',
+    ).toBeGreaterThanOrEqual(3);
+  });
+
+  it('/invite/ SSR form contains an attribution <select> with option elements (AC1/FR-31)', () => {
+    // The attribution field is a labeled <select> for structured FR-31 capture.
+    expect(inviteHtml).toMatch(/<select[^>]+name="attribution"[^>]*>/i);
+    expect(inviteHtml).toContain('<option');
+  });
+
+  it('/invite/ SSR form contains the honeypot input (aria-hidden, tabindex=-1) (AC2)', () => {
+    // The honeypot <input name="website"> must be in the SSR'd form (the server
+    // checks it on both JSON and form-encoded paths). It must be visually hidden
+    // (aria-hidden wrapper).
+    expect(inviteHtml).toMatch(/aria-hidden="true"/i);
+    expect(inviteHtml).toContain('name="website"');
+    expect(inviteHtml).toMatch(/tabindex="-1"/i);
+  });
+
+  it('/invite/ contains no exclamation marks in copy (positive-assertion voice)', () => {
+    // Strip all <script>…</script> blocks (the island JS legitimately uses ! negation).
+    // Also strip HTML comments — Astro emits <!--astro:end--> island markers.
+    const copyOnly = inviteHtml
+      .replace(/<!doctype html>/i, '')
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<!--[\s\S]*?-->/g, '');
+    expect(copyOnly).not.toContain('!');
+  });
+
+  // NON-island routes: assert none reference the React client.*.js chunk.
+  // This is the core NFR-1 isolation guarantee: ONLY /invite/ gains the React runtime.
+  const NON_ISLAND_MIRROR_ROUTES = [
+    '/timeline',
+    '/glass-box',
+    '/faq',
+    '/about',
+    '/browse',
+    '/speaking',
+    '/speaking/reel',
+    '/work/loandemo',
+  ] as const;
+
+  it.each(NON_ISLAND_MIRROR_ROUTES)(
+    'non-island route %s does NOT reference the React client.*.js chunk (NFR-1 isolation)',
+    (route) => {
+      const html = readFileSync(routeHtmlPath(route), 'utf8');
+      // The React chunk (client.*.js from @astrojs/react) must NOT appear in any
+      // non-island route. If it appears, the React runtime has leaked outside /invite/.
+      expect(
+        html,
+        `${route} must not reference React client.*.js (the React runtime must not leak)`,
+      ).not.toMatch(/client\.[a-zA-Z0-9_-]+\.js/);
+    },
+  );
+
+  it('home (/) does NOT reference the React client.*.js chunk (NFR-1 isolation)', () => {
+    // Home only has the scene-rail script (1 executable, inline). No React chunk.
+    expect(indexHtml).not.toMatch(/client\.[a-zA-Z0-9_-]+\.js/);
+  });
+
+  it('/invite/thanks/ builds as a 0-JS confirmation page (AC2, Decision 3)', () => {
+    // The confirmation page is a pure MirrorLayout page — 0 executable JS.
+    expect(existsSync(join(distDir, 'invite', 'thanks', 'index.html'))).toBe(true);
+    expect(countExecutableScripts(thanksHtml)).toBe(0);
+    expect(thanksHtml).not.toMatch(/<script\b[^>]*\bsrc=/);
+  });
+
+  it('/invite/thanks/ names the entity and carries the response-time copy (AC2)', () => {
+    // Answer-first: entity name in the lede.
+    expect(thanksHtml).toContain('Joshua R. Brandt, MSE');
+    // Response-time copy (with [OPEN: N] placeholder).
+    expect(thanksHtml).toContain('[OPEN: N]');
+    // A link back to / (canonical return path).
+    expect(thanksHtml).toMatch(/<a[^>]+href="\/"[^>]*>/i);
+  });
+
+  it('/invite/thanks/ contains no exclamation marks in copy (positive-assertion voice)', () => {
+    const copyOnly = thanksHtml.replace(/<!doctype html>/i, '');
+    expect(copyOnly).not.toContain('!');
+  });
+
+  it('/invite/thanks/ is self-canonical (Rule 2 trailing-slash)', () => {
+    expect(thanksHtml).toContain(
+      '<link rel="canonical" href="https://joshuabrandt.abacusai.cloud/invite/thanks/"',
+    );
   });
 });

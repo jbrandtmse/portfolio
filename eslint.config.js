@@ -15,6 +15,10 @@ const nodeGlobals = {
   require: 'readonly',
   exports: 'writable',
   globalThis: 'readonly',
+  setTimeout: 'readonly',
+  clearTimeout: 'readonly',
+  setInterval: 'readonly',
+  clearInterval: 'readonly',
 };
 
 export default tseslint.config(
@@ -33,9 +37,11 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   ...astro.configs.recommended,
   {
-    // Node-context files: config + the Hono service. Provide Node globals and
-    // allow console (used for startup/diagnostics).
-    files: ['**/*.config.{js,mjs,ts}', 'api/**/*.ts'],
+    // Node-context files: config + the Hono service + the e2e served-runtime
+    // launcher (web/e2e/*.mjs — a plain-Node script that starts the API +
+    // preview + proxy for Playwright). Provide Node globals and allow console
+    // (used for startup/diagnostics).
+    files: ['**/*.config.{js,mjs,ts}', 'api/**/*.ts', 'web/e2e/**/*.mjs'],
     languageOptions: {
       globals: nodeGlobals,
     },
