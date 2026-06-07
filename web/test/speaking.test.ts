@@ -6,7 +6,13 @@ import { beforeAll, describe, expect, it } from 'vitest';
 
 import ReelPoster from '../src/components/speaker/ReelPoster.astro';
 import TalkCard from '../src/components/speaker/TalkCard.astro';
-import { REEL, SIGNATURE_TALKS, talkEventInput, reelVideoObjectInput } from '../src/data/speaking';
+import {
+  REEL,
+  SIGNATURE_TALKS,
+  METRICS,
+  talkEventInput,
+  reelVideoObjectInput,
+} from '../src/data/speaking';
 
 /**
  * Speaker Surface build-output + component assertions (Story 3.1, Task 6).
@@ -377,17 +383,96 @@ describe('Build output — /speaking/ and /speaking/reel/', () => {
     expect(existsSync(path)).toBe(true);
   });
 
-  it('/speaking ships 0 executable JS (NFR-1)', () => {
+  it('/speaking ships exactly ONE executable script — the vanilla copy-button enhancement (NFR-1 carve-out, Story 3.2 AC3)', () => {
     if (!speakingHtml) return;
-    expect(countExecutableScripts(speakingHtml)).toBe(0);
+    // Story 3.2 Decision 2: /speaking is the SECOND sanctioned progressive-enhancement
+    // route. It ships ONE minimal vanilla script (BioBlock copy enhancement) —
+    // NOT zero and NOT more than one. No external <script src>, no .js bundle.
+    expect(countExecutableScripts(speakingHtml)).toBe(1);
     expect(speakingHtml).not.toMatch(/<script\b[^>]*\bsrc=/);
-    expect(speakingHtml).not.toMatch(/\.js(["'?])/);
+    expect(speakingHtml).not.toMatch(/client\.[a-zA-Z0-9]+\.js/);
   });
 
   it('/speaking/reel ships 0 executable JS (NFR-1)', () => {
     if (!reelHtml) return;
     expect(countExecutableScripts(reelHtml)).toBe(0);
     expect(reelHtml).not.toMatch(/<script\b[^>]*\bsrc=/);
+  });
+
+  // ── QA gap-fill (Story 3.2 AC2): credibility floor — placeholders are VISIBLE
+  // text, and NO fabricated audience number ships as fact. ─────────────────────
+  //
+  // The existing checks assert "[ph]"/"[OPEN:" appear somewhere in the whole
+  // document. This scopes to the social-proof SECTION and to the actual
+  // metric__figure elements: every unconfirmed figure must be a visible-text
+  // placeholder; the ONLY non-placeholder figure allowed is the "30 years
+  // shipping" datum (consistent with PERSON.description's "30 years of shipping
+  // experience" — not invented). A regression that swaps a "[ph]" for an invented
+  // audience number (e.g. "12,000 subscribers") reds here.
+
+  it('/speaking social-proof figures are all [ph] placeholders except the allowlisted "30 years" (no invented numbers, AC2)', () => {
+    if (!speakingHtml) return;
+    const sectionMatch = speakingHtml.match(
+      /<section class="speaking__social-proof"[^>]*>([\s\S]*?)<\/section>/,
+    );
+    expect(sectionMatch, 'speaking__social-proof section present').not.toBeNull();
+    const section = sectionMatch![1]!;
+
+    // The figures actually rendered in the metric cells.
+    const figures = [
+      ...section.matchAll(/<div class="metric__figure"[^>]*>([\s\S]*?)<\/div>/g),
+    ].map((m) =>
+      m[1]!
+        .replace(/<[^>]+>/g, '')
+        .replace(/\s+/g, ' ')
+        .trim(),
+    );
+    // One figure per METRICS entry (binds the rendered count to the data).
+    expect(figures.length).toBe(METRICS.length);
+
+    // The allowlisted real figure: "30" (Years shipping software) — derived from
+    // PERSON.description, the credibility floor's one confirmed number.
+    const ALLOWLISTED_REAL_FIGURES = new Set(['30']);
+    for (const fig of figures) {
+      const isPlaceholder = /\[(ph|OPEN|ASSUMPTION)/i.test(fig);
+      const isAllowlisted = ALLOWLISTED_REAL_FIGURES.has(fig);
+      expect(
+        isPlaceholder || isAllowlisted,
+        `metric figure "${fig}" is neither a visible-text placeholder nor the allowlisted "30 years" — possible fabricated number`,
+      ).toBe(true);
+    }
+
+    // And cross-check: the only bare numeric token in the section's VISIBLE text
+    // is "30" — i.e. no other number leaked as fact next to the placeholders.
+    const visibleText = section
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&[a-z#0-9]+;/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const numericTokens = visibleText.match(/\b\d[\d,.]*\b/g) ?? [];
+    const nonAllowlistedNumbers = numericTokens.filter((n) => !ALLOWLISTED_REAL_FIGURES.has(n));
+    expect(
+      nonAllowlistedNumbers,
+      `unexpected number(s) in the social-proof strip (only "30" is allowed): ${nonAllowlistedNumbers.join(', ')}`,
+    ).toEqual([]);
+  });
+
+  it('/speaking social-proof placeholders ([ph]/[OPEN]) are inside the rendered section as visible text, not color alone (AC2)', () => {
+    if (!speakingHtml) return;
+    const sectionMatch = speakingHtml.match(
+      /<section class="speaking__social-proof"[^>]*>([\s\S]*?)<\/section>/,
+    );
+    expect(sectionMatch).not.toBeNull();
+    const visibleText = sectionMatch![1]!
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&[a-z#0-9]+;/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    // The flags live in the visible body text of the section (the credibility-
+    // floor commitment: a reader SEES that figures/quotes/logos are placeholders).
+    expect(visibleText).toContain('[ph]');
+    expect(visibleText).toContain('[OPEN:');
+    expect(visibleText).toContain('Conf logo [ph]'); // logo wall placeholders are text
   });
 
   it('/speaking emits N Event nodes = SIGNATURE_TALKS.length', () => {
@@ -479,9 +564,13 @@ describe('Build output — /speaking/ and /speaking/reel/', () => {
     expect(text.startsWith('Joshua R. Brandt, MSE')).toBe(true);
   });
 
-  it('/speaking contains no exclamation marks (positive-assertion voice)', () => {
+  it('/speaking contains no exclamation marks in copy (positive-assertion voice)', () => {
     if (!speakingHtml) return;
-    const copyOnly = speakingHtml.replace(/<!doctype html>/i, '');
+    // Strip the inline copy-button script (JS legitimately uses ! for
+    // negation / !== etc.) — same pattern as build-output.test.ts home check.
+    const copyOnly = speakingHtml
+      .replace(/<!doctype html>/i, '')
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
     expect(copyOnly).not.toContain('!');
   });
 

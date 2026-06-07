@@ -1,12 +1,13 @@
 /**
- * speaking.ts — curated reel metadata + signature talks (Story 3.1).
+ * speaking.ts — curated reel metadata + signature talks (Story 3.1) and
+ * copy-paste bios, credibility-strip data (Story 3.2).
  *
  * This is a web-local data module: content consumed only by /speaking and
  * /speaking/reel. Not a cross-package or agent-reachable surface (Decision 1).
  *
- * Credibility floor (Decision 2): every unconfirmed value is a clearly-labeled
- * [OPEN] or [ASSUMPTION] string in visible DOM text — no fabrication. Seed
- * content gives the page real shape while being honestly flagged.
+ * Credibility floor: every unconfirmed value is a clearly-labeled [OPEN] or
+ * [ASSUMPTION] string in visible DOM text — no fabrication. Seed content gives
+ * the page real shape while being honestly flagged.
  *
  * Determinism (NFR-6): all dates are fixed constants (no new Date()), so two
  * clean builds stay byte-identical.
@@ -203,6 +204,164 @@ export const SIGNATURE_TALKS: SignatureTalk[] = [
     eventOrganizerName: '[OPEN: organizer pending]',
   },
 ];
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Bios — copy-paste ready (Story 3.2, AC1, Decision 1).
+ *
+ * SHORT: mirrors PERSON.description exactly (the 50-word canonical bio already
+ * in the Person JSON-LD on / and /about). LONG: extends the short form with the
+ * same facts, no new claims — [ASSUMPTION] until Josh confirms.
+ *
+ * Both bios end the running-sentence tail "seasoned, building at the frontier."
+ * — lowercase + trailing period by design (NOT the Title-case hero <h1> form;
+ * do not normalize). No exclamation marks. Positive-assertion voice.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+export interface Bio {
+  /** Display label — e.g. "Short bio · 50 words". */
+  label: string;
+  /** Approximate word count for the word-count sub-label. */
+  wordCount: string;
+  /**
+   * The bio prose verbatim. Always rendered as selectable plain text in the DOM
+   * (the JS-off copy path). [ASSUMPTION] flags remain until Josh confirms.
+   */
+  text: string;
+}
+
+/**
+ * BIOS — the two copy-paste bio blocks for the /speaking page (Story 3.2).
+ *
+ * SHORT MUST equal PERSON.description (AC1/AC5 consistency — page text agrees
+ * with the Person JSON-LD on / and /about). Sourced from the mockups/speaker-
+ * surface.html promoted mock; [ASSUMPTION] until Josh confirms.
+ */
+export const BIOS: readonly Bio[] = [
+  {
+    // [ASSUMPTION: short bio text] — mirrors PERSON.description verbatim.
+    label: 'Short bio',
+    wordCount: '50 words',
+    text: 'Joshua R. Brandt, MSE is a software engineer with 30 years of shipping experience, now building at the frontier of agentic engineering. He speaks on the patterns that outlast hype cycles and on running real software through disciplined, auditable agent workflows — seasoned, building at the frontier.',
+  },
+  {
+    // [ASSUMPTION: long bio text] — extends the short form; same facts, no new claims.
+    label: 'Long bio',
+    wordCount: '126 words',
+    text: 'Joshua R. Brandt, MSE is a software engineer with three decades of shipping experience who has gone deep on agentic engineering — seasoned, building at the frontier. Having engineered through every “this changes everything” wave from distributed objects to Kubernetes, he now focuses on what experienced ICs actually need: how to tell durable architecture from fashion, and how to make AI agents dependable teammates rather than party tricks. He works in the open, publishing the real, disciplined process behind his projects so the method is auditable, not asserted — including a portfolio built entirely as a public agentic-engineering project, documented as it ships. His talks pair a veteran’s skepticism with hands-on practice, and aim to leave senior audiences with patterns they can use the next morning.',
+  },
+] as const;
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Metrics — audience-draw figures for the credibility strip (Story 3.2, AC2).
+ *
+ * All figures are [OPEN]/[ph] — pending Josh's confirmation. Keep displayed
+ * values consistent with the Person/Event JSON-LD (no contradictions).
+ * Determinism: fixed string constants, no wall-clock.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+export interface MetricDatum {
+  /** The large navy figure text — may include [ph] inline placeholder flag. */
+  figure: string;
+  /** UPPERCASE label below the figure (e.g. "YouTube subscribers"). */
+  label: string;
+  /** Italic source/attribution line below the label. */
+  source: string;
+}
+
+/**
+ * METRICS — four audience-draw figures for the /speaking credibility strip.
+ * All values are [OPEN] placeholders until Josh confirms real figures.
+ */
+export const METRICS: readonly MetricDatum[] = [
+  {
+    figure: '[ph]',
+    label: 'YouTube subscribers',
+    source: '[OPEN: real figure pending]',
+  },
+  {
+    figure: '[ph]',
+    label: 'Total talk views',
+    source: '[OPEN: real figure pending]',
+  },
+  {
+    figure: '[ph]',
+    label: 'Talks given',
+    source: '[OPEN: real figure pending]',
+  },
+  {
+    figure: '30',
+    label: 'Years shipping software',
+    source: 'veteran IC',
+  },
+] as const;
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Testimonials — organizer / attendee quotes (Story 3.2, AC2).
+ *
+ * [OPEN] — placeholder attribution until real approved testimonials land.
+ * The quote text is also clearly flagged as [OPEN] in visible DOM text.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+export interface TestimonialDatum {
+  /** The blockquote text — [OPEN] until approved. */
+  quote: string;
+  /** Credited name (bold in the attribution). */
+  name: string;
+  /** Role / position of the speaker. */
+  role: string;
+  /** Event name — [OPEN] until confirmed. */
+  event: string;
+}
+
+/**
+ * TESTIMONIALS — three placeholder quotes for the /speaking credibility strip.
+ * All values are [OPEN] pending real approved testimonials.
+ */
+export const TESTIMONIALS: readonly TestimonialDatum[] = [
+  {
+    quote:
+      '[OPEN: real testimonial pending] — one of the few talks where the senior engineers stayed for every question.',
+    name: '[OPEN: name pending]',
+    role: 'Program Chair',
+    event: '[OPEN: event pending]',
+  },
+  {
+    quote:
+      '[OPEN: real testimonial pending] — came in skeptical about the AI hype; left with three patterns used the next week.',
+    name: '[OPEN: name pending]',
+    role: 'Attendee',
+    event: '[OPEN: event pending]',
+  },
+  {
+    quote:
+      '[OPEN: real testimonial pending] — reliable, prepared, and the kind of speaker you re-invite.',
+    name: '[OPEN: name pending]',
+    role: 'Organizer',
+    event: '[OPEN: event pending]',
+  },
+] as const;
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Logos — conference/company logo wall (Story 3.2, AC2).
+ *
+ * [OPEN] — text-labeled placeholders until real logo assets land.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+export interface LogoPlaceholder {
+  /** Visible label text — not a real logo asset yet. */
+  label: string;
+}
+
+/**
+ * LOGOS — four labeled placeholder slots for the /speaking logo wall.
+ * Real conference / company logos replace these when assets are confirmed.
+ */
+export const LOGOS: readonly LogoPlaceholder[] = [
+  { label: 'Conf logo [ph]' },
+  { label: 'Conf logo [ph]' },
+  { label: 'Conf logo [ph]' },
+  { label: 'Conf logo [ph]' },
+] as const;
 
 /* ──────────────────────────────────────────────────────────────────────────
  * JSON-LD builders — typed inputs for eventJsonLd / videoObjectJsonLd.

@@ -19,3 +19,10 @@
 2026-06-06T23:04:16Z	Story 3.1	qa_complete	spawn_at=2026-06-06T22:49:55Z model=claude-opus-4-8 tests_added=15 first_run_failures=0 clarifications=0 closing_sections_present=true note=jsonld_schema_validity+reel_lead_order+credibility_floor_full_gate_green
 2026-06-06T23:18:17Z	Story 3.1	cr_complete	spawn_at=2026-06-06T23:04:16Z model=claude-opus-4-8 resolved=4 deferred=0 dismissed=3 high=0 med=1 low=3 clarifications=0 closing_sections_present=true note=med_reel_poster_self_link_fixed_posterHref_prop
 2026-06-06T23:22:53Z	Story 3.1	smoke_complete	method=browser result=pass iterations=1 defects_caught=0 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-3.1-speaker-surface.md model=claude-opus-4-8
+2026-06-06T23:23:17Z	Story 3.1	committed	sha=6c19dc4 submodules=
+2026-06-06T23:27:43Z	Story 3.2	story_created	path=_bmad-output/implementation-artifacts/3-2-copy-paste-bios-social-proof.md spec_words=2711
+2026-06-06T23:48:42Z	Story 3.2	dev_complete	spawn_at=2026-06-06T23:27:43Z model=claude-sonnet-4-6 files=8 loc_added=1019 loc_removed=28 clarifications=0 nfr_tripwires=0 adr_violations_surfaced=0 cycle_iteration=1 closing_sections_present=true note=sanctioned_nfr1_carveout_speaking_1_nonreact_copy_script_baseline_holds
+2026-06-06T23:48:42Z	Story 3.2	adr_verifications_complete	tool=none acs=none result=none_required evidence= model=claude-opus-4-8
+2026-06-07T00:09:54Z	Story 3.2	qa_complete	spawn_at=2026-06-06T23:48:42Z model=claude-opus-4-8 tests_added=9 first_run_failures=0 clarifications=0 closing_sections_present=true note=caught_2_vacuous_existing_tests_copy_payload+ac5_jsonld_falsepositive_backstopped
+2026-06-07T00:21:32Z	Story 3.2	cr_complete	spawn_at=2026-06-07T00:09:54Z model=claude-opus-4-8 resolved=0 deferred=2 dismissed=2 high=0 med=0 low=2 clarifications=0 closing_sections_present=true note=nfr1_carveout_verified_correctly_scoped+ac5_antidrift_mutation_confirmed
+2026-06-07T00:24:19Z	Story 3.2	smoke_complete	method=browser result=pass iterations=1 defects_caught=0 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-3.2-bios-social-proof.md model=claude-opus-4-8

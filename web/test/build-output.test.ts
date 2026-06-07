@@ -6,6 +6,9 @@ import { fileURLToPath } from 'node:url';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { BIOS } from '../src/data/speaking';
+import { PERSON } from '../src/lib/person';
+
 /**
  * Build-output assertions for the design-system foundation (Story 1.2), the
  * calm-credible hero + audience fork (Story 1.3, IAC-1 / IAC-2), and the home
@@ -625,6 +628,12 @@ describe('Story 1.5 — every Mirror route is a real, answer-first, self-canonic
       // <script type="application/ld+json"> (DATA) to several Mirror routes
       // (/about, /speaking, /speaking/reel, /work/loandemo, /faq) — that does
       // NOT violate NFR-1. Assert zero executable scripts; ld+json is allowed.
+      //
+      // CARVE-OUT (Story 3.2, Decision 2 / AC3): /speaking is the SECOND sanctioned
+      // route with one minimal executable script (the vanilla copy-button enhancement).
+      // It is explicitly NOT zero — asserted separately below. Skip the 0-count check
+      // for /speaking; every OTHER Mirror route stays at 0 executable JS.
+      if (route === '/speaking') return;
       expect(countExecutableScripts(html)).toBe(0);
       expect(html).not.toMatch(/<script\b[^>]*\bsrc=/);
       expect(html).not.toMatch(/<link\b[^>]*\brel="modulepreload"/);
@@ -636,10 +645,178 @@ describe('Story 1.5 — every Mirror route is a real, answer-first, self-canonic
     'contains no exclamation marks in copy on %s (positive-assertion)',
     (route) => {
       const html = readFileSync(routeHtmlPath(route), 'utf8');
-      const copyOnly = html.replace(/<!doctype html>/i, '');
+      const copyOnly = html
+        .replace(/<!doctype html>/i, '')
+        // Strip the inline copy-button script block (JS legitimately uses ! for
+        // negation, !== etc.) — same pattern as the home scene-rail strip.
+        .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
       expect(copyOnly).not.toContain('!');
     },
   );
+});
+
+describe('Story 3.2 — /speaking NFR-1 carve-out: exactly ONE sanctioned copy-enhancement script (AC3, Decision 2)', () => {
+  let speakingHtml = '';
+  beforeAll(() => {
+    speakingHtml = readFileSync(routeHtmlPath('/speaking'), 'utf8');
+  });
+
+  it('/speaking ships exactly ONE executable script — the vanilla copy-button enhancement (NFR-1 carve-out)', () => {
+    // Story 3.2, Decision 2: /speaking is the SECOND sanctioned progressive-enhancement
+    // route. It ships ONE minimal vanilla script (the BioBlock copy enhancement) —
+    // NOT zero (unlike all other Mirror routes) and NOT more than one.
+    const execCount = countExecutableScripts(speakingHtml);
+    expect(
+      execCount,
+      `/speaking must ship exactly 1 executable script (the copy enhancement); found ${execCount}`,
+    ).toBe(1);
+  });
+
+  it('the single /speaking executable script is NOT a React island / client.*.js chunk (NFR-1 carve-out)', () => {
+    // Must be a minimal vanilla inline script, NOT a React hydration bundle.
+    // No <script src=...> (external), no modulepreload, no .js bundle reference.
+    expect(speakingHtml).not.toMatch(/<script\b[^>]*\bsrc=/);
+    expect(speakingHtml).not.toMatch(/<link\b[^>]*\brel="modulepreload"/);
+    expect(speakingHtml).not.toMatch(/client\.[a-zA-Z0-9]+\.js/);
+  });
+
+  it('the /speaking copy script body contains the clipboard API call (sanity: correct script)', () => {
+    // Confirm the one executable script is the expected copy enhancement,
+    // not an unrelated script that accidentally ended up there.
+    const execBlock = [...speakingHtml.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)].find(
+      (m) => !/type\s*=\s*["']application\/ld\+json["']/i.test(m[1] ?? ''),
+    );
+    expect(execBlock).toBeDefined();
+    const scriptBody = execBlock![2]!;
+    expect(scriptBody).toContain('navigator.clipboard');
+    expect(scriptBody).toContain('data-bio-copy');
+  });
+
+  it('the bio text elements are present as selectable plain text in the /speaking DOM (JS-off copy path; AC1/AC3)', () => {
+    // The 0-JS baseline: bios are always present in the DOM regardless of the
+    // copy-button script. A user can manually select + copy without any JS.
+    // Assert that the known short-bio text (from PERSON.description / BIO.text)
+    // is present verbatim in the HTML.
+    const shortBioSnippet =
+      'Joshua R. Brandt, MSE is a software engineer with 30 years of shipping experience';
+    const longBioSnippet =
+      'Joshua R. Brandt, MSE is a software engineer with three decades of shipping experience';
+    expect(speakingHtml).toContain(shortBioSnippet);
+    expect(speakingHtml).toContain(longBioSnippet);
+    // Both bios must end with the lowercase running-sentence tail.
+    expect(speakingHtml).toContain('seasoned, building at the frontier.');
+  });
+
+  it('the short bio on /speaking EXACTLY mirrors PERSON.description (AC1/AC5 consistency)', () => {
+    // The short bio displayed on /speaking must equal PERSON.description so the
+    // page text agrees with the Person JSON-LD emitted on / and /about.
+    const personDescription =
+      'Joshua R. Brandt, MSE is a software engineer with 30 years of shipping experience, ' +
+      'now building at the frontier of agentic engineering. He speaks on the patterns that ' +
+      'outlast hype cycles and on running real software through disciplined, auditable agent ' +
+      'workflows — seasoned, building at the frontier.';
+    expect(speakingHtml).toContain(personDescription);
+  });
+
+  it('the /speaking bios section carries Copy buttons and a fallback note (AC1)', () => {
+    // Each BioBlock must have a real <button> (the Copy control) and a fallback
+    // note stating manual selection works.
+    const copyBtns = speakingHtml.match(/<button\b[^>]*data-bio-copy[^>]*>/g) ?? [];
+    expect(
+      copyBtns.length,
+      'should have at least 2 Copy buttons (one per BioBlock)',
+    ).toBeGreaterThanOrEqual(2);
+    // The fallback note text is present.
+    expect(speakingHtml).toContain('If the copy button fails, the text above is fully selectable');
+  });
+
+  it('/speaking renders Metric, Testimonial, and logo-wall placeholders with [OPEN]/[ph] in visible text (AC2)', () => {
+    // Social proof credibility floor: every unconfirmed value flagged in text,
+    // not color/style alone.
+    expect(speakingHtml).toContain('[ph]');
+    expect(speakingHtml).toContain('[OPEN:');
+    // Logo wall placeholders are present in text.
+    expect(speakingHtml).toContain('Conf logo [ph]');
+    // Testimonial [OPEN] flags are visible.
+    expect(speakingHtml).toContain('[OPEN: real testimonial pending]');
+  });
+
+  it('/speaking credibility strip proof-note is present (AC2 honesty)', () => {
+    expect(speakingHtml).toContain('placeholders');
+    // Use a shorter substring — the full string may have whitespace/newline variations
+    // depending on how Astro serializes multi-line template literals.
+    expect(speakingHtml).toContain('approved quotes are pending');
+  });
+});
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Story 3.2 — QA gap-fill: AC5 short-bio anti-drift (the VISIBLE bio agrees
+ * with PERSON.description, bound to the imported lib value).
+ *
+ * WHY a second AC5 test: the carve-out's existing "short bio EXACTLY mirrors
+ * PERSON.description" assertion does `speakingHtml.toContain(<literal>)` against
+ * the WHOLE document — but PERSON.description is ALSO embedded (3×) in the Event
+ * JSON-LD as `performer.description`. So that whole-HTML check passes even if the
+ * VISIBLE/copied short bio is changed to something else (verified by mutating
+ * BIOS[0].text — the literal still appeared via the JSON-LD leak, and the test
+ * stayed green: a false positive). These tests close that gap two ways:
+ *   1. data layer — BIOS[0].text === PERSON.description (the source binding);
+ *   2. served HTML — the text INSIDE the first <p class="bio-block__text"> (the
+ *      element a user reads/copies) equals PERSON.description, decoded — NOT a
+ *      whole-document substring search the JSON-LD can satisfy.
+ * A drift between the rendered short bio and PERSON.description now reds.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+describe('Story 3.2 — AC5 short-bio anti-drift: the VISIBLE bio === PERSON.description', () => {
+  let speakingHtml = '';
+  beforeAll(() => {
+    speakingHtml = readFileSync(routeHtmlPath('/speaking'), 'utf8');
+  });
+
+  /** Decode the minimal HTML entities Astro emits in the bio text + collapse WS. */
+  function decode(s: string): string {
+    return s
+      .replace(/<[^>]+>/g, '')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&middot;/g, '·')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  it('data layer — BIOS[0].text equals PERSON.description (the single-source binding)', () => {
+    // The source of the false positive is a divergence here; assert the binding
+    // directly so a drift fails at the data layer, not just the rendered page.
+    expect(BIOS[0]!.text).toBe(PERSON.description);
+  });
+
+  it('served HTML — the first <p class="bio-block__text"> text equals PERSON.description (scoped, not whole-doc)', () => {
+    // Extract the text of the FIRST bio-block paragraph specifically — the element
+    // the organizer reads and selects — rather than searching the whole document
+    // (which the Event performer.description JSON-LD would satisfy regardless).
+    const bioParas = [...speakingHtml.matchAll(/<p class="bio-block__text"[^>]*>([\s\S]*?)<\/p>/g)];
+    expect(bioParas.length, 'two rendered bio-block__text paragraphs').toBe(2);
+    const firstBioText = decode(bioParas[0]![1]!);
+    // The rendered short bio is byte-for-byte PERSON.description (decoded), so the
+    // page text and the Person JSON-LD provably cannot silently disagree (AC5).
+    expect(firstBioText).toBe(decode(PERSON.description));
+  });
+
+  it('the rendered short bio is NOT the long bio (the two blocks are distinct content)', () => {
+    // Guards a wiring bug that rendered the same bio twice (which would still
+    // satisfy a naive "contains PERSON.description" check on the whole document).
+    const bioParas = [...speakingHtml.matchAll(/<p class="bio-block__text"[^>]*>([\s\S]*?)<\/p>/g)];
+    expect(bioParas.length).toBe(2);
+    const firstBioText = decode(bioParas[0]![1]!);
+    const secondBioText = decode(bioParas[1]![1]!);
+    expect(firstBioText).not.toBe(secondBioText);
+    // The long bio extends the short — both end on the lowercase running tail.
+    expect(firstBioText.endsWith('seasoned, building at the frontier.')).toBe(true);
+    expect(secondBioText).toContain('seasoned, building at the frontier.');
+  });
 });
 
 describe('Story 1.5 — the canonical /about (AC3)', () => {
@@ -1098,8 +1275,12 @@ describe('Story 1.10 — env-gated Umami is OFF by default (AC2 / IAC-2; NFR-1)'
   it('keeps the home + every Mirror route at 0 executable scripts with the gate closed', () => {
     // Re-assert the floor specifically in the Umami context: the home keeps its
     // single scene-rail script; the Mirror routes keep zero. No Umami JS is added.
+    // CARVE-OUT (Story 3.2): /speaking ships ONE minimal copy-enhancement script
+    // (sanctioned in build-output test; asserted separately in the NFR-1 carve-out
+    // suite above). Skip it here — it is not zero, and it is not Umami.
     expect(countExecutableScripts(indexHtml)).toBe(1);
     for (const route of MIRROR_ROUTES) {
+      if (route === '/speaking') continue; // carve-out — see Story 3.2 NFR-1 suite
       const html = readFileSync(routeHtmlPath(route), 'utf8');
       expect(countExecutableScripts(html), `executable scripts on ${route}`).toBe(0);
     }
