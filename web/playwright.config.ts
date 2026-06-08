@@ -261,5 +261,23 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
       testMatch: /depth-dial\.spec\.ts/,
     },
+    // (Story 5.3) Agent re-curation by stated intent. Desktop, JS on.
+    // Rule 7: proven to EXECUTE (not skipped); exercises:
+    //   (a) organizer → speaker at visual order 1 (CSS order property)
+    //   (b) explorer → flagship at visual order 1
+    //   (c) different intents → demonstrably different orderings (AC1)
+    //   (d) re-curation in place — URL unchanged (FR-8)
+    //   (e) JS-off → canonical DOM order unchanged (FR-8/NFR-3)
+    //   (f) hero /speaking bypass present without chat (SM-C1)
+    //   (g) the REAL controller (applyRecuration via the GuidePanel SSE path)
+    //       re-orders in place — mutation-verified (QA, Rule 8): (a)–(d) inline
+    //       the CSS-order assignment, so (g) is the only test that binds the
+    //       production web controller end-to-end.
+    // All via the serve-with-api.mjs prod-faithful proxy (GUIDE_LLM_STUB=1).
+    {
+      name: 'recuration',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /recuration\.spec\.ts/,
+    },
   ],
 });

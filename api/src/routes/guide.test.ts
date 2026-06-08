@@ -544,3 +544,278 @@ describe('POST /api/guide — full handler tests (Story 4.3)', () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Story 5.3 — Re-curation SSE event (AC1, AC3, AC4, AC5)
+//
+// Tests verify:
+//   (a) An organizer query → recuration SSE event with intent=organizer, order[1]=speaker.
+//   (b) An explorer query → recuration SSE event with intent=explorer, order[1]=flagship.
+//   (c) Organizer and explorer orderings are DEMONSTRABLY DIFFERENT (AC1).
+//   (d) The recuration event carries a full 7-scene permutation (AC3 — no scene dropped).
+//   (e) hero is always first in the emitted order (SM-C1 from the SSE payload — AC3).
+//   (f) A generic/default query → NO recuration event emitted (today's behavior — AC4).
+//   (g) The grounded answer path still emits token/citation/done (re-curation is additive — AC4).
+//   (h) Fail-closed path (below threshold) → no recuration event (additive — AC4).
+//
+// Rule 8: assertions scoped to specific SSE event types and fields.
+// GUIDE_LLM_STUB=1 is set at the top of this file — deterministic classifier.
+// ---------------------------------------------------------------------------
+
+describe('Story 5.3 — Re-curation SSE event (AC1, AC3, AC4, AC5)', () => {
+  let app: Awaited<typeof import('../app.js')>['default'];
+  let resetRateLimiter: () => void;
+
+  beforeAll(async () => {
+    const appMod = await import('../app.js');
+    app = appMod.default;
+    const guideMod = await import('./guide.js');
+    resetRateLimiter = guideMod._resetRateLimiter;
+  });
+
+  beforeEach(() => {
+    resetRateLimiter?.();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('(a) organizer query → recuration event with intent=organizer, order[1]=speaker (AC1, AC3)', async () => {
+    // Uses GUIDE_LLM_STUB stub classifier: "organizer" keyword → intent=organizer.
+    const res = await app.fetch(
+      new Request('http://localhost/api/guide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: "I'm a conference organizer looking to book a talk",
+        }),
+      }),
+    );
+
+    expect(res.status).toBe(200);
+    const events = await readSseBody(res);
+
+    // Rule 8: scoped to recuration event type
+    const recurationEvents = events.filter((e) => e.event === 'recuration');
+    expect(recurationEvents.length, 'organizer query must emit exactly one recuration event').toBe(
+      1,
+    );
+
+    const data = recurationEvents[0]!.data as { type: string; intent: string; order: string[] };
+    expect(data.type, 'recuration event type field must be "recuration"').toBe('recuration');
+    expect(data.intent, 'organizer query must classify as "organizer"').toBe('organizer');
+
+    // SM-C1: hero first, speaker second (AC3)
+    // Mutation-verification: if order table changed organizer[0] or [1], this reds.
+    expect(data.order[0], 'recuration order must start with hero (SM-C1 — AC3)').toBe('hero');
+    expect(data.order[1], 'organizer: order[1] must be "speaker" (SM-C1 first-after-hero)').toBe(
+      'speaker',
+    );
+    expect(data.order, 'recuration order must contain all 7 scenes (AC3)').toHaveLength(7);
+  });
+
+  it('(b) explorer query → recuration event with intent=explorer, order[1]=flagship (AC1)', async () => {
+    const res = await app.fetch(
+      new Request('http://localhost/api/guide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: 'show me something cool and interesting',
+        }),
+      }),
+    );
+
+    expect(res.status).toBe(200);
+    const events = await readSseBody(res);
+
+    const recurationEvents = events.filter((e) => e.event === 'recuration');
+    expect(recurationEvents.length, 'explorer query must emit one recuration event').toBe(1);
+
+    const data = recurationEvents[0]!.data as { intent: string; order: string[] };
+    expect(data.intent, 'explorer query must classify as "explorer"').toBe('explorer');
+    expect(data.order[0], 'explorer order[0] must be hero (SM-C1)').toBe('hero');
+    expect(data.order[1], 'explorer order[1] must be flagship (AC1)').toBe('flagship');
+  });
+
+  it('(c) organizer and explorer produce DEMONSTRABLY DIFFERENT orderings (AC1)', async () => {
+    const makeReq = (query: string) =>
+      app.fetch(
+        new Request('http://localhost/api/guide', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query }),
+        }),
+      );
+
+    const [orgRes, expRes] = await Promise.all([
+      makeReq("I'm an event organizer looking to book a speaker"),
+      makeReq('show me something cool'),
+    ]);
+
+    const orgEvents = await readSseBody(orgRes);
+    const expEvents = await readSseBody(expRes);
+
+    const orgRec = orgEvents.find((e) => e.event === 'recuration')!.data as {
+      order: string[];
+    };
+    const expRec = expEvents.find((e) => e.event === 'recuration')!.data as {
+      order: string[];
+    };
+
+    // AC1: demonstrably different orderings
+    // Mutation-verification: if both emitted the same order, this would red.
+    expect(
+      orgRec.order[1],
+      'organizer and explorer must have different scenes at position 1',
+    ).not.toBe(expRec.order[1]);
+
+    // Organizer → speaker second; explorer → flagship second
+    expect(orgRec.order[1]).toBe('speaker');
+    expect(expRec.order[1]).toBe('flagship');
+  });
+
+  it('(d) recuration event contains all 7 scenes (no scene dropped — AC3, SM-C1)', async () => {
+    const res = await app.fetch(
+      new Request('http://localhost/api/guide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: 'show me something cool' }),
+      }),
+    );
+
+    const events = await readSseBody(res);
+    const rec = events.find((e) => e.event === 'recuration')!.data as { order: string[] };
+
+    const EXPECTED_SCENES = [
+      'hero',
+      'thesis',
+      'timeline',
+      'speaker',
+      'flagship',
+      'glass-box',
+      'close',
+    ];
+    const sortedReceived = [...rec.order].sort();
+    const sortedExpected = [...EXPECTED_SCENES].sort();
+
+    // Rule 8: deep equality on sorted arrays (permutation check)
+    expect(
+      sortedReceived,
+      'recuration order must be a permutation of all 7 scenes (no drop — AC3)',
+    ).toEqual(sortedExpected);
+  });
+
+  it("(e) default/generic query → NO recuration event emitted (today's behavior — AC4)", async () => {
+    // A generic query with no intent keywords → stub classifies as 'default'
+    // → guide route skips emitting recuration (additive: absent = canonical arc).
+    // NOTE: the query must NOT match any stub classifier keywords
+    // (organizer/conference/speaking/builder/engineer/agentic/glass-box/build/developer
+    //  /explorer/cool/demo/show me/impressive/interesting).
+    // Using a plain background/experience query that matches none of the keyword sets.
+    const res = await app.fetch(
+      new Request('http://localhost/api/guide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: "What is Joshua's educational background and work history?",
+        }),
+      }),
+    );
+
+    expect(res.status).toBe(200);
+    const events = await readSseBody(res);
+
+    // Rule 8: scoped to recuration event absence
+    // A plain background query has no intent keywords → classifies as 'default'
+    // → no recuration event (additive: absent = canonical arc, today's behavior).
+    const recurationEvents = events.filter((e) => e.event === 'recuration');
+    expect(
+      recurationEvents.length,
+      'default intent query must NOT emit a recuration event (additive — AC4)',
+    ).toBe(0);
+
+    // The answer stream must still work (token + done) — re-curation is additive
+    const tokenEvents = events.filter((e) => e.event === 'token');
+    const doneEvents = events.filter((e) => e.event === 'done');
+    expect(
+      tokenEvents.length,
+      'answer stream must still emit tokens (additive — AC4)',
+    ).toBeGreaterThan(0);
+    expect(
+      doneEvents.length,
+      'answer stream must still end with done (additive — AC4)',
+    ).toBeGreaterThanOrEqual(1);
+  });
+
+  it('(f) fail-closed path (below threshold) → no recuration event (additive — AC4)', async () => {
+    // Below-threshold queries skip the grounded path entirely → classification never runs.
+    const res = await app.fetch(
+      new Request('http://localhost/api/guide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: 'zzz_xyzzy_gibberish_notincorpus_at_all',
+        }),
+      }),
+    );
+
+    expect(res.status).toBe(200);
+    const events = await readSseBody(res);
+
+    const recurationEvents = events.filter((e) => e.event === 'recuration');
+    expect(recurationEvents.length, 'fail-closed path must not emit a recuration event').toBe(0);
+  });
+
+  it('(g) grounded answer path still works WITH recuration (token+citation+done still emitted — AC4)', async () => {
+    // Confirm re-curation is ADDITIVE — the organizer query still gets a full grounded answer
+    const res = await app.fetch(
+      new Request('http://localhost/api/guide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: "I'm a conference organizer looking to book a talk about fintech",
+        }),
+      }),
+    );
+
+    expect(res.status).toBe(200);
+    const events = await readSseBody(res);
+
+    // recuration event IS emitted (organizer keyword)
+    expect(events.filter((e) => e.event === 'recuration').length).toBe(1);
+
+    // AND the answer still streams normally
+    expect(
+      events.filter((e) => e.event === 'token').length,
+      'tokens must still stream with recuration',
+    ).toBeGreaterThan(0);
+    expect(
+      events.filter((e) => e.event === 'done').length,
+      'done must still be emitted with recuration',
+    ).toBeGreaterThanOrEqual(1);
+  });
+
+  it('(h) recuration event is emitted BEFORE tokens (SSE ordering — AC5)', async () => {
+    const res = await app.fetch(
+      new Request('http://localhost/api/guide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: "I'm a conference organizer looking to book a talk",
+        }),
+      }),
+    );
+
+    const events = await readSseBody(res);
+    const recIdx = events.findIndex((e) => e.event === 'recuration');
+    const firstTokenIdx = events.findIndex((e) => e.event === 'token');
+
+    expect(recIdx, 'recuration event must be present').toBeGreaterThanOrEqual(0);
+    expect(firstTokenIdx, 'token event must be present').toBeGreaterThanOrEqual(0);
+    // Rule 8: order assertion — recuration must come before the first token
+    expect(recIdx, 'recuration event must be emitted before first token').toBeLessThan(
+      firstTokenIdx,
+    );
+  });
+});

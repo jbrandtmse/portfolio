@@ -33,8 +33,31 @@ export interface ErrorEvent {
   message: string;
 }
 
+/**
+ * Agent re-curation directive emitted when the Guide classifies visitor intent
+ * and maps it to a home Scene ordering (Story 5.3, FR-10).
+ *
+ * `intent` — the classified bucket: one of the 4-intent SM-C1-guarded enum.
+ * `order`  — the full Scene sequence (a permutation of all 7 SceneIds) that
+ *             the web controller should apply via CSS `order`.
+ *
+ * The api owns the fixed intent→order TABLE (the model NEVER emits a raw
+ * ordering). This event is ADDITIVE — a client that ignores it still works;
+ * absent classification = today's Guide behavior (backward-compatible).
+ */
+export interface RecurationEvent {
+  type: 'recuration';
+  /** The classified visitor intent bucket. */
+  intent: 'organizer' | 'builder' | 'explorer' | 'default';
+  /**
+   * The home Scene ordering — a permutation of all 7 SceneIds with `hero`
+   * always first (SM-C1 hard guard). Values are the section `id` attributes.
+   */
+  order: string[];
+}
+
 /** Discriminated union of every Guide SSE event (keyed on `type`). */
-export type GuideEvent = TokenEvent | CitationEvent | DoneEvent | ErrorEvent;
+export type GuideEvent = TokenEvent | CitationEvent | DoneEvent | ErrorEvent | RecurationEvent;
 
 /** The set of valid Guide SSE event names. */
 export type GuideEventType = GuideEvent['type'];

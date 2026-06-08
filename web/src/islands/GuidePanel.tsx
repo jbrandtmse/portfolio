@@ -37,10 +37,11 @@
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useStore } from '@nanostores/react';
 
-import type { GuideEvent, CitationEvent } from '@portfolio/shared/events';
+import type { GuideEvent, CitationEvent, RecurationEvent } from '@portfolio/shared/events';
 import { STARTER_PROMPTS } from '../data/faq';
 import { track } from '../lib/analytics';
 import { onMotionAllowed } from '../lib/motion';
+import { applyRecuration, initRecuration } from '../lib/recuration';
 import { $depth, $guideOpen } from '../lib/store';
 
 // ---------------------------------------------------------------------------
@@ -196,6 +197,16 @@ export function GuidePanel({ pillRef }: { pillRef?: React.RefObject<HTMLButtonEl
   }, [isOpen]);
 
   // ---------------------------------------------------------------------------
+  // Re-curation (Story 5.3, FR-10)
+  // ---------------------------------------------------------------------------
+
+  // Initialize the home page for re-curation on first mount (sets CSS order to
+  // canonical source order; marks main.home as data-recuration-ready).
+  useEffect(() => {
+    initRecuration();
+  }, []);
+
+  // ---------------------------------------------------------------------------
   // Reduced motion (Decision 7)
   // ---------------------------------------------------------------------------
 
@@ -304,7 +315,12 @@ export function GuidePanel({ pillRef }: { pillRef?: React.RefObject<HTMLButtonEl
               continue;
             }
 
-            if (parsed.type === 'token') {
+            if (parsed.type === 'recuration') {
+              // Story 5.3, FR-10: apply the re-curation directive in place.
+              // GuidePanel → recuration controller → CSS `order` (DOM unchanged, FR-8).
+              const rec = parsed as RecurationEvent;
+              applyRecuration({ intent: rec.intent, order: rec.order });
+            } else if (parsed.type === 'token') {
               collectedText += parsed.value;
               setTranscript((prev) =>
                 prev.map((t) => (t.id === guideEntryId ? { ...t, text: collectedText } : t)),

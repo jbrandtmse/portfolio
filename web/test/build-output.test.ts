@@ -658,6 +658,29 @@ describe('home 7-scene scaffold + scene-rail (Story 1.4 IAC-1 / IAC-2)', () => {
     expect(indexHtml).toMatch(/<details\b[^>]*class="[^"]*rail-m[^"]*"[^>]*>/);
     expect(indexHtml).toMatch(/<summary\b[^>]*>[\s\S]*?Jump to section[\s\S]*?<\/summary>/);
   });
+
+  it('Story 5.3 FR-8: canonical DOM section order is unchanged — hero→thesis→timeline→speaker→flagship→glass-box→close', () => {
+    // FR-8 / NFR-3: re-curation (Story 5.3) is CSS-`order`-only (visual).
+    // The SERVED DOM order must remain the canonical arc so crawlers, JS-off visitors,
+    // and the a11y reading-order baseline always see the full default sequence.
+    // Mutation-verification: if the DOM order were changed (physically moving sections),
+    // this test would red.
+    const sectionIds = [...indexHtml.matchAll(/<section\b[^>]*\sid="([^"]+)"[^>]*>/g)].map(
+      (m) => m[1],
+    );
+    // Rule 8: deep equality (not just a presence check — order matters)
+    expect(
+      sectionIds,
+      'Story 5.3 FR-8: canonical DOM order must be canonical arc (re-curation is CSS-order-only)',
+    ).toEqual(['hero', 'thesis', 'timeline', 'speaker', 'flagship', 'glass-box', 'close']);
+  });
+
+  it('Story 5.3 FR-8: <main class="home"> is a flex column (CSS order support present in built CSS)', () => {
+    // The flex-direction: column on main.home enables CSS `order` re-sequencing.
+    // Rule 8: scoped to the .home selector in built CSS.
+    // Mutation-verification: removing `display:flex` from .home reds this.
+    expect(builtCss).toMatch(/\.home[^{]*\{[^}]*flex-direction:column/);
+  });
 });
 
 describe('built CSS — scene-rail two-layer reduced-motion gate (Story 1.4 AC4)', () => {

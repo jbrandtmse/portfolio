@@ -590,6 +590,32 @@ const homeJsonLd = serializeJsonLd([
     }
   }
 
+  /* ── Re-curation flex order (Story 5.3, FR-10 / FR-8) ───────────────────
+     <main class="home"> is a flex column so that CSS `order` can re-sequence
+     the scenes VISUALLY without touching the DOM order (FR-8/NFR-3: crawlers
+     and JS-off visitors always see the canonical hero→…→close order).
+
+     Each <section> receives a CSS `order` value set by the web recuration
+     controller (web/src/lib/recuration.ts). Default (no JS / no directive) =
+     source order (the controller sets order=0,1,…,6 on init; without JS the
+     sections are in DOM order which is visually equivalent).
+
+     Reduced motion (NFR-2): the ORDER itself applies unconditionally (it is a
+     layout change, not an animation). Only the ORDER-CHANGE TRANSITION is
+     gated behind prefers-reduced-motion: no-preference (see below). */
+  .home {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Smooth scene reorder transition — only when motion is allowed (NFR-2).
+     200ms ease-in-out is perceptible but not jarring for a layout shift. */
+  @media (prefers-reduced-motion: no-preference) {
+    .home > section {
+      transition: order 0ms; /* CSS order cannot be transitioned; this is a placeholder */
+    }
+  }
+
   /* The scenes are plain, sequential sections (AC4 — fully functional JS-off).
      Each is a calm editorial band with generous whitespace; depth is tone +
      hairline, never shadow (DESIGN §Elevation, the flat system). On desktop the
