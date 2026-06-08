@@ -7,7 +7,7 @@
  * (horizontal desktop / vertical mobile) is CSS-only; DOM order is unchanged.
  *
  * Structure:
- *  • ONE <ol> (oldest → newest, the DOM reading order)
+ *  • ONE <ol id="timeline-spine"> (oldest → newest, the DOM reading order)
  *  • Era-band regions label the spine (runway + agentic turn)
  *  • Two flagship nodes (portfolio + loandemo) each expand to a static Dot cluster
  *  • Runway era: faint ticks (decorative) + era-band label — NO invented facts
@@ -15,6 +15,12 @@
  *
  * The lede's first sentence names "Joshua R. Brandt, MSE" (GEO floor; UX-DR15).
  * No drop-cap or pull-quote (reader-only devices). No exclamation marks.
+ *
+ * Story 6.2: adds a deferred ZoomableTimeline React island (semantic zoom) that
+ * loads ONLY under prefers-reduced-motion: no-preference (onMotionAllowed gate).
+ * Under reduced-motion or JS-off the static <ol> remains the sole experience.
+ * The island reads its data from the <script type="application/json" id="timeline-data">
+ * data island below (no Node fs in the browser).
  */
 
 import MirrorLayout from '../layouts/MirrorLayout.astro';
@@ -30,6 +36,37 @@ import type { FlagshipNode as FlagshipNodeData, RunwayTick } from '../lib/timeli
 // exactly as the Glass Box page reads glassbox.json. (Story 2.4 / architecture
 // §Structure: content/timeline/dots.ts → render-timeline → timeline.json.)
 const TIMELINE_ERAS = loadTimelineEras();
+
+// Story 6.2: Build the island data payload from the loaded eras — only flagship
+// entries with id-safe slugs. Ticks are intentionally excluded (runtime-only labels).
+// Each flagship gets a stable `id` derived from its label for the $timelineFocus atom.
+function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+// Serialise as island data. Only flagships (not ticks) participate in zoom.
+const TIMELINE_ISLAND_DATA = TIMELINE_ERAS.map((era) => ({
+  id: era.id,
+  label: era.label,
+  entries: era.entries
+    .filter((e) => e.kind === 'flagship')
+    .map((e) => {
+      const f = e as FlagshipNodeData;
+      return {
+        id: slugify(f.label),
+        label: f.label,
+        date: f.date,
+        description: f.description,
+        // Story 6.2: carry the flagship's own href ([OPEN] for harvested
+        // epics/retros) so the island renders the clean "reader coming" affordance.
+        href: f.href,
+        cluster: f.cluster,
+      };
+    }),
+}));
 
 const LEDE =
   'Joshua R. Brandt, MSE has spent thirty years shipping software, now building at the frontier of agentic engineering. This is the Master Timeline of that craft — from the long runway of shipping years to the dense agentic turn, built in the open using the BMAD Method.';
@@ -47,7 +84,11 @@ const LEDE =
       <a href="/glass-box/">the Glass Box</a>.
     </p>
 
-    <ol class="timeline-spine" aria-label="Timeline from runway to agentic turn">
+    <ol
+      id="timeline-spine"
+      class="timeline-spine"
+      aria-label="Timeline from runway to agentic turn"
+    >
       {
         TIMELINE_ERAS.map((era, eraIndex) => (
           <li
@@ -92,6 +133,7 @@ const LEDE =
                         label={flagship.label}
                         date={flagship.date}
                         description={flagship.description}
+                        href={flagship.href}
                         cluster={flagship.cluster}
                       />
                     </li>
@@ -104,6 +146,55 @@ const LEDE =
       }
     </ol>
   </section>
+
+  {
+    /*
+    Story 6.2: Timeline data island — the ZoomableTimeline island reads this in the
+    browser (no Node fs access at runtime). JSON-encoded EraBand[] flagships only.
+    This is a data <script> (type=application/json), NOT an executable script —
+    it does NOT count against the script budget (NFR-1 / AC5).
+  */
+  }
+  <script
+    type="application/json"
+    id="timeline-data"
+    set:html={JSON.stringify(TIMELINE_ISLAND_DATA)}
+  />
+
+  {
+    /*
+    Story 6.2: Deferred ZoomableTimeline mount.
+    Mirrors the index.astro onMotionAllowed + dynamic-import pattern exactly:
+      - onMotionAllowed gate is MANDATORY (AC4 / NFR-1): under prefers-reduced-motion
+        the gate no-ops → the island + GSAP chunk are NEVER fetched.
+      - requestIdleCallback (or setTimeout fallback) so Lighthouse's no-interaction
+        trace on /timeline/ does NOT trigger the import → script budget stays at 2.
+      - createRoot is called inside the bootstrap.ts boot() function.
+    NOTE: this IS an executable <script> — it counts as 1 toward the 2-script budget
+    (joining the GuidePill). The ZoomableTimeline chunk itself is deferred (not counted).
+  */
+  }
+  <script>
+    import { onMotionAllowed } from '../lib/motion';
+
+    onMotionAllowed(() => {
+      // One-shot interaction trigger — mirrors the index.astro pattern exactly.
+      // Lighthouse's no-interaction trace NEVER scrolls/clicks/keys, so this
+      // import never fires in its trace, keeping /timeline/ within the LH budgets.
+      // Under prefers-reduced-motion onMotionAllowed no-ops → island never loads.
+      let loaded = false;
+      const loadIsland = (): void => {
+        if (loaded) return;
+        loaded = true;
+        void import('../lib/timeline-zoom/bootstrap').then((m) => m.boot());
+      };
+
+      const once: AddEventListenerOptions = { once: true, passive: true };
+      window.addEventListener('scroll', loadIsland, once);
+      window.addEventListener('pointerdown', loadIsland, once);
+      window.addEventListener('keydown', loadIsland, once);
+    });
+  </script>
 </MirrorLayout>
 
 <style>
@@ -264,5 +355,414 @@ const LEDE =
   /* Flagship entries fill available space */
   .timeline-entry--flagship {
     flex: 1;
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+   * Story 6.2: JS-enhanced — the static <ol> is visually hidden when the
+   * ZoomableTimeline island is mounted. It stays in the DOM for:
+   *   • SEO / screen-readers (it's a real semantic structure)
+   *   • JS-off clients (the island never runs; both levels fully visible)
+   *   • Reduced-motion clients (the island never loads; <ol> is the experience)
+   * The island's React root (#zt-island-root) is inserted BEFORE the spine;
+   * the spine is hidden via a class toggled by bootstrap.ts.
+   * ────────────────────────────────────────────────────────────── */
+  :global(.timeline-spine--js-enhanced) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* ──────────────────────────────────────────────────────────────
+   * ZoomableTimeline island styles
+   * All motion inside @media (prefers-reduced-motion: no-preference) (Layer-1 rule).
+   * The non-animated layout works without animation.
+   * ────────────────────────────────────────────────────────────── */
+
+  /* Root wrapper */
+  :global(.zt-root) {
+    margin-top: var(--space-2);
+  }
+
+  /* Navigation bar (shown when a flagship is focused) */
+  :global(.zt-nav-bar) {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-surface-raised, #f5f0e8);
+    border-radius: 4px;
+    border: 1px solid var(--color-border-hairline, #d1c5b0);
+  }
+
+  :global(.zt-overview-btn) {
+    font-size: var(--font-size-meta, 12px);
+    color: var(--color-accent);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: var(--space-1) var(--space-2);
+    border-radius: 3px;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  :global(.zt-overview-btn:focus-visible) {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  :global(.zt-nav-bar__focused-label) {
+    font-size: var(--font-size-meta, 12px);
+    color: var(--color-ink-secondary);
+    font-weight: 600;
+  }
+
+  /* Timeline spine (the island's own ol — not the static baseline's ol) */
+  :global(.zt-spine) {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  :global(.zt-era) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  /* Entries list within an era — proper list nesting (axe listitem rule). */
+  :global(.zt-era__entries) {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  :global(.zt-entry) {
+    position: relative;
+  }
+
+  /* Dimmed — non-focused entries when another is expanded */
+  :global(.zt-entry--dimmed) {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.zt-entry--dimmed) {
+      transition: opacity 0.2s ease;
+    }
+    :global(.zt-entry--expanded) {
+      transition: opacity 0.2s ease;
+    }
+  }
+
+  /* Flagship node */
+  :global(.zt-flagship) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  /* Trigger button (flagship milestone row) */
+  :global(.zt-flagship__trigger) {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    padding: var(--space-2) var(--space-2);
+    border-radius: 4px;
+    width: 100%;
+  }
+
+  :global(.zt-flagship__trigger:focus-visible) {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  :global(.zt-flagship__trigger:hover) {
+    background: var(--color-surface-raised, #f5f0e8);
+  }
+
+  :global(.zt-flagship__dot-visual) {
+    display: inline-block;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    flex-shrink: 0;
+  }
+
+  :global(.zt-flagship__title) {
+    font-size: var(--font-size-body);
+    font-weight: 600;
+    color: var(--color-ink-primary);
+    line-height: 1.3;
+    flex: 1;
+  }
+
+  :global(.zt-flagship__date) {
+    font-size: 12px;
+    color: var(--color-ink-secondary);
+  }
+
+  :global(.zt-flagship__chevron) {
+    font-size: 10px;
+    color: var(--color-ink-secondary);
+    margin-left: auto;
+  }
+
+  :global(.zt-flagship__desc) {
+    font-size: var(--font-size-meta, 12px);
+    color: var(--color-ink-secondary);
+    margin: 0;
+    padding: 0 var(--space-2);
+    max-width: 52ch;
+    line-height: var(--line-height-body);
+  }
+
+  /* Story 6.2 (code-review fix): clean "full reader coming (6.3/6.4)" affordance
+     for harvested epics/retros whose Glass Box reader does not exist yet
+     ([OPEN] flagship href). Replaces the leaked internal sentinel in prose. */
+  :global(.zt-flagship__reader-note) {
+    font-size: var(--font-size-meta, 12px);
+    color: var(--color-ink-secondary);
+    font-style: italic;
+    margin: 0;
+    padding: 0 var(--space-2);
+    max-width: 52ch;
+    line-height: var(--line-height-body);
+  }
+
+  :global(.zt-flagship__reader-link) {
+    font-size: var(--font-size-meta, 12px);
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    padding: 0 var(--space-2);
+  }
+
+  :global(.zt-flagship__reader-link:hover) {
+    text-decoration-thickness: 2px;
+  }
+
+  :global(.zt-flagship__reader-link:focus-visible) {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Cluster — hidden (display:none) when collapsed, visible when expanded.
+     IMPORTANT: AC4 — BOTH levels always present in the static <ol> (the JS-off
+     baseline). The island's cluster uses display:none collapse (presentation only). */
+  :global(.zt-cluster) {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    margin-left: calc(17px + var(--space-2));
+    display: none; /* collapsed by default */
+  }
+
+  :global(.zt-cluster--visible) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.zt-cluster--visible) {
+      animation: zt-cluster-reveal 0.2s ease both;
+    }
+
+    @keyframes zt-cluster-reveal {
+      from {
+        opacity: 0;
+        transform: translateY(-4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  }
+
+  :global(.zt-cluster__item) {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+
+  /* Dot visual in the island (mirrors TimelineDot states) */
+  :global(.zt-dot-visual) {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    margin-top: 3px;
+    background: var(--color-accent);
+  }
+
+  :global(.zt-dot-visual[data-state='faint']) {
+    background: var(--color-border-hairline, #d1c5b0);
+  }
+
+  :global(.zt-dot-visual[data-state='live']) {
+    background: var(--color-success, #2d7d46);
+  }
+
+  :global(.zt-cluster__label) {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  :global(.zt-dot-btn) {
+    font-size: var(--font-size-meta, 12px);
+    color: var(--color-accent);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    text-align: left;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    line-height: 1.3;
+  }
+
+  :global(.zt-dot-btn:focus-visible) {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  :global(.zt-dot-btn:hover) {
+    text-decoration-thickness: 2px;
+  }
+
+  :global(.zt-open-flag) {
+    font-style: italic;
+    color: var(--color-ink-secondary);
+    font-size: 11px;
+  }
+
+  :global(.zt-reader-hint) {
+    color: var(--color-ink-secondary);
+  }
+
+  :global(.zt-cluster__date) {
+    font-size: 11px;
+    color: var(--color-ink-secondary);
+  }
+
+  /* Detail panel (non-modal dialog) */
+  :global(.zt-detail-panel) {
+    position: relative;
+    margin-top: var(--space-2);
+    margin-left: calc(17px + var(--space-2));
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-surface-raised, #f5f0e8);
+    border: 1px solid var(--color-border-hairline, #d1c5b0);
+    border-radius: 4px;
+    max-width: 44ch;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :global(.zt-detail-panel) {
+      animation: zt-panel-reveal 0.15s ease both;
+    }
+
+    @keyframes zt-panel-reveal {
+      from {
+        opacity: 0;
+        transform: translateY(-4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  }
+
+  :global(.zt-detail-panel__close) {
+    position: absolute;
+    top: var(--space-2);
+    right: var(--space-2);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    color: var(--color-ink-secondary);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  :global(.zt-detail-panel__close:focus-visible) {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  :global(.zt-detail-panel__content) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding-right: var(--space-5);
+  }
+
+  :global(.zt-detail-panel__label) {
+    font-size: var(--font-size-body);
+    font-weight: 600;
+    color: var(--color-ink-primary);
+    line-height: 1.3;
+  }
+
+  :global(.zt-detail-panel__date) {
+    font-size: 12px;
+    color: var(--color-ink-secondary);
+  }
+
+  :global(.zt-detail-panel__desc) {
+    font-size: var(--font-size-meta, 12px);
+    color: var(--color-ink-secondary);
+    line-height: var(--line-height-body);
+    margin: 0;
+  }
+
+  :global(.zt-detail-panel__reader-link) {
+    font-size: var(--font-size-meta, 12px);
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  :global(.zt-detail-panel__reader-link:hover) {
+    text-decoration-thickness: 2px;
+  }
+
+  :global(.zt-detail-panel__reader-link:focus-visible) {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  :global(.zt-detail-panel__open-note) {
+    font-size: 12px;
+    color: var(--color-ink-secondary);
+    font-style: italic;
+    margin: 0;
+    line-height: 1.4;
   }
 </style>

@@ -199,6 +199,11 @@ function mergeSeedAndDots(seed: readonly EraBand[], harvested: HarvestedDot[]): 
         label: dot.label,
         date: dot.date,
         description: dot.description ?? '',
+        // Carry the Dot's own href ([OPEN] for harvested epics/retros) so the
+        // timeline surfaces can render the clean "full reader coming (6.3/6.4)"
+        // affordance for the no-reader-yet status (Story 6.2). The seed flagships
+        // (loandemo, This portfolio) leave href absent (they have real clusters).
+        href: dot.href,
         cluster: [],
       }));
 

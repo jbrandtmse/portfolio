@@ -60,20 +60,29 @@ test.describe('Master Timeline — /timeline/', () => {
     await expect(lede).toContainText(/^Joshua R\. Brandt, MSE/);
   });
 
-  test('ships exactly 2 executable scripts — Guide pill only (NFR-1, Story 4.4 carve-out)', async ({
+  test('ships exactly 3 executable scripts — Guide pill (2) + deferred-mount shim (1) (NFR-1, Story 6.2 AC5)', async ({
     page,
   }) => {
     await page.goto(TIMELINE_PATH);
-    // Story 4.4: ALL routes ship the site-wide Guide pill (2 exec scripts).
+    // Story 6.2: /timeline/ ships 3 executable scripts:
+    //   - 2 Guide pill init scripts (site-wide carve-out, Story 4.4)
+    //   - 1 deferred ZoomableTimeline mount shim (onMotionAllowed + requestIdleCallback)
+    // The ZoomableTimeline island + GSAP are NOT in the initial exec set (they load
+    // lazily via dynamic import() inside onMotionAllowed — AC5 / NFR-1).
+    // The <script type="application/json" id="timeline-data"> is a data island (not executable).
     const executableScripts = await page.evaluate(() => {
       const scripts = Array.from(document.querySelectorAll('script'));
-      return scripts.filter((s) => s.type !== 'application/ld+json' && s.type !== 'importmap')
-        .length;
+      return scripts.filter(
+        (s) =>
+          s.type !== 'application/ld+json' &&
+          s.type !== 'importmap' &&
+          s.type !== 'application/json',
+      ).length;
     });
     expect(
       executableScripts,
-      `/timeline/ must ship exactly 2 exec scripts (Guide pill only); found ${executableScripts}`,
-    ).toBe(2);
+      `/timeline/ must ship exactly 3 exec scripts (2 GuidePill + 1 deferred-mount shim); found ${executableScripts}`,
+    ).toBe(3);
   });
 });
 
@@ -90,11 +99,19 @@ test.describe('Master Timeline — era-bands (AC2)', () => {
 
   test('era regions carry aria-label attributes (AC6)', async ({ page }) => {
     await page.goto(TIMELINE_PATH);
-    // Each era <li> carries aria-label="Era: <name>"
-    const runwayEra = page.locator('[aria-label="Era: The Runway"]');
-    const agenticEra = page.locator('[aria-label="Era: The Agentic Turn"]');
-    await expect(runwayEra).toHaveCount(1);
-    await expect(agenticEra).toHaveCount(1);
+    // Each era carries aria-label="Era: <name>" — present in the static <ol> (always)
+    // and also in the ZoomableTimeline island when JS is enabled (Story 6.2 adds the island).
+    // The guarantee is that at least one element with the correct aria-label exists.
+    const runwayCount = await page.locator('[aria-label="Era: The Runway"]').count();
+    expect(
+      runwayCount,
+      'Era: The Runway aria-label must be present at least once',
+    ).toBeGreaterThanOrEqual(1);
+    const agenticCount = await page.locator('[aria-label="Era: The Agentic Turn"]').count();
+    expect(
+      agenticCount,
+      'Era: The Agentic Turn aria-label must be present at least once',
+    ).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -714,5 +731,661 @@ test.describe('Story 6.1 AC6 — Integration: merged Dots visible on served /tim
     // Assert: zero anchors with href="[OPEN]" exist.
     const brokenOpenLinks = page.locator('a[href="[OPEN]"]');
     await expect(brokenOpenLinks).toHaveCount(0);
+  });
+
+  // ── Story 6.2 code-review fix: the internal `[OPEN: no Glass Box reader yet]`
+  //    developer sentinel must NEVER leak into user-visible prose. The harvested
+  //    epics/retros/course-corrections now show their clean summary + a clearly
+  //    labeled "full reader coming (6.3/6.4)" affordance instead (owner decision 2).
+  //    This is a credibility/Rule-9 floor — asserted on BOTH the static baseline
+  //    (JS-off) and the island-enhanced surface so the two never diverge. ────────
+  test('(6.2 fix) NO `[OPEN: …]` reader sentinel leaks into visible prose — STATIC (JS-off)', async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto(TIMELINE_PATH);
+
+    // The visible body text must not contain the internal "no Glass Box reader yet"
+    // developer sentinel (Rule 9). This is the SPECIFIC sentinel class the fix
+    // targets — the one that rode on every harvested epic/retro/course-correction
+    // description.
+    const bodyText = (await page.locator('body').innerText()) ?? '';
+    expect(
+      bodyText,
+      'the internal "[OPEN: no Glass Box reader yet]" sentinel must not appear in visible prose',
+    ).not.toContain('[OPEN: no Glass Box reader yet]');
+    // Belt-and-suspenders: no "Glass Box reader yet" fragment in any form.
+    expect(
+      bodyText,
+      'no "Glass Box reader yet" developer sentinel fragment in visible text',
+    ).not.toMatch(/Glass Box reader yet/);
+    // NOTE: a DIFFERENT, intentional placeholder — the loandemo cluster dot's
+    // `[OPEN: repo URL — supplied by Story 2.5]` — IS deliberately visible in the
+    // static <ol> (Story 2.5 owns it) and is correctly NOT stripped. So we do not
+    // assert against the broad `[OPEN:` form here; only the no-reader-yet class.
+
+    // The clean affordance IS rendered for the harvested epics/retros (Rule 13 —
+    // the user-observable replacement, not merely the absence of the sentinel).
+    const epicLi = page.locator(
+      'li.timeline-entry--flagship[aria-label="Flagship: Epic 1 — Build Foundation"]',
+    );
+    await expect(epicLi.locator('.flagship-node__reader-note')).toHaveText(
+      /Full reader coming.*6\.3\/6\.4/i,
+    );
+    // The clean harvested summary is still present (not blanked by the strip).
+    await expect(epicLi.locator('.flagship-node__description')).toHaveText(
+      /Scaffold, design system/i,
+    );
+
+    await context.close();
+  });
+
+  test('(6.2 fix) NO `[OPEN: …]` reader sentinel leaks into visible prose — ISLAND-enhanced', async ({
+    page,
+  }) => {
+    await page.goto(TIMELINE_PATH);
+
+    const motionAllowed = await page.evaluate(
+      () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    );
+    if (!motionAllowed) {
+      test.skip();
+      return;
+    }
+
+    // Trigger the deferred island mount (scroll is one of the one-shot triggers).
+    await page.evaluate(() => window.scrollBy({ top: 50, behavior: 'instant' }));
+    const ztRoot = page.locator('[data-testid="zt-root"]');
+    await expect.poll(async () => ztRoot.count(), { timeout: 8000 }).toBeGreaterThan(0);
+
+    // The island root's visible text must not carry the sentinel either (the island
+    // mirrors the same data, so a divergence would re-introduce the leak — this is
+    // exactly the surface the QA flagged as leaking 11×).
+    const islandText = (await ztRoot.innerText()) ?? '';
+    expect(islandText, 'island must not render the "no Glass Box reader yet" sentinel').not.toMatch(
+      /\[OPEN: no Glass Box reader yet\]/,
+    );
+    expect(
+      islandText,
+      'island must not render the "Glass Box reader yet" developer sentinel fragment',
+    ).not.toMatch(/Glass Box reader yet/);
+
+    // The island renders the clean "reader coming" affordance for a harvested epic
+    // flagship (Rule 13 — the user-observable replacement). Epic flagships have an
+    // empty cluster; their affordance rides on the .zt-flagship__reader-note element.
+    const epicFlagship = page.locator(
+      '.zt-flagship:has(.zt-flagship__title:text("Epic 1 — Build Foundation"))',
+    );
+    await expect(epicFlagship.locator('.zt-flagship__reader-note')).toHaveText(
+      /Full reader coming.*6\.3\/6\.4/i,
+    );
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Story 6.2 — ZoomableTimeline island (semantic zoom)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * AC1 — semantic zoom: overview ↔ a project's Dots.
+ *
+ * Rule 7: proven to run (not skipped). Motion-enabled path only.
+ * Rule 13: asserts user-observable outcome — cluster Dots VISIBLE (not just an attribute flip).
+ * Mutation-verify instruction: remove the `zt-cluster--visible` CSS rule → cluster stays display:none → test fails.
+ */
+test.describe('Story 6.2 — ZoomableTimeline: semantic zoom (AC1)', () => {
+  test('(AC1) clicking a flagship expands its cluster Dots to VISIBLE — motion-enabled path (Rule 13)', async ({
+    page,
+  }) => {
+    // Rule 7: guard that the test actually RUNS (not vacuously skipped on reduced-motion).
+    await page.goto(TIMELINE_PATH);
+
+    const motionAllowed = await page.evaluate(
+      () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    );
+    if (!motionAllowed) {
+      // Only test the on-path (motion allowed) case here; reduced-motion is AC4 below.
+      test.skip();
+      return;
+    }
+
+    // Trigger the one-shot interaction listener (scroll triggers the island load).
+    // Rule 7: anti-vacuity — we prove the island actually mounts after interaction.
+    await page.evaluate(() => window.scrollBy({ top: 50, behavior: 'instant' }));
+
+    // Wait until the island root appears (the bootstrap creates #zt-island-root).
+    const ztRoot = page.locator('[data-testid="zt-root"]');
+    await expect
+      .poll(async () => ztRoot.count(), {
+        timeout: 8000,
+        message: 'ZoomableTimeline island must mount after scroll',
+      })
+      .toBeGreaterThan(0);
+
+    // Find the first flagship trigger button.
+    const firstTrigger = page.locator('button.zt-flagship__trigger').first();
+    await expect(firstTrigger).toBeVisible();
+
+    // Before clicking: the cluster should NOT be visible (collapsed state).
+    const firstFlagshipId = await firstTrigger.evaluate(
+      (el) => el.closest('[data-flagship-id]')?.getAttribute('data-flagship-id') ?? '',
+    );
+    expect(firstFlagshipId).not.toBe('');
+
+    const cluster = page.locator(`[data-testid="cluster-${firstFlagshipId}"]`);
+    await expect(cluster).toBeAttached();
+
+    // The cluster must be hidden (collapsed) before click.
+    const hiddenBefore = await cluster.evaluate(
+      (el) =>
+        getComputedStyle(el).display === 'none' || !el.classList.contains('zt-cluster--visible'),
+    );
+    expect(hiddenBefore, 'cluster must start collapsed (Rule 13 mutation guard)').toBe(true);
+
+    // Click to expand.
+    await firstTrigger.click();
+
+    // Rule 13: cluster Dots must be VISIBLE after expand — not just an attribute flip.
+    // If the `zt-cluster--visible` CSS rule were a no-op, this would fail.
+    await expect(cluster).toHaveClass(/zt-cluster--visible/);
+    await expect(cluster).toBeVisible();
+
+    // At least one cluster item must be visible (not display:none, not opacity:0).
+    const firstItem = cluster.locator('.zt-cluster__item').first();
+    // For flagships with clusters (portfolio, loandemo): item is visible.
+    // For flagships with empty clusters (epics, retros): no items — skip.
+    const itemCount = await cluster.locator('.zt-cluster__item').count();
+    if (itemCount > 0) {
+      await expect(firstItem).toBeVisible();
+      // Bounding box confirms the element actually takes up space (Rule 13).
+      const box = await firstItem.boundingBox();
+      expect(
+        box,
+        'cluster item must have a non-zero bounding box (actually visible)',
+      ).not.toBeNull();
+      expect(box!.width, 'cluster item width > 0').toBeGreaterThan(0);
+      expect(box!.height, 'cluster item height > 0').toBeGreaterThan(0);
+    }
+
+    // ── Rule 13 anti-vacuity hardening (QA) ────────────────────────────────────
+    // The `.first()` flagship above happens to have a non-empty cluster TODAY
+    // (loandemo, 3 Dots), so the item-visibility block runs. But a future harvest
+    // reorder could put an EMPTY-cluster flagship (an epic/retro) first, silently
+    // skipping the `if (itemCount > 0)` block and making the visible-item assertion
+    // vacuous. Guarantee a non-empty cluster's Dots become VISIBLE by explicitly
+    // expanding the "This portfolio" flagship (a known 7-Dot cluster) and asserting
+    // its cluster items render with a non-zero box. This binds the Rule-13 outcome
+    // to a stable target independent of harvest ordering.
+    //
+    // First collapse back to overview: while a flagship is focused, the OTHER
+    // flagships are `.zt-entry--dimmed { pointer-events: none }` (by design), so
+    // we must return to overview before targeting a different flagship.
+    const overviewBtn = page.locator('[data-testid="zt-overview-btn"]');
+    if ((await overviewBtn.count()) > 0) {
+      await overviewBtn.click();
+      await expect(firstTrigger).toHaveAttribute('aria-expanded', 'false');
+    }
+
+    const portfolioTrigger = page
+      .locator('button.zt-flagship__trigger', { hasText: 'This portfolio' })
+      .first();
+    expect(
+      await portfolioTrigger.count(),
+      'the "This portfolio" flagship must exist in the island (a known non-empty cluster)',
+    ).toBeGreaterThan(0);
+    const portfolioId = await portfolioTrigger.evaluate(
+      (el) => el.closest('[data-flagship-id]')?.getAttribute('data-flagship-id') ?? '',
+    );
+    const portfolioCluster = page.locator(`[data-testid="cluster-${portfolioId}"]`);
+    // Collapsed before expand (display:none — Rule 13 mutation guard).
+    await expect(portfolioCluster).not.toBeVisible();
+    await portfolioTrigger.click();
+    // VISIBLE after expand — the CSS consumer turns the class into a real reveal.
+    await expect(portfolioCluster).toBeVisible();
+    const portfolioItems = portfolioCluster.locator('.zt-cluster__item');
+    expect(
+      await portfolioItems.count(),
+      'the portfolio cluster must have its harvested Dots',
+    ).toBeGreaterThan(0);
+    const pItem = portfolioItems.first();
+    await expect(pItem).toBeVisible();
+    const pBox = await pItem.boundingBox();
+    expect(pBox, 'portfolio cluster item must occupy real space (Rule 13)').not.toBeNull();
+    expect(pBox!.width).toBeGreaterThan(0);
+    expect(pBox!.height).toBeGreaterThan(0);
+  });
+
+  test('(AC1) keyboard Enter/Space expands a flagship cluster (keyboard accessibility)', async ({
+    page,
+  }) => {
+    await page.goto(TIMELINE_PATH);
+
+    const motionAllowed = await page.evaluate(
+      () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    );
+    if (!motionAllowed) {
+      test.skip();
+      return;
+    }
+
+    await page.evaluate(() => window.scrollBy({ top: 50, behavior: 'instant' }));
+    const ztRoot = page.locator('[data-testid="zt-root"]');
+    await expect.poll(async () => ztRoot.count(), { timeout: 8000 }).toBeGreaterThan(0);
+
+    const firstTrigger = page.locator('button.zt-flagship__trigger').first();
+    await firstTrigger.focus();
+    await page.keyboard.press('Enter');
+
+    // The trigger must have aria-expanded="true" after activation.
+    await expect(firstTrigger).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  test('(AC1) the overview↔detail control button collapses back to overview', async ({ page }) => {
+    await page.goto(TIMELINE_PATH);
+
+    const motionAllowed = await page.evaluate(
+      () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    );
+    if (!motionAllowed) {
+      test.skip();
+      return;
+    }
+
+    await page.evaluate(() => window.scrollBy({ top: 50, behavior: 'instant' }));
+    const ztRoot = page.locator('[data-testid="zt-root"]');
+    await expect.poll(async () => ztRoot.count(), { timeout: 8000 }).toBeGreaterThan(0);
+
+    // Expand first flagship.
+    const firstTrigger = page.locator('button.zt-flagship__trigger').first();
+    await firstTrigger.click();
+    await expect(firstTrigger).toHaveAttribute('aria-expanded', 'true');
+
+    // The "Back to timeline overview" button must appear.
+    const overviewBtn = page.locator('[data-testid="zt-overview-btn"]');
+    await expect(overviewBtn).toBeVisible();
+
+    // Clicking it collapses back to overview.
+    await overviewBtn.click();
+    await expect(firstTrigger).toHaveAttribute('aria-expanded', 'false');
+    await expect(overviewBtn).not.toBeVisible();
+  });
+});
+
+/**
+ * AC2 — open a Dot → its detail (reuse + link).
+ *
+ * Rule 9: no fabricated content in the detail panel.
+ * Rule 13: detail panel actually SHOWS its text (not just a state attribute flip).
+ */
+test.describe('Story 6.2 — ZoomableTimeline: Dot detail panel (AC2)', () => {
+  test('(AC2) opening a portfolio Dot shows its detail + a real /glass-box/ reader link (Rule 9, Rule 13)', async ({
+    page,
+  }) => {
+    await page.goto(TIMELINE_PATH);
+
+    const motionAllowed = await page.evaluate(
+      () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    );
+    if (!motionAllowed) {
+      test.skip();
+      return;
+    }
+
+    await page.evaluate(() => window.scrollBy({ top: 50, behavior: 'instant' }));
+    const ztRoot = page.locator('[data-testid="zt-root"]');
+    await expect.poll(async () => ztRoot.count(), { timeout: 8000 }).toBeGreaterThan(0);
+
+    // Expand the "This portfolio" flagship (known to have /glass-box/ cluster Dots).
+    const portfolioTrigger = page
+      .locator('button.zt-flagship__trigger', { hasText: 'This portfolio' })
+      .first();
+    if ((await portfolioTrigger.count()) === 0) {
+      // The "This portfolio" flagship may not appear first; skip if not found.
+      test.skip();
+      return;
+    }
+    await portfolioTrigger.click();
+    await expect(portfolioTrigger).toHaveAttribute('aria-expanded', 'true');
+
+    // Find the first dot-button in the cluster.
+    const portfolioId = await portfolioTrigger.evaluate(
+      (el) => el.closest('[data-flagship-id]')?.getAttribute('data-flagship-id') ?? '',
+    );
+    const firstDotBtn = page.locator(`[data-testid="dot-btn-${portfolioId}-0"]`);
+    await expect(firstDotBtn).toBeVisible();
+
+    // Click the Dot button to open its detail panel.
+    await firstDotBtn.click();
+
+    // Rule 13: the detail panel SHOWS real text (label + reader link).
+    const detailPanel = page.locator('.zt-detail-panel');
+    await expect(detailPanel).toBeVisible();
+
+    const labelEl = detailPanel.locator('.zt-detail-panel__label');
+    await expect(labelEl).toBeVisible();
+    const labelText = await labelEl.textContent();
+    expect(
+      labelText?.trim().length,
+      'detail panel label must have real text (Rule 9)',
+    ).toBeGreaterThan(0);
+
+    // The reader link must resolve 200 (AC2 — "where a reader exists").
+    const readerLink = detailPanel.locator('.zt-detail-panel__reader-link');
+    await expect(readerLink).toBeVisible();
+    const href = await readerLink.getAttribute('href');
+    expect(href, 'reader link must have an href').not.toBeNull();
+
+    if (href && href.startsWith('/glass-box/')) {
+      const response = await page.goto(href);
+      expect(response?.status(), `reader link ${href} must resolve 200`).toBe(200);
+      await page.goto(TIMELINE_PATH);
+    }
+  });
+
+  test('(AC2) Esc dismisses ONLY the detail panel, keeps the flagship expanded, and returns focus to the opener', async ({
+    page,
+  }) => {
+    await page.goto(TIMELINE_PATH);
+
+    const motionAllowed = await page.evaluate(
+      () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    );
+    if (!motionAllowed) {
+      test.skip();
+      return;
+    }
+
+    await page.evaluate(() => window.scrollBy({ top: 50, behavior: 'instant' }));
+    const ztRoot = page.locator('[data-testid="zt-root"]');
+    await expect.poll(async () => ztRoot.count(), { timeout: 8000 }).toBeGreaterThan(0);
+
+    // Target the "This portfolio" flagship — a STABLE non-empty cluster (7 Dots),
+    // so the Dot-open path is guaranteed to run (not skipped on data reorder).
+    const portfolioTrigger = page
+      .locator('button.zt-flagship__trigger', { hasText: 'This portfolio' })
+      .first();
+    expect(
+      await portfolioTrigger.count(),
+      'the "This portfolio" flagship (a known non-empty cluster) must exist',
+    ).toBeGreaterThan(0);
+    await portfolioTrigger.click();
+    await expect(portfolioTrigger).toHaveAttribute('aria-expanded', 'true');
+    const portfolioId = await portfolioTrigger.evaluate(
+      (el) => el.closest('[data-flagship-id]')?.getAttribute('data-flagship-id') ?? '',
+    );
+
+    // Open the first Dot's detail.
+    const dotBtnTestId = `dot-btn-${portfolioId}-0`;
+    const firstDotBtn = page.locator(`[data-testid="${dotBtnTestId}"]`);
+    await expect(firstDotBtn).toBeVisible();
+    await firstDotBtn.click();
+    const detailPanel = page.locator('.zt-detail-panel');
+    await expect(detailPanel).toBeVisible();
+
+    // Press Esc — AC2: a SINGLE-LEVEL dismiss.
+    await page.keyboard.press('Escape');
+
+    // (1) The detail panel is dismissed.
+    await expect(detailPanel).not.toBeVisible();
+
+    // (2) The flagship stays EXPANDED — Esc closes the detail, not the whole zoom.
+    // (Regression guard: the island's top-level Esc handler must NOT also collapse
+    //  the flagship while a detail panel is open — that would unmount the opener
+    //  and drop focus to <body>, breaking AC2's focus-return promise.)
+    await expect(portfolioTrigger).toHaveAttribute('aria-expanded', 'true');
+
+    // (3) Focus is RETURNED to the opener Dot button (AC2 — not lost to <body>).
+    const focusedTestId = await page.evaluate(
+      () => document.activeElement?.getAttribute('data-testid') ?? null,
+    );
+    expect(focusedTestId, 'AC2: Esc must return focus to the opener Dot button (not <body>)').toBe(
+      dotBtnTestId,
+    );
+  });
+
+  test('(AC2) harvested epic/retro Dot shows harvested summary + "full reader" affordance — no fabricated prose (Rule 9)', async ({
+    page,
+  }) => {
+    await page.goto(TIMELINE_PATH);
+
+    const motionAllowed = await page.evaluate(
+      () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    );
+    if (!motionAllowed) {
+      test.skip();
+      return;
+    }
+
+    await page.evaluate(() => window.scrollBy({ top: 50, behavior: 'instant' }));
+    const ztRoot = page.locator('[data-testid="zt-root"]');
+    await expect.poll(async () => ztRoot.count(), { timeout: 8000 }).toBeGreaterThan(0);
+
+    // Find a flagship flagged as "reader coming" (OPEN) — these are the harvested epics/retros.
+    // They appear in the island as trigger buttons labeled e.g. "Epic 1 — Build Foundation".
+    const epicTrigger = page
+      .locator('button.zt-flagship__trigger', { hasText: /Epic \d+/ })
+      .first();
+    if ((await epicTrigger.count()) === 0) {
+      test.skip();
+      return;
+    }
+    await epicTrigger.click();
+    await expect(epicTrigger).toHaveAttribute('aria-expanded', 'true');
+
+    // If there are cluster items for this epic, open the first one.
+    const epicId = await epicTrigger.evaluate(
+      (el) => el.closest('[data-flagship-id]')?.getAttribute('data-flagship-id') ?? '',
+    );
+    const dotBtn = page.locator(`[data-testid="dot-btn-${epicId}-0"]`);
+    if ((await dotBtn.count()) === 0) {
+      // Epic flagships have empty clusters in the current data set — the flagship
+      // itself carries the description via the .zt-flagship__desc element.
+      // Assert the description text is the HARVESTED summary (from timeline.json).
+      const flagshipDesc = page.locator(
+        `.zt-flagship[data-flagship-id="${epicId}"] .zt-flagship__desc`,
+      );
+      const descText = await flagshipDesc.textContent();
+      // Rule 9: description must not be fabricated prose — it comes from the
+      // harvested timeline.json (short factual summary). Assert it's non-empty.
+      expect(
+        descText?.trim().length,
+        'epic flagship description must be non-empty (harvested, not fabricated)',
+      ).toBeGreaterThan(0);
+      // Rule 9: no invented skill/conclusion prose. The harvested summaries are
+      // short factual labels; anything looking like full paragraphs is a red flag.
+      // Scope: the description element only (Rule 8 — scoped, not whole-doc).
+      expect(
+        descText?.length ?? 0,
+        'epic description should be a short summary, not a fabricated essay',
+      ).toBeLessThan(300);
+      return;
+    }
+
+    await dotBtn.click();
+    const detailPanel = page.locator('.zt-detail-panel');
+    await expect(detailPanel).toBeVisible();
+
+    // Rule 9: no fabricated epic-scope/retro-conclusion prose.
+    // The detail must NOT contain invented long-form content.
+    const descEl = detailPanel.locator('.zt-detail-panel__desc');
+    if ((await descEl.count()) > 0) {
+      const descText = await descEl.textContent();
+      expect(
+        descText?.length ?? 0,
+        'Dot description must be the harvested summary (not fabricated)',
+      ).toBeLessThan(300);
+    }
+
+    // If the Dot has an [OPEN] note, it must say "reader coming" (not pretend a reader exists).
+    const openNote = detailPanel.locator('.zt-detail-panel__open-note');
+    if ((await openNote.count()) > 0) {
+      await expect(openNote).toContainText(/reader.*coming|6\.3.*6\.4/i);
+    }
+  });
+});
+
+/**
+ * AC4 — reduced-motion: island + GSAP chunk NEVER fetched.
+ *
+ * Rule 7: proven to run (anti-vacuity guard that emulation is active).
+ * This is the FR-8 guarantee: the heavy chunk is NEVER fetched under reduced-motion.
+ */
+test.describe('Story 6.2 — ZoomableTimeline: reduced-motion (AC4)', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+  });
+
+  test('(AC4-a) under reduced-motion, the ZoomableTimeline island chunk + GSAP are NEVER fetched (FR-8 guarantee — Rule 7)', async ({
+    page,
+  }) => {
+    // Rule 7: intercept ALL requests; prove heavy chunks are NEVER fetched.
+    const heavyChunkRequests: string[] = [];
+    page.on('request', (req) => {
+      const url = req.url();
+      // Track ZoomableTimeline island chunk, GSAP vendor chunk, and bootstrap.
+      if (
+        url.includes('ZoomableTimeline') ||
+        url.includes('timeline-zoom') ||
+        url.includes('cinematic-gsap') ||
+        url.includes('timeline_zoom') // Vite's chunk naming for lib/timeline-zoom/
+      ) {
+        heavyChunkRequests.push(url);
+      }
+    });
+
+    await page.goto(TIMELINE_PATH);
+
+    // Anti-vacuity guard (Rule 7): the preference MUST actually be emulated.
+    const isReduced = await page.evaluate(
+      () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    );
+    expect(isReduced, 'reduced-motion emulation must be active (Rule 7 anti-vacuity)').toBe(true);
+
+    // Simulate interaction — under reduced-motion, onMotionAllowed no-ops, so
+    // no listener attaches and no chunk loads.
+    await page.evaluate(() => window.scrollBy({ top: 200, behavior: 'instant' }));
+    await page.waitForTimeout(1500); // allow any deferred callbacks to fire.
+
+    // The island root must NOT be mounted (onMotionAllowed gate no-ops).
+    const islandRoot = await page.locator('#zt-island-root').count();
+    expect(islandRoot, 'ZoomableTimeline island root must NOT mount under reduced-motion').toBe(0);
+
+    // No heavy chunks fetched.
+    expect(
+      heavyChunkRequests,
+      `Heavy chunks must NOT be fetched under reduced-motion (FR-8): ${heavyChunkRequests.join(', ')}`,
+    ).toHaveLength(0);
+  });
+
+  test('(AC4-b) under reduced-motion, the static <ol class="timeline-spine"> shows BOTH levels — every era, flagship, cluster Dot present + visible', async ({
+    page,
+  }) => {
+    await page.goto(TIMELINE_PATH);
+
+    const isReduced = await page.evaluate(
+      () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    );
+    expect(isReduced, 'reduced-motion emulation must be active').toBe(true);
+
+    // The static spine is the full experience under reduced-motion.
+    const spine = page.locator('ol.timeline-spine');
+    await expect(spine).toBeVisible();
+
+    // Era labels must be present (both levels reachable, AC4 / FR-8).
+    await expect(page.locator('body')).toContainText('The Runway');
+    await expect(page.locator('body')).toContainText('The Agentic Turn');
+
+    // Portfolio cluster Dots must be present + visible in the static <ol>.
+    const brainstormLink = page.locator('a[href="/glass-box/brainstorm/"]').first();
+    await expect(brainstormLink).toBeAttached();
+    await expect(brainstormLink).toBeVisible();
+
+    // Flagship milestone nodes are present.
+    await expect(page.locator('body')).toContainText('This portfolio');
+    await expect(page.locator('body')).toContainText('loandemo');
+  });
+});
+
+/**
+ * AC4 — JS-off: static <ol> is the full experience, both levels present + visible.
+ */
+test.describe('Story 6.2 — ZoomableTimeline: JS-off (AC4)', () => {
+  test('(AC4-c) JS-off: both levels (every era, flagship, cluster Dot, label, date, link) present and visible', async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+
+    await page.goto(TIMELINE_PATH);
+
+    // The static spine must be the full experience.
+    const spine = page.locator('ol.timeline-spine');
+    await expect(spine).toBeVisible();
+
+    // Both era levels present.
+    await expect(page.locator('body')).toContainText('The Runway');
+    await expect(page.locator('body')).toContainText('The Agentic Turn');
+
+    // Flagship labels present at overview level.
+    await expect(page.locator('body')).toContainText('This portfolio');
+    await expect(page.locator('body')).toContainText('loandemo');
+
+    // Cluster Dots are present AND visible JS-off (not display:none, no JS needed).
+    // The static FlagshipNode renders them unconditionally.
+    const brainstormLink = page.locator('a[href="/glass-box/brainstorm/"]').first();
+    await expect(brainstormLink).toBeAttached();
+    await expect(brainstormLink).toBeVisible();
+
+    // /work/loandemo/ cluster is visible.
+    const loandemoLink = page.locator('a[href="/work/loandemo/#code"]').first();
+    await expect(loandemoLink).toBeAttached();
+    await expect(loandemoLink).toBeVisible();
+
+    // No broken [OPEN] anchors.
+    const openLinks = page.locator('a[href="[OPEN]"]');
+    await expect(openLinks).toHaveCount(0);
+
+    await context.close();
+  });
+});
+
+/**
+ * AC5 — deferred-load script count (extends the existing script-count assertion).
+ * The ZoomableTimeline island + GSAP must NOT appear in the initial HTML.
+ */
+test.describe('Story 6.2 — ZoomableTimeline: deferred load + script count (AC5)', () => {
+  test('(AC5) the ZoomableTimeline island chunk and GSAP are NOT in the initial HTML', async ({
+    page,
+  }) => {
+    await page.goto(TIMELINE_PATH);
+
+    const html = await page.content();
+    expect(html).not.toMatch(/ZoomableTimeline\.[a-zA-Z0-9_-]+\.js/);
+    expect(html).not.toMatch(/cinematic-gsap\.[a-zA-Z0-9_-]+\.js/);
+  });
+
+  test('(AC5) the data island is present in the initial HTML (timeline-data script tag)', async ({
+    page,
+  }) => {
+    await page.goto(TIMELINE_PATH);
+
+    // The data island must be in the initial HTML so the deferred island can read it.
+    const dataScript = page.locator('script#timeline-data[type="application/json"]');
+    await expect(dataScript).toBeAttached();
+
+    // It must contain valid JSON (not empty).
+    const content = await dataScript.textContent();
+    expect(
+      content?.trim().length,
+      'timeline-data script must have non-empty JSON content',
+    ).toBeGreaterThan(0);
+    expect(() => JSON.parse(content!), 'timeline-data script must be valid JSON').not.toThrow();
+
+    // The JSON must contain era data (non-empty array with entries).
+    const eras = JSON.parse(content!) as Array<{ id: string; entries: unknown[] }>;
+    expect(eras.length, 'at least 1 era in timeline data').toBeGreaterThan(0);
+    const totalFlagships = eras.reduce((sum, era) => sum + era.entries.length, 0);
+    expect(totalFlagships, 'timeline data must have flagships').toBeGreaterThan(0);
   });
 });

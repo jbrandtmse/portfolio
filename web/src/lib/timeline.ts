@@ -52,6 +52,15 @@ export interface FlagshipNode {
   label: string;
   date: string;
   description: string;
+  /**
+   * Optional reader href for the flagship ITSELF (Story 6.2). Harvested
+   * epics/retros/course-corrections are FlagshipNode-shaped with an empty
+   * cluster; this carries their `[OPEN]` (no-reader-yet) status so both the
+   * static FlagshipNode and the zoom island can render the same clean
+   * "full reader coming (6.3/6.4)" affordance instead of leaking a sentinel.
+   * Absent for the multi-artifact seed flagships (loandemo, This portfolio).
+   */
+  href?: string;
   /** Child dots in this flagship's cluster (ordered oldest → newest). */
   cluster: TimelineDotEntry[];
 }

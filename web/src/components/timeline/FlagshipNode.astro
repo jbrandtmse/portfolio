@@ -19,16 +19,29 @@
 import TimelineDot from '../glassbox/TimelineDot.astro';
 import { formatDotDate } from '../../lib/timeline.ts';
 import type { TimelineDotEntry } from '../../lib/timeline.ts';
+import { cleanDescription, readerAffordance } from '../../lib/timeline-display.ts';
 
 interface Props {
   label: string;
   date: string;
   description: string;
+  /**
+   * Optional reader href for the flagship itself (Story 6.2). Harvested
+   * epics/retros/course-corrections carry `[OPEN]` here → a clean
+   * "full reader coming (6.3/6.4)" affordance instead of a leaked sentinel.
+   */
+  href?: string;
   /** Child dots in this flagship's cluster (ordered oldest → newest). */
   cluster: TimelineDotEntry[];
 }
 
-const { label, date, description, cluster } = Astro.props;
+const { label, date, description, href, cluster } = Astro.props;
+
+// Story 6.2: strip any leaked internal `[OPEN: …]` sentinel from visible prose,
+// and decide the flagship-level "reader" affordance from its own href. Shared
+// with ZoomableTimeline.tsx (web/src/lib/timeline-display.ts) so both surfaces agree.
+const cleanDesc = cleanDescription(description);
+const flagshipAffordance = readerAffordance(href);
 ---
 
 <div class="flagship-node">
@@ -39,7 +52,19 @@ const { label, date, description, cluster } = Astro.props;
       <time class="flagship-node__date" datetime={date}>
         {formatDotDate(date)}
       </time>
-      <p class="flagship-node__description">{description}</p>
+      {cleanDesc && <p class="flagship-node__description">{cleanDesc}</p>}
+      {
+        flagshipAffordance.kind === 'coming' && (
+          <p class="flagship-node__reader-note">{flagshipAffordance.text}</p>
+        )
+      }
+      {
+        flagshipAffordance.kind === 'link' && (
+          <a class="flagship-node__reader-link" href={flagshipAffordance.href}>
+            {flagshipAffordance.label}
+          </a>
+        )
+      }
     </div>
   </div>
 
@@ -118,6 +143,30 @@ const { label, date, description, cluster } = Astro.props;
     line-height: var(--line-height-body);
     margin: 0;
     max-width: 40ch;
+  }
+
+  /* Story 6.2: clean "full reader coming (6.3/6.4)" affordance for harvested
+     epics/retros whose Glass Box reader does not exist yet ([OPEN] status).
+     Replaces the leaked internal `[OPEN: no Glass Box reader yet]` sentinel. */
+  .flagship-node__reader-note {
+    font-size: var(--font-size-meta, 12px);
+    color: var(--color-ink-secondary);
+    font-style: italic;
+    line-height: var(--line-height-body);
+    margin: 0;
+    max-width: 40ch;
+  }
+
+  .flagship-node__reader-link {
+    font-size: var(--font-size-meta, 12px);
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    line-height: 1.3;
+  }
+
+  .flagship-node__reader-link:hover {
+    text-decoration-thickness: 2px;
   }
 
   /* Cluster: the list of child dots */

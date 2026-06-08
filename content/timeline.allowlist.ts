@@ -156,8 +156,7 @@ export const TIMELINE_ALLOWLIST: readonly TimelineHarvestEntry[] = [
     label: 'Sprint Course-Correction',
     href: '[OPEN]',
     state: 'resting',
-    description:
-      'Mid-sprint scope adjustment — documented course-correction for the build. [OPEN: no Glass Box reader yet]',
+    description: 'Mid-sprint scope adjustment — documented course-correction for the build.',
   },
 
   // ── COMPLETED EPIC CYCLE LOGS ─────────────────────────────────────────────
@@ -168,8 +167,7 @@ export const TIMELINE_ALLOWLIST: readonly TimelineHarvestEntry[] = [
     label: 'Epic 1 — Build Foundation',
     href: '[OPEN]',
     state: 'filled',
-    description:
-      'Scaffold, design system, hero, static mirror, pipeline. [OPEN: no Glass Box reader yet]',
+    description: 'Scaffold, design system, hero, static mirror, pipeline.',
   },
   {
     sourceFile: '_bmad-output/implementation-artifacts/cycle-log-epic-2.md',
@@ -177,8 +175,7 @@ export const TIMELINE_ALLOWLIST: readonly TimelineHarvestEntry[] = [
     label: 'Epic 2 — Glass Box & Timeline',
     href: '[OPEN]',
     state: 'filled',
-    description:
-      'Glass Box publish pipeline, artifact reader, Master Timeline seeded. [OPEN: no Glass Box reader yet]',
+    description: 'Glass Box publish pipeline, artifact reader, Master Timeline seeded.',
   },
   {
     sourceFile: '_bmad-output/implementation-artifacts/cycle-log-epic-3.md',
@@ -186,8 +183,7 @@ export const TIMELINE_ALLOWLIST: readonly TimelineHarvestEntry[] = [
     label: 'Epic 3 — Speaker Surface & Invite',
     href: '[OPEN]',
     state: 'filled',
-    description:
-      'Speaker reel, bios, Invite Me form with resilience. [OPEN: no Glass Box reader yet]',
+    description: 'Speaker reel, bios, Invite Me form with resilience.',
   },
   {
     sourceFile: '_bmad-output/implementation-artifacts/cycle-log-epic-4.md',
@@ -195,8 +191,7 @@ export const TIMELINE_ALLOWLIST: readonly TimelineHarvestEntry[] = [
     label: 'Epic 4 — Knowledge Base & Guide',
     href: '[OPEN]',
     state: 'filled',
-    description:
-      'KB index, FAQ Mirror, Guide endpoint, Guide island. [OPEN: no Glass Box reader yet]',
+    description: 'KB index, FAQ Mirror, Guide endpoint, Guide island.',
   },
   {
     sourceFile: '_bmad-output/implementation-artifacts/cycle-log-epic-5.md',
@@ -204,7 +199,7 @@ export const TIMELINE_ALLOWLIST: readonly TimelineHarvestEntry[] = [
     label: 'Epic 5 — Cinematic Canvas & Depth Dial',
     href: '[OPEN]',
     state: 'filled',
-    description: "Continuous canvas, depth dial, director's mode. [OPEN: no Glass Box reader yet]",
+    description: "Continuous canvas, depth dial, director's mode.",
   },
 
   // ── RETROSPECTIVES ────────────────────────────────────────────────────────
@@ -215,8 +210,7 @@ export const TIMELINE_ALLOWLIST: readonly TimelineHarvestEntry[] = [
     label: 'Epic 1 Retrospective',
     href: '[OPEN]',
     state: 'filled',
-    description:
-      'Post-Epic 1 retrospective — lessons from the foundation sprint. [OPEN: no Glass Box reader yet]',
+    description: 'Post-Epic 1 retrospective — lessons from the foundation sprint.',
   },
   {
     sourceFile: '_bmad-output/implementation-artifacts/epic-2-retro-2026-06-06.md',
@@ -224,8 +218,7 @@ export const TIMELINE_ALLOWLIST: readonly TimelineHarvestEntry[] = [
     label: 'Epic 2 Retrospective',
     href: '[OPEN]',
     state: 'filled',
-    description:
-      'Post-Epic 2 retrospective — lessons from Glass Box and Timeline. [OPEN: no Glass Box reader yet]',
+    description: 'Post-Epic 2 retrospective — lessons from Glass Box and Timeline.',
   },
   {
     sourceFile: '_bmad-output/implementation-artifacts/epic-3-retro-2026-06-07.md',
@@ -233,8 +226,7 @@ export const TIMELINE_ALLOWLIST: readonly TimelineHarvestEntry[] = [
     label: 'Epic 3 Retrospective',
     href: '[OPEN]',
     state: 'filled',
-    description:
-      'Post-Epic 3 retrospective — lessons from speaker surface and invite. [OPEN: no Glass Box reader yet]',
+    description: 'Post-Epic 3 retrospective — lessons from speaker surface and invite.',
   },
   {
     sourceFile: '_bmad-output/implementation-artifacts/epic-4-retro-2026-06-07.md',
@@ -242,8 +234,7 @@ export const TIMELINE_ALLOWLIST: readonly TimelineHarvestEntry[] = [
     label: 'Epic 4 Retrospective',
     href: '[OPEN]',
     state: 'filled',
-    description:
-      'Post-Epic 4 retrospective — lessons from KB index and Guide. [OPEN: no Glass Box reader yet]',
+    description: 'Post-Epic 4 retrospective — lessons from KB index and Guide.',
   },
   {
     sourceFile: '_bmad-output/implementation-artifacts/epic-5-retro-2026-06-08.md',
@@ -251,7 +242,6 @@ export const TIMELINE_ALLOWLIST: readonly TimelineHarvestEntry[] = [
     label: 'Epic 5 Retrospective',
     href: '[OPEN]',
     state: 'filled',
-    description:
-      'Post-Epic 5 retrospective — lessons from cinematic canvas and depth dial. [OPEN: no Glass Box reader yet]',
+    description: 'Post-Epic 5 retrospective — lessons from cinematic canvas and depth dial.',
   },
 ];

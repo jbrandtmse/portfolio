@@ -31,3 +31,15 @@ export const $guideOpen = atom(false);
  */
 export type Depth = 'skim' | 'overview' | 'deep';
 export const $depth = atom<Depth>('overview');
+
+/**
+ * The currently focused flagship on the /timeline/ page — drives the ZoomableTimeline
+ * island's overview ↔ detail semantic zoom (Story 6.2).
+ *
+ *   null         — overview: all eras visible, clusters collapsed
+ *   <string>     — a flagship `data-flagship-id` value → that flagship's cluster expanded
+ *
+ * The ZoomableTimeline island subscribes via useStore($timelineFocus); other surfaces
+ * (e.g. a guided tour) can drive the zoom by writing $timelineFocus.set(id).
+ */
+export const $timelineFocus = atom<string | null>(null);

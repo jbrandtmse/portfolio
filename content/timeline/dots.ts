@@ -67,6 +67,13 @@ export interface FlagshipNode {
   label: string;
   date: string;
   description: string;
+  /**
+   * Optional reader href for the flagship itself (Story 6.2). Carried by
+   * harvested epics/retros/course-corrections (FlagshipNode-shaped, empty
+   * cluster) so both timeline surfaces render a clean "reader coming" affordance
+   * for their `[OPEN]` status. Absent for the seed multi-artifact flagships.
+   */
+  href?: string;
   /** Child dots in this flagship's cluster (ordered oldest → newest). */
   cluster: TimelineDotEntry[];
 }

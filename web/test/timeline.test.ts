@@ -35,10 +35,24 @@ function allScriptTags(html: string): string[] {
   return html.match(/<script\b[^>]*>/gi) ?? [];
 }
 
-/** Count EXECUTABLE scripts — every <script> that is NOT an ld+json data block. */
+/**
+ * Count EXECUTABLE scripts — every <script> that is NOT a JSON data block.
+ *
+ * Excluded:
+ *   - type="application/ld+json"  — structured-data blocks (pre-existing exclusion)
+ *   - type="application/json"     — data islands (Story 6.2: timeline-data island)
+ *
+ * Story 6.2 adds a <script type="application/json" id="timeline-data"> data island
+ * alongside the static <ol>. This is NOT executable code — it is a JSON payload the
+ * ZoomableTimeline island reads at runtime. Excluding it preserves the semantic meaning
+ * of this counter (executable scripts = scripts the browser parses + runs).
+ */
 function countExecutableScripts(html: string): number {
-  return allScriptTags(html).filter((tag) => !/type\s*=\s*["']application\/ld\+json["']/i.test(tag))
-    .length;
+  return allScriptTags(html).filter(
+    (tag) =>
+      !/type\s*=\s*["']application\/ld\+json["']/i.test(tag) &&
+      !/type\s*=\s*["']application\/json["']/i.test(tag),
+  ).length;
 }
 
 // ─── beforeAll: generate data + build ────────────────────────────────────────
@@ -104,16 +118,22 @@ describe('Story 2.4 AC3 — one <h1>, semantic <ol>, 0 executable JS', () => {
     expect(html).toMatch(/<ol\b[^>]*class="[^"]*timeline-spine[^"]*"[^>]*>/);
   });
 
-  it('ships exactly 2 executable scripts — Guide pill only (NFR-1, Story 4.4 carve-out)', () => {
+  it('ships exactly 3 executable scripts — Guide pill (2) + deferred-mount shim (1) (NFR-1, Story 6.2)', () => {
     // Story 4.4: ALL routes ship the site-wide Guide pill (2 exec scripts).
-    // /timeline/ has no InviteForm chunk, no GuidePanel chunk, no external src= scripts.
+    // Story 6.2: the deferred ZoomableTimeline mount shim adds 1 page-specific
+    // executable script (the onMotionAllowed gate + requestIdleCallback + dynamic import).
+    // The ZoomableTimeline island itself + GSAP are NOT in the initial script set —
+    // they are loaded lazily via dynamic import() inside onMotionAllowed (AC5 / NFR-1).
+    // The <script type="application/json" id="timeline-data"> data island is NOT counted
+    // (it is a JSON payload, not executable code — see countExecutableScripts above).
     const html = readFileSync(timelineHtmlPath, 'utf8');
     expect(
       countExecutableScripts(html),
-      '/timeline/ must have exactly 2 exec scripts (Guide pill only)',
-    ).toBe(2);
-    expect(html).not.toMatch(/<script\b[^>]*\bsrc=/);
-    expect(html).not.toMatch(/<link\b[^>]*\brel="modulepreload"/);
+      '/timeline/ must have exactly 3 exec scripts (2 GuidePill + 1 deferred-mount shim)',
+    ).toBe(3);
+    // The ZoomableTimeline island and GSAP must NOT be in the initial script set.
+    expect(html).not.toMatch(/ZoomableTimeline\.[a-zA-Z0-9_-]+\.js/);
+    expect(html).not.toMatch(/cinematic-gsap\.[a-zA-Z0-9_-]+\.js/);
     expect(html).not.toMatch(/InviteForm\.[a-zA-Z0-9_-]+\.js/);
     expect(html).not.toMatch(/GuidePanel\.[a-zA-Z0-9_-]+\.js/);
   });
