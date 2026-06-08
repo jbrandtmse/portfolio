@@ -43,3 +43,4 @@
 2026-06-08T12:43:36Z	Story 5.4	smoke_complete	method=browser+api result=pass iterations=1 defects_caught=0 evidence=realLLM_organizer_directive_order+deepen[speaker,flagship]+skip[thesis,timeline]_smc1valid+browser_full_cut_reorder+deep_tier_visible+skip_marked_but_reachable_fr8+domCanonical model=claude-opus-4-8 note=2_HIGH_caught_by_qa+cr_fixed_confirmed_in_render
 2026-06-08T12:43:59Z	Story 5.4	committed	sha=4c266ab submodules=
 2026-06-08T13:58:34Z	Epic 5	retrospective_complete	doc=epic-5-retro-2026-06-08.md verdict=automated_went_well rules_codified=12,13 model_default=claude-haiku-4-5
+2026-06-08T13:59:41Z	Epic 5	epic_merged_to_feature	repos=. feature_sha=cbe990f merge_sha=cbe990f submodules=
