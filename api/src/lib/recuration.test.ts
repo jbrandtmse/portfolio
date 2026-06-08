@@ -1,23 +1,34 @@
 /**
- * recuration.test.ts — unit tests for api/src/lib/recuration.ts (Story 5.3).
+ * recuration.test.ts — unit tests for api/src/lib/recuration.ts (Story 5.3 + 5.4).
  *
- * Tests:
+ * Story 5.3 tests:
  *  AC3: assertSmc1Invariants() — the real table is SM-C1-valid (mutation-verified).
  *  AC4: classifyIntentStub() — deterministic keyword matching for e2e testability.
  *  AC4: parseClassifierResponse() — constrained to enum; out-of-set → 'default'.
  *  AC4: classifyIntent() — stub mode (GUIDE_LLM_STUB engaged); injection-safe.
  *  AC1: getOrderForIntent() — correct orderings for all 4 intents.
+ *
+ * Story 5.4 tests (AC2, AC4, FR-8 / SM-C1):
+ *  assertSmc1Invariants() — also guards skip table (hero/close/speaker-for-organizer).
+ *  INTENT_DEEPEN_TABLE — every deepened id is a real SceneId; mutation-verified.
+ *  INTENT_SKIP_TABLE — SM-C1/FR-8 guards (hero/close never skipped; speaker not skipped for organizer).
+ *  getDirectiveForIntent() — returns order + deepen + skip from server tables.
+ *  FR-8: skip = tour omission only; every scene id in skip is a real SceneId.
+ *
  *  Rule 8: assertions scoped to specific fields; real module exports used (not inline copies).
  *  Mutation-verified: noted per test (removing table constraints reds the SM-C1 test).
  */
 import { describe, expect, it, vi, afterEach } from 'vitest';
 import {
+  INTENT_DEEPEN_TABLE,
   INTENT_ORDER_TABLE,
+  INTENT_SKIP_TABLE,
   SCENE_IDS,
   VALID_INTENTS,
   assertSmc1Invariants,
   classifyIntent,
   classifyIntentStub,
+  getDirectiveForIntent,
   getOrderForIntent,
   parseClassifierResponse,
 } from './recuration.js';
@@ -335,6 +346,240 @@ describe('RecurationEvent wire shape (AC5 — integration point)', () => {
         expect(typeof id).toBe('string');
         expect(id.length).toBeGreaterThan(0);
       }
+    }
+  });
+});
+
+// ===========================================================================
+// Story 5.4 tests: deepen/skip tables + getDirectiveForIntent + SM-C1/FR-8
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// INTENT_DEEPEN_TABLE — every deepened id is a real SceneId (AC2, FR-8 / Rule 8)
+// ---------------------------------------------------------------------------
+
+describe('INTENT_DEEPEN_TABLE — every deepened id is a real SceneId (Story 5.4, AC2)', () => {
+  const sceneIdSet = new Set<string>(SCENE_IDS);
+
+  it('INTENT_DEEPEN_TABLE has an entry for all 4 intents', () => {
+    for (const intent of VALID_INTENTS) {
+      // Rule 8: real module export — not an inline copy
+      expect(Object.prototype.hasOwnProperty.call(INTENT_DEEPEN_TABLE, intent)).toBe(true);
+    }
+  });
+
+  it('default intent deepen list is empty (no deepening in default arc)', () => {
+    // Mutation-verification: if default were non-empty, the canonical arc would be altered.
+    expect(INTENT_DEEPEN_TABLE.default).toEqual([]);
+  });
+
+  it('every deepened id for every intent is a real SceneId (FR-8 — no invented scenes)', () => {
+    for (const [intent, deepen] of Object.entries(INTENT_DEEPEN_TABLE)) {
+      for (const id of deepen) {
+        // Rule 8: scoped to the id membership check
+        // Mutation-verification: adding an invented id reds this test.
+        expect(sceneIdSet.has(id), `intent "${intent}" deepen contains invalid id "${id}"`).toBe(
+          true,
+        );
+      }
+    }
+  });
+
+  it('organizer intent deepens speaker and flagship (the relevant path for an organizer)', () => {
+    // Rule 8: scoped to organizer deepen contents
+    // Mutation-verification: changing the organizer deepen list reds this.
+    expect(INTENT_DEEPEN_TABLE.organizer).toContain('speaker');
+    expect(INTENT_DEEPEN_TABLE.organizer).toContain('flagship');
+  });
+
+  it('assertSmc1Invariants() does NOT throw on the real INTENT_DEEPEN_TABLE', () => {
+    // The real tables are exercised at module load; re-call to verify.
+    // Mutation-verification: adding an unknown scene id to the deepen table throws.
+    expect(() => assertSmc1Invariants()).not.toThrow();
+  });
+
+  it('assertSmc1Invariants() THROWS on a bad deepen table (unknown scene id)', () => {
+    const originalDeepen = INTENT_DEEPEN_TABLE.default;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (INTENT_DEEPEN_TABLE as any).default = ['not-a-real-scene-id'];
+      expect(() => assertSmc1Invariants()).toThrow('[recuration] SM-C1 VIOLATION');
+    } finally {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (INTENT_DEEPEN_TABLE as any).default = originalDeepen;
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// INTENT_SKIP_TABLE — SM-C1/FR-8 guards (Story 5.4, AC2, Rule 8)
+//
+// SM-C1 hard constraints: hero/close never skipped; speaker not skipped for organizer.
+// FR-8: skip = tour omission only; every skipped id is a real SceneId.
+// ---------------------------------------------------------------------------
+
+describe('INTENT_SKIP_TABLE — SM-C1/FR-8-valid (Story 5.4, AC2)', () => {
+  const sceneIdSet = new Set<string>(SCENE_IDS);
+
+  it('INTENT_SKIP_TABLE has an entry for all 4 intents', () => {
+    for (const intent of VALID_INTENTS) {
+      // Rule 8: real module export
+      expect(Object.prototype.hasOwnProperty.call(INTENT_SKIP_TABLE, intent)).toBe(true);
+    }
+  });
+
+  it('default intent skip list is empty (no skipping in default arc)', () => {
+    // Mutation-verification: if default were non-empty, the canonical arc would skip scenes.
+    expect(INTENT_SKIP_TABLE.default).toEqual([]);
+  });
+
+  it('hero is NEVER in any skip list (SM-C1 hard guard)', () => {
+    for (const [intent, skip] of Object.entries(INTENT_SKIP_TABLE)) {
+      // Rule 8: scoped to the presence-of-hero check
+      // Mutation-verification: adding 'hero' to any skip list reds this test.
+      expect(skip.includes('hero'), `intent "${intent}" skip list must not contain "hero"`).toBe(
+        false,
+      );
+    }
+  });
+
+  it('close is NEVER in any skip list (the tour always reaches the CTA)', () => {
+    for (const [intent, skip] of Object.entries(INTENT_SKIP_TABLE)) {
+      // Rule 8: scoped to the presence-of-close check
+      // Mutation-verification: adding 'close' to any skip list reds this test.
+      expect(skip.includes('close'), `intent "${intent}" skip list must not contain "close"`).toBe(
+        false,
+      );
+    }
+  });
+
+  it('speaker is NEVER in the organizer skip list (SM-C1 — SM-C1 visible speaker path)', () => {
+    // Rule 8: scoped to the organizer skip list
+    // Mutation-verification: adding 'speaker' to organizer skip list reds this + assertSmc1Invariants.
+    expect(
+      INTENT_SKIP_TABLE.organizer.includes('speaker'),
+      'organizer skip list must not contain "speaker" (SM-C1)',
+    ).toBe(false);
+  });
+
+  it('every skipped id for every intent is a real SceneId (FR-8 — no invented scenes)', () => {
+    for (const [intent, skip] of Object.entries(INTENT_SKIP_TABLE)) {
+      for (const id of skip) {
+        // Rule 8: scoped to the id membership check
+        // Mutation-verification: adding an invented id reds this test.
+        expect(sceneIdSet.has(id), `intent "${intent}" skip contains invalid id "${id}"`).toBe(
+          true,
+        );
+      }
+    }
+  });
+
+  it('assertSmc1Invariants() does NOT throw on the real INTENT_SKIP_TABLE', () => {
+    // The real tables are exercised at module load; re-call to verify.
+    expect(() => assertSmc1Invariants()).not.toThrow();
+  });
+
+  it('assertSmc1Invariants() THROWS when hero is added to a skip list', () => {
+    const originalSkip = INTENT_SKIP_TABLE.default;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (INTENT_SKIP_TABLE as any).default = ['hero'];
+      expect(() => assertSmc1Invariants()).toThrow('SM-C1 VIOLATION');
+    } finally {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (INTENT_SKIP_TABLE as any).default = originalSkip;
+    }
+  });
+
+  it('assertSmc1Invariants() THROWS when speaker is added to organizer skip list', () => {
+    const originalSkip = INTENT_SKIP_TABLE.organizer;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (INTENT_SKIP_TABLE as any).organizer = [...originalSkip, 'speaker'];
+      expect(() => assertSmc1Invariants()).toThrow('SM-C1 VIOLATION');
+    } finally {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (INTENT_SKIP_TABLE as any).organizer = originalSkip;
+    }
+  });
+
+  it('assertSmc1Invariants() THROWS when close is added to any skip list', () => {
+    const originalSkip = INTENT_SKIP_TABLE.default;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (INTENT_SKIP_TABLE as any).default = ['close'];
+      expect(() => assertSmc1Invariants()).toThrow('SM-C1 VIOLATION');
+    } finally {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (INTENT_SKIP_TABLE as any).default = originalSkip;
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getDirectiveForIntent() — returns full order + deepen + skip (Story 5.4, AC1)
+// ---------------------------------------------------------------------------
+
+describe("getDirectiveForIntent() — full director's directive (Story 5.4, AC1)", () => {
+  it('returns an object with order, deepen, and skip arrays for all 4 intents', () => {
+    for (const intent of VALID_INTENTS) {
+      const directive = getDirectiveForIntent(intent);
+      // Rule 8: scoped to each returned field
+      expect(Array.isArray(directive.order), `${intent} order must be an array`).toBe(true);
+      expect(Array.isArray(directive.deepen), `${intent} deepen must be an array`).toBe(true);
+      expect(Array.isArray(directive.skip), `${intent} skip must be an array`).toBe(true);
+    }
+  });
+
+  it('order comes from INTENT_ORDER_TABLE (server-owned; model never emits)', () => {
+    for (const intent of VALID_INTENTS) {
+      const directive = getDirectiveForIntent(intent);
+      // Rule 8: scoped to the order reference equality
+      // Mutation-verification: changing the table changes this result.
+      expect(directive.order).toBe(INTENT_ORDER_TABLE[intent]);
+    }
+  });
+
+  it('deepen comes from INTENT_DEEPEN_TABLE (server-owned; model never emits)', () => {
+    for (const intent of VALID_INTENTS) {
+      const directive = getDirectiveForIntent(intent);
+      expect(directive.deepen).toBe(INTENT_DEEPEN_TABLE[intent]);
+    }
+  });
+
+  it('skip comes from INTENT_SKIP_TABLE (server-owned; model never emits)', () => {
+    for (const intent of VALID_INTENTS) {
+      const directive = getDirectiveForIntent(intent);
+      expect(directive.skip).toBe(INTENT_SKIP_TABLE[intent]);
+    }
+  });
+
+  it('default directive has empty deepen + empty skip (no director effects in default arc)', () => {
+    const directive = getDirectiveForIntent('default');
+    // Mutation-verification: if default deepen/skip were non-empty, the default arc would alter scenes.
+    expect(directive.deepen).toEqual([]);
+    expect(directive.skip).toEqual([]);
+  });
+
+  it('organizer directive deepens speaker + flagship (per INTENT_DEEPEN_TABLE)', () => {
+    const directive = getDirectiveForIntent('organizer');
+    // Rule 8: scoped to specific fields
+    expect(directive.deepen).toContain('speaker');
+    expect(directive.deepen).toContain('flagship');
+  });
+
+  it('organizer directive does NOT skip speaker (SM-C1 — speaker visible for organizer)', () => {
+    const directive = getDirectiveForIntent('organizer');
+    // Rule 8: scoped to the skip array
+    // Mutation-verification: adding speaker to organizer skip reds both this and assertSmc1Invariants.
+    expect(directive.skip).not.toContain('speaker');
+  });
+
+  it('no directive skips hero or close (SM-C1/FR-8 hard guards)', () => {
+    for (const intent of VALID_INTENTS) {
+      const directive = getDirectiveForIntent(intent);
+      expect(directive.skip).not.toContain('hero');
+      expect(directive.skip).not.toContain('close');
     }
   });
 });

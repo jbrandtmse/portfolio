@@ -818,4 +818,88 @@ describe('Story 5.3 — Re-curation SSE event (AC1, AC3, AC4, AC5)', () => {
       firstTokenIdx,
     );
   });
+
+  // ─── Story 5.4 — deepen + skip fields in the recuration SSE event ─────────
+
+  it('(i) Story 5.4: organizer recuration event includes deepen + skip arrays (AC1, AC4)', async () => {
+    // The recuration SSE event must now carry deepen + skip from the server tables.
+    // Rule 8: scoped to the deepen and skip fields of the recuration event data.
+    // Mutation-verification: removing deepen/skip from emitRecuration → these fields missing.
+    const res = await app.fetch(
+      new Request('http://localhost/api/guide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: "I'm a conference organizer looking to book a talk",
+        }),
+      }),
+    );
+
+    expect(res.status).toBe(200);
+    const events = await readSseBody(res);
+
+    const recurationEvents = events.filter((e) => e.event === 'recuration');
+    expect(recurationEvents.length, 'must emit one recuration event').toBe(1);
+
+    const data = recurationEvents[0]!.data as {
+      intent: string;
+      order: string[];
+      deepen: string[];
+      skip: string[];
+    };
+
+    // deepen must be an array of SceneIds
+    expect(Array.isArray(data.deepen), 'deepen must be an array').toBe(true);
+    // organizer deepen includes speaker + flagship (from INTENT_DEEPEN_TABLE)
+    expect(data.deepen, 'organizer deepen must include speaker').toContain('speaker');
+    expect(data.deepen, 'organizer deepen must include flagship').toContain('flagship');
+
+    // skip must be an array
+    expect(Array.isArray(data.skip), 'skip must be an array').toBe(true);
+    // organizer skip must NOT contain hero, close, or speaker (SM-C1/FR-8)
+    expect(data.skip, 'organizer skip must NOT contain hero (SM-C1)').not.toContain('hero');
+    expect(data.skip, 'organizer skip must NOT contain close (SM-C1)').not.toContain('close');
+    expect(data.skip, 'organizer skip must NOT contain speaker (SM-C1)').not.toContain('speaker');
+  });
+
+  it('(j) Story 5.4: explorer recuration event includes deepen + skip arrays (AC1, FR-8)', async () => {
+    const res = await app.fetch(
+      new Request('http://localhost/api/guide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: 'show me something cool and interesting' }),
+      }),
+    );
+
+    const events = await readSseBody(res);
+    const data = events.find((e) => e.event === 'recuration')!.data as {
+      deepen: string[];
+      skip: string[];
+    };
+
+    expect(Array.isArray(data.deepen), 'deepen must be an array').toBe(true);
+    expect(Array.isArray(data.skip), 'skip must be an array').toBe(true);
+    // FR-8: hero and close are never skipped
+    expect(data.skip).not.toContain('hero');
+    expect(data.skip).not.toContain('close');
+    // Explorer deepens flagship
+    expect(data.deepen, 'explorer must deepen flagship').toContain('flagship');
+  });
+
+  it('(k) Story 5.4: default query emits NO recuration event (no deepen/skip in default arc)', async () => {
+    // Default intent → no recuration event at all (canonical arc, additive behavior)
+    const res = await app.fetch(
+      new Request('http://localhost/api/guide', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: 'Tell me about Joshua' }),
+      }),
+    );
+
+    const events = await readSseBody(res);
+    const recurationEvents = events.filter((e) => e.event === 'recuration');
+    // Rule 8: scoped to recuration event absence
+    // Mutation-verification: if default triggered recuration, this reds.
+    expect(recurationEvents.length, 'default intent must emit NO recuration event').toBe(0);
+  });
 });

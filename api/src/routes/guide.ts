@@ -39,7 +39,7 @@ import { env } from '../env.js';
 import { assembleGroundedPrompt, detectInjection, extractCitations } from '../lib/grounding.js';
 import { LlmUnavailableError, streamTokens } from '../lib/llm-client.js';
 import { logger } from '../lib/logger.js';
-import { classifyIntent, getOrderForIntent } from '../lib/recuration.js';
+import { classifyIntent, getDirectiveForIntent } from '../lib/recuration.js';
 import { search } from '../lib/retriever.js';
 
 // ---------------------------------------------------------------------------
@@ -133,10 +133,16 @@ async function emitError(stream: SseWriter, message: string): Promise<void> {
   });
 }
 
-async function emitRecuration(stream: SseWriter, intent: string, order: string[]): Promise<void> {
+async function emitRecuration(
+  stream: SseWriter,
+  intent: string,
+  order: string[],
+  deepen: string[],
+  skip: string[],
+): Promise<void> {
   await stream.writeSSE({
     event: 'recuration',
-    data: JSON.stringify({ type: 'recuration', intent, order }),
+    data: JSON.stringify({ type: 'recuration', intent, order, deepen, skip }),
   });
 }
 
@@ -298,9 +304,16 @@ guideRouter.post('/guide', async (c: Context) => {
       // Emit re-curation directive FIRST (before citations + tokens) so the
       // client can begin re-ordering the scenes while the answer streams in.
       // Only emit for non-default intents (default = no change from canonical arc).
+      // Story 5.4: includes deepen + skip from the server-owned tables.
       if (classifiedIntent !== 'default') {
-        const order = getOrderForIntent(classifiedIntent);
-        await emitRecuration(stream, classifiedIntent, order);
+        const directive = getDirectiveForIntent(classifiedIntent);
+        await emitRecuration(
+          stream,
+          classifiedIntent,
+          directive.order,
+          directive.deepen,
+          directive.skip,
+        );
       }
 
       // Emit citation events first (all retrieved chunks that grounded the answer)

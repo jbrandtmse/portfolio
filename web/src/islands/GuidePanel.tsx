@@ -316,10 +316,15 @@ export function GuidePanel({ pillRef }: { pillRef?: React.RefObject<HTMLButtonEl
             }
 
             if (parsed.type === 'recuration') {
-              // Story 5.3, FR-10: apply the re-curation directive in place.
+              // Story 5.3 / 5.4, FR-10: apply the re-curation directive in place.
               // GuidePanel → recuration controller → CSS `order` (DOM unchanged, FR-8).
+              // Story 5.4: pass deepen/skip + motionAllowed so the controller
+              // can apply depth tiers + drive the camera inside the motion gate.
               const rec = parsed as RecurationEvent;
-              applyRecuration({ intent: rec.intent, order: rec.order });
+              applyRecuration(
+                { intent: rec.intent, order: rec.order, deepen: rec.deepen, skip: rec.skip },
+                motionAllowed,
+              );
             } else if (parsed.type === 'token') {
               collectedText += parsed.value;
               setTranscript((prev) =>
@@ -391,12 +396,14 @@ export function GuidePanel({ pillRef }: { pillRef?: React.RefObject<HTMLButtonEl
     // Omitting currentDepth would memoize a STALE closure that posts the depth as
     // of the previous query/mount — not the dial's current value — breaking AC2
     // (the GuidePanel must include the CHOSEN depth in /api/guide). (Story 5.2 CR)
-    // currentDepth MUST be a dependency: sendQuery is memoized, and a depth-only
-    // change (the dial) re-renders this component WITHOUT touching the other deps.
-    // Omitting currentDepth would memoize a STALE closure that posts the depth as
-    // of the previous query/mount — not the dial's current value — breaking AC2
-    // (the GuidePanel must include the CHOSEN depth in /api/guide). (Story 5.2 CR)
-    [isStreaming, transcript, idPrefix, currentDepth],
+    //
+    // motionAllowed MUST be a dependency: sendQuery captures motionAllowed in its
+    // closure and passes it to applyRecuration (line ~326). motionAllowed is
+    // useState(false) flipped to true by the onMotionAllowed mount effect. Without
+    // this dep, the closure stales at false — the entire motionAllowed-gated block
+    // (data-skip marking + goToScene camera driving) is inert, so SKIP and
+    // camera-driving never fire on a real motion-enabled visit. (Story 5.4 QA HIGH)
+    [isStreaming, transcript, idPrefix, currentDepth, motionAllowed],
   );
 
   const handleSubmit = useCallback(

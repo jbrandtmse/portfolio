@@ -79,20 +79,79 @@ export const INTENT_ORDER_TABLE: Record<Intent, SceneId[]> = {
 };
 
 // ---------------------------------------------------------------------------
+// Intent → deepen TABLE (Story 5.4, server-owned; model never emits)
+//
+// Each entry lists the SceneIds to set to deep detail for that intent.
+// `default` → empty (no deepening; canonical arc unchanged).
+// ---------------------------------------------------------------------------
+
+export const INTENT_DEEPEN_TABLE: Record<Intent, SceneId[]> = {
+  // Default: no deepening
+  default: [],
+  // Organizer: deepen speaker (show the full speaking profile) + flagship
+  organizer: ['speaker', 'flagship'],
+  // Builder: deepen glass-box (show the full technical depth) + flagship
+  builder: ['glass-box', 'flagship'],
+  // Explorer: deepen flagship (show the full demo)
+  explorer: ['flagship'],
+};
+
+// ---------------------------------------------------------------------------
+// Intent → skip TABLE (Story 5.4, server-owned + SM-C1-guarded; model never emits)
+//
+// Each entry lists the SceneIds the camera tour OMITS for that intent.
+// SKIP IS TOUR-OMISSION ONLY — scenes stay in the DOM + scroll + rail + JS-off.
+// `default` → empty (no skipping; canonical arc unchanged).
+//
+// SM-C1 hard constraints (enforced by assertSmc1Invariants at startup):
+//   - `hero` MUST NOT be skipped (never).
+//   - `close` MUST NOT be skipped (the tour always reaches the call-to-action).
+//   - `speaker` MUST NOT be skipped for `organizer` (SM-C1 mandate: visible path).
+//   - Every skipped SceneId must be a real SceneId in SCENE_IDS.
+// ---------------------------------------------------------------------------
+
+export const INTENT_SKIP_TABLE: Record<Intent, SceneId[]> = {
+  // Default: no skipping
+  default: [],
+  // Organizer: skip thesis + timeline (not directly relevant to booking a talk)
+  organizer: ['thesis', 'timeline'],
+  // Builder: skip timeline + speaker (not the technical deep-dive focus)
+  builder: ['timeline', 'speaker'],
+  // Explorer: skip timeline (explorers want demos, not the career arc)
+  explorer: ['timeline'],
+};
+
+// ---------------------------------------------------------------------------
 // SM-C1 startup assertion (server-side permutation + hero-first + speaker-present guard)
 // ---------------------------------------------------------------------------
 
 /**
- * Assert that every entry in INTENT_ORDER_TABLE is:
+ * Assert that every entry in INTENT_ORDER_TABLE, INTENT_DEEPEN_TABLE, and
+ * INTENT_SKIP_TABLE satisfies SM-C1 and FR-8 invariants:
+ *
+ * Order table:
  *   (a) a permutation of all 7 SceneIds (no drop, no addition)
  *   (b) `hero` is first
  *   (c) `speaker` is present
  *
- * Called at module load (startup); throws so a misconfigured table is caught immediately.
- * Also exported for tests (Rule 8 — exercises the REAL table, mutation-verified).
+ * Deepen table:
+ *   (d) every deepened id is a real SceneId in SCENE_IDS
+ *
+ * Skip table (Story 5.4, FR-8 / SM-C1 hard guards):
+ *   (e) `hero` MUST NOT be skipped (ever)
+ *   (f) `close` MUST NOT be skipped (the tour always reaches the close CTA)
+ *   (g) `speaker` MUST NOT be skipped for `organizer` (SM-C1 mandate)
+ *   (h) every skipped id is a real SceneId in SCENE_IDS
+ *
+ * Called at module load (startup); throws so a misconfigured table is caught
+ * immediately. Also exported for tests (Rule 8 — exercises the REAL tables,
+ * mutation-verified).
  */
 export function assertSmc1Invariants(): void {
   const sortedCanonical = [...SCENE_IDS].sort();
+  const sceneIdSet = new Set<string>(SCENE_IDS);
+
+  // ── Order table invariants ──
   for (const [intent, order] of Object.entries(INTENT_ORDER_TABLE) as [Intent, SceneId[]][]) {
     // (a) Same length as canonical
     if (order.length !== SCENE_IDS.length) {
@@ -120,6 +179,48 @@ export function assertSmc1Invariants(): void {
       throw new Error(
         `[recuration] SM-C1 VIOLATION: intent "${intent}" order is missing "speaker"`,
       );
+    }
+  }
+
+  // ── Deepen table invariants ──
+  for (const [intent, deepen] of Object.entries(INTENT_DEEPEN_TABLE) as [Intent, SceneId[]][]) {
+    // (d) every deepened id must be a real SceneId
+    for (const id of deepen) {
+      if (!sceneIdSet.has(id)) {
+        throw new Error(
+          `[recuration] SM-C1 VIOLATION: intent "${intent}" deepen list contains unknown scene id "${id}"`,
+        );
+      }
+    }
+  }
+
+  // ── Skip table invariants ──
+  for (const [intent, skip] of Object.entries(INTENT_SKIP_TABLE) as [Intent, SceneId[]][]) {
+    for (const id of skip) {
+      // (h) every skipped id must be a real SceneId
+      if (!sceneIdSet.has(id)) {
+        throw new Error(
+          `[recuration] FR-8/SM-C1 VIOLATION: intent "${intent}" skip list contains unknown scene id "${id}"`,
+        );
+      }
+      // (e) hero must NEVER be skipped
+      if (id === 'hero') {
+        throw new Error(
+          `[recuration] SM-C1 VIOLATION: intent "${intent}" skip list contains "hero" — hero is NEVER skippable`,
+        );
+      }
+      // (f) close must NEVER be skipped
+      if (id === 'close') {
+        throw new Error(
+          `[recuration] SM-C1 VIOLATION: intent "${intent}" skip list contains "close" — close is NEVER skippable`,
+        );
+      }
+      // (g) speaker must NEVER be skipped for organizer
+      if (id === 'speaker' && intent === 'organizer') {
+        throw new Error(
+          `[recuration] SM-C1 VIOLATION: intent "organizer" skip list contains "speaker" — speaker is NEVER skippable for organizer`,
+        );
+      }
     }
   }
 }
@@ -330,4 +431,38 @@ export async function classifyIntent(options: ClassifyIntentOptions): Promise<In
  */
 export function getOrderForIntent(intent: Intent): SceneId[] {
   return INTENT_ORDER_TABLE[intent];
+}
+
+// ---------------------------------------------------------------------------
+// Look up the full director's-mode directive for a given intent (Story 5.4)
+// ---------------------------------------------------------------------------
+
+export interface DirectorDirective {
+  /** The SM-C1-guarded scene order (from INTENT_ORDER_TABLE). */
+  order: SceneId[];
+  /**
+   * SceneIds to render at deep detail via the Story 5.2 `$depth` mechanism.
+   * Empty array = no deepening (default arc).
+   */
+  deepen: SceneId[];
+  /**
+   * SceneIds the camera tour omits (FR-8: stays in DOM + scroll + rail).
+   * Empty array = no skipping (default arc).
+   */
+  skip: SceneId[];
+}
+
+/**
+ * Return the full SM-C1-guarded director's directive for a given intent.
+ * All three components (order, deepen, skip) come EXCLUSIVELY from the
+ * server-owned tables — the model never emits any of them.
+ *
+ * Story 5.4: this is the single source for the `recuration` SSE event payload.
+ */
+export function getDirectiveForIntent(intent: Intent): DirectorDirective {
+  return {
+    order: INTENT_ORDER_TABLE[intent],
+    deepen: INTENT_DEEPEN_TABLE[intent],
+    skip: INTENT_SKIP_TABLE[intent],
+  };
 }

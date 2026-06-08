@@ -681,6 +681,61 @@ describe('home 7-scene scaffold + scene-rail (Story 1.4 IAC-1 / IAC-2)', () => {
     // Mutation-verification: removing `display:flex` from .home reds this.
     expect(builtCss).toMatch(/\.home[^{]*\{[^}]*flex-direction:column/);
   });
+
+  it('Story 5.4 FR-8: all 7 section ids present in the built home HTML (none removed — FR-8)', () => {
+    // Story 5.4's skip mechanism is tour-omission only; every scene must be in
+    // the BUILT static HTML regardless of skip configuration.
+    // Rule 8: scoped to the exact set of section ids (deep equality).
+    // Mutation-verification: if a scene were conditionally omitted from the build, this reds.
+    const sectionIds = [...indexHtml.matchAll(/<section\b[^>]*\sid="([^"]+)"[^>]*>/g)].map(
+      (m) => m[1],
+    );
+    // Must contain all 7 scenes — exactly (no extras, no drops)
+    expect(
+      sectionIds,
+      'Story 5.4 FR-8: all 7 scenes must be in built HTML (skip = tour omission, not build omission)',
+    ).toEqual(['hero', 'thesis', 'timeline', 'speaker', 'flagship', 'glass-box', 'close']);
+  });
+
+  it('Story 5.4 FR-8: no section has display:none or visibility:hidden in the built HTML (skip is CSS-attr-only)', () => {
+    // The built home HTML must not contain any inline display:none or visibility:hidden
+    // on the scene sections — skip marks are purely runtime data-attributes, not build-time
+    // visibility toggles (FR-8 HARD guard).
+    // Rule 8: scoped to section elements only.
+    // Mutation-verification: adding display:none to a section in index.astro reds this.
+    const sectionTags = [...indexHtml.matchAll(/<section\b([^>]*)>/g)].map((m) => m[1]!);
+    for (const attrs of sectionTags) {
+      // No inline style with display:none or visibility:hidden
+      expect(
+        attrs,
+        `a <section> tag must not have inline display:none or visibility:hidden (Story 5.4 FR-8)`,
+      ).not.toMatch(/style="[^"]*display:\s*none/i);
+      expect(
+        attrs,
+        `a <section> tag must not have inline visibility:hidden (Story 5.4 FR-8)`,
+      ).not.toMatch(/style="[^"]*visibility:\s*hidden/i);
+    }
+  });
+
+  it('Story 5.4 AC1: per-section DEEPEN reveals the deep tier (section[data-depth=deep] .scene__deep is in built CSS)', () => {
+    // The director's-mode DEEPEN verb sets data-depth="deep" on the SECTION
+    // (web/src/lib/recuration.ts). For that to render deep detail (AC1) while the
+    // GLOBAL depth dial is at its default 'overview' (which hides .scene__deep for
+    // every scene), the built CSS MUST carry a per-section reveal rule that shows
+    // the deepened scene's deep tier. Without it, DEEPEN is a visual no-op (CR HIGH).
+    //
+    // Rule 8: scoped to the exact selector→declaration pairing in the built CSS.
+    // Mutation-verification: removing the `section[data-depth='deep'] .scene__deep`
+    // rule from index.astro reds this (and the live e2e (j) deep-visible assertion).
+    // The minifier may emit the attribute selector with single, double, or no quotes.
+    // Astro adds a scoped attribute (e.g. [data-astro-cid-…]) to .scene__deep and
+    // may emit the data-depth value unquoted; tolerate both + any whitespace.
+    const norm = builtCssNorm.replace(/\s+/g, '');
+    expect(
+      norm,
+      'built CSS must reveal .scene__deep for a section[data-depth=deep] (per-section DEEPEN)',
+    ).toMatch(/section\[data-depth=["']?deep["']?\]\.scene__deep(\[[^\]]*\])?\{display:block/);
+  });
 });
 
 describe('built CSS — scene-rail two-layer reduced-motion gate (Story 1.4 AC4)', () => {

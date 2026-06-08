@@ -572,6 +572,30 @@ const homeJsonLd = serializeJsonLd([
     display: block;
   }
 
+  /* ── Per-scene deepen (Story 5.4 — director's-mode DEEPEN verb) ───────────
+     The Guide's director's-mode can DEEPEN individual scenes (organizer →
+     speaker + flagship, etc.) by setting data-depth="deep" on the SECTION
+     (web/src/lib/recuration.ts applyRecuration). This must reveal THAT scene's
+     deep tier even while the GLOBAL depth dial (html[data-depth]) is at its
+     default 'overview' (which hides .scene__deep for every scene, line ~546).
+
+     Without this rule the section-scoped data-depth="deep" attribute is inert:
+     the html[data-depth='overview'] .scene__deep { display:none } rule above has
+     equal specificity (0,2,1) and would tie-then-win on source order, so the
+     deepened scene's deep content would NEVER show — DEEPEN would be a no-op
+     (AC1: "a deepened scene at deep detail"). Placed AFTER the global rules so
+     it wins the source-order tie at equal specificity.
+
+     FR-8-safe: this only REVEALS additional (already-in-DOM) deep content for
+     the deepened scene; it never hides or removes anything. */
+  :global(section[data-depth='deep']) .scene__deep {
+    display: block;
+  }
+
+  :global(section[data-depth='deep']) .scene__skim {
+    display: none;
+  }
+
   /* Optional content-swap transition — only when motion is allowed (NFR-2).
      A simple fade-in for the depth tier swap; does NOT affect control operation. */
   @media (prefers-reduced-motion: no-preference) {
