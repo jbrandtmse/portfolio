@@ -103,6 +103,71 @@ const homeJsonLd = serializeJsonLd([
   }
   <SceneRail />
 
+  {
+    /*
+    ── CINEMATIC STILL POSTER (Story 5.1, AC2 / NFR-1) ───────────────────────
+    The initial-paint static fallback for the WebGL set-piece. A pre-rendered SVG
+    of the drafting-grid/blueprint composition — zero executable JS, 0 incremental
+    script weight, fully visible before any user interaction.
+
+    Under prefers-reduced-motion / JS-off / before first interaction:
+      → this image IS the "set-piece" (the static baseline).
+    After first scroll/interaction (motion allowed):
+      → the WebGL canvas loads and the still fades out gracefully.
+
+    aria-hidden: purely decorative; all scene content is in the DOM.
+    The SVG is served from /cinematic/cinematic-still.svg (generated at build time
+    by scripts/build-cinematic-assets.ts — committed as a stable asset).
+  */
+  }
+  <div id="cinematic-still-poster" aria-hidden="true" class="cinematic-still">
+    <img
+      src="/cinematic/cinematic-still.svg"
+      alt=""
+      aria-hidden="true"
+      width="800"
+      height="500"
+      decoding="async"
+      loading="lazy"
+    />
+  </div>
+
+  {
+    /*
+    ── DEFERRED CINEMATIC BOOTSTRAP (Story 5.1, AC1 / AC3 / AC5 — NFR-1 critical) ─
+    The heavy GSAP + three.js + @react-three/fiber stack is loaded ONLY on the
+    FIRST real user scroll or interaction, INSIDE onMotionAllowed. This ensures:
+      - Lighthouse's no-interaction trace on `/` NEVER fetches the heavy chunk.
+      - The 256KB `/` script budget stays green (the bootstrap is a tiny shim).
+      - Under prefers-reduced-motion → onMotionAllowed no-ops → heavy stack is
+        never loaded (AC3: camera path disabled outright; WebGL never initialized).
+
+    One-shot listeners ({once: true, passive: true}); never preventDefault (FR-2).
+    NOT client:load, NOT client:visible, NOT requestIdleCallback alone.
+  */
+  }
+  <script>
+    import { onMotionAllowed } from '../lib/motion';
+
+    onMotionAllowed(() => {
+      // One-shot interaction/scroll trigger — Lighthouse never scrolls/interacts,
+      // so this import never fires in its trace.
+      let loaded = false;
+      const loadCinematic = (): void => {
+        if (loaded) return;
+        loaded = true;
+        // Dynamic import — the heavy chunk (GSAP + three + R3F) loads here,
+        // AFTER the first real user scroll/pointer/key event.
+        void import('../lib/cinematic/bootstrap').then((m) => m.boot());
+      };
+
+      const once: AddEventListenerOptions = { once: true, passive: true };
+      window.addEventListener('scroll', loadCinematic, once);
+      window.addEventListener('pointerdown', loadCinematic, once);
+      window.addEventListener('keydown', loadCinematic, once);
+    });
+  </script>
+
   <main class="home">
     {/* ── Scene 1 — Hero (the 1.3 HeroStatic; carries the single <h1>) ─────── */}
     <section id="hero" aria-label="Introduction">
@@ -283,6 +348,43 @@ const homeJsonLd = serializeJsonLd([
 </BaseLayout>
 
 <style>
+  /* ── Cinematic still poster (Story 5.1, AC2 / NFR-1) ─────────────────────
+     The static fallback for the WebGL set-piece. Fixed behind the scenes,
+     covering the full viewport. `aria-hidden` and decorative (pointer-events:none).
+     On initial paint (before interaction), this image IS the set-piece.
+     After the WebGL canvas loads, this fades to 0 and is removed from the DOM.
+
+     CSS motion guard (NFR-2 Layer 1): the opacity transition is inside a
+     no-preference media query so reduced-motion never sees the animation.
+     Under reduced motion, the still is always visible (the static baseline). */
+  .cinematic-still {
+    position: fixed;
+    inset: 0;
+    z-index: -2; /* behind the WebGL canvas AND behind scene content */
+    pointer-events: none;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cinematic-still img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    opacity: 0.6;
+    /* Subtle scale so it feels like a wide composition, not a screenshot. */
+    transform: scale(1.05);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .cinematic-still {
+      /* Let JS-driven transitions run when motion is allowed. */
+      transition: opacity 0.6s ease;
+    }
+  }
+
   /* The scenes are plain, sequential sections (AC4 — fully functional JS-off).
      Each is a calm editorial band with generous whitespace; depth is tone +
      hairline, never shadow (DESIGN §Elevation, the flat system). On desktop the

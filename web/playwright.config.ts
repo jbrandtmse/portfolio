@@ -121,6 +121,14 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
       testMatch: /(home|view-source|url-form)\.spec\.ts/,
     },
+    // (Story 5.1) Cinematic camera path + WebGL set-piece e2e — desktop, JS on.
+    // Tests: motion-enabled bootstrap after scroll, reduced-motion disabled-outright,
+    // FR-2 scene-rail operable, AC2 static still in initial HTML, AC3 no-canvas.
+    {
+      name: 'cinematic',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /cinematic\.spec\.ts/,
+    },
     // (IAC-3) WCAG 2.1 AA audit at a DESKTOP viewport (/ and /about).
     {
       name: 'axe-desktop',
