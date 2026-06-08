@@ -133,6 +133,26 @@ Durable rules for AI dev + code-review agents working on this project. Rules are
 
 **How to apply:** the `/epic-cycle` spawn-prompt skeleton carries the synchronous-completion directive for dev, QA, AND code-review identically; treat a stage that yields without its closing summary as an incomplete stage (Rule 10).
 
+## 12. React island `useCallback`/`useEffect` dependency arrays must list EVERY captured reactive value — and the gated behavior must be asserted ON the real path
+
+**Context:** Any React island (`web/src/islands/*.tsx`) with a memoized callback/effect (`useCallback`/`useMemo`/`useEffect`) that reads component state/props — especially a state flag flipped asynchronously after mount (e.g. `motionAllowed` set by an `onMotionAllowed` effect, `currentDepth` set by a store subscription).
+
+**Rule:** Every value the callback/effect CAPTURES from render scope MUST be in its dependency array. A captured value omitted from the deps freezes at its initial value (a stale closure) — so any branch gated on it (`if (motionAllowed) {…}`) silently runs against the stale value (usually the initial `false`/default), disabling the behavior on the real runtime path while leaving SSR/initial-render correct. Pair this with Rule 13: the test MUST assert the gated behavior IS applied on the real path (e.g. `data-skip="true"` IS set after a motion-enabled run), mutation-verified to red when the dep is dropped — NOT merely that it is absent in the off case (which passes vacuously when the behavior never fires at all).
+
+**Why:** the SAME stale-closure bug shipped twice in Epic 5: Story 5.2's `GuidePanel.sendQuery` omitted `currentDepth` (posted a depth lagging one dial-change behind — code-review HIGH), and Story 5.4's `sendQuery` omitted `motionAllowed` (disabled director's-mode SKIP + camera-driving entirely on the real browser path — QA HIGH) — the 5.4 occurrence even had the 5.2 fix's comment sitting right above the dep array. Both passed the green gate because no e2e asserted the gated behavior was actually applied with motion enabled (the FR-8 "not hidden" + reduced-motion "absent" tests passed vacuously while the feature was inert). (Epic 5 retro, 2026-06-08.)
+
+**How to apply:** when reviewing/authoring an island callback, enumerate every identifier it reads from render scope and confirm each is in the deps (an eslint `react-hooks/exhaustive-deps` rule is the mechanical guard — enable/heed it); for every motion/depth/intent-gated behavior, add a real-runtime e2e that drives the on-path (gate satisfied) case and asserts the effect IS present, mutation-verified.
+
+## 13. Tests for a visual/behavioral outcome assert the USER-OBSERVABLE result, never just that an attribute/flag was set
+
+**Context:** Any story whose deliverable is a rendered/visible outcome driven by an attribute, class, data-* flag, CSS custom property, or state value (depth tiers, re-curation reorder, skip/deepen, a toggled control's effect).
+
+**Rule:** A test MUST assert the END outcome the user/AC observes — the element is actually VISIBLE / actually MOVED / actually RENDERED — not merely that the intermediate signal (a `data-depth="deep"` attribute, an `order` value, a `data-skip` flag) was set. An attribute with no CSS/JS CONSUMER is a silent no-op: the signal is present, the gate is green, and the user sees nothing. Verify the consumer exists and produces the visible result (computed style / bounding box / DOM-visible content), mutation-verified.
+
+**Why:** Story 5.4's "deepen" set `data-depth="deep"` on a `<section>`, but Story 5.2's depth tiers were revealed only by `html[data-depth='deep']` (the ROOT attribute from the dial) — NO rule consumed a section-scoped `data-depth`, so a "deepened" scene showed ZERO deep content. The e2e asserted the attribute was set (vacuous) and passed; code-review caught the no-op only by checking the rendered visibility on the real build and adding the missing per-section CSS consumer + a visible-deep assertion. The attribute-was-set test verified nothing the user experiences. (Epic 5 retro, 2026-06-08.)
+
+**How to apply:** for every attribute/flag/property a story introduces to drive a visual change, write the assertion against the observable result (`getComputedStyle().display !== 'none'`, the element's measured position, the visible text), and confirm + test the consumer (the CSS rule / JS handler) that turns the signal into the outcome; mutation-verify the test reds when the consumer (not just the signal) is removed.
+
 ---
 
 ## Project configuration notes (not rules — durable decisions the next epic-cycle run should honor)
