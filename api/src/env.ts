@@ -38,11 +38,15 @@ const envSchema = z.object({
 
   /**
    * LLM model ID to use for the Guide stream.
-   * Default: gpt-5-mini (current mid-tier streaming model on the VM's RouteLLM
-   * endpoint; confirmed available + verified live on /api/guide). Override per
-   * deployment via GUIDE_LLM_MODEL in api/.env.
+   * Default: claude-haiku-4-5-20251001 — a fast streaming model (~2-3s end-to-end
+   * for a grounded answer, well under the /api/guide abort ceiling) with strong
+   * instruction-following for the grounding/citation/injection contract; confirmed
+   * available + verified live on /api/guide (grounded + cited + injection-resistant
+   * + fail-closed). Chosen over the prior gpt-5-mini default, whose reasoning-class
+   * tail latency (~16.5s streaming) intermittently exceeded the ceiling and tripped
+   * the graceful fallback. Override per deployment via GUIDE_LLM_MODEL in api/.env.
    */
-  GUIDE_LLM_MODEL: z.string().default('gpt-5-mini'),
+  GUIDE_LLM_MODEL: z.string().default('claude-haiku-4-5-20251001'),
 
   /**
    * When set to "1", the llm-client uses a deterministic stub — no live LLM
