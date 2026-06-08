@@ -170,19 +170,32 @@ describe('Story 2.4 AC2 — era-bands and flagship clusters rendered', () => {
     expect(html).toMatch(/aria-label="Era: The Agentic Turn"/);
   });
 
-  it('renders exactly 3 faint runway-tick DOT ELEMENTS and 2 milestone flagship DOT ELEMENTS', () => {
+  it('renders exactly 3 faint runway-tick DOT ELEMENTS and at least 2 milestone flagship DOT ELEMENTS', () => {
     const html = readFileSync(timelineHtmlPath, 'utf8');
     // Count the actual <span class="timeline-dot timeline-dot--{state}"> ELEMENTS
     // (not the single inlined CSS rule that also mentions the modifier). This
-    // pins the curated manifest's shape: 3 quiet-runway ticks + 2 flagship
-    // milestones (loandemo + portfolio). A silent manifest change is caught here.
+    // asserts the curated runway ticks (3 faint) are present and that flagships
+    // are rendered (milestone dots). Story 6.1 (Stage 2) auto-harvests BMAD Dots
+    // so the agentic-turn era now contains more than 2 milestone dots (epics,
+    // retros, course-corrections are harvested alongside the loandemo + portfolio
+    // flagships). The minimum threshold is 2 (the seed flagships) plus at least
+    // all allowlisted harvested entries.
     const dotSpans = [
       ...html.matchAll(/<span\b[^>]*class="[^"]*\btimeline-dot\b[^"]*"[^>]*>/g),
     ].map((m) => m[0]);
     const faint = dotSpans.filter((s) => /timeline-dot--faint/.test(s)).length;
     const milestone = dotSpans.filter((s) => /timeline-dot--milestone/.test(s)).length;
     expect(faint, '3 faint runway ticks').toBe(3);
-    expect(milestone, '2 milestone flagship dots').toBe(2);
+    // At minimum: loandemo + portfolio (seed) + harvested epics/retros/course-correction.
+    // The exact count grows as the allowlist grows — assert it is at least 13
+    // (2 seed flagships + 11 harvested entries: 6 planning-cluster + 5 epics +
+    //  5 retros + 1 course-correction; note planning Dots are in the cluster, not
+    //  milestone dots — only top-level flagship entries get milestone dots).
+    // Actually: 2 seed flagships + 11 harvested top-level entries = 13 total.
+    expect(
+      milestone,
+      'at least 13 milestone flagship dots (seed + harvested)',
+    ).toBeGreaterThanOrEqual(13);
   });
 
   it('renders the 1px DASHED era divider between the runway and agentic-turn eras', () => {

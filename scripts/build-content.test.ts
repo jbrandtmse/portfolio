@@ -37,14 +37,15 @@ const orchestratorCode = orchestratorSource
   .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
 
 describe('content-pipeline orchestrator — registry state (AC1)', () => {
-  it('has the expected generators registered, in order: render-glassbox (2.1), render-timeline (2.4), build-kb-index (4.1)', () => {
+  it('has the expected generators registered, in order: render-glassbox (2.1), harvest-timeline (6.1), build-kb-index (4.1)', () => {
     // Story 2.1 landed render-glassbox (AR-13); Story 2.4 added render-timeline
-    // (FR-16, content/timeline/dots.ts → web/src/generated/timeline.json).
+    // (FR-16); Story 6.1 replaced it with harvest-timeline (FR-17, deterministic
+    // git→Dot auto-harvest, content/timeline.allowlist.ts → timeline.json).
     // Story 4.1 adds build-kb-index (content/kb/*.md → Orama corpus → api/data/).
     expect(Array.isArray(CONTENT_GENERATORS)).toBe(true);
     expect(CONTENT_GENERATORS.map((g) => g.name)).toEqual([
       'render-glassbox',
-      'render-timeline',
+      'harvest-timeline',
       'build-kb-index',
     ]);
   });

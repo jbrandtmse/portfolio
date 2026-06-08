@@ -152,10 +152,18 @@ test.describe('Master Timeline — deterministic "Mon YYYY" date labels (Story 3
   }) => {
     await page.goto(TIMELINE_PATH);
     const milestoneDates = page.locator('.flagship-node__date');
-    // Two flagships in the agentic-turn band: loandemo + portfolio.
-    await expect(milestoneDates).toHaveCount(2);
+    // Story 6.1 (Stage 2): the agentic-turn era now has many more flagships —
+    // the loandemo + portfolio seed flagships plus all harvested epics, retros,
+    // and course-corrections from the timeline allowlist. Assert at least 2
+    // (the seed flagships) rather than pinning an exact count that grows with
+    // each new allowlist entry.
+    const milestoneDateCount = await milestoneDates.count();
+    expect(
+      milestoneDateCount,
+      'at least 2 milestone dates (loandemo + portfolio)',
+    ).toBeGreaterThanOrEqual(2);
     for (const d of await milestoneDates.all()) {
-      // Both manifest dates fall in June 2026, so the deterministic label is "Jun 2026".
+      // All manifest dates fall in June 2026, so the deterministic label is "Jun 2026".
       await expect(d).toHaveText(/^\s*Jun 2026\s*$/);
       // A regression to the old toLocaleDateString full-style label would include
       // a day number (e.g. "June 6, 2026") — assert no day-of-month leaks in.
@@ -182,30 +190,44 @@ test.describe('Master Timeline — deterministic "Mon YYYY" date labels (Story 3
   }) => {
     await page.goto(TIMELINE_PATH);
     const dotDates = page.locator('.flagship-node__dot-date');
-    // loandemo cluster (3) + portfolio cluster (7) = 10 dated cluster dots.
+    // Story 6.1 (Stage 2): loandemo cluster (3) + portfolio cluster (7) = 10 dated
+    // cluster dots. The harvested epic/retro/course-correction entries are top-level
+    // FlagshipNode items with EMPTY clusters, so they do NOT add cluster dot dates.
     await expect(dotDates).toHaveCount(10);
     for (const d of await dotDates.all()) {
       // All cluster manifest dates are in June 2026 → deterministic "Jun 2026".
       await expect(d).toHaveText(/^\s*Jun 2026\s*$/);
-      // The machine-readable datetime must be a raw ISO date-only string
-      // (YYYY-MM or YYYY-MM-DD), i.e. the verbatim manifest value — NOT the
-      // human "Jun 2026" label.
+      // The machine-readable datetime must be an ISO date string (date-only OR
+      // full ISO-8601 timestamp from git committer date). The harvested planning
+      // Dots carry full ISO-8601 timestamps (git committer date format %cI).
       const dt = await d.getAttribute('datetime');
       expect(dt, 'cluster <time> must carry a datetime attribute').not.toBeNull();
-      expect(dt!).toMatch(/^\d{4}-\d{2}(-\d{2})?$/);
+      // Accept both date-only (YYYY-MM or YYYY-MM-DD) and full ISO-8601 timestamp
+      // (YYYY-MM-DDTHH:MM:SS+HH:MM) — harvested Dots use git committer dates.
+      expect(dt!).toMatch(/^\d{4}-\d{2}(-\d{2}(T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2})?)?$/);
     }
   });
 
-  test('a day-precise cluster date (2026-06-02) keeps its full ISO datetime but shows "Jun 2026"', async ({
+  test('a day-precise cluster date renders as "Jun 2026" (harvested or seeded)', async ({
     page,
   }) => {
     await page.goto(TIMELINE_PATH);
-    // The brainstorm/PRD-era cluster dots carry datetime="2026-06-02"; their
-    // visible label collapses to the month form. This pins label≠datetime at the
-    // cluster tier (the day part is in the attr, absent from the label).
-    const dayPrecise = page.locator('time.flagship-node__dot-date[datetime="2026-06-02"]').first();
-    await expect(dayPrecise).toBeAttached();
-    await expect(dayPrecise).toHaveText(/^\s*Jun 2026\s*$/);
+    // Stage 2: planning Dots in the portfolio cluster carry full git committer date
+    // timestamps (e.g. 2026-06-02T23:02:06+00:00), not bare date-only strings.
+    // The brainstorm Dot (date = 2026-06-02T23:02:06+00:00) should render "Jun 2026".
+    // Assert: at least one cluster dot date with a 2026-06-02 prefix renders "Jun 2026".
+    const dotDates = page.locator('.flagship-node__dot-date');
+    const allDates = await dotDates.all();
+    let foundJune = false;
+    for (const d of allDates) {
+      const dt = await d.getAttribute('datetime');
+      if (dt && dt.startsWith('2026-06-02')) {
+        await expect(d).toHaveText(/^\s*Jun 2026\s*$/);
+        foundJune = true;
+        break;
+      }
+    }
+    expect(foundJune, 'at least one 2026-06-02 cluster dot renders as Jun 2026').toBe(true);
   });
 });
 
@@ -303,9 +325,14 @@ test.describe('Master Timeline — AC3: visual order === DOM order (meaningful s
       document
         .querySelectorAll('.timeline-era__entries')
         .forEach((c, i) => out.push({ label: `era-entries[${i}]`, ...childVisualVsDom(c) }));
-      document
-        .querySelectorAll('.flagship-node__cluster')
-        .forEach((c, i) => out.push({ label: `cluster[${i}]`, ...childVisualVsDom(c) }));
+      // Story 6.1 (Stage 2): harvested epic/retro entries render as FlagshipNode
+      // with EMPTY clusters. Only include clusters that have child items to avoid
+      // asserting on empty flex containers (empty clusters still have flex layout
+      // but contain zero children — they are valid empty <ol>s).
+      document.querySelectorAll('.flagship-node__cluster').forEach((c, i) => {
+        const result = childVisualVsDom(c);
+        if (result.n > 0) out.push({ label: `cluster[${i}]`, ...result });
+      });
       return out;
     });
   }
@@ -408,9 +435,15 @@ test.describe('Master Timeline — AC3: visual order === DOM order (meaningful s
     const mobileOrder = await getEntryLabels(page);
 
     // Non-vacuous: there are real entries and the expected oldest→newest sequence.
-    expect(desktopOrder.length).toBe(5);
+    // Story 6.1 (Stage 2): the agentic-turn era now has many more entries (harvested
+    // BMAD Dots: epics, retros, course-correction, planning). Total entries =
+    // runway (3 ticks) + agentic-turn (13 flagship entries) = 16 minimum.
+    expect(desktopOrder.length).toBeGreaterThanOrEqual(5);
     expect(desktopOrder[0]).toContain('Early shipping years');
-    expect(desktopOrder[desktopOrder.length - 1]).toBe('This portfolio');
+    // The last entry is the most recent harvested item (Epic 5 Retrospective or
+    // Epic 5 cycle log — whichever has the latest git committer date). It is no
+    // longer guaranteed to be "This portfolio" since harvested Dots may be newer.
+    expect(desktopOrder.length).toBeGreaterThan(5);
     expect(desktopOrder).toEqual(mobileOrder);
   });
 
@@ -457,7 +490,7 @@ test.describe('Master Timeline — JS-off (AC3)', () => {
     await expect(page.locator('time[datetime="~1996"]')).toBeAttached();
     await expect(page.locator('time[datetime="2026-06-06"]').first()).toBeAttached();
 
-    // Portfolio Dots must be followable <a> elements (real links, JS-off).
+    // Portfolio cluster Dots must be followable <a> elements (real links, JS-off).
     const brainstormLink = page.locator('a[href="/glass-box/brainstorm/"]').first();
     await expect(brainstormLink).toBeAttached();
     await expect(brainstormLink).toHaveJSProperty('tagName', 'A');
@@ -571,5 +604,115 @@ test.describe('Master Timeline — URL form (trailing-slash, no 301)', () => {
     expect(response?.status()).toBe(200);
     // Current URL stays at the trailing-slash form (no redirect observed).
     expect(page.url()).toContain(TIMELINE_PATH);
+  });
+});
+
+/**
+ * Story 6.1 AC6 — Integration AC: the existing /timeline/ renders the merged Dots.
+ *
+ * Asserts the USER-OBSERVABLE rendered outcome (Rule 13): both the curated seed
+ * (runway ticks) AND the harvested BMAD Dots (epics, retros) are VISIBLE on the
+ * served /timeline/ page, not just present in the JSON. JS-off semantic <ol>
+ * contains them. Links resolve (no broken link to a fabricated target).
+ *
+ * The harvest pipeline (scripts/harvest-timeline.ts) runs as part of the
+ * webServer `pnpm build` in playwright.config.ts — the JSON is generated before
+ * the Astro build, so the page receives the merged output.
+ */
+test.describe('Story 6.1 AC6 — Integration: merged Dots visible on served /timeline/', () => {
+  test('the runway era IS VISIBLE (seed ticks render with JS on)', async ({ page }) => {
+    await page.goto(TIMELINE_PATH);
+    // Assert the user-observable runway band is present and visible (Rule 13).
+    const runwayEra = page.locator('[aria-label="Era: The Runway"]');
+    await expect(runwayEra).toBeVisible();
+    // The first runway tick text is visible — not just attached.
+    await expect(page.locator('body')).toContainText('Early shipping years');
+  });
+
+  test('at least one harvested BMAD Dot IS VISIBLE in the agentic-turn era', async ({ page }) => {
+    await page.goto(TIMELINE_PATH);
+    // Assert a harvested epic Dot is rendered and visible (Rule 13 — user-observable).
+    // Epic 1 cycle log becomes "Epic 1 — Build Foundation" in the agentic-turn era.
+    const agenticEra = page.locator('[aria-label="Era: The Agentic Turn"]');
+    await expect(agenticEra).toBeVisible();
+
+    // Rule 8 (scoped) + Rule 13 (user-observable result, not just text-in-body):
+    // bind the assertion to the harvested entry's REAL rendered <li>, INSIDE the
+    // agentic-turn era, and assert the FULL milestone Dot renders — the milestone
+    // marker span + the VISIBLE label + the VISIBLE date. A body-wide toContainText
+    // would pass if the string appeared anywhere (e.g. a stray comment); this proves
+    // the harvested epic/retro Dots render as real, visible milestone nodes (the
+    // empty-cluster FlagshipNode is not an invisible/broken no-op).
+    const epicLi = agenticEra.locator(
+      'li.timeline-entry--flagship[aria-label="Flagship: Epic 1 — Build Foundation"]',
+    );
+    await expect(epicLi).toHaveCount(1);
+    await expect(epicLi).toBeVisible();
+    // The milestone dot marker renders for the harvested (empty-cluster) Dot.
+    await expect(epicLi.locator('.timeline-dot--milestone')).toBeAttached();
+    // The visible title text is the harvested label.
+    await expect(epicLi.locator('.flagship-node__title')).toHaveText('Epic 1 — Build Foundation');
+    // Rule 13: the harvested Dot's DATE is actually rendered (deterministic Jun 2026
+    // from the real git committer date), carrying the verbatim ISO datetime attr.
+    const epicDate = epicLi.locator('time.flagship-node__date');
+    await expect(epicDate).toHaveText(/^\s*Jun 2026\s*$/);
+    await expect(epicDate).toHaveAttribute(
+      'datetime',
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/,
+    );
+
+    // A harvested retro Dot is likewise visible as its own scoped milestone node.
+    const retroLi = agenticEra.locator(
+      'li.timeline-entry--flagship[aria-label="Flagship: Epic 1 Retrospective"]',
+    );
+    await expect(retroLi).toHaveCount(1);
+    await expect(retroLi).toBeVisible();
+    await expect(retroLi.locator('.flagship-node__title')).toHaveText('Epic 1 Retrospective');
+  });
+
+  test('JS-off: semantic <ol> contains BOTH runway ticks AND harvested BMAD Dots', async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    const response = await page.goto(TIMELINE_PATH);
+    expect(response?.status()).toBe(200);
+
+    // The spine is a real <ol> (not a div) and is visible JS-off.
+    const spine = page.locator('ol.timeline-spine');
+    await expect(spine).toBeVisible();
+
+    // Runway ticks are visible JS-off (seed, un-harvestable).
+    await expect(page.locator('body')).toContainText('Early shipping years');
+    await expect(page.locator('time[datetime="~1996"]')).toBeAttached();
+
+    // Harvested BMAD Dot is visible JS-off — assert a real epic entry renders.
+    await expect(page.locator('body')).toContainText('Epic 1 — Build Foundation');
+
+    // Portfolio planning Dots still resolve to real Glass Box links JS-off.
+    const brainstormLink = page.locator('a[href="/glass-box/brainstorm/"]').first();
+    await expect(brainstormLink).toBeAttached();
+
+    // No `href="[OPEN]"` appears in the rendered HTML ([OPEN] items render as
+    // non-link spans, not broken anchors — credibility floor, AC5).
+    const openLinks = page.locator('a[href="[OPEN]"]');
+    await expect(openLinks).toHaveCount(0);
+
+    await context.close();
+  });
+
+  test('Dot links resolve (no broken link to a fabricated target)', async ({ page }) => {
+    await page.goto(TIMELINE_PATH);
+    // Portfolio planning Dots link to real Glass Box readers (slug is in GLASSBOX_ALLOWLIST).
+    for (const slug of PORTFOLIO_SLUGS) {
+      const link = page.locator(`a[href="/glass-box/${slug}/"]`).first();
+      await expect(link, `Reader link present for ${slug}`).toBeAttached();
+    }
+    // Harvested epic/retro/course-correction Dots with [OPEN] href must NOT render
+    // as broken <a href="[OPEN]"> anchors. The FlagshipNode component renders them
+    // as plain milestone nodes with no cluster link (empty cluster = no dot links).
+    // Assert: zero anchors with href="[OPEN]" exist.
+    const brokenOpenLinks = page.locator('a[href="[OPEN]"]');
+    await expect(brokenOpenLinks).toHaveCount(0);
   });
 });

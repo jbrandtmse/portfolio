@@ -1,42 +1,37 @@
 /**
- * content/timeline/dots.ts — the hand-curated Master Timeline manifest (Story 2.4).
+ * content/timeline/dots.ts — the CURATED SEED for the Master Timeline (Story 6.1).
  *
- * CANONICAL LOCATION (architecture.md §Structure line 568 + §Requirements-to-
- * Structure line 618; epics.md Story 2.4 + Story 2.6): this manifest lives at
- * the REPO-ROOT `content/` — the single source of truth (FR-33/FR-34, code-as-
- * CMS) — exactly like `content/glassbox.allowlist.ts`. Story 2.6 (Project Import)
- * grows the site by EDITING this file.
+ * ROLE CHANGE (Story 6.1 — Stage 2): this file is now the CURATED SEED only,
+ * not the complete manifest. The BMAD-process Dots (planning workflows, completed
+ * epics, course-corrections, retrospectives) are auto-harvested at build time by
+ * `scripts/harvest-timeline.ts` from the real artifacts via the default-deny
+ * timeline allowlist (`content/timeline.allowlist.ts`). This seed provides what
+ * CANNOT be harvested from git:
  *
- * BUILD WIRE-UP (parallels render-glassbox, AR-9 / Story 1.8 pipeline):
- *   content/timeline/dots.ts  (this file, the source of truth)
- *     → scripts/render-timeline.ts        (generator; registered in CONTENT_GENERATORS)
- *     → web/src/generated/timeline.json    (deterministic, gitignored build output)
- *     → web/src/lib/timeline.ts            (loader; graceful-absent)
- *     → web/src/pages/timeline.astro       (imports the loader; respects the Vite boundary)
- * Vite/Astro cannot import from outside the `web/` package, so the page never
- * imports this file directly — it reads the generated JSON, just as the Glass
- * Box page reads `glassbox.json` rather than importing `glassbox.allowlist.ts`.
+ *  1. The pre-repo "runway" era (three [ASSUMPTION]-flagged career ticks —
+ *     these predate this repo and have no git committer date).
+ *  2. The era-band structure: ids, labels, metaNotes for the "runway" and
+ *     "agentic-turn" bands (the growth-arc narrative, Story 2.4 / Story 6.2).
+ *  3. The loandemo flagship and its cluster (links to /work/loandemo/#… case-study
+ *     fragments, not to `_bmad-output` artifacts — not harvestable from git).
+ *  4. The "This portfolio" flagship stub (the harvester populates its cluster
+ *     from TIMELINE_ALLOWLIST planning entries).
  *
- * Stage 1: HAND-CURATED ONLY. NO automated git/filesystem harvest.
- * The deterministic git→Dot auto-harvest is Stage 2 (Epic 6 / Story 6.1–6.2).
+ * The `harvestTimeline()` function in `scripts/harvest-timeline.ts` merges this
+ * seed with the harvested Dots into the same `EraBand[]` shape and writes the
+ * result to `web/src/generated/timeline.json`.
  *
- * DATA MODEL: the shape is intentionally clean so Epic 6's auto-harvest can
- * populate the same model (Era + TimelineDotEntry, including cluster nesting).
+ * CANONICAL BUILD WIRE-UP:
+ *   content/timeline/dots.ts (this file — seed)  ┐
+ *   content/timeline.allowlist.ts (harvest gate) ├→ scripts/harvest-timeline.ts
+ *   _bmad-output/ artifacts (via allowlist)      ┘     → web/src/generated/timeline.json
+ *                                                         → web/src/pages/timeline.astro
  *
- * TWO ERA-BANDS:
- *  • "runway"      — the quiet ~30-year career before the agentic turn.
- *                    Rendered as a labeled era-band with faint ticks (decorative).
- *                    NO invented dates/employers/titles. AC4 — credibility floor.
- *  • "agentic-turn" — the dense proof: the two Stage-1 flagships.
- *
- * TWO FLAGSHIPS (each with a static Dot cluster):
- *  • portfolio — this site (the recursion). Dots → /glass-box/{slug}/ readers.
- *  • loandemo  — the live-on-stage engineering proof. Dots → /work/loandemo/#…
- *                forward-reference (Story 2.5 owns the real fragment targets + URLs).
- *                Repo/artifact URLs flagged [OPEN].
- *
- * ORDERING: chronological, oldest → newest (matches the DOM reading order; the
- * horizontal desktop layout reflects this left → right without DOM reordering).
+ * CREDIBILITY FLOOR (Rule 9):
+ *  - Runway ticks: approximate ~YYYY + [ASSUMPTION]. Never invent exact dates.
+ *  - Loandemo cluster: /work/loandemo/#… forward-refs; [OPEN] where URL unconfirmed.
+ *  - "This portfolio" flagship: no cluster here (harvested). date is the live-site date.
+ *  - No invented facts — every field is traceable to the public bio or an artifact.
  */
 
 /** Dot visual state — matches TimelineDot.astro's DotState union (extended in 2.4). */
@@ -101,16 +96,18 @@ export interface EraBand {
 }
 
 /**
- * The Master Timeline: two era-bands in reading order (oldest → newest).
+ * The CURATED SEED — what the harvester merges with the auto-harvested Dots.
  *
- * The runway band renders the labeled era + faint decorative ticks only.
- * No invented career facts. Any real career milestone that is not confirmed
- * from the bio/brief is omitted. AC4 — credibility > density.
+ * Contains only un-harvestable content:
+ *  - The runway era with [ASSUMPTION]-flagged ticks (pre-repo career)
+ *  - The loandemo flagship (links to /work/loandemo/#…, not git artifacts)
+ *  - The "This portfolio" flagship stub (harvester populates its cluster)
  *
- * The agentic-turn band holds the two Stage-1 flagships with their real Dot
- * clusters. These are the dense proof.
+ * The harvester reads this seed, adds all planning-workflow Dots into the
+ * "This portfolio" cluster, and adds epic/retro/course-correction Dots into
+ * the agentic-turn era — then sorts everything chronologically.
  */
-export const TIMELINE_ERAS: readonly EraBand[] = [
+export const TIMELINE_SEED: readonly EraBand[] = [
   {
     id: 'runway',
     label: 'The Runway',
@@ -176,8 +173,10 @@ export const TIMELINE_ERAS: readonly EraBand[] = [
           },
         ],
       },
-      // portfolio flagship — this site (the recursion proof).
-      // Dots → real /glass-box/{slug}/ readers (Story 2.2/2.3).
+      // portfolio flagship stub — the cluster is populated by the harvester
+      // from planning-workflow entries in TIMELINE_ALLOWLIST (Story 6.1).
+      // The 'The Live Site' dot is kept here as it links to an external URL,
+      // not a _bmad-output artifact.
       {
         kind: 'flagship',
         label: 'This portfolio',
@@ -185,48 +184,8 @@ export const TIMELINE_ERAS: readonly EraBand[] = [
         description:
           'Built in the open using the BMAD Method. The site you are reading is the artifact.',
         cluster: [
-          {
-            label: 'Brainstorm Session',
-            date: '2026-06-02',
-            state: 'filled',
-            href: '/glass-box/brainstorm/',
-            description: '47 ideas in 90 minutes — the raw thinking that seeded every decision.',
-          },
-          {
-            label: 'Pre-Brief Research',
-            date: '2026-06-02',
-            state: 'filled',
-            href: '/glass-box/pre-brief-research/',
-            description: 'The grounding pass before strategy.',
-          },
-          {
-            label: 'Product Brief',
-            date: '2026-06-02',
-            state: 'filled',
-            href: '/glass-box/product-brief/',
-            description: 'The one-page argument that set the direction.',
-          },
-          {
-            label: 'Product Requirements Document',
-            date: '2026-06-02',
-            state: 'filled',
-            href: '/glass-box/prd/',
-            description: 'Every feature, every constraint, every never.',
-          },
-          {
-            label: 'UX Design',
-            date: '2026-06-03',
-            state: 'filled',
-            href: '/glass-box/ux-design/',
-            description: 'Ink-on-cream, editorial — the visual identity.',
-          },
-          {
-            label: 'UX Experience',
-            date: '2026-06-03',
-            state: 'filled',
-            href: '/glass-box/ux-experience/',
-            description: 'The visitor journey, choreographed.',
-          },
+          // The Live Site dot stays seeded — it links to the deployed URL,
+          // not to a _bmad-output artifact that can be harvested from git.
           {
             label: 'The Live Site',
             date: '2026-06-06',
@@ -239,3 +198,10 @@ export const TIMELINE_ERAS: readonly EraBand[] = [
     ],
   },
 ];
+
+/**
+ * @deprecated Use TIMELINE_SEED instead. This alias is kept for a brief
+ * transition period so render-timeline.ts can still import it; once
+ * render-timeline.ts is removed (Story 6.1), remove this alias too.
+ */
+export const TIMELINE_ERAS = TIMELINE_SEED;
