@@ -103,6 +103,71 @@ const homeJsonLd = serializeJsonLd([
   }
   <SceneRail />
 
+  {
+    /*
+    ── CINEMATIC STILL POSTER (Story 5.1, AC2 / NFR-1) ───────────────────────
+    The initial-paint static fallback for the WebGL set-piece. A pre-rendered SVG
+    of the drafting-grid/blueprint composition — zero executable JS, 0 incremental
+    script weight, fully visible before any user interaction.
+
+    Under prefers-reduced-motion / JS-off / before first interaction:
+      → this image IS the "set-piece" (the static baseline).
+    After first scroll/interaction (motion allowed):
+      → the WebGL canvas loads and the still fades out gracefully.
+
+    aria-hidden: purely decorative; all scene content is in the DOM.
+    The SVG is served from /cinematic/cinematic-still.svg (generated at build time
+    by scripts/build-cinematic-assets.ts — committed as a stable asset).
+  */
+  }
+  <div id="cinematic-still-poster" aria-hidden="true" class="cinematic-still">
+    <img
+      src="/cinematic/cinematic-still.svg"
+      alt=""
+      aria-hidden="true"
+      width="800"
+      height="500"
+      decoding="async"
+      loading="lazy"
+    />
+  </div>
+
+  {
+    /*
+    ── DEFERRED CINEMATIC BOOTSTRAP (Story 5.1, AC1 / AC3 / AC5 — NFR-1 critical) ─
+    The heavy GSAP + three.js + @react-three/fiber stack is loaded ONLY on the
+    FIRST real user scroll or interaction, INSIDE onMotionAllowed. This ensures:
+      - Lighthouse's no-interaction trace on `/` NEVER fetches the heavy chunk.
+      - The 256KB `/` script budget stays green (the bootstrap is a tiny shim).
+      - Under prefers-reduced-motion → onMotionAllowed no-ops → heavy stack is
+        never loaded (AC3: camera path disabled outright; WebGL never initialized).
+
+    One-shot listeners ({once: true, passive: true}); never preventDefault (FR-2).
+    NOT client:load, NOT client:visible, NOT requestIdleCallback alone.
+  */
+  }
+  <script>
+    import { onMotionAllowed } from '../lib/motion';
+
+    onMotionAllowed(() => {
+      // One-shot interaction/scroll trigger — Lighthouse never scrolls/interacts,
+      // so this import never fires in its trace.
+      let loaded = false;
+      const loadCinematic = (): void => {
+        if (loaded) return;
+        loaded = true;
+        // Dynamic import — the heavy chunk (GSAP + three + R3F) loads here,
+        // AFTER the first real user scroll/pointer/key event.
+        void import('../lib/cinematic/bootstrap').then((m) => m.boot());
+      };
+
+      const once: AddEventListenerOptions = { once: true, passive: true };
+      window.addEventListener('scroll', loadCinematic, once);
+      window.addEventListener('pointerdown', loadCinematic, once);
+      window.addEventListener('keydown', loadCinematic, once);
+    });
+  </script>
+
   <main class="home">
     {/* ── Scene 1 — Hero (the 1.3 HeroStatic; carries the single <h1>) ─────── */}
     <section id="hero" aria-label="Introduction">
@@ -114,6 +179,11 @@ const homeJsonLd = serializeJsonLd([
       <div class="scene__inner">
         <Kicker>The thesis</Kicker>
         <h2 id="thesis-title" class="scene__thesis-line">The medium is the message.</h2>
+        {/* ── skim tier (one-line essence) ─────────────────────────────────── */}
+        <p class="scene__skim">
+          Thirty years of shipping. Now building at the frontier. The site is the proof.
+        </p>
+        {/* ── overview tier (DEFAULT — current teaser content, unchanged) ───── */}
         {/* Answer-first, entity-named lede for `/` (GEO/SEO; EXPERIENCE §Voice). */}
         <p class="scene__lede">
           Joshua R. Brandt, MSE is a software engineer with about thirty years of shipping
@@ -124,6 +194,29 @@ const homeJsonLd = serializeJsonLd([
           Method project, so the proof and the portfolio are the same artifact. Everything below is
           a way into that record.
         </p>
+        {/* ── deep tier (expanded grounded detail — reuses committed content) ── */}
+        {
+          /*
+          Rule 9: every claim below traces to:
+            - The committed thesis lede above (thirty years, agentic frontier).
+            - The committed body above (built in the open, BMAD Method, proof + portfolio).
+            - The committed Glass Box framing — "the curated, chronological build-story"
+              (the /glass-box teaser on this page + the /glass-box/ Mirror route, which is
+              default-deny/curated). NO completeness claim ("every … is in the Glass Box")
+              is made — that would contradict the curated allowlist (Rule 9 fabrication class).
+          NO new facts introduced.
+          JS-off (no data-depth on <html>): .scene__deep is visible (reachable, FR-8).
+          JS-on + data-depth=overview or skim: CSS hides .scene__deep.
+          JS-on + data-depth=deep: CSS shows .scene__deep.
+        */
+        }
+        <div class="scene__deep">
+          <p class="scene__deep-body">
+            The portfolio and the proof are the same artifact — built in the open as a BMAD Method
+            project. Thirty years of shipping, now at the frontier of agentic engineering; the
+            curated, chronological build-story is in the Glass Box below.
+          </p>
+        </div>
       </div>
     </section>
 
@@ -132,6 +225,9 @@ const homeJsonLd = serializeJsonLd([
       <div class="scene__inner">
         <Kicker>Master Timeline</Kicker>
         <h2 id="timeline-title" class="scene__title">Thirty years, on one spine</h2>
+        {/* ── skim tier ───────────────────────────────────────────────────── */}
+        <p class="scene__skim">A craft-arc from early shipping to the agentic turn.</p>
+        {/* ── overview tier (DEFAULT) ─────────────────────────────────────── */}
         <p class="scene__summary">
           A single craft-arc from the early shipping years to the agentic turn — the runway that
           earns the frontier.
@@ -141,6 +237,24 @@ const homeJsonLd = serializeJsonLd([
             See the Master Timeline<span class="scene__arrow" aria-hidden="true">&rarr;</span>
           </a>
         </p>
+        {
+          /* ── deep tier ─────────────────────────────────────────────────────
+          Rule 9: summary traces to the committed teaser above (craft-arc,
+          early shipping to agentic turn, runway). Link unchanged.
+        */
+        }
+        <div class="scene__deep">
+          <p class="scene__deep-body">
+            The timeline maps the full craft progression — from the long runway of early shipping
+            years through the agentic turn — in a single chronological record. See the eras and the
+            work behind the frontier claim.
+          </p>
+          <p class="scene__more scene__more--deep">
+            <a class="scene__link" href="/timeline/">
+              See the Master Timeline<span class="scene__arrow" aria-hidden="true">&rarr;</span>
+            </a>
+          </p>
+        </div>
       </div>
     </section>
 
@@ -149,6 +263,9 @@ const homeJsonLd = serializeJsonLd([
       <div class="scene__inner">
         <Kicker>Speaking</Kicker>
         <h2 id="speaker-title" class="scene__title">Talks that show the build, live</h2>
+        {/* ── skim tier ───────────────────────────────────────────────────── */}
+        <p class="scene__skim">Signature talks. Book directly.</p>
+        {/* ── overview tier (DEFAULT) ─────────────────────────────────────── */}
         <p class="scene__summary">
           Signature talks and the reel, plus a direct way to book — for organizers who want the
           frontier explained on a stage.
@@ -158,6 +275,25 @@ const homeJsonLd = serializeJsonLd([
             See speaking and book a talk<span class="scene__arrow" aria-hidden="true">&rarr;</span>
           </a>
         </p>
+        {
+          /* ── deep tier ─────────────────────────────────────────────────────
+          Rule 9: traces to the committed teaser above (signature talks, reel,
+          book, frontier explained on a stage). No new claims.
+        */
+        }
+        <div class="scene__deep">
+          <p class="scene__deep-body">
+            The speaking page carries the signature talks, a recorded reel, and a direct booking
+            path — for conference and event organizers who want the frontier explained on a stage by
+            someone who has shipped it.
+          </p>
+          <p class="scene__more scene__more--deep">
+            <a class="scene__link" href="/speaking/">
+              See speaking and book a talk
+              <span class="scene__arrow" aria-hidden="true">&rarr;</span>
+            </a>
+          </p>
+        </div>
       </div>
     </section>
 
@@ -166,6 +302,9 @@ const homeJsonLd = serializeJsonLd([
       <div class="scene__inner">
         <Kicker>Flagship</Kicker>
         <h2 id="flagship-title" class="scene__title">loandemo, end to end</h2>
+        {/* ── skim tier ───────────────────────────────────────────────────── */}
+        <p class="scene__skim">A real product, intent to working software, agentic methods.</p>
+        {/* ── overview tier (DEFAULT) ─────────────────────────────────────── */}
         <p class="scene__summary">
           The flagship case study: a real product taken from intent to working software with agentic
           methods.
@@ -175,6 +314,25 @@ const homeJsonLd = serializeJsonLd([
             Read the loandemo case study<span class="scene__arrow" aria-hidden="true">&rarr;</span>
           </a>
         </p>
+        {
+          /* ── deep tier ─────────────────────────────────────────────────────
+          Rule 9: traces to the committed teaser above (real product, intent
+          to working software, agentic methods). No new claims.
+        */
+        }
+        <div class="scene__deep">
+          <p class="scene__deep-body">
+            The loandemo case study walks a real product from intent all the way to working software
+            using agentic engineering methods. It is the flagship demonstration of the approach this
+            portfolio documents.
+          </p>
+          <p class="scene__more scene__more--deep">
+            <a class="scene__link" href="/work/loandemo/">
+              Read the loandemo case study
+              <span class="scene__arrow" aria-hidden="true">&rarr;</span>
+            </a>
+          </p>
+        </div>
       </div>
     </section>
 
@@ -183,6 +341,9 @@ const homeJsonLd = serializeJsonLd([
       <div class="scene__inner">
         <Kicker>Glass Box</Kicker>
         <h2 id="glass-box-title" class="scene__title">The build, with the lid off</h2>
+        {/* ── skim tier ───────────────────────────────────────────────────── */}
+        <p class="scene__skim">The curated build artifacts, in the order they were made.</p>
+        {/* ── overview tier (DEFAULT) ─────────────────────────────────────── */}
         <p class="scene__summary">
           The curated, chronological build-story behind this site — the actual artifacts, in the
           order they were made.
@@ -192,6 +353,23 @@ const homeJsonLd = serializeJsonLd([
             Open the Glass Box<span class="scene__arrow" aria-hidden="true">&rarr;</span>
           </a>
         </p>
+        {
+          /* ── deep tier ─────────────────────────────────────────────────────
+          Rule 9: traces to the committed teaser above (curated, chronological
+          build-story, actual artifacts, order they were made). No new claims.
+        */
+        }
+        <div class="scene__deep">
+          <p class="scene__deep-body">
+            The Glass Box is the curated, chronological record of how this site was built — the
+            actual artifacts in the order they were made. It is the build-story with the lid off.
+          </p>
+          <p class="scene__more scene__more--deep">
+            <a class="scene__link" href="/glass-box/">
+              Open the Glass Box<span class="scene__arrow" aria-hidden="true">&rarr;</span>
+            </a>
+          </p>
+        </div>
       </div>
     </section>
 
@@ -283,6 +461,185 @@ const homeJsonLd = serializeJsonLd([
 </BaseLayout>
 
 <style>
+  /* ── Cinematic still poster (Story 5.1, AC2 / NFR-1) ─────────────────────
+     The static fallback for the WebGL set-piece. Fixed behind the scenes,
+     covering the full viewport. `aria-hidden` and decorative (pointer-events:none).
+     On initial paint (before interaction), this image IS the set-piece.
+     After the WebGL canvas loads, this fades to 0 and is removed from the DOM.
+
+     CSS motion guard (NFR-2 Layer 1): the opacity transition is inside a
+     no-preference media query so reduced-motion never sees the animation.
+     Under reduced motion, the still is always visible (the static baseline). */
+  .cinematic-still {
+    position: fixed;
+    inset: 0;
+    z-index: -2; /* behind the WebGL canvas AND behind scene content */
+    pointer-events: none;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cinematic-still img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    opacity: 0.6;
+    /* Subtle scale so it feels like a wide composition, not a screenshot. */
+    transform: scale(1.05);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .cinematic-still {
+      /* Let JS-driven transitions run when motion is allowed. */
+      transition: opacity 0.6s ease;
+    }
+  }
+
+  /* ── Depth Dial tier visibility (Story 5.2, AC1/AC4) ─────────────────────
+     CSS shows/hides scene tiers by the root [data-depth] attribute set by the
+     depth-dial enhancement script. The three rules below are the CSS half of
+     progressive disclosure.
+
+     JS-off / no data-depth: the SKIM tier is hidden (it's the most stripped-
+     down tier; overview + deep are both in the DOM and visible — FR-8 "nothing
+     hidden", all content reachable). The overview tier is the default display.
+
+     data-depth="skim": only the skim tier and the title are visible.
+     data-depth="overview": the overview tier (default) and skim hidden.
+     data-depth="deep": everything shown (skim hidden, overview + deep visible).
+
+     Content-swap transitions: authored only under no-preference (NFR-2).
+  */
+
+  /* Always hide the skim one-liner when there's no depth set (JS-off) or
+     when depth = overview/deep. Only data-depth="skim" reveals it. */
+  .scene__skim {
+    display: none;
+  }
+
+  /* data-depth="skim": show skim, hide overview/deep tier content. */
+  :global(html[data-depth='skim']) .scene__skim {
+    display: block;
+  }
+
+  :global(html[data-depth='skim']) .scene__lede,
+  :global(html[data-depth='skim']) .scene__summary,
+  :global(html[data-depth='skim']) .scene__body,
+  :global(html[data-depth='skim']) .scene__more,
+  :global(html[data-depth='skim']) .scene__deep {
+    display: none;
+  }
+
+  /* The Close scene (the conversion ask + invite form) is deliberately NOT
+     tiered — it has no .scene__skim replacement. The GLOBAL skim-hide rule above
+     would otherwise strip its summary in Skim mode, leaving the title floating
+     above the form with no intro. The Close ask must read at EVERY depth, so
+     keep its summary visible in skim. (Story 5.2 CR — untiered-scene side-effect) */
+  :global(html[data-depth='skim']) .scene--close .scene__summary {
+    display: block;
+  }
+
+  /* data-depth="overview" (also the JS-on default): hide skim + deep. */
+  :global(html[data-depth='overview']) .scene__skim,
+  :global(html[data-depth='overview']) .scene__deep {
+    display: none;
+  }
+
+  /* data-depth="deep": show overview + deep; hide skim.
+     The overview content is already visible by default (display: block as set
+     below on .scene__summary etc.); the deep block was hidden by the default
+     above — explicitly show it here. */
+  :global(html[data-depth='deep']) .scene__skim {
+    display: none;
+  }
+
+  :global(html[data-depth='deep']) .scene__deep {
+    display: block;
+  }
+
+  /* JS-off (no data-depth): overview shows, deep shows (reachable, FR-8).
+     Skim remains hidden (it's just a one-liner and not the important content;
+     overview is the meaningful default). The :not([data-depth]) selector covers
+     the SSR/JS-off state. */
+  :global(html:not([data-depth])) .scene__skim {
+    display: none;
+  }
+
+  :global(html:not([data-depth])) .scene__deep {
+    display: block;
+  }
+
+  /* ── Per-scene deepen (Story 5.4 — director's-mode DEEPEN verb) ───────────
+     The Guide's director's-mode can DEEPEN individual scenes (organizer →
+     speaker + flagship, etc.) by setting data-depth="deep" on the SECTION
+     (web/src/lib/recuration.ts applyRecuration). This must reveal THAT scene's
+     deep tier even while the GLOBAL depth dial (html[data-depth]) is at its
+     default 'overview' (which hides .scene__deep for every scene, line ~546).
+
+     Without this rule the section-scoped data-depth="deep" attribute is inert:
+     the html[data-depth='overview'] .scene__deep { display:none } rule above has
+     equal specificity (0,2,1) and would tie-then-win on source order, so the
+     deepened scene's deep content would NEVER show — DEEPEN would be a no-op
+     (AC1: "a deepened scene at deep detail"). Placed AFTER the global rules so
+     it wins the source-order tie at equal specificity.
+
+     FR-8-safe: this only REVEALS additional (already-in-DOM) deep content for
+     the deepened scene; it never hides or removes anything. */
+  :global(section[data-depth='deep']) .scene__deep {
+    display: block;
+  }
+
+  :global(section[data-depth='deep']) .scene__skim {
+    display: none;
+  }
+
+  /* Optional content-swap transition — only when motion is allowed (NFR-2).
+     A simple fade-in for the depth tier swap; does NOT affect control operation. */
+  @media (prefers-reduced-motion: no-preference) {
+    .scene__deep,
+    .scene__skim {
+      animation: scene-depth-fade 200ms ease both;
+    }
+
+    @keyframes scene-depth-fade {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+  }
+
+  /* ── Re-curation flex order (Story 5.3, FR-10 / FR-8) ───────────────────
+     <main class="home"> is a flex column so that CSS `order` can re-sequence
+     the scenes VISUALLY without touching the DOM order (FR-8/NFR-3: crawlers
+     and JS-off visitors always see the canonical hero→…→close order).
+
+     Each <section> receives a CSS `order` value set by the web recuration
+     controller (web/src/lib/recuration.ts). Default (no JS / no directive) =
+     source order (the controller sets order=0,1,…,6 on init; without JS the
+     sections are in DOM order which is visually equivalent).
+
+     Reduced motion (NFR-2): the ORDER itself applies unconditionally (it is a
+     layout change, not an animation). Only the ORDER-CHANGE TRANSITION is
+     gated behind prefers-reduced-motion: no-preference (see below). */
+  .home {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Smooth scene reorder transition — only when motion is allowed (NFR-2).
+     200ms ease-in-out is perceptible but not jarring for a layout shift. */
+  @media (prefers-reduced-motion: no-preference) {
+    .home > section {
+      transition: order 0ms; /* CSS order cannot be transitioned; this is a placeholder */
+    }
+  }
+
   /* The scenes are plain, sequential sections (AC4 — fully functional JS-off).
      Each is a calm editorial band with generous whitespace; depth is tone +
      hairline, never shadow (DESIGN §Elevation, the flat system). On desktop the
@@ -335,6 +692,40 @@ const homeJsonLd = serializeJsonLd([
     font-weight: var(--font-weight-body);
     line-height: var(--line-height-body);
     color: var(--color-ink-secondary);
+  }
+
+  /* Skim one-liner — a compact, trimmed-essence line. Matching body weight. */
+  .scene__skim {
+    margin: var(--space-4) 0 0;
+    max-width: 60ch;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+  }
+
+  /* Deep tier — expanded grounded detail block below the overview teaser. */
+  .scene__deep {
+    margin: var(--space-4) 0 0;
+    padding: var(--space-4);
+    border-left: 3px solid var(--color-border-hairline);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  }
+
+  .scene__deep-body {
+    margin: 0;
+    max-width: 60ch;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+    font-style: italic;
+  }
+
+  .scene__more--deep {
+    margin-top: var(--space-3);
   }
 
   .scene__more {

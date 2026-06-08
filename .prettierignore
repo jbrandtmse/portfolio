@@ -5,6 +5,11 @@ node_modules
 api/data
 pnpm-lock.yaml
 
+# Third-party pre-compiled / WASM-wrapped JS assets served statically —
+# these are generated binaries (Basis Universal transcoder, Draco decoder)
+# and must not be reformatted.
+web/public/cinematic/*.js
+
 # Pre-existing BMAD tooling, planning artifacts, and docs are owned by their
 # own workflows and authored in their own style — Prettier governs only the
 # application scaffold (web/api/shared + root config), not these.

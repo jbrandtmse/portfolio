@@ -39,6 +39,7 @@ import { env } from '../env.js';
 import { assembleGroundedPrompt, detectInjection, extractCitations } from '../lib/grounding.js';
 import { LlmUnavailableError, streamTokens } from '../lib/llm-client.js';
 import { logger } from '../lib/logger.js';
+import { classifyIntent, getDirectiveForIntent } from '../lib/recuration.js';
 import { search } from '../lib/retriever.js';
 
 // ---------------------------------------------------------------------------
@@ -132,6 +133,19 @@ async function emitError(stream: SseWriter, message: string): Promise<void> {
   });
 }
 
+async function emitRecuration(
+  stream: SseWriter,
+  intent: string,
+  order: string[],
+  deepen: string[],
+  skip: string[],
+): Promise<void> {
+  await stream.writeSSE({
+    event: 'recuration',
+    data: JSON.stringify({ type: 'recuration', intent, order, deepen, skip }),
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Route
 // ---------------------------------------------------------------------------
@@ -205,7 +219,7 @@ guideRouter.post('/guide', async (c: Context) => {
     );
   }
 
-  const { query, threadContext } = parseResult.data;
+  const { query, threadContext, depth } = parseResult.data;
 
   // ------------------------------------------------------------------
   // Step 4 — Injection detection (log + continue — grounding still holds).
@@ -244,8 +258,37 @@ guideRouter.post('/guide', async (c: Context) => {
   // ------------------------------------------------------------------
   // Steps 7–9 — Ground → stream → AbortController ceiling.
   // ------------------------------------------------------------------
-  const messages = assembleGroundedPrompt(query, chunks, threadContext);
+  // Story 5.2: pass depth to assemble a verbosity instruction (grounding contract unchanged).
+  const messages = assembleGroundedPrompt(query, chunks, threadContext, depth);
   const citations = extractCitations(chunks);
+
+  // ------------------------------------------------------------------
+  // Step 7b — Intent classification (Story 5.3, FR-10, ADDITIVE).
+  // Classifies the visitor's query (+ thread) into one of 4 intent buckets
+  // and maps it to the SM-C1-guarded scene order via the fixed table.
+  //
+  // ADDITIVE: if classification fails (throws, returns 'default'), the guide
+  // answer stream continues unaffected — no re-curation event is emitted for
+  // 'default' (that's today's behavior / no-op). Only non-default intents
+  // trigger the recuration SSE event.
+  //
+  // Security: untrusted query is DATA (grounding.detectInjection + neutralize
+  // delimiters applied inside classifyIntent / assembleClassifierMessages).
+  // Model output constrained to the 4-token enum (parseClassifierResponse
+  // returns 'default' for any out-of-set / empty value — AC4).
+  // ------------------------------------------------------------------
+  const conversationText =
+    threadContext && threadContext.length > 0
+      ? threadContext.map((t) => t.content).join('\n') + '\n' + query
+      : query;
+
+  // Run classification concurrently with the LLM ceiling setup; errors → 'default'
+  let classifiedIntent: Awaited<ReturnType<typeof classifyIntent>>;
+  try {
+    classifiedIntent = await classifyIntent({ conversationText });
+  } catch {
+    classifiedIntent = 'default';
+  }
 
   // ~15s hard ceiling on the LLM call (NFR-4)
   const controller = new AbortController();
@@ -258,6 +301,21 @@ guideRouter.post('/guide', async (c: Context) => {
     });
 
     try {
+      // Emit re-curation directive FIRST (before citations + tokens) so the
+      // client can begin re-ordering the scenes while the answer streams in.
+      // Only emit for non-default intents (default = no change from canonical arc).
+      // Story 5.4: includes deepen + skip from the server-owned tables.
+      if (classifiedIntent !== 'default') {
+        const directive = getDirectiveForIntent(classifiedIntent);
+        await emitRecuration(
+          stream,
+          classifiedIntent,
+          directive.order,
+          directive.deepen,
+          directive.skip,
+        );
+      }
+
       // Emit citation events first (all retrieved chunks that grounded the answer)
       for (const citation of citations) {
         await emitCitation(stream, citation.route, citation.label);

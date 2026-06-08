@@ -320,6 +320,241 @@ describe('built home page (web/dist/index.html)', () => {
     ).toMatch(/renderer-url="[^"]*client\.[^"]+\.js"/);
   });
 
+  it('Story 5.1 NFR-1: the three/R3F chunk is NOT statically referenced in the initial home HTML (deferred)', () => {
+    // The heavy cinematic stack (three.js + @react-three/fiber + GSAP) is loaded
+    // ONLY via dynamic import() on first user scroll/interaction. It must NOT appear
+    // as a static <script src=...> or <link rel="modulepreload"> in the initial HTML —
+    // Lighthouse's no-interaction trace must never fetch it, keeping the 256KB budget.
+    //
+    // NFR-6 note (Story 5.1 cycle_iteration=3): manualChunks pins vendor library
+    // boundaries to stabilise chunk hashes (rollup#5902, vite#6773). The vendors
+    // are split into cinematic-three.*.js (three.js + R3F) and cinematic-gsap.*.js
+    // (GSAP). Project source files (WebGLSetpiece.*.js, bootstrap.*.js) keep their
+    // original Rollup-assigned names but are now tiny entry shims (~2KB) that point
+    // into the stable vendor chunks. None of these must appear in the initial HTML.
+    expect(
+      indexHtml,
+      'cinematic-three vendor chunk must NOT be statically referenced in initial home HTML',
+    ).not.toMatch(/cinematic-three\.[a-zA-Z0-9_-]+\.js/);
+
+    expect(
+      indexHtml,
+      'cinematic-gsap vendor chunk must NOT be statically referenced (deferred behind interaction)',
+    ).not.toMatch(/cinematic-gsap\.[a-zA-Z0-9_-]+\.js/);
+
+    expect(
+      indexHtml,
+      'WebGLSetpiece entry chunk must NOT be statically referenced in initial home HTML',
+    ).not.toMatch(/WebGLSetpiece\.[a-zA-Z0-9_-]+\.js/);
+
+    expect(
+      indexHtml,
+      'cinematic bootstrap entry chunk must NOT be statically referenced (deferred behind interaction)',
+    ).not.toMatch(/bootstrap\.[a-zA-Z0-9_-]+\.js/);
+
+    // The still poster IS in the initial HTML (the 0-JS fallback).
+    expect(indexHtml, 'the cinematic still poster img must be in the initial HTML').toMatch(
+      /id="cinematic-still-poster"/,
+    );
+    expect(indexHtml, 'the cinematic still SVG src must reference the generated asset').toMatch(
+      /src="\/cinematic\/cinematic-still\.svg"/,
+    );
+  });
+
+  it('Story 5.1 NFR-1: the three/R3F chunk is referenced ONLY by the home page, not by other routes (isolation)', () => {
+    // NFR-1 isolation: the cinematic chunks must be referenced by NO route other
+    // than `/` (and even on `/` the heavy stack is deferred behind interaction).
+    // Mirror the InviteForm isolation pattern from Story 3.5.
+    //
+    // NFR-6 note (Story 5.1 cycle_iteration=3): manualChunks pins vendor library
+    // boundaries. The cinematic chunks are now: cinematic-three.*.js (three.js + R3F
+    // vendor), cinematic-gsap.*.js (GSAP vendor), WebGLSetpiece.*.js (project shim),
+    // bootstrap.*.js (project shim). ALL must be absent from non-home routes.
+    const astroDir = join(distDir, '_astro');
+
+    // The three-dependent vendor chunk IS in dist/_astro/ (the deferred bundle exists).
+    const jsFiles = readdirSync(astroDir).filter((f) => f.endsWith('.js'));
+    const threeVendorChunkExists = jsFiles.some((f) => f.startsWith('cinematic-three'));
+    expect(
+      threeVendorChunkExists,
+      'cinematic-three vendor chunk (three.js + R3F) must exist in dist/_astro/ (the deferred cinematic bundle)',
+    ).toBe(true);
+
+    // Also assert the WebGLSetpiece project entry chunk still exists (the island entry point).
+    const webglEntryExists = jsFiles.some((f) => f.startsWith('WebGLSetpiece'));
+    expect(
+      webglEntryExists,
+      'WebGLSetpiece entry chunk must exist in dist/_astro/ (the island entry point)',
+    ).toBe(true);
+
+    // But none of the cinematic chunks may appear in any Mirror route's HTML (not even as a preload).
+    const MIRROR_HTML_ROUTES = [
+      '/about',
+      '/timeline',
+      '/speaking',
+      '/speaking/reel',
+      '/work/loandemo',
+      '/glass-box',
+      '/faq',
+      '/invite',
+      '/browse',
+    ] as const;
+
+    for (const route of MIRROR_HTML_ROUTES) {
+      const htmlPath = routeHtmlPath(route);
+      const html = readFileSync(htmlPath, 'utf8');
+      expect(
+        html,
+        `${route} must NOT reference the cinematic-three vendor chunk (NFR-1 isolation)`,
+      ).not.toMatch(/cinematic-three\.[a-zA-Z0-9_-]+\.js/);
+      expect(
+        html,
+        `${route} must NOT reference the cinematic-gsap vendor chunk (NFR-1 isolation)`,
+      ).not.toMatch(/cinematic-gsap\.[a-zA-Z0-9_-]+\.js/);
+      expect(
+        html,
+        `${route} must NOT reference the WebGLSetpiece chunk (NFR-1 isolation)`,
+      ).not.toMatch(/WebGLSetpiece\.[a-zA-Z0-9_-]+\.js/);
+    }
+  });
+
+  it('Story 5.1 AC2: KTX2/Basis asset pipeline — grid-texture.ktx2 exists in public, WebGLSetpiece uses KTX2Loader not TextureLoader for PNG (Rule 8)', () => {
+    // Build-output evidence that the AC2 KTX2/Basis texture half of the pipeline
+    // is present AND the runtime island references KTX2Loader (not the old TextureLoader PNG path).
+    //
+    // 1. The committed static KTX2 asset must be present in web/public/cinematic/
+    //    (it is copied verbatim into dist/ by astro build).
+    const ktx2Asset = join(webRoot, 'public', 'cinematic', 'grid-texture.ktx2');
+    expect(ktx2Asset, 'grid-texture.ktx2 must exist in web/public/cinematic/').toSatisfy(
+      existsSync,
+    );
+
+    // 2. The Basis transcoder assets must also be present (required by KTX2Loader at runtime).
+    const basisJs = join(webRoot, 'public', 'cinematic', 'basis_transcoder.js');
+    const basisWasm = join(webRoot, 'public', 'cinematic', 'basis_transcoder.wasm');
+    expect(basisJs, 'basis_transcoder.js must exist in web/public/cinematic/').toSatisfy(
+      existsSync,
+    );
+    expect(basisWasm, 'basis_transcoder.wasm must exist in web/public/cinematic/').toSatisfy(
+      existsSync,
+    );
+
+    // 3. The KTX2 file must be a valid KTX2 container (check magic bytes: «KTX 20»\r\n\x1A\n).
+    const ktx2Magic = Buffer.from([
+      0xab,
+      0x4b,
+      0x54,
+      0x58,
+      0x20,
+      0x32,
+      0x30,
+      0xbb, // «KTX 20»
+      0x0d,
+      0x0a,
+      0x1a,
+      0x0a, // \r\n\x1A\n
+    ]);
+    const ktx2Header = readFileSync(ktx2Asset).subarray(0, 12);
+    expect(ktx2Header.equals(ktx2Magic), 'grid-texture.ktx2 must have valid KTX2 magic bytes').toBe(
+      true,
+    );
+
+    // 4. WebGLSetpiece.tsx island source must import KTX2Loader, not TextureLoader.
+    const islandSrc = readFileSync(join(webRoot, 'src', 'islands', 'WebGLSetpiece.tsx'), 'utf8');
+    expect(
+      islandSrc,
+      'WebGLSetpiece.tsx must import KTX2Loader from three (AC2 runtime texture pipeline)',
+    ).toMatch(/import.*KTX2Loader.*from.*three\/examples\/jsm\/loaders\/KTX2Loader/);
+    expect(
+      islandSrc,
+      'WebGLSetpiece.tsx must NOT import TextureLoader (replaced by KTX2Loader)',
+    ).not.toMatch(/import.*TextureLoader/);
+
+    // 5. The runtime load path must use grid-texture.ktx2, not grid-texture.png.
+    expect(
+      islandSrc,
+      'WebGLSetpiece.tsx must reference grid-texture.ktx2 as the runtime texture (AC2)',
+    ).toContain('/cinematic/grid-texture.ktx2');
+    expect(
+      islandSrc,
+      'WebGLSetpiece.tsx must NOT reference grid-texture.png as a runtime WebGL texture (replaced by .ktx2)',
+    ).not.toMatch(/useLoader\s*\([^)]*grid-texture\.png/);
+
+    // 6. The island must call setTranscoderPath pointing to /cinematic/.
+    expect(islandSrc, 'WebGLSetpiece.tsx must call setTranscoderPath on the KTX2Loader').toContain(
+      'setTranscoderPath',
+    );
+  });
+
+  it('Story 5.1 AC2: Draco geometry pipeline — the runtime DRACOLoader decoder assets are served (regression: Code Review iter3 found the wrapper missing → GLB 404 at runtime)', () => {
+    // AC2's GEOMETRY half: a Draco-compressed GLB requires the Draco decoder to be
+    // served at the path passed to `setDecoderPath('/cinematic/')`. In a browser
+    // (WebAssembly available) three's DRACOLoader fetches BOTH `draco_wasm_wrapper.js`
+    // AND `draco_decoder.wasm` (see DRACOLoader._initDecoder). If the wrapper is
+    // absent the GLB load 404s → the entire R3F <Suspense> throws → NO canvas renders.
+    //
+    // The original Story 5.1 build shipped only draco_decoder.wasm (copied from the
+    // `draco3d` npm package, which does NOT ship draco_wasm_wrapper.js) — so the
+    // Draco-compressed set-piece geometry was dead at runtime. This regression test
+    // locks BOTH runtime decoder assets present (mutation-relevant: delete the
+    // wrapper and this test reds).
+    const dracoWrapper = join(webRoot, 'public', 'cinematic', 'draco_wasm_wrapper.js');
+    const dracoWasm = join(webRoot, 'public', 'cinematic', 'draco_decoder.wasm');
+    expect(
+      existsSync(dracoWrapper),
+      'draco_wasm_wrapper.js must be served from web/public/cinematic/ (DRACOLoader fetches it in the browser WASM path)',
+    ).toBe(true);
+    expect(
+      existsSync(dracoWasm),
+      'draco_decoder.wasm must be served from web/public/cinematic/ (DRACOLoader fetches it alongside the wrapper)',
+    ).toBe(true);
+
+    // The committed GLB must be genuinely Draco-compressed (KHR_draco_mesh_compression
+    // in extensionsRequired) — otherwise the decoder assets are moot and AC2's "loaded
+    // through the Draco compression pipeline" is unmet.
+    const glbPath = join(webRoot, 'public', 'cinematic', 'drafting-grid.glb');
+    expect(existsSync(glbPath), 'drafting-grid.glb must exist in web/public/cinematic/').toBe(true);
+    const glb = readFileSync(glbPath);
+    // GLB header: magic 'glTF' (0x46546C67 LE) + version 2; first chunk is JSON.
+    expect(glb.readUInt32LE(0), 'drafting-grid.glb must have the glTF magic').toBe(0x46546c67);
+    const jsonChunkLen = glb.readUInt32LE(12);
+    const glbJson = JSON.parse(glb.subarray(20, 20 + jsonChunkLen).toString('utf8')) as {
+      extensionsRequired?: string[];
+    };
+    expect(
+      glbJson.extensionsRequired ?? [],
+      'drafting-grid.glb must REQUIRE KHR_draco_mesh_compression (genuinely Draco-compressed, AC2)',
+    ).toContain('KHR_draco_mesh_compression');
+
+    // The island must configure the DRACOLoader to fetch the decoder from /cinematic/.
+    const islandSrc = readFileSync(join(webRoot, 'src', 'islands', 'WebGLSetpiece.tsx'), 'utf8');
+    expect(islandSrc, 'WebGLSetpiece.tsx must import DRACOLoader (AC2 geometry pipeline)').toMatch(
+      /import.*DRACOLoader.*from.*three\/examples\/jsm\/loaders\/DRACOLoader/,
+    );
+    expect(islandSrc, 'WebGLSetpiece.tsx must call setDecoderPath for the DRACOLoader').toContain(
+      'setDecoderPath',
+    );
+  });
+
+  it('Story 5.1 Integration AC: the goToScene producer API registers ScrollToPlugin (the Story-5.4 consumer surface must actually navigate)', () => {
+    // The cinematic controller exposes goToScene(n) as the producer API Story 5.4
+    // (director's mode) will call. goToScene uses `gsap.to(window, { scrollTo })`,
+    // which is a NO-OP unless GSAP's ScrollToPlugin is registered. Registering only
+    // ScrollTrigger (which the scroll-driven camera path needs) is NOT enough for
+    // goToScene — the producer method would silently fail to navigate. This locks
+    // BOTH plugins registered so the documented producer surface is actually live.
+    // (Both plugins live only in the deferred cinematic-gsap chunk → zero `/` budget cost.)
+    const cinematicSrc = readFileSync(join(webRoot, 'src', 'lib', 'cinematic', 'index.ts'), 'utf8');
+    expect(
+      cinematicSrc,
+      'cinematic/index.ts must import ScrollToPlugin (goToScene scrollTo tween needs it)',
+    ).toMatch(/import\s*\{\s*ScrollToPlugin\s*\}\s*from\s*['"]gsap\/ScrollToPlugin['"]/);
+    expect(
+      cinematicSrc,
+      'cinematic/index.ts must register ScrollToPlugin alongside ScrollTrigger',
+    ).toMatch(/registerPlugin\([^)]*ScrollToPlugin[^)]*\)/);
+  });
+
   it('contains no exclamation marks in copy (positive-assertion voice)', () => {
     // The voice rule bans "!" in COPY, not in code. Strip the <!doctype>, all
     // <script>…</script> blocks (JS legitimately uses ! for negation/!==), and
@@ -422,6 +657,84 @@ describe('home 7-scene scaffold + scene-rail (Story 1.4 IAC-1 / IAC-2)', () => {
     // operable. The same anchors live inside; presentation-only reflow.
     expect(indexHtml).toMatch(/<details\b[^>]*class="[^"]*rail-m[^"]*"[^>]*>/);
     expect(indexHtml).toMatch(/<summary\b[^>]*>[\s\S]*?Jump to section[\s\S]*?<\/summary>/);
+  });
+
+  it('Story 5.3 FR-8: canonical DOM section order is unchanged — hero→thesis→timeline→speaker→flagship→glass-box→close', () => {
+    // FR-8 / NFR-3: re-curation (Story 5.3) is CSS-`order`-only (visual).
+    // The SERVED DOM order must remain the canonical arc so crawlers, JS-off visitors,
+    // and the a11y reading-order baseline always see the full default sequence.
+    // Mutation-verification: if the DOM order were changed (physically moving sections),
+    // this test would red.
+    const sectionIds = [...indexHtml.matchAll(/<section\b[^>]*\sid="([^"]+)"[^>]*>/g)].map(
+      (m) => m[1],
+    );
+    // Rule 8: deep equality (not just a presence check — order matters)
+    expect(
+      sectionIds,
+      'Story 5.3 FR-8: canonical DOM order must be canonical arc (re-curation is CSS-order-only)',
+    ).toEqual(['hero', 'thesis', 'timeline', 'speaker', 'flagship', 'glass-box', 'close']);
+  });
+
+  it('Story 5.3 FR-8: <main class="home"> is a flex column (CSS order support present in built CSS)', () => {
+    // The flex-direction: column on main.home enables CSS `order` re-sequencing.
+    // Rule 8: scoped to the .home selector in built CSS.
+    // Mutation-verification: removing `display:flex` from .home reds this.
+    expect(builtCss).toMatch(/\.home[^{]*\{[^}]*flex-direction:column/);
+  });
+
+  it('Story 5.4 FR-8: all 7 section ids present in the built home HTML (none removed — FR-8)', () => {
+    // Story 5.4's skip mechanism is tour-omission only; every scene must be in
+    // the BUILT static HTML regardless of skip configuration.
+    // Rule 8: scoped to the exact set of section ids (deep equality).
+    // Mutation-verification: if a scene were conditionally omitted from the build, this reds.
+    const sectionIds = [...indexHtml.matchAll(/<section\b[^>]*\sid="([^"]+)"[^>]*>/g)].map(
+      (m) => m[1],
+    );
+    // Must contain all 7 scenes — exactly (no extras, no drops)
+    expect(
+      sectionIds,
+      'Story 5.4 FR-8: all 7 scenes must be in built HTML (skip = tour omission, not build omission)',
+    ).toEqual(['hero', 'thesis', 'timeline', 'speaker', 'flagship', 'glass-box', 'close']);
+  });
+
+  it('Story 5.4 FR-8: no section has display:none or visibility:hidden in the built HTML (skip is CSS-attr-only)', () => {
+    // The built home HTML must not contain any inline display:none or visibility:hidden
+    // on the scene sections — skip marks are purely runtime data-attributes, not build-time
+    // visibility toggles (FR-8 HARD guard).
+    // Rule 8: scoped to section elements only.
+    // Mutation-verification: adding display:none to a section in index.astro reds this.
+    const sectionTags = [...indexHtml.matchAll(/<section\b([^>]*)>/g)].map((m) => m[1]!);
+    for (const attrs of sectionTags) {
+      // No inline style with display:none or visibility:hidden
+      expect(
+        attrs,
+        `a <section> tag must not have inline display:none or visibility:hidden (Story 5.4 FR-8)`,
+      ).not.toMatch(/style="[^"]*display:\s*none/i);
+      expect(
+        attrs,
+        `a <section> tag must not have inline visibility:hidden (Story 5.4 FR-8)`,
+      ).not.toMatch(/style="[^"]*visibility:\s*hidden/i);
+    }
+  });
+
+  it('Story 5.4 AC1: per-section DEEPEN reveals the deep tier (section[data-depth=deep] .scene__deep is in built CSS)', () => {
+    // The director's-mode DEEPEN verb sets data-depth="deep" on the SECTION
+    // (web/src/lib/recuration.ts). For that to render deep detail (AC1) while the
+    // GLOBAL depth dial is at its default 'overview' (which hides .scene__deep for
+    // every scene), the built CSS MUST carry a per-section reveal rule that shows
+    // the deepened scene's deep tier. Without it, DEEPEN is a visual no-op (CR HIGH).
+    //
+    // Rule 8: scoped to the exact selector→declaration pairing in the built CSS.
+    // Mutation-verification: removing the `section[data-depth='deep'] .scene__deep`
+    // rule from index.astro reds this (and the live e2e (j) deep-visible assertion).
+    // The minifier may emit the attribute selector with single, double, or no quotes.
+    // Astro adds a scoped attribute (e.g. [data-astro-cid-…]) to .scene__deep and
+    // may emit the data-depth value unquoted; tolerate both + any whitespace.
+    const norm = builtCssNorm.replace(/\s+/g, '');
+    expect(
+      norm,
+      'built CSS must reveal .scene__deep for a section[data-depth=deep] (per-section DEEPEN)',
+    ).toMatch(/section\[data-depth=["']?deep["']?\]\.scene__deep(\[[^\]]*\])?\{display:block/);
   });
 });
 

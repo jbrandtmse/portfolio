@@ -37,11 +37,12 @@
 import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useStore } from '@nanostores/react';
 
-import type { GuideEvent, CitationEvent } from '@portfolio/shared/events';
+import type { GuideEvent, CitationEvent, RecurationEvent } from '@portfolio/shared/events';
 import { STARTER_PROMPTS } from '../data/faq';
 import { track } from '../lib/analytics';
 import { onMotionAllowed } from '../lib/motion';
-import { $guideOpen } from '../lib/store';
+import { applyRecuration, initRecuration } from '../lib/recuration';
+import { $depth, $guideOpen } from '../lib/store';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -75,6 +76,10 @@ const GREETING = "I'm your guide to Joshua's work. I only say what it can back u
 
 export function GuidePanel({ pillRef }: { pillRef?: React.RefObject<HTMLButtonElement | null> }) {
   const isOpen = useStore($guideOpen);
+  // Story 5.2: read the visitor's chosen depth from the nanostore.
+  // Passed in every /api/guide request to tune answer verbosity/detail only.
+  // The grounding/fail-closed/citation contract is unchanged (FR-6/7/9).
+  const currentDepth = useStore($depth);
 
   const panelRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -192,6 +197,16 @@ export function GuidePanel({ pillRef }: { pillRef?: React.RefObject<HTMLButtonEl
   }, [isOpen]);
 
   // ---------------------------------------------------------------------------
+  // Re-curation (Story 5.3, FR-10)
+  // ---------------------------------------------------------------------------
+
+  // Initialize the home page for re-curation on first mount (sets CSS order to
+  // canonical source order; marks main.home as data-recuration-ready).
+  useEffect(() => {
+    initRecuration();
+  }, []);
+
+  // ---------------------------------------------------------------------------
   // Reduced motion (Decision 7)
   // ---------------------------------------------------------------------------
 
@@ -257,6 +272,9 @@ export function GuidePanel({ pillRef }: { pillRef?: React.RefObject<HTMLButtonEl
           body: JSON.stringify({
             query,
             threadContext: priorTurns.length > 0 ? priorTurns : undefined,
+            // Story 5.2: include the visitor's chosen depth to tune answer verbosity.
+            // The api tunes verbosity/detail ONLY; grounding/safety contract unchanged.
+            depth: currentDepth,
           }),
         });
 
@@ -297,7 +315,17 @@ export function GuidePanel({ pillRef }: { pillRef?: React.RefObject<HTMLButtonEl
               continue;
             }
 
-            if (parsed.type === 'token') {
+            if (parsed.type === 'recuration') {
+              // Story 5.3 / 5.4, FR-10: apply the re-curation directive in place.
+              // GuidePanel → recuration controller → CSS `order` (DOM unchanged, FR-8).
+              // Story 5.4: pass deepen/skip + motionAllowed so the controller
+              // can apply depth tiers + drive the camera inside the motion gate.
+              const rec = parsed as RecurationEvent;
+              applyRecuration(
+                { intent: rec.intent, order: rec.order, deepen: rec.deepen, skip: rec.skip },
+                motionAllowed,
+              );
+            } else if (parsed.type === 'token') {
               collectedText += parsed.value;
               setTranscript((prev) =>
                 prev.map((t) => (t.id === guideEntryId ? { ...t, text: collectedText } : t)),
@@ -363,7 +391,19 @@ export function GuidePanel({ pillRef }: { pillRef?: React.RefObject<HTMLButtonEl
         setIsStreaming(false);
       }
     },
-    [isStreaming, transcript, idPrefix],
+    // currentDepth MUST be a dependency: sendQuery is memoized, and a depth-only
+    // change (the dial) re-renders this component WITHOUT touching the other deps.
+    // Omitting currentDepth would memoize a STALE closure that posts the depth as
+    // of the previous query/mount — not the dial's current value — breaking AC2
+    // (the GuidePanel must include the CHOSEN depth in /api/guide). (Story 5.2 CR)
+    //
+    // motionAllowed MUST be a dependency: sendQuery captures motionAllowed in its
+    // closure and passes it to applyRecuration (line ~326). motionAllowed is
+    // useState(false) flipped to true by the onMotionAllowed mount effect. Without
+    // this dep, the closure stales at false — the entire motionAllowed-gated block
+    // (data-skip marking + goToScene camera driving) is inert, so SKIP and
+    // camera-driving never fire on a real motion-enabled visit. (Story 5.4 QA HIGH)
+    [isStreaming, transcript, idPrefix, currentDepth, motionAllowed],
   );
 
   const handleSubmit = useCallback(

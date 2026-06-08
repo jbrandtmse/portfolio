@@ -97,6 +97,168 @@ test.describe('home / — the scene-rail (the FR-2 skip/progress/jump affordance
       )
       .not.toBe('#hero');
   });
+
+  test('Story 5.0 AC1: bottom-of-scroll activates the #close rail entry even when #close is SHORT (aria-current + Scene 7 of 7)', async ({
+    page,
+  }) => {
+    // Story 5.0 AC1: the bottom-of-page sentinel fallback (inside onMotionAllowed)
+    // must set aria-current on the #close rail entry and update [data-scene-current]
+    // to 7 when the page is scrolled to its very foot.
+    //
+    // NON-VACUOUS design: the test forces #close to a SHORT height (~120px) AFTER the
+    // onMotionAllowed init has run (so the sentinel is already appended). This simulates
+    // the [1.4]/[1.9] condition where a short final section cannot straddle the interior
+    // observer's active band (rootMargin '-30% 0px -60% 0px' = only 30-40% of viewport
+    // height, ~216-288px of a 720px viewport). A 120px-tall #close at the page bottom
+    // cannot intersect this band before page-bottom — so the interior observer alone
+    // cannot activate #close. Only the page-foot sentinel (the footObserver) can fire
+    // setActive(lastId) in this condition.
+    //
+    // overflow:hidden is also set on #close so the InviteForm's natural-height content
+    // does not overflow and inflate scrollHeight beyond the sentinel's position.
+    //
+    // A 400px spacer is appended after the sentinel so maxScroll puts the sentinel
+    // clearly inside the viewport (~319px from top) — not at the exact viewport edge
+    // where Chromium's IntersectionObserver fires inconsistently. The spacer also
+    // ensures the final scroll position places #close BELOW the interior active band
+    // (at viewport y=19, band starts at y=216), making the test truly non-vacuous.
+    //
+    // Mutation-verification (performed in cycle_iteration=2):
+    //   - Removing the footObserver from SceneRail.astro REDS this test (Received:
+    //     "#hero" — interior observer never reaches #close at the scroll position).
+    //   - Removing the entire sentinel/footObserver block causes waitForFunction to
+    //     timeout (no sentinel appended to body).
+    //   - Both mutations red correctly.
+
+    await page.goto('/');
+
+    // Confirm motion is allowed (so the enhancement runs — this test is the positive path).
+    const motionAllowed = await page.evaluate(
+      () => !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    );
+    if (!motionAllowed) {
+      // If the test browser has reduced motion globally, skip gracefully —
+      // reduced-motion.spec.ts covers the static baseline.
+      test.skip();
+      return;
+    }
+
+    // Wait for the onMotionAllowed init to have run (module scripts are deferred;
+    // waiting for networkidle ensures the module loaded and executed).
+    await page.waitForLoadState('networkidle');
+
+    // Verify the sentinel was appended to body by the onMotionAllowed init.
+    // The sentinel is the LAST child of body with aria-hidden="true" and height:1px.
+    await page.waitForFunction(() => {
+      const last = document.body.lastElementChild as HTMLElement;
+      return (
+        last !== null &&
+        last.tagName === 'DIV' &&
+        last.getAttribute('aria-hidden') === 'true' &&
+        last.style.height === '1px'
+      );
+    });
+
+    // NON-VACUOUS: Force #close to a SHORT height so the interior observer
+    // (rootMargin '-30% 0px -60% 0px') CANNOT activate it when the page is at bottom.
+    // The interior active band = 30%–40% of viewport from top = ~216–288px in a 720px
+    // viewport. A 120px section at the page bottom cannot straddle this band.
+    // A 120px-tall #close at the end of the page cannot intersect 216-288px from the
+    // top — so only the page-foot sentinel (footObserver) can activate it.
+    await page.evaluate(() => {
+      const closeEl = document.getElementById('close');
+      if (closeEl) {
+        closeEl.style.setProperty('height', '120px', 'important');
+        closeEl.style.setProperty('min-height', '0', 'important');
+        closeEl.style.setProperty('overflow', 'hidden', 'important');
+      }
+    });
+
+    // Confirm the short #close layout is applied (getBoundingClientRect reflects
+    // the overridden height).
+    await page.waitForFunction(() => {
+      const el = document.getElementById('close');
+      return el !== null && el.getBoundingClientRect().height <= 125;
+    });
+
+    // RELIABLE SCROLL: Scroll to put the body-end sentinel clearly INSIDE the viewport,
+    // while keeping #close OUT of the interior observer's active band.
+    //
+    // Layout after CSS injection (720px viewport):
+    //   #close offsetTop≈2479, height=120 → bottom≈2599
+    //   footer  offsetTop≈2653, height≈126 → bottom≈2779
+    //   sentinel offsetTop≈2779, height=1  → bottom≈2780 (natural scrollHeight)
+    //
+    // Problem: at natural maxScroll=2780-720=2060, sentinel.rectBottom=720 — the exact
+    // viewport edge — and Chromium's IntersectionObserver fires inconsistently there.
+    //
+    // Second problem: after scroll, #close must NOT be in the interior active band
+    // (30%-40% of viewport = 216-288px from top), or the interior observer activates
+    // it instead of the footObserver, making the test vacuous. The scroll position
+    // must be > 2383 so #close.bottom (≈2599) is above 216px from viewport top.
+    //
+    // Fix: append a 400px spacer to body AFTER the sentinel. New scrollHeight≈3180.
+    // The browser clamps scrollTop at maxScroll=3180-720=2460. At scrollTop=2460:
+    //   sentinel.rectTop  = 2779-2460 = 319 ✓ (clearly inside viewport [0,720])
+    //   #close.rectTop    = 2479-2460 =  19 ✓ (below active band start at 216px)
+    //   #close.rectBottom = 2599-2460 = 139 ✓ (below active band start at 216px)
+    // Only the footObserver can activate #close — interior observer can't see it.
+    await page.evaluate(() => {
+      // Append a test spacer to push maxScroll past the #close active-band range.
+      const spacer = document.createElement('div');
+      spacer.setAttribute('aria-hidden', 'true');
+      spacer.setAttribute('data-test-spacer', '');
+      spacer.style.cssText = 'height:400px;pointer-events:none;';
+      document.body.appendChild(spacer);
+
+      // The sentinel is now the second-to-last child of body.
+      // Scroll to maxScroll (browser clamps): puts sentinel clearly inside viewport
+      // and #close below the interior active band.
+      const sentinel = document.body.children[document.body.children.length - 2] as HTMLElement;
+      const targetScrollY = sentinel.offsetTop - 300; // aim for sentinel ~300px from top
+      window.scrollTo({ top: Math.max(0, targetScrollY), behavior: 'instant' });
+    });
+    await expect
+      .poll(
+        async () => page.locator('.rail-d a[aria-current="true"]').first().getAttribute('href'),
+        {
+          timeout: 5000,
+          message:
+            'aria-current must move to #close at the foot of scroll (short #close condition — only the sentinel fallback can activate it)',
+        },
+      )
+      .toBe('#close');
+
+    // [data-scene-current] must read "7" (the last scene number).
+    await expect
+      .poll(async () => page.locator('.rail-d [data-scene-current]').first().textContent(), {
+        timeout: 3000,
+        message: '[data-scene-current] must read 7 (the last scene number)',
+      })
+      .toBe('7');
+
+    // Exactly one rail entry carries aria-current (no stale entries on previous scenes).
+    await expect(page.locator('.rail-d a[aria-current="true"]')).toHaveCount(1);
+  });
+
+  test('Story 5.0 AC2: interior scenes still track correctly (rootMargin heuristic unchanged)', async ({
+    page,
+  }) => {
+    // Confirms that adding the bottom-of-page sentinel did NOT regress the interior
+    // scene tracking — aria-current still moves off #hero as a mid-arc scene scrolls in.
+    await page.goto('/');
+    // Baseline on #hero.
+    await expect(page.locator('.rail-d a[aria-current="true"]')).toHaveAttribute('href', '#hero');
+
+    // Scroll to a well-interior scene (flagship is not the last scene).
+    await page.locator('section#flagship').scrollIntoViewIfNeeded();
+    await expect
+      .poll(
+        async () => page.locator('.rail-d a[aria-current="true"]').first().getAttribute('href'),
+        { timeout: 5000 },
+      )
+      .not.toBe('#hero');
+  });
 });
 
 test.describe('a Mirror route loads as a real answer-first page', () => {

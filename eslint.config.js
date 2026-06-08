@@ -23,7 +23,8 @@ const nodeGlobals = {
 
 export default tseslint.config(
   {
-    // Global ignores — build output, deps, generated types.
+    // Global ignores — build output, deps, generated types, and third-party
+    // pre-compiled assets served statically (e.g. WASM transcoder wrappers).
     ignores: [
       '**/node_modules/**',
       '**/dist/**',
@@ -31,6 +32,10 @@ export default tseslint.config(
       'web/dist/**',
       'api/dist/**',
       'api/data/**',
+      // Third-party pre-compiled JS assets in web/public/ — these are
+      // generated/compiled binaries (Basis Universal transcoder, Draco decoder)
+      // and must not be linted.
+      'web/public/cinematic/*.js',
     ],
   },
   js.configs.recommended,

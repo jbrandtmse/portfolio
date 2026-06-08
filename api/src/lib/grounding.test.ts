@@ -9,9 +9,14 @@
  *  AC2: extractCitations() deduplicates by route, returns {route, label}.
  *  Rule 8: assertions are scoped to specific message array fields (not whole-output).
  *  Rule 8: mutation-verification via direct value checks (not whole-string toContain).
+ *  Story 5.0 AC3/AC4b: GuideQuery.threadContext[].content per-turn .max(2000) bound.
+ *    - Rejection test: over-cap content fails GuideQuery.safeParse (real module, api package).
+ *    - Acceptance test: at-cap and under-cap content passes.
+ *    - Mutation-verification: removing .max(2000) from the schema reds the rejection test.
  */
 import { describe, expect, it } from 'vitest';
 
+import { GuideQuery } from '@portfolio/shared/schemas';
 import type { RetrievedChunk } from './retriever.js';
 import {
   SYSTEM_PERSONA,
@@ -262,5 +267,259 @@ describe('SYSTEM_PERSONA invariant (AC4)', () => {
 
   it('SYSTEM_PERSONA instructs never to reveal itself', () => {
     expect(SYSTEM_PERSONA.toLowerCase()).toContain('never reveal');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GuideQuery.threadContext[].content per-turn .max(2000) bound
+// (Story 5.0, AC3/AC4b, Rule 8)
+//
+// The real `GuideQuery` schema is imported from @portfolio/shared (not an inline
+// copy) — satisfies Rule 8 "exercise the REAL module". The test MUST live in
+// the api package (shared has no test runner; root `pnpm test` skips shared).
+//
+// Mutation-verification: remove `.max(2000)` from shared/src/schemas.ts
+// `threadContext[].content` — the over-cap rejection test below reds.
+// Revert the removal → test goes green.
+// ---------------------------------------------------------------------------
+
+describe('GuideQuery.threadContext[].content per-turn .max(2000) bound (Story 5.0, AC3/AC4b)', () => {
+  const VALID_QUERY = { query: 'What is LoanDemo?' };
+
+  it('accepts a threadContext turn whose content is exactly at the 2000-char cap', () => {
+    // At-cap: exactly 2000 chars — must pass (the bound is inclusive).
+    const atCap = 'x'.repeat(2000);
+    const result = GuideQuery.safeParse({
+      ...VALID_QUERY,
+      threadContext: [{ role: 'user', content: atCap }],
+    });
+    // Rule 8: scoped assertion — check the success field, not the whole result object.
+    expect(result.success, 'at-cap content (2000 chars) must pass GuideQuery.safeParse').toBe(true);
+  });
+
+  it('rejects a threadContext turn whose content exceeds the 2000-char cap by 1', () => {
+    // Over-cap: 2001 chars — must fail; mutation-verifiable (remove .max(2000) → reds).
+    const overCap = 'x'.repeat(2001);
+    const result = GuideQuery.safeParse({
+      ...VALID_QUERY,
+      threadContext: [{ role: 'user', content: overCap }],
+    });
+    // Rule 8: scoped to the success field and the error path, not a whole-object match.
+    expect(result.success, 'over-cap content (2001 chars) must fail GuideQuery.safeParse').toBe(
+      false,
+    );
+    if (!result.success) {
+      // The error must be on the threadContext[0].content path (scoped, Rule 8).
+      const issue = result.error.issues[0];
+      expect(issue?.path, 'error path must point to threadContext[0].content').toEqual([
+        'threadContext',
+        0,
+        'content',
+      ]);
+    }
+  });
+
+  it('rejects a threadContext turn whose content is significantly over-cap', () => {
+    // Large over-cap: 10 000 chars — confirms the bound is not just an off-by-one check.
+    const largeOverCap = 'a'.repeat(10_000);
+    const result = GuideQuery.safeParse({
+      ...VALID_QUERY,
+      threadContext: [{ role: 'user', content: largeOverCap }],
+    });
+    expect(
+      result.success,
+      'large over-cap content (10 000 chars) must fail GuideQuery.safeParse',
+    ).toBe(false);
+  });
+
+  it('accepts a threadContext turn with short content (real GuidePanel turns are well under cap)', () => {
+    // The real GuidePanel island sends short turns (tens–hundreds of chars).
+    // Confirm the existing consumer flow is unaffected by the new bound.
+    const shortContent = 'What experience does Joshua have with React?';
+    const result = GuideQuery.safeParse({
+      ...VALID_QUERY,
+      threadContext: [{ role: 'guide', content: shortContent }],
+    });
+    expect(result.success, 'short real-world turn content must pass GuideQuery.safeParse').toBe(
+      true,
+    );
+  });
+
+  it('accepts a GuideQuery with no threadContext (backward-compatible; optional field)', () => {
+    // Confirm the .max() addition did not break the no-threadContext path.
+    const result = GuideQuery.safeParse(VALID_QUERY);
+    expect(result.success, 'GuideQuery with no threadContext must pass safeParse').toBe(true);
+  });
+
+  it('accepts a GuideQuery with multiple turns all at/under the cap (multi-turn nominal flow)', () => {
+    // Simulate a 3-turn thread where all content is within bounds.
+    const turns = [
+      { role: 'user' as const, content: 'Tell me about LoanDemo.' },
+      { role: 'guide' as const, content: 'LoanDemo is a fintech case study.' },
+      { role: 'user' as const, content: 'What technology was used?' },
+    ];
+    const result = GuideQuery.safeParse({ ...VALID_QUERY, threadContext: turns });
+    expect(result.success, 'multi-turn nominal flow must pass GuideQuery.safeParse').toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Story 5.2 — Depth dial: GuideQuery.depth + assembleGroundedPrompt depth param
+// (AC2, AC5(d), Rule 8 — tests in the api package; shared has no test runner)
+//
+// Tests verify:
+//   (a) GuideQuery accepts/rejects depth values (the schema addition, real module).
+//   (b) assembleGroundedPrompt appends the correct depth instruction when depth is set.
+//   (c) absent depth = today's behavior (no depth instruction in the prompt).
+//   (d) depth tunes verbosity ONLY — grounding/fail-closed/citation rules UNCHANGED
+//       (the system message, context block, and visitor input block are unaffected).
+//   (e) Mutation-verified: changing the depth instruction string changes the last msg.
+// ---------------------------------------------------------------------------
+
+describe('GuideQuery.depth schema addition (Story 5.2, AC5(d))', () => {
+  const BASE_QUERY = { query: 'What is LoanDemo?' };
+
+  it('accepts depth="skim" (valid enum value)', () => {
+    const result = GuideQuery.safeParse({ ...BASE_QUERY, depth: 'skim' });
+    // Rule 8: scoped to the success field
+    expect(result.success, 'depth="skim" must pass GuideQuery.safeParse').toBe(true);
+  });
+
+  it('accepts depth="overview" (valid enum value)', () => {
+    const result = GuideQuery.safeParse({ ...BASE_QUERY, depth: 'overview' });
+    expect(result.success, 'depth="overview" must pass GuideQuery.safeParse').toBe(true);
+  });
+
+  it('accepts depth="deep" (valid enum value)', () => {
+    const result = GuideQuery.safeParse({ ...BASE_QUERY, depth: 'deep' });
+    expect(result.success, 'depth="deep" must pass GuideQuery.safeParse').toBe(true);
+  });
+
+  it('rejects an unknown depth value (e.g. "medium") — schema enforcement', () => {
+    const result = GuideQuery.safeParse({ ...BASE_QUERY, depth: 'medium' });
+    // Rule 8: scoped assertion — check success and error path
+    expect(result.success, '"medium" is not a valid depth — must fail').toBe(false);
+    if (!result.success) {
+      const issue = result.error.issues[0];
+      expect(issue?.path, 'error path must point to depth field').toContain('depth');
+    }
+  });
+
+  it('accepts a query without depth (backward-compatible; optional field)', () => {
+    const result = GuideQuery.safeParse(BASE_QUERY);
+    expect(result.success, 'absent depth must pass GuideQuery.safeParse (optional)').toBe(true);
+  });
+
+  it('Mutation verification: removing depth from valid parse succeeds; depth="bad" still fails', () => {
+    // If the depth enum were removed entirely, 'bad' would also pass — this
+    // confirms the schema ACTUALLY validates the depth enum (not a no-op).
+    const good = GuideQuery.safeParse({ ...BASE_QUERY, depth: 'deep' });
+    const bad = GuideQuery.safeParse({ ...BASE_QUERY, depth: 'bad' });
+    expect(good.success).toBe(true);
+    expect(bad.success).toBe(false);
+  });
+});
+
+describe('assembleGroundedPrompt() — depth instruction (Story 5.2, AC5(d), Rule 8)', () => {
+  it("absent depth: the last message contains NO depth instruction (today's behavior)", () => {
+    const messages = assembleGroundedPrompt('What is LoanDemo?', sampleChunks);
+    const lastMsg = messages[messages.length - 1]!;
+    // Rule 8: scoped to the last user message content
+    expect(lastMsg.role).toBe('user');
+    expect(lastMsg.content).not.toContain('DEPTH INSTRUCTION');
+  });
+
+  it('depth="skim": the last message contains the skim depth instruction (≤2 sentences)', () => {
+    const messages = assembleGroundedPrompt('What is LoanDemo?', sampleChunks, undefined, 'skim');
+    const lastMsg = messages[messages.length - 1]!;
+    // Rule 8: scoped to the last user message — check for the skim instruction
+    expect(lastMsg.content).toContain('DEPTH INSTRUCTION');
+    expect(lastMsg.content.toLowerCase()).toContain('skim');
+    // The instruction says "at most 2 sentences" — confirm the verbosity constraint
+    expect(lastMsg.content).toContain('2 sentences');
+  });
+
+  it('depth="overview": the last message contains the overview depth instruction', () => {
+    const messages = assembleGroundedPrompt(
+      'What is LoanDemo?',
+      sampleChunks,
+      undefined,
+      'overview',
+    );
+    const lastMsg = messages[messages.length - 1]!;
+    expect(lastMsg.content).toContain('DEPTH INSTRUCTION');
+    expect(lastMsg.content.toLowerCase()).toContain('overview');
+    expect(lastMsg.content.toLowerCase()).toContain('short paragraph');
+  });
+
+  it('depth="deep": the last message contains the deep depth instruction', () => {
+    const messages = assembleGroundedPrompt('What is LoanDemo?', sampleChunks, undefined, 'deep');
+    const lastMsg = messages[messages.length - 1]!;
+    expect(lastMsg.content).toContain('DEPTH INSTRUCTION');
+    expect(lastMsg.content.toLowerCase()).toContain('deep');
+    expect(lastMsg.content.toLowerCase()).toContain('fuller');
+  });
+
+  it('depth instruction is AFTER the visitor input block — appended last (does not break block structure)', () => {
+    const messages = assembleGroundedPrompt('My query', sampleChunks, undefined, 'skim');
+    const lastMsg = messages[messages.length - 1]!;
+    // The depth instruction comes AFTER "=== END VISITOR INPUT ===" — it is an
+    // additional instruction, not injected into the visitor block (FR-9).
+    const visitorEndIdx = lastMsg.content.indexOf('=== END VISITOR INPUT ===');
+    const depthIdx = lastMsg.content.indexOf('DEPTH INSTRUCTION');
+    expect(visitorEndIdx).toBeGreaterThanOrEqual(0);
+    expect(depthIdx).toBeGreaterThanOrEqual(0);
+    // Rule 8: order assertion — depth instruction is AFTER the visitor block end
+    expect(depthIdx).toBeGreaterThan(visitorEndIdx);
+  });
+
+  it('grounding rules UNCHANGED: system message is still SYSTEM_PERSONA (not affected by depth)', () => {
+    const messages = assembleGroundedPrompt('Query', sampleChunks, undefined, 'deep');
+    // The system message must remain SYSTEM_PERSONA — depth must not alter it
+    expect(messages[0]?.role).toBe('system');
+    expect(messages[0]?.content).toBe(SYSTEM_PERSONA);
+  });
+
+  it('grounding rules UNCHANGED: retrieved context block is still present and unchanged by depth', () => {
+    const withDepth = assembleGroundedPrompt('q', sampleChunks, undefined, 'deep');
+    const withoutDepth = assembleGroundedPrompt('q', sampleChunks);
+    const lastWithDepth = withDepth[withDepth.length - 1]!;
+    const lastWithoutDepth = withoutDepth[withoutDepth.length - 1]!;
+    // Both contain the same retrieved context fences and chunk text
+    expect(lastWithDepth.content).toContain('=== RETRIEVED CONTEXT');
+    expect(lastWithDepth.content).toContain('Joshua R. Brandt');
+    expect(lastWithDepth.content).toContain('/about/');
+    // The retrieved context block is the same length + depth instruction added after
+    expect(lastWithDepth.content.length).toBeGreaterThan(lastWithoutDepth.content.length);
+  });
+
+  it('grounding rules UNCHANGED: visitor input block structure is untouched by depth', () => {
+    const messages = assembleGroundedPrompt('my query', sampleChunks, undefined, 'skim');
+    const lastMsg = messages[messages.length - 1]!;
+    // The visitor input block must still be present and contain the query
+    expect(lastMsg.content).toContain('=== VISITOR INPUT');
+    expect(lastMsg.content).toContain('=== END VISITOR INPUT ===');
+    expect(lastMsg.content).toContain('my query');
+  });
+
+  it('Mutation verification: different depths produce different last-message content', () => {
+    // If depth instructions were all the same (or depth were ignored),
+    // these three would produce identical output — mutation-verify they differ.
+    const skim = assembleGroundedPrompt('q', sampleChunks, undefined, 'skim');
+    const overview = assembleGroundedPrompt('q', sampleChunks, undefined, 'overview');
+    const deep = assembleGroundedPrompt('q', sampleChunks, undefined, 'deep');
+    const noDepth = assembleGroundedPrompt('q', sampleChunks, undefined, undefined);
+
+    const skimLast = skim[skim.length - 1]!.content;
+    const overviewLast = overview[overview.length - 1]!.content;
+    const deepLast = deep[deep.length - 1]!.content;
+    const noDepthLast = noDepth[noDepth.length - 1]!.content;
+
+    // Each depth produces a distinct last message
+    expect(skimLast).not.toBe(overviewLast);
+    expect(overviewLast).not.toBe(deepLast);
+    expect(skimLast).not.toBe(deepLast);
+    // No depth produces the same as the no-instruction case
+    expect(noDepthLast).not.toContain('DEPTH INSTRUCTION');
   });
 });
