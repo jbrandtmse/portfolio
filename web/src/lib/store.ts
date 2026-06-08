@@ -43,3 +43,17 @@ export const $depth = atom<Depth>('overview');
  * (e.g. a guided tour) can drive the zoom by writing $timelineFocus.set(id).
  */
 export const $timelineFocus = atom<string | null>(null);
+
+/**
+ * The active step index for the Glass Box guided tour (Story 6.3).
+ *
+ *   null    — tour is closed (default); the static <ol> is the sole experience
+ *   number  — 0-based index into the date-sorted featured artifacts; the tour
+ *             is open and showing that step
+ *
+ * The GlassBoxTour island writes/reads this atom. The tour is an INFORMATION
+ * feature (not decorative motion), so it mounts for all JS-on users under both
+ * no-preference and reduced-motion. Animated transitions (scroll-into-view, fades)
+ * are gated behind CSS `@media (prefers-reduced-motion: no-preference)`.
+ */
+export const $tourStep = atom<number | null>(null);

@@ -25,6 +25,18 @@
  *  AC5 — real glassbox.json data (slug, title, date) consumed; trailing-slash links.
  *  AC6 — exactly ONE <h1> (MirrorLayout title); ghost text uses --color-ink-ghost.
  *
+ * Story 6.3: adds the GlassBoxTour deferred island — a narrated guided tour.
+ *   - A <script type="application/json" id="glassbox-tour-data"> data island
+ *     embeds tour data for the bootstrap to consume.
+ *   - An inline <script> loads bootstrap.ts via requestIdleCallback (light, deferred).
+ *   - The island mounts for all JS-on users (NOT gated behind onMotionAllowed,
+ *     because the tour is an INFORMATION feature, not decorative motion).
+ *   - Animated transitions (scroll, fade) live under
+ *     @media (prefers-reduced-motion: no-preference) in the island CSS.
+ *   - The static <ol> remains the full JS-off experience (FR-8).
+ *   - JS count: this adds 1 inline <script> (joining the 2 Guide-pill scripts),
+ *     raising the page total to 3 executable scripts.
+ *
  * EDITORIAL (Dev Notes): NO drop-cap, NO pull-quotes — reserved for reader only.
  * Cross-link /timeline/ is a forward-reference (Story 2.4 fills it; Rule 3 note).
  */
@@ -37,6 +49,12 @@ import type { GlassboxArtifact } from '../../lib/glassbox';
 
 const LEDE =
   'Joshua R. Brandt, MSE builds in the open. The Glass Box is the curated, read-only record of the real BMAD Method artifacts behind this work — the planning, the design, and the execution, as it happened.';
+
+const FRAMING_LEAD =
+  'Not everything makes it in. The Glass Box is default-deny: only artifacts that reward reading — that show real thinking, not a polished surface — are published here. Curation is an act of taste, not gatekeeping.';
+
+const RECURSION_BEAT =
+  "You're reading the build history of the site you're reading it on. It's being built in the open, right now.";
 
 // Load real artifact data from glassbox.json (Story 2.1/2.2 producer).
 // Gracefully returns [] if the file is absent — the page still renders.
@@ -56,6 +74,21 @@ const featuredNodes = FEATURED_SLUGS.map((node) => {
   )
   // Sort chronologically by artifact date (AC5: order matches glassbox.json dates).
   .sort((a, b) => new Date(a.artifact.date).getTime() - new Date(b.artifact.date).getTime());
+
+// Tour data: date-sorted featured artifacts with their curatorNotes.
+// Ghost nodes are omitted — they have no readers (AC2 / Rule 9).
+const tourArtifacts = featuredNodes.map(({ artifact }) => ({
+  slug: artifact.slug,
+  title: artifact.title,
+  curatorNote: artifact.curatorNote,
+  date: artifact.date,
+}));
+
+const tourData = JSON.stringify({
+  artifacts: tourArtifacts,
+  framingLead: FRAMING_LEAD,
+  recursionBeat: RECURSION_BEAT,
+});
 ---
 
 <MirrorLayout
@@ -86,12 +119,17 @@ const featuredNodes = FEATURED_SLUGS.map((node) => {
     </p>
   </section>
 
+  {/* ── Tour data island (Story 6.3) ─────────────────────────────────── */}
+  {/* Consumed by glassbox-tour/bootstrap.ts at runtime (JS-on path only). */}
+  <script type="application/json" id="glassbox-tour-data" set:html={tourData} />
+
   {/* ── Build-story spine (AC1, AC2, AC4) ────────────────────────────── */}
   {
     /*
     JS-off (AC4): the spine IS a semantic <ol>. CSS positions the Dots alongside
     the cards via flex; if CSS is absent, the list degrades to a plain ordered
     list of dated artifact links. No JS needed.
+    Story 6.3: featured items get data-tour-slug so the island can scroll to them.
   */
   }
   <section class="glass-box__spine-section" aria-label="Build story timeline">
@@ -100,7 +138,7 @@ const featuredNodes = FEATURED_SLUGS.map((node) => {
       {/* ── Featured artifact nodes (AC1, AC5) ──────────────────────── */}
       {
         featuredNodes.map(({ node, artifact }) => (
-          <li class="glass-box__spine-item">
+          <li class="glass-box__spine-item" data-tour-slug={artifact.slug}>
             <div class="glass-box__dot-col">
               <TimelineDot state={node.dotState} />
               <span class="glass-box__spine-line" aria-hidden="true" />
@@ -329,5 +367,240 @@ const featuredNodes = FEATURED_SLUGS.map((node) => {
     .glass-box__dot-col {
       padding-top: var(--space-4);
     }
+  }
+</style>
+
+{
+  /*
+  ── GlassBoxTour deferred mount (Story 6.3) ──────────────────────────────
+  This is an INFORMATION feature — mount it for ALL JS-on visitors (not just
+  motion-allowed). Use requestIdleCallback (or setTimeout fallback) to defer
+  the import so the initial page load is not blocked.
+  NOTE: this adds 1 executable <script> → the page now ships 3 exec scripts
+  (2 Guide-pill + this). The glassbox-tour.spec.ts test asserts the correct count.
+*/
+}
+<script>
+  // Deferred idle mount — the import is LIGHT (no GSAP/WebGL).
+  // Not gated behind onMotionAllowed: the tour is an information feature.
+  let booted = false;
+  const loadTour = (): void => {
+    if (booted) return;
+    booted = true;
+    void import('../../lib/glassbox-tour/bootstrap').then((m) => m.boot());
+  };
+
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(loadTour, { timeout: 2000 });
+  } else {
+    setTimeout(loadTour, 200);
+  }
+</script>
+
+<style is:global>
+  /* ─── GlassBoxTour island styles ──────────────────────────────────────── */
+  /* Using is:global so the dynamically-mounted React island can inherit them. */
+
+  .gbt {
+    margin-bottom: var(--space-7);
+    max-width: var(--measure-reading);
+  }
+
+  .gbt__start-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .gbt__start-btn {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-meta);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-accent);
+    background: none;
+    border: 1px solid var(--color-accent);
+    border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-4);
+    cursor: pointer;
+  }
+
+  .gbt__start-btn:hover {
+    background: var(--color-accent);
+    color: var(--color-bg);
+  }
+
+  .gbt__start-btn:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .gbt__close-btn {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    color: var(--color-ink-secondary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: var(--space-2);
+    border-radius: var(--radius-sm);
+  }
+
+  .gbt__close-btn:hover {
+    color: var(--color-ink-primary);
+  }
+
+  .gbt__close-btn:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .gbt__panel {
+    margin-top: var(--space-5);
+    padding: var(--space-5);
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-subtle, var(--color-bg));
+  }
+
+  .gbt__panel:focus {
+    outline: none; /* focus managed programmatically; visible ring is on controls */
+  }
+
+  .gbt__panel:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .gbt__step-indicator {
+    display: block;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-meta);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-ink-meta-min);
+    margin-bottom: var(--space-3);
+  }
+
+  .gbt__step-title {
+    font: var(--text-h3, inherit);
+    font-family: var(--font-family-base);
+    color: var(--color-ink-primary);
+    margin: 0 0 var(--space-3);
+  }
+
+  .gbt__narration {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+    margin: 0 0 var(--space-4);
+  }
+
+  .gbt__reader-link {
+    display: inline-block;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-meta);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-accent);
+    text-decoration-line: underline;
+    text-underline-offset: 2px;
+    margin-bottom: var(--space-5);
+  }
+
+  .gbt__reader-link:hover {
+    color: var(--color-accent-hover);
+  }
+
+  .gbt__reader-link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  .gbt__nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  .gbt__nav-btn {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-meta);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-ink-primary);
+    background: none;
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-4);
+    cursor: pointer;
+  }
+
+  .gbt__nav-btn:disabled {
+    color: var(--color-ink-meta-min);
+    cursor: not-allowed;
+  }
+
+  .gbt__nav-btn:not(:disabled):hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .gbt__nav-btn:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .gbt__step-dots {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .gbt__dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-border-hairline);
+  }
+
+  .gbt__dot--active {
+    background: var(--color-accent);
+  }
+
+  .gbt__intro-hint {
+    margin-top: var(--space-4);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    color: var(--color-ink-meta-min);
+    max-width: var(--measure-reading);
+    /* Hidden from AT (duplicates the static framing-lead text) */
+  }
+
+  /* ── Active spine item highlight ────────────────────────────────────── */
+  [data-tour-slug] {
+    transition: none; /* instant by default */
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    [data-tour-slug] {
+      transition: outline 200ms ease;
+    }
+  }
+
+  [data-tour-active='true'] {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 4px;
+    border-radius: var(--radius-sm);
   }
 </style>

@@ -55,12 +55,13 @@ function allScriptTags(html: string): string[] {
   return html.match(/<script\b[^>]*>/gi) ?? [];
 }
 
-/** Count EXECUTABLE scripts — every <script> that is NOT an ld+json data block. */
+/** Count EXECUTABLE scripts — every <script> that is NOT an ld+json data block or JSON data island. */
 function countExecutableScripts(html: string): number {
   return allScriptTags(html).filter(
     (tag) =>
       !/type\s*=\s*["']application\/ld\+json["']/i.test(tag) &&
-      !/type\s*=\s*["']importmap["']/i.test(tag),
+      !/type\s*=\s*["']importmap["']/i.test(tag) &&
+      !/type\s*=\s*["']application\/json["']/i.test(tag),
   ).length;
 }
 
@@ -119,11 +120,15 @@ describe('Story 2.3 AC6 — one <h1> and 0 executable JS', () => {
     expect(h1Matches).toHaveLength(1);
   });
 
-  it('ships exactly 2 executable scripts — the Guide pill init only (Story 4.4 NFR-1 carve-out)', () => {
-    // Story 4.4: ALL routes now ship the site-wide Guide pill (2 exec scripts).
-    // /glass-box/ has NO InviteForm chunk, NO GuidePanel chunk — only the pill.
+  it('ships exactly 3 executable scripts — Guide pill (2) + tour bootstrap (1) (Story 6.3)', () => {
+    // Story 4.4: ALL routes ship the site-wide Guide pill (2 exec scripts).
+    // Story 6.3 adds 1 tour bootstrap script (information feature, not decoration).
+    // application/json data islands (glassbox-tour-data) do NOT count as executable.
     const execCount = countExecutableScripts(indexHtml);
-    expect(execCount, '/glass-box/ must have exactly 2 exec scripts (Guide pill only)').toBe(2);
+    expect(
+      execCount,
+      '/glass-box/ must have exactly 3 exec scripts (Guide pill x2 + tour x1)',
+    ).toBe(3);
   });
 
   it('has exactly one <h1> — card titles are h3, not h1', () => {

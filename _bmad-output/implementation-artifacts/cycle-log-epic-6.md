@@ -24,3 +24,10 @@
 2026-06-08T18:40:00Z	Story 6.2	qa_complete	spawn_at=2026-06-08T18:01:00Z model=claude-opus-4-8 tests=web/test/timeline-zoom.test.ts,web/e2e/timeline.spec.ts tests_added=4 defects_fixed=2 first_run_failures=0 clarifications=0 closing_sections_present=true
 2026-06-08T18:55:00Z	Story 6.2	cr_complete	spawn_at=2026-06-08T18:41:00Z model=claude-opus-4-8 resolved=1 deferred=0 dismissed=0 high=0 med=1 low=0 clarifications=0 closing_sections_present=true
 2026-06-08T19:10:00Z	Story 6.2	smoke_complete	method=browser result=pass iterations=1 defects_caught=0 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-6.2-smoke.md model=claude-opus-4-8
+2026-06-08T19:12:00Z	Story 6.2	committed	sha=8791455 submodules=
+2026-06-08T19:20:10Z	Story 6.3	story_created	path=_bmad-output/implementation-artifacts/6-3-glass-box-guided-tour.md service_introducing=false consumer_of=2.2,2.3 integration_ac=consumer_declaration resolves=resetRecuration_deadcode
+2026-06-08T22:25:00Z	Story 6.3	dev_complete	spawn_at=2026-06-08T19:21:00Z model=claude-sonnet-4-6 files=web/src/islands/GlassBoxTour.tsx,web/src/lib/glassbox-tour/bootstrap.ts,web/src/lib/store.ts,web/src/pages/glass-box/index.astro,web/src/lib/recuration.ts loc_added=NA clarifications=0 nfr_tripwires=0 adr_violations_surfaced=0 cycle_iteration=1 closing_sections_present=true note=full_gate_not_explicitly_confirmed_qa_verifies_fresh
+2026-06-08T22:25:10Z	Story 6.3	adr_verifications_complete	result=none_required reason=no_docs_adr_registry model=claude-opus-4-8
+2026-06-08T22:55:00Z	Story 6.3	qa_complete	spawn_at=2026-06-08T22:26:00Z model=claude-opus-4-8 tests=web/e2e/glassbox-tour.spec.ts tests_added=2 defects_fixed=0 hardened=2 first_run_failures=0 clarifications=0 closing_sections_present=true
+2026-06-08T23:05:00Z	Story 6.3	cr_complete	spawn_at=2026-06-08T22:56:00Z model=claude-opus-4-8 resolved=1 deferred=0 dismissed=0 high=0 med=0 low=1 clarifications=0 closing_sections_present=true
+2026-06-08T23:12:00Z	Story 6.3	smoke_complete	method=browser result=pass iterations=1 defects_caught=0 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-6.3-smoke.md model=claude-opus-4-8

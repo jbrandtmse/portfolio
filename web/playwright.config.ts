@@ -261,6 +261,17 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
       testMatch: /depth-dial\.spec\.ts/,
     },
+    // (Story 6.3) Glass Box guided tour — deferred React island.
+    // AC1: narrated step-through (visible narration + reader link per step, mutation-verified)
+    // AC2: reader link resolves 200; no ghost node reader links
+    // AC3: JS-off spine full (Rule 7); reduced-motion tour usable, no animated transitions
+    // AC4: narration traces to known curatorNotes (Rule 9)
+    // Information feature (not gated behind onMotionAllowed): mounts for all JS-on users.
+    {
+      name: 'glassbox-tour',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /glassbox-tour\.spec\.ts/,
+    },
     // (Story 5.3) Agent re-curation by stated intent. Desktop, JS on.
     // Rule 7: proven to EXECUTE (not skipped); exercises:
     //   (a) organizer → speaker at visual order 1 (CSS order property)
