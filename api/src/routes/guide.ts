@@ -205,7 +205,7 @@ guideRouter.post('/guide', async (c: Context) => {
     );
   }
 
-  const { query, threadContext } = parseResult.data;
+  const { query, threadContext, depth } = parseResult.data;
 
   // ------------------------------------------------------------------
   // Step 4 — Injection detection (log + continue — grounding still holds).
@@ -244,7 +244,8 @@ guideRouter.post('/guide', async (c: Context) => {
   // ------------------------------------------------------------------
   // Steps 7–9 — Ground → stream → AbortController ceiling.
   // ------------------------------------------------------------------
-  const messages = assembleGroundedPrompt(query, chunks, threadContext);
+  // Story 5.2: pass depth to assemble a verbosity instruction (grounding contract unchanged).
+  const messages = assembleGroundedPrompt(query, chunks, threadContext, depth);
   const citations = extractCitations(chunks);
 
   // ~15s hard ceiling on the LLM call (NFR-4)

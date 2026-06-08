@@ -41,7 +41,7 @@ import type { GuideEvent, CitationEvent } from '@portfolio/shared/events';
 import { STARTER_PROMPTS } from '../data/faq';
 import { track } from '../lib/analytics';
 import { onMotionAllowed } from '../lib/motion';
-import { $guideOpen } from '../lib/store';
+import { $depth, $guideOpen } from '../lib/store';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -75,6 +75,10 @@ const GREETING = "I'm your guide to Joshua's work. I only say what it can back u
 
 export function GuidePanel({ pillRef }: { pillRef?: React.RefObject<HTMLButtonElement | null> }) {
   const isOpen = useStore($guideOpen);
+  // Story 5.2: read the visitor's chosen depth from the nanostore.
+  // Passed in every /api/guide request to tune answer verbosity/detail only.
+  // The grounding/fail-closed/citation contract is unchanged (FR-6/7/9).
+  const currentDepth = useStore($depth);
 
   const panelRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -257,6 +261,9 @@ export function GuidePanel({ pillRef }: { pillRef?: React.RefObject<HTMLButtonEl
           body: JSON.stringify({
             query,
             threadContext: priorTurns.length > 0 ? priorTurns : undefined,
+            // Story 5.2: include the visitor's chosen depth to tune answer verbosity.
+            // The api tunes verbosity/detail ONLY; grounding/safety contract unchanged.
+            depth: currentDepth,
           }),
         });
 
@@ -363,7 +370,17 @@ export function GuidePanel({ pillRef }: { pillRef?: React.RefObject<HTMLButtonEl
         setIsStreaming(false);
       }
     },
-    [isStreaming, transcript, idPrefix],
+    // currentDepth MUST be a dependency: sendQuery is memoized, and a depth-only
+    // change (the dial) re-renders this component WITHOUT touching the other deps.
+    // Omitting currentDepth would memoize a STALE closure that posts the depth as
+    // of the previous query/mount — not the dial's current value — breaking AC2
+    // (the GuidePanel must include the CHOSEN depth in /api/guide). (Story 5.2 CR)
+    // currentDepth MUST be a dependency: sendQuery is memoized, and a depth-only
+    // change (the dial) re-renders this component WITHOUT touching the other deps.
+    // Omitting currentDepth would memoize a STALE closure that posts the depth as
+    // of the previous query/mount — not the dial's current value — breaking AC2
+    // (the GuidePanel must include the CHOSEN depth in /api/guide). (Story 5.2 CR)
+    [isStreaming, transcript, idPrefix, currentDepth],
   );
 
   const handleSubmit = useCallback(

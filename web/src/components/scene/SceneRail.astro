@@ -92,6 +92,53 @@ const TOTAL = SCENES.length;
       <p class="rail-d__lab">Scene <span data-scene-current>1</span> of {TOTAL}</p>
     </div>
 
+    {/* ── Depth Dial (Story 5.2, AC1/AC3) ──────────────────────────────────── */}
+    {
+      /*
+       * A native radio <fieldset> — no JS required for the control itself (the
+       * options are followable/readable without JS). A tiny enhancement script
+       * below syncs radios ↔ $depth and sets data-depth on <html>. The dial is
+       * NOT motion-gated (it is a control, not animation). State rides the
+       * native :checked attribute — accessible via the a11y tree without color.
+       */
+    }
+    <fieldset class="depth-dial" data-depth-dial>
+      <legend class="depth-dial__legend">Depth</legend>
+      <div class="depth-dial__options">
+        <label class="depth-dial__label">
+          <input
+            class="depth-dial__radio"
+            type="radio"
+            name="depth"
+            value="skim"
+            data-depth-radio
+          />
+          <span class="depth-dial__text">Skim</span>
+        </label>
+        <label class="depth-dial__label depth-dial__label--checked">
+          <input
+            class="depth-dial__radio"
+            type="radio"
+            name="depth"
+            value="overview"
+            data-depth-radio
+            checked
+          />
+          <span class="depth-dial__text">Overview</span>
+        </label>
+        <label class="depth-dial__label">
+          <input
+            class="depth-dial__radio"
+            type="radio"
+            name="depth"
+            value="deep"
+            data-depth-radio
+          />
+          <span class="depth-dial__text">Deep dive</span>
+        </label>
+      </div>
+    </fieldset>
+
     <div class="rail-d__foot">
       <a class="rail-d__skip" href="#close"
         >Skip to the end <span aria-hidden="true">&darr;</span></a
@@ -128,6 +175,44 @@ const TOTAL = SCENES.length;
         </li>
         <li>
           <a class="rail-m__link rail-m__link--jump" href="/speaking/"> Jump: book a talk </a>
+        </li>
+        <li class="rail-m__depth-item">
+          <fieldset class="depth-dial depth-dial--mobile" data-depth-dial-mobile>
+            <legend class="depth-dial__legend">Depth</legend>
+            <div class="depth-dial__options">
+              <label class="depth-dial__label">
+                <input
+                  class="depth-dial__radio"
+                  type="radio"
+                  name="depth-mobile"
+                  value="skim"
+                  data-depth-radio-mobile
+                />
+                <span class="depth-dial__text">Skim</span>
+              </label>
+              <label class="depth-dial__label depth-dial__label--checked">
+                <input
+                  class="depth-dial__radio"
+                  type="radio"
+                  name="depth-mobile"
+                  value="overview"
+                  data-depth-radio-mobile
+                  checked
+                />
+                <span class="depth-dial__text">Overview</span>
+              </label>
+              <label class="depth-dial__label">
+                <input
+                  class="depth-dial__radio"
+                  type="radio"
+                  name="depth-mobile"
+                  value="deep"
+                  data-depth-radio-mobile
+                />
+                <span class="depth-dial__text">Deep dive</span>
+              </label>
+            </div>
+          </fieldset>
         </li>
       </ol>
     </details>
@@ -459,6 +544,92 @@ const TOTAL = SCENES.length;
     color: var(--color-accent);
   }
 
+  .rail-m__depth-item {
+    margin-top: var(--space-2);
+    border-top: 1px solid var(--color-border-hairline);
+    padding: var(--space-2) var(--space-4) var(--space-3);
+  }
+
+  /* ── Depth Dial (Story 5.2, AC1/AC3) ─────────────────────────────────────
+     A native <fieldset> radio group — keyboard-operable (arrow keys navigate
+     between radios, Tab to/from the group), state in the a11y tree via :checked
+     (never color alone — color is a REDUNDANT reinforcement, not the signal).
+     No box-shadow (DESIGN §Elevation flat system). NOT gated on motion (it is
+     a control, not animation). */
+  .depth-dial {
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3) var(--space-3);
+    margin: 14px 0 12px;
+  }
+
+  .depth-dial__legend {
+    padding: 0 var(--space-2);
+    font-size: 9.5px;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-ink-secondary);
+  }
+
+  .depth-dial__options {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: var(--space-2);
+  }
+
+  /* In mobile context the options flow horizontally to save vertical space. */
+  .depth-dial--mobile .depth-dial__options {
+    flex-direction: row;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  .depth-dial__label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    padding: 4px 6px;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-regular);
+    color: var(--color-ink-secondary);
+    cursor: pointer;
+  }
+
+  .depth-dial__label:hover {
+    color: var(--color-accent);
+  }
+
+  /* The native radio — visible and sized for a ≥24px hit area contribution.
+     State is carried via :checked in the a11y tree (the native affordance). */
+  .depth-dial__radio {
+    flex: 0 0 auto;
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    accent-color: var(--color-accent);
+    cursor: pointer;
+  }
+
+  .depth-dial__radio:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Checked label — REDUNDANT visual reinforcement (the :checked carries the
+     real accessible signal; color is additional context only). */
+  .depth-dial__label:has(input:checked) {
+    color: var(--color-accent);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .depth-dial__text {
+    line-height: 1.2;
+  }
+
   /* ── The two-layer reduced-motion gate — CSS layer (Layer 1) ───────────────
      This is the CSS half of the shared two-layer gate documented in
      web/src/lib/motion.ts (CSS_REDUCED_MOTION_CONVENTION). The scroll-driven
@@ -589,5 +760,67 @@ const TOTAL = SCENES.length;
       );
       footObserver.observe(sentinel);
     }
+  });
+</script>
+
+{
+  /*
+  Depth Dial enhancement (Story 5.2, AC1/AC3/AC4 — NFR-1).
+  NOT motion-gated: the dial is a control, not animation. This tiny script:
+    1. Sets data-depth on <html> so CSS can show/hide scene tiers.
+    2. Syncs the desktop + mobile radio groups with each other and with $depth.
+    3. Works without nanostores by using a custom event ('depth-change') so the
+       GuidePanel island (which imports $depth from the store) can subscribe.
+  JS-off fallback: the CSS tiers use [data-depth] — without it, the overview
+  tier is the "visible default" (authored as the non-hidden baseline via CSS
+  :not([data-depth]) or [data-depth="overview"] — whichever is appropriate).
+*/
+}
+<script>
+  import { $depth } from '../../lib/store';
+  import type { Depth } from '../../lib/store';
+
+  // Sync radios ↔ $depth ↔ data-depth on <html>.
+  // Desktop radios: [data-depth-radio]; Mobile radios: [data-depth-radio-mobile].
+  // The two groups use different `name` attributes so they don't interfere as a
+  // native radio group — the script keeps them in sync manually.
+
+  const desktopRadios = Array.from(
+    document.querySelectorAll<HTMLInputElement>('[data-depth-radio]'),
+  );
+  const mobileRadios = Array.from(
+    document.querySelectorAll<HTMLInputElement>('[data-depth-radio-mobile]'),
+  );
+  const allRadios = [...desktopRadios, ...mobileRadios];
+
+  function isDepth(v: string): v is Depth {
+    return v === 'skim' || v === 'overview' || v === 'deep';
+  }
+
+  function applyDepth(depth: Depth) {
+    // Set data-depth on <html> (the CSS shows/hides tiers by this attribute).
+    document.documentElement.setAttribute('data-depth', depth);
+    // Sync all radio groups so both desktop and mobile reflect the state.
+    for (const radio of allRadios) {
+      radio.checked = radio.value === depth;
+    }
+  }
+
+  // Initialize to the current store value and apply.
+  applyDepth($depth.get());
+
+  // When any radio changes, update the store (which triggers the subscriber below).
+  for (const radio of allRadios) {
+    radio.addEventListener('change', () => {
+      const val = radio.value;
+      if (isDepth(val)) {
+        $depth.set(val);
+      }
+    });
+  }
+
+  // Subscribe to store changes (e.g. driven by the GuidePanel or future consumers).
+  $depth.subscribe((depth) => {
+    applyDepth(depth);
   });
 </script>

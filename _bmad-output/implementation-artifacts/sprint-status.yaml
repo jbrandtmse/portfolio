@@ -1,5 +1,5 @@
 # generated: 2026-06-06T02:19:05Z
-# last_updated: 2026-06-07
+# last_updated: 2026-06-08
 # project: portfolio
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-06T02:19:05Z
-last_updated: 2026-06-08T04:24:06Z
+last_updated: 2026-06-08T05:50:00Z
 project: portfolio
 project_key: NOKEY
 tracking_system: file-system
@@ -94,7 +94,7 @@ development_status:
   epic-5: in-progress
   5-0-epic-4-deferred-cleanup: done
   5-1-continuous-canvas-with-cinematic-scene-transitions: done
-  5-2-depth-dial: backlog
+  5-2-depth-dial: done
   5-3-agent-re-curation-by-stated-intent: backlog
   5-4-directors-mode-scene-reordering: backlog
   epic-5-retrospective: optional

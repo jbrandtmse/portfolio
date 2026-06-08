@@ -253,5 +253,13 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
       testMatch: /guide-panel\.spec\.ts/,
     },
+    // (Story 5.2) Depth Dial — AC1–AC5. Desktop, JS on (JS-off tests use inline
+    // browser.newContext()). Uses the serve-with-api proxy for the GuidePanel
+    // agent-path test (AC2: GuidePanel sends depth in /api/guide body).
+    {
+      name: 'depth-dial',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /depth-dial\.spec\.ts/,
+    },
   ],
 });

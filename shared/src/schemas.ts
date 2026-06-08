@@ -38,6 +38,12 @@ export type InviteInput = z.infer<typeof InviteInput>;
  * Per-turn content is bounded at 2000 chars (Story 5.0, [4.3]): 6 turns ×
  * 2000 + query 1000 is a sane prompt ceiling; prevents a client from inflating
  * the assembled prompt well beyond the query.max(1000) cap suggests.
+ *
+ * `depth` is the visitor's chosen content depth level (Story 5.2, Decision 4).
+ * OPTIONAL — absent depth = today's behavior (backward-compatible). When present,
+ * the api tunes ANSWER VERBOSITY/DETAIL only; the grounding/fail-closed/citation
+ * safety contract is unchanged (FR-6/7/9). Server-validated via this schema;
+ * an unexpected value is rejected like any invalid field.
  */
 export const GuideQuery = z.object({
   query: z.string().trim().min(1).max(1000),
@@ -49,5 +55,6 @@ export const GuideQuery = z.object({
       }),
     )
     .optional(),
+  depth: z.enum(['skim', 'overview', 'deep']).optional(),
 });
 export type GuideQuery = z.infer<typeof GuideQuery>;
