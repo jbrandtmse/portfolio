@@ -290,5 +290,17 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
       testMatch: /recuration\.spec\.ts/,
     },
+    // (Story 6.4) Glass Box explorable map — static clustered phase-map section.
+    // AC1: 6 artifacts + live site grouped into 4 phases in order; free-browse.
+    // AC2: every featured node is a real <a> reachable JS-off (headline, Rule 7);
+    //      each featured reader resolves 200; ghosts non-link (Rule 9).
+    // AC3: credibility (curated strings, no fabricated ghost link); composition
+    //      (6.3 tour + spine + JS-off baseline intact); no new exec JS (map is static).
+    // Includes axe-core AA on the new map section.
+    {
+      name: 'glassbox-map',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /glassbox-map\.spec\.ts/,
+    },
   ],
 });

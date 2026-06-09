@@ -44,7 +44,12 @@ import MirrorLayout from '../../layouts/MirrorLayout.astro';
 import TimelineDot from '../../components/glassbox/TimelineDot.astro';
 import ArtifactCard from '../../components/glassbox/ArtifactCard.astro';
 import { loadGlassboxArtifacts } from '../../lib/glassbox';
-import { FEATURED_SLUGS, SHIPPING_NODE, GHOST_NODES } from '../../content/glassbox.index';
+import {
+  FEATURED_SLUGS,
+  SHIPPING_NODE,
+  GHOST_NODES,
+  PHASE_MAP,
+} from '../../content/glassbox.index';
 import type { GlassboxArtifact } from '../../lib/glassbox';
 
 const LEDE =
@@ -89,6 +94,51 @@ const tourData = JSON.stringify({
   framingLead: FRAMING_LEAD,
   recursionBeat: RECURSION_BEAT,
 });
+
+// ─── Phase Map (Story 6.4) ────────────────────────────────────────────────────
+// Build a resolved phase map for static rendering: join PHASE_MAP entries
+// against real artifact data and the shipping node. Ghost entries (As it
+// accrues) are kept as-is — they render as honest non-link placeholders.
+const resolvedPhaseMap = PHASE_MAP.map((phase) => {
+  const nodes = phase.slugs.map((slug) => {
+    if (slug === 'shipping') {
+      return {
+        kind: 'shipping' as const,
+        slug: 'shipping',
+        title: SHIPPING_NODE.title,
+        type: SHIPPING_NODE.type,
+        href: SHIPPING_NODE.href,
+        date: SHIPPING_NODE.date,
+        curatorNote: SHIPPING_NODE.curatorNote,
+      };
+    }
+    const artifact = artifactMap.get(slug);
+    if (artifact) {
+      return {
+        kind: 'featured' as const,
+        slug: artifact.slug,
+        title: artifact.title,
+        type: artifact.type,
+        href: `/glass-box/${artifact.slug}/`,
+        date: artifact.date,
+        curatorNote: artifact.curatorNote,
+      };
+    }
+    // Ghost slug — no reader exists (Rule 9: no fabricated link).
+    return {
+      kind: 'ghost' as const,
+      slug,
+      title:
+        GHOST_NODES.find((g) => g.type === slug || g.title.toLowerCase().includes(slug))?.title ??
+        slug,
+      type: slug,
+      href: null,
+      date: null,
+      curatorNote: null,
+    };
+  });
+  return { phase, nodes };
+});
 ---
 
 <MirrorLayout
@@ -119,9 +169,123 @@ const tourData = JSON.stringify({
     </p>
   </section>
 
+  {/* ── Choose Your Path affordance (Story 6.4) ──────────────────────── */}
+  {
+    /*
+    Two ways to explore the same artifact set:
+    - Guided Tour (6.3): narrated, build-story-order, primary path.
+    - Explorable Map (6.4): phase-grouped, free-browse, secondary path.
+    Both are always accessible; the affordance frames the choice.
+  */
+  }
+  <section class="glass-box__choose" aria-label="Choose your exploration path">
+    <h2 class="glass-box__choose-heading">Two ways to explore</h2>
+    <p class="glass-box__choose-intro">
+      The same six artifacts, two lenses: a narrated build story in chronological order, or a
+      self-directed map grouped by build phase.
+    </p>
+    <div class="glass-box__choose-paths">
+      <a href="#glass-box-tour" class="glass-box__path-card">
+        <span class="glass-box__path-label">Guided Tour</span>
+        <span class="glass-box__path-desc">
+          Narrated, build-story order — the primary path through the artifacts.
+        </span>
+      </a>
+      <a href="#glass-box-map" class="glass-box__path-card">
+        <span class="glass-box__path-label">Explorable Map</span>
+        <span class="glass-box__path-desc">
+          Phase-grouped, free-browse — explore any artifact in any order.
+        </span>
+      </a>
+    </div>
+  </section>
+
   {/* ── Tour data island (Story 6.3) ─────────────────────────────────── */}
   {/* Consumed by glassbox-tour/bootstrap.ts at runtime (JS-on path only). */}
   <script type="application/json" id="glassbox-tour-data" set:html={tourData} />
+
+  {/* ── Explorable Phase Map (Story 6.4 — static, crawlable) ─────────── */}
+  {
+    /*
+    AC2: Every artifact node is a real <a href="/glass-box/{slug}/"> present in
+    the SSR'd HTML — reachable with JS off and by crawlers (no node gated on JS).
+    AC1: Artifacts grouped into build phases (Discovery → Definition → Design →
+         Launch → As it accrues); free-browse, no forced order.
+    AC3: Labels/phase names trace to real curated copy; ghosts are honest
+         "As it accrues" placeholders with NO fabricated reader link (Rule 9).
+    The map is OUTSIDE the tour island's managed DOM so the two don't interfere.
+  */
+  }
+  <section
+    id="glass-box-map"
+    class="glass-box__map"
+    aria-label="Explorable phase map of build artifacts"
+  >
+    <h2 class="glass-box__map-heading">Explorable Map</h2>
+    <p class="glass-box__map-intro">
+      Browse by build phase — each card links to the artifact reader. Explore in any order.
+    </p>
+
+    {
+      resolvedPhaseMap.map(({ phase, nodes }) => (
+        <div class="glass-box__phase" data-phase={phase.name}>
+          <h3 class="glass-box__phase-heading">
+            <span class="glass-box__phase-dot" aria-hidden="true" />
+            {phase.name}
+          </h3>
+          <p class="glass-box__phase-desc">{phase.description}</p>
+          <ul class="glass-box__phase-nodes" role="list">
+            {nodes.map((node) =>
+              node.kind === 'ghost' ? (
+                /* Ghost node — honest "As it accrues" placeholder, NO reader link (Rule 9) */
+                <li class="glass-box__node glass-box__node--ghost">
+                  <article class="glass-box__node-card glass-box__node-card--ghost">
+                    <span class="glass-box__node-chip" aria-label={`Type: ${node.type}`}>
+                      {node.type}
+                    </span>
+                    <h4 class="glass-box__node-title">{node.title}</h4>
+                    <p class="glass-box__node-status" aria-label="Status: As it accrues">
+                      As it accrues
+                    </p>
+                  </article>
+                </li>
+              ) : (
+                /* Featured or shipping node — real <a href> (AC2) */
+                <li class="glass-box__node">
+                  <article class="glass-box__node-card">
+                    <span class="glass-box__node-chip" aria-label={`Type: ${node.type}`}>
+                      {node.type}
+                    </span>
+                    <h4 class="glass-box__node-title">{node.title}</h4>
+                    {node.curatorNote && <p class="glass-box__node-note">{node.curatorNote}</p>}
+                    {node.kind === 'shipping' ? (
+                      <a
+                        class="glass-box__node-link"
+                        href={node.href}
+                        aria-label={`Visit the live site: ${node.href}`}
+                        rel="noopener noreferrer"
+                        target="_self"
+                      >
+                        View →
+                      </a>
+                    ) : (
+                      <a
+                        class="glass-box__node-link"
+                        href={node.href}
+                        aria-label={`Read ${node.title}`}
+                      >
+                        Read →
+                      </a>
+                    )}
+                  </article>
+                </li>
+              ),
+            )}
+          </ul>
+        </div>
+      ))
+    }
+  </section>
 
   {/* ── Build-story spine (AC1, AC2, AC4) ────────────────────────────── */}
   {
@@ -132,7 +296,7 @@ const tourData = JSON.stringify({
     Story 6.3: featured items get data-tour-slug so the island can scroll to them.
   */
   }
-  <section class="glass-box__spine-section" aria-label="Build story timeline">
+  <section id="glass-box-tour" class="glass-box__spine-section" aria-label="Build story timeline">
     <h2 class="glass-box__spine-heading">Build Story</h2>
     <ol class="glass-box__spine" role="list">
       {/* ── Featured artifact nodes (AC1, AC5) ──────────────────────── */}
@@ -366,6 +530,284 @@ const tourData = JSON.stringify({
 
     .glass-box__dot-col {
       padding-top: var(--space-4);
+    }
+  }
+
+  /* ─── Choose Your Path affordance (Story 6.4) ─────────────────────────── */
+  .glass-box__choose {
+    margin-top: var(--space-section-band);
+    max-width: var(--measure-reading);
+  }
+
+  .glass-box__choose-heading {
+    font: var(--text-h2);
+    font-family: var(--font-family-base);
+    letter-spacing: var(--letter-spacing-h2);
+    color: var(--color-ink-primary);
+    margin-bottom: var(--space-4);
+  }
+
+  .glass-box__choose-intro {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+    margin-bottom: var(--space-6);
+  }
+
+  .glass-box__choose-paths {
+    display: flex;
+    gap: var(--space-5);
+    flex-wrap: wrap;
+  }
+
+  .glass-box__path-card {
+    flex: 1;
+    min-width: min(240px, 100%);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-5);
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    transition: border-color 0.15s ease;
+  }
+
+  .glass-box__path-card:hover {
+    border-color: #c6b89e;
+  }
+
+  .glass-box__path-card:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-lg);
+  }
+
+  .glass-box__path-label {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-accent);
+  }
+
+  .glass-box__path-desc {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+  }
+
+  /* ─── Explorable Phase Map (Story 6.4) ──────────────────────────────── */
+  .glass-box__map {
+    margin-top: var(--space-section-band);
+  }
+
+  .glass-box__map-heading {
+    font: var(--text-h2);
+    font-family: var(--font-family-base);
+    letter-spacing: var(--letter-spacing-h2);
+    color: var(--color-ink-primary);
+    margin-bottom: var(--space-4);
+  }
+
+  .glass-box__map-intro {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+    margin-bottom: var(--space-7);
+    max-width: var(--measure-reading);
+  }
+
+  /* ─── Phase group ─────────────────────────────────────────────────────── */
+  .glass-box__phase {
+    margin-bottom: var(--space-8);
+  }
+
+  .glass-box__phase-heading {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font: var(--text-h3);
+    font-family: var(--font-family-base);
+    letter-spacing: var(--letter-spacing-h3);
+    color: var(--color-ink-primary);
+    margin-bottom: var(--space-2);
+  }
+
+  /* Decorative phase dot — aria-hidden (not a status carrier) */
+  .glass-box__phase-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-accent);
+    flex-shrink: 0;
+  }
+
+  /* Ghost phase uses a softer dot */
+  [data-phase='As it accrues'] .glass-box__phase-dot {
+    background-color: var(--color-border-hairline);
+    border: 1px dashed var(--color-ink-ghost);
+  }
+
+  .glass-box__phase-desc {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+    margin-bottom: var(--space-5);
+    margin-left: calc(8px + var(--space-3)); /* align with heading text */
+  }
+
+  /* ─── Phase node list ──────────────────────────────────────────────────── */
+  .glass-box__phase-nodes {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-5);
+  }
+
+  .glass-box__node {
+    flex: 1;
+    min-width: min(220px, 100%);
+  }
+
+  /* ─── Node card ────────────────────────────────────────────────────────── */
+  .glass-box__node-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-lg);
+    padding: var(--space-card-pad);
+    box-shadow: none;
+    transition: border-color 0.15s ease;
+  }
+
+  .glass-box__node-card:hover {
+    border-color: #c6b89e;
+  }
+
+  /* Ghost node card variant */
+  .glass-box__node-card--ghost {
+    background-color: transparent;
+    border-style: dashed;
+  }
+
+  .glass-box__node-card--ghost:hover {
+    border-color: var(--color-border-hairline);
+  }
+
+  /* ─── Node card internals ──────────────────────────────────────────────── */
+  .glass-box__node-chip {
+    display: inline-block;
+    padding: 2px var(--space-2);
+    border: 1.5px solid var(--color-accent);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-kicker);
+    font-weight: var(--font-weight-semibold);
+    font-variant: small-caps;
+    letter-spacing: var(--letter-spacing-kicker);
+    color: var(--color-accent);
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  .glass-box__node-card--ghost .glass-box__node-chip {
+    color: var(--color-ink-ghost);
+    border-color: var(--color-ink-ghost);
+  }
+
+  .glass-box__node-title {
+    margin-top: var(--space-3);
+    font: var(--text-h3, inherit);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-primary);
+  }
+
+  .glass-box__node-card--ghost .glass-box__node-title {
+    color: var(--color-ink-ghost);
+  }
+
+  .glass-box__node-note {
+    margin-top: var(--space-2);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    font-style: italic;
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+    flex: 1; /* push link to bottom */
+  }
+
+  .glass-box__node-status {
+    margin-top: var(--space-3);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-meta);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-ink-ghost);
+  }
+
+  .glass-box__node-link {
+    display: inline-block;
+    margin-top: var(--space-4);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-accent);
+    text-decoration: none;
+    transition: transform 0.1s ease;
+  }
+
+  .glass-box__node-link:hover {
+    color: var(--color-accent-hover);
+    transform: translateX(3px);
+  }
+
+  .glass-box__node-link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* ─── Phase map mobile ───────────────────────────────────────────────────── */
+  @media (max-width: 760px) {
+    .glass-box__choose-paths {
+      flex-direction: column;
+    }
+
+    .glass-box__path-card {
+      min-width: 0;
+    }
+
+    .glass-box__phase-nodes {
+      flex-direction: column;
+    }
+
+    .glass-box__node {
+      min-width: 0;
+    }
+  }
+
+  /* ─── Phase map motion (no-preference only) ──────────────────────────────── */
+  @media (prefers-reduced-motion: no-preference) {
+    .glass-box__path-card {
+      transition: border-color 0.15s ease;
     }
   }
 </style>

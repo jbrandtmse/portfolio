@@ -15,6 +15,12 @@
  * CHRONOLOGICAL ORDER: the index page sorts featured nodes by their artifact date.
  * The shipping node is pinned at a specific position (see index.astro).
  * Ghosted nodes appear after the real set (they have no real date yet).
+ *
+ * Story 6.4 (Explorable Map): this file also exports PHASE_MAP and PHASE_ORDER,
+ * which group featured artifacts + the shipping node into build phases for the
+ * static clustered phase-map section on /glass-box/. The mapping is an explicit
+ * curated const — deterministic, pure, and testable. Ghost nodes are a separate
+ * phase entry with no reader links.
  */
 
 /** A featured artifact node — maps to a real glassbox.json entry. */
@@ -127,3 +133,77 @@ export const GHOST_NODES: ReadonlyArray<GhostNode> = [
     description: 'Post-epic lessons and what would have been done differently.',
   },
 ];
+
+// ─── Phase Map (Story 6.4 — Explorable Map) ──────────────────────────────────
+
+/**
+ * The four build phases, in display order.
+ *
+ * Each entry names a phase and assigns the artifact slugs (or the special
+ * 'shipping' key) that belong to it. Ghost slugs are kept in the separate
+ * AS_IT_ACCRUES entry below (they have no readers — Rule 9).
+ *
+ * This const is PURE and TESTABLE: it contains no runtime logic, no imports.
+ * The explorable-map section in index.astro joins this against the live
+ * GlassboxArtifact[] at build time. Adding a future artifact means adding it
+ * to glassbox.json + FEATURED_SLUGS + the appropriate phase entry here.
+ */
+export type PhaseName = 'Discovery' | 'Definition' | 'Design' | 'Launch' | 'As it accrues';
+
+export interface PhaseEntry {
+  /** Human-readable phase label (h3 in the map). */
+  name: PhaseName;
+  /**
+   * Artifact slugs belonging to this phase.
+   * The special value 'shipping' refers to SHIPPING_NODE.
+   * Ghost slugs ('architecture', 'epics', 'retrospective') go only in the
+   * 'As it accrues' entry below (they have no readers — Rule 9).
+   */
+  slugs: ReadonlyArray<string>;
+  /** Short description of what this phase covers — shown beneath the heading. */
+  description: string;
+}
+
+/**
+ * PHASE_MAP — the curated phase → artifact assignment.
+ *
+ * Phase order: Discovery → Definition → Design → Launch → As it accrues.
+ * Phase membership comes from artifact `type` (brainstorm, research, brief,
+ * prd, ux ×2) and the shipping node; ghost nodes occupy the last phase.
+ *
+ * This is the single source of truth for the phase grouping. index.astro
+ * reads this at build time and assembles the static phase-map HTML.
+ */
+export const PHASE_MAP: ReadonlyArray<PhaseEntry> = [
+  {
+    name: 'Discovery',
+    slugs: ['brainstorm', 'pre-brief-research'],
+    description: 'Understanding the problem space before any brief was written.',
+  },
+  {
+    name: 'Definition',
+    slugs: ['product-brief', 'prd'],
+    description: 'Turning discovery insights into a scoped product definition.',
+  },
+  {
+    name: 'Design',
+    slugs: ['ux-design', 'ux-experience'],
+    description: 'Translating the product definition into a designed experience.',
+  },
+  {
+    name: 'Launch',
+    slugs: ['shipping'],
+    description: 'Shipping the work — the live site that is the recursive proof.',
+  },
+  {
+    name: 'As it accrues',
+    slugs: ['architecture', 'epics', 'retrospective'],
+    description: 'Planning artifacts that will be published as they are completed and reviewed.',
+  },
+] as const;
+
+/**
+ * PHASE_ORDER — the display order of phase names for the map section.
+ * Derived from PHASE_MAP to stay in sync automatically.
+ */
+export const PHASE_ORDER: ReadonlyArray<PhaseName> = PHASE_MAP.map((p) => p.name);

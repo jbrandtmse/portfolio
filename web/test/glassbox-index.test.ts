@@ -72,6 +72,41 @@ function extractArtifactReadHrefs(html: string): string[] {
   return [...matches].map((m) => m[1]!);
 }
 
+/**
+ * Extract artifact read hrefs ONLY from the build-story spine section.
+ * Story 6.4 adds a phase-map section with the same slugs in a different order —
+ * scoping to the spine avoids false positives in chronological-order tests.
+ */
+function extractSpineArtifactReadHrefs(html: string): string[] {
+  // Extract only the <ol class="glass-box__spine">…</ol> section.
+  const spineMatch = html.match(/<ol class="glass-box__spine"[^>]*>([\s\S]*?)<\/ol>/);
+  if (!spineMatch) return [];
+  const spineHtml = spineMatch[1]!;
+  const matches = spineHtml.matchAll(/href="(\/glass-box\/[^/"]+\/)"/g);
+  return [...matches].map((m) => m[1]!);
+}
+
+/**
+ * Extract ONLY the explorable phase-map section (Story 6.4) from the index HTML.
+ * Returns the inner HTML of <section id="glass-box-map" …>…</section>, or '' if
+ * absent. Used to scope credibility assertions to the map (Rule 8: specific
+ * surface), distinct from the spine which renders the same artifacts.
+ */
+function extractMapSection(html: string): string {
+  const m = html.match(/<section id="glass-box-map"[^>]*>([\s\S]*?)<\/section>/);
+  return m ? m[1]! : '';
+}
+
+/** Decode the small set of HTML entities the .astro emitter produces in text. */
+function decodeEntities(s: string): string {
+  return s
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+}
+
 // ─── Known slugs from the 2.1 allowlist ──────────────────────────────────────
 const EXPECTED_SLUGS = [
   'brainstorm',
@@ -235,12 +270,14 @@ describe('Story 2.3 AC5 — real glassbox.json data, slugs resolve, chronologica
     // full sequence of artifact links in the HTML must equal the slugs sorted by
     // their real glassbox.json date (ascending). Catches any mis-sort that the
     // two-pair spot-check would miss (e.g. a 06-04 item rendered before a 06-02).
+    // Story 6.4 note: scoped to the build-story spine (the explorable map lists
+    // the same slugs in phase order — a different, intentional ordering).
     const artifacts = loadGlassboxJson();
     const expectedOrder = [...artifacts]
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .map((a) => a.slug);
 
-    const renderedOrder = extractArtifactReadHrefs(indexHtml).map((h) =>
+    const renderedOrder = extractSpineArtifactReadHrefs(indexHtml).map((h) =>
       h.replace(/^\/glass-box\//, '').replace(/\/$/, ''),
     );
 
@@ -253,8 +290,9 @@ describe('Story 2.3 AC5 — real glassbox.json data, slugs resolve, chronologica
   });
 
   it('nodes appear in chronological order (dates from glassbox.json, ascending)', () => {
-    // Parse all artifact link hrefs in order of appearance.
-    const hrefs = extractArtifactReadHrefs(indexHtml);
+    // Parse all artifact link hrefs in order of appearance — scoped to spine
+    // (Story 6.4: the explorable map renders the same slugs in phase order).
+    const hrefs = extractSpineArtifactReadHrefs(indexHtml);
     // The artifact links in the HTML should be a subset of EXPECTED_SLUGS in
     // chronological order — check that brainstorm/pre-brief-research/product-brief
     // (all 2026-06-02) appear before prd/ux-experience (2026-06-06).
@@ -392,5 +430,62 @@ describe('Story 2.3 forward-reference — 1.5 stub resolved', () => {
   it('footer /glass-box/ link is present (global footer)', () => {
     // The site footer links /glass-box/ and it now reaches the real index.
     expect(indexHtml).toContain('href="/glass-box/"');
+  });
+});
+
+// ─── Story 6.4 AC3 / Rule 9 — map node labels TRACE TO REAL artifact data ─────
+// QA hardening: the e2e suite proves the map nodes are real <a> links to the
+// right slugs, but nothing bound the RENDERED node TITLE/NOTE to the REAL
+// glassbox.json data. A regression that hardcodes a fabricated title/note into
+// the map markup would pass the whole green gate (AC3 says all labels/notes
+// "trace to real artifact data" — the highest-risk LLM-author failure, Rule 9).
+// These assertions are scoped to the #glass-box-map section (Rule 8) and bound
+// to the REAL loader output, mutation-verified (break a title in the .astro map
+// → these red).
+describe('Story 6.4 AC3 / Rule 9 — map node labels trace to real artifact data', () => {
+  it('the explorable map section is present in the built index', () => {
+    const map = extractMapSection(indexHtml);
+    expect(map.length, '#glass-box-map section must be present in dist HTML').toBeGreaterThan(0);
+  });
+
+  it('each featured map node renders the REAL glassbox.json title (no fabricated label)', () => {
+    const map = decodeEntities(extractMapSection(indexHtml));
+    const artifacts = loadGlassboxJson();
+    for (const slug of EXPECTED_SLUGS) {
+      const artifact = artifacts.find((a) => a.slug === slug);
+      expect(artifact, `glassbox.json must contain "${slug}"`).toBeTruthy();
+      // The node card sits beside its real reader link; the real title text must
+      // appear inside the map section (sourced from the loader, not hardcoded).
+      expect(map, `map node "${slug}" must render its REAL title "${artifact!.title}"`).toContain(
+        artifact!.title,
+      );
+      expect(
+        map,
+        `map node "${slug}" must render its REAL curatorNote (credibility, Rule 9)`,
+      ).toContain(artifact!.curatorNote);
+    }
+  });
+
+  it('the shipping map node renders the real live-site label + curatorNote (not fabricated)', () => {
+    const map = decodeEntities(extractMapSection(indexHtml));
+    // SHIPPING_NODE values are the single source of truth (glassbox.index.ts).
+    expect(map, 'map must render the real shipping title "The Live Site"').toContain(
+      'The Live Site',
+    );
+    expect(map, 'map must render the real shipping curatorNote (credibility, Rule 9)').toContain(
+      'Shipping on day one of Epic 1, not an IOU.',
+    );
+    // And the real live-site href (no fabricated target).
+    expect(map).toContain('href="https://joshuabrandt.abacusai.cloud/"');
+  });
+
+  it('no ghost slug appears as a reader link inside the map (Rule 9: no fabricated reader)', () => {
+    const map = extractMapSection(indexHtml);
+    for (const ghost of ['architecture', 'epics', 'retrospective']) {
+      expect(
+        map,
+        `map must NOT contain a fabricated reader link /glass-box/${ghost}/`,
+      ).not.toContain(`href="/glass-box/${ghost}/"`);
+    }
   });
 });

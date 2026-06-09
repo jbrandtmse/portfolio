@@ -1,63 +1,43 @@
-# Test Automation Summary — Story 6.0 (Epic-5 deferred cleanup / Rule-12 mechanical guard)
+# Test Automation Summary — Story 6.4 (Glass Box explorable map)
 
-QA stage of `/epic-cycle`. Story 6.0 enables `react-hooks/exhaustive-deps` +
-`react-hooks/rules-of-hooks` as hard ERRORs scoped to the React `.tsx` islands
-(`web/src/islands/**`). This is a lint-config cleanup story — no new product
-UI surface — so NO browser/Playwright e2e was generated (a vacuous e2e against a
-non-existent surface would violate the project's anti-vacuous-test rules). The
-verification is the canonical gate + the AC3 mutation proof, plus ONE durable
-config-assertion regression guard.
+QA stage of `/epic-cycle`. Verified FRESH per Rule 10 (dev self-report treated as
+unreliable). Full canonical gate run verbatim (Rule 5).
 
-## Fresh verification (project Rule 10 — independently reproduced, not trusted)
+## Canonical gate — `pnpm test:all` + `check-deterministic` (all GREEN)
 
-- **AC1** — `eslint --print-config` on each of the four islands shows both
-  `react-hooks/exhaustive-deps` and `react-hooks/rules-of-hooks` at severity
-  `2` (error). `eslint-plugin-react-hooks ^7.1.1` is a root devDependency; the
-  lockfile resolves it (3 references).
-- **AC1 scope** — the rules are ABSENT on non-island surfaces (`.astro`, the
-  Node/api service, the eslint config itself, non-island web `.ts`). The guard
-  is islands-only; no repo-wide noise.
-- **AC2** — `pnpm run lint` (root `eslint .`) exits 0; the four existing islands
-  are clean (0 react-hooks violations) — the Epic-5 fixes hold, the dev needed
-  no island code change.
-- **AC3 (mutation, both rules)** — reproduced independently:
-  - dropped `currentDepth` from `GuidePanel.sendQuery`'s `useCallback` deps (the
-    5.2 bug) → `pnpm run lint` failed exit 1 with
-    `react-hooks/exhaustive-deps … missing dependency: 'currentDepth'` at 406:5;
-    reverted → green, no residual diff.
-  - made a `useEffect` conditional in `GuidePill.tsx` → `pnpm run lint` failed
-    exit 1 with `react-hooks/rules-of-hooks … called conditionally`; reverted →
-    green, no residual diff.
-- **AC4 (canonical gate, Rule 5)** — `pnpm test:all` run verbatim:
-  typecheck (0 errors) → lint (0) → format:check (all files, incl. the new test)
-  → test (api 219 + web 678 pass) → test:e2e (278 pass, 1 long-standing skip) →
-  lh (all assertions pass). `pnpm run check-deterministic` PASS — `web/dist`
-  byte-identical across two clean builds (lint/test change did not touch dist).
+| Stage | Result |
+|-------|--------|
+| typecheck | 0 errors (lead's `!` fix at glassbox-tour.spec.ts:595 held; sanity-checked correct — loop index always in-bounds) |
+| lint (`eslint .`) | clean |
+| format:check (`prettier --check .`) | clean (caught + fixed a format issue in my added test — Rule 5) |
+| test (unit) | scripts 184 + api 219 + web **754** (was 750 + 4 QA-added) = 1157 pass |
+| test:e2e | **340 passed, 1 skipped** (pre-existing DATABASE_URL-gated invite/home native-POST test — NOT a 6.4 guarantee, Rule 7 verified) |
+| lh (Lighthouse CI) | PASS (all assertions) |
+| check-deterministic | PASS — byte-identical (tree hash 9253691d…) |
 
-## Generated Tests
+## Coverage verified
 
-### Config-assertion regression guard (non-vacuous, Rule 8)
+- **AC2 JS-off headline (Rule 7):** `glassbox-map` Playwright project DISCOVERED + RUNS (21/21, 0 skipped). JS-off test (`javaScriptEnabled:false`) proves the `#glass-box-map` section + all 6 featured nodes are real `<a href="/glass-box/{slug}/">`, visible JS-off; 6 readers resolve 200; 3 ghosts non-link.
+- **AC1 free-browse:** same 6 artifacts + live-site grouped into 4 phases (+ "As it accrues") in order; independently navigable.
+- **AC3 credibility (Rule 9 broad audit):** served HTML scanned — no fabrication-class phrases; ghosts honestly "as it accrues / will be published as they are completed"; live-site node = real URL; composition (6.3 tour + spine + JS-off baseline) intact.
+- **NFR-6 / script budget:** exec-script count `.toBe(3)` (not loosened); map adds 0 executable JS; build byte-deterministic.
+- **axe-core AA:** zero violations on `/glass-box/` with the map section.
 
-- [x] `web/test/eslint-react-hooks-config.test.ts` — 7 tests. Binds the REAL
-  resolved ESLint config via `eslint --print-config` (run with cwd = repo root,
-  same as `eslint .`):
-  - 4 island tests assert both react-hooks rules resolve to error (severity 2)
-    for each existing island; the islands glob auto-covers Epic-6's new islands.
-  - 3 scope-guard tests assert the rules are absent for representative
-    non-island files (`.astro`, an api test, the eslint config).
-  - Discoverable by the default `vitest run` suite (`test/**/*.test.ts`),
-    confirmed via `vitest list` (7 tests collected); prettier-clean.
-  - Mutation-verified to RED: (A) downgrade exhaustive-deps→warn ⇒ 4 island
-    tests red; (B) remove rules-of-hooks ⇒ 4 island tests red; (C) widen glob to
-    `.astro` ⇒ 1 scope test red. Restored config ⇒ all 7 green.
+## Mutation verification (Rule 8 — non-vacuous, real module)
 
-## Coverage
+- Unit: moved `prd` Discovery→Definition → "prd in Definition" reds; ghost slug into featured phase → ghost-isolation + no-duplicate guards red. Restored.
+- E2E: fabricated ghost reader link in `.astro` → 4 assertions red (JS-off headline, 2× ghost-no-link, non-link-placeholder). Restored.
+- New tests: fabricated map title in `.astro` → new "renders REAL title" test reds. Restored.
 
-- Lint-config guard: AC1/AC2/AC3/AC4 fully verified fresh; the bug class
-  (stale-closure omitted dep) and the rules-of-hooks class both proven to red.
-- No new product behavior to e2e (lint-config + dependency-array-correctness
-  change only); existing depth-dial / recuration stale-closure e2e remain green.
+## QA hardening added
 
-## Next Steps
+`web/test/glassbox-index.test.ts` — new describe block "Story 6.4 AC3 / Rule 9 —
+map node labels trace to real artifact data" (4 tests). Closed a gap: no prior test
+bound the RENDERED map node titles/notes to the REAL `loadGlassboxJson()` output —
+a hardcoded/fabricated map title would have passed the whole green gate. Scoped to
+`#glass-box-map` (Rule 8), bound to real loader data, mutation-verified.
 
-- Lead per-story smoke gate, then commit (QA leaves all changes uncommitted).
+## Verdict
+
+All ACs verified fresh and green. One credibility-binding gap hardened. Ready for
+code-review.

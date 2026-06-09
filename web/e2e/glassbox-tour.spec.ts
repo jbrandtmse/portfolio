@@ -592,7 +592,7 @@ test.describe('Glass Box tour — AC1 (QA): build-story order + visible highligh
 
     for (let step = 0; step < FEATURED_SLUGS.length; step++) {
       await page.locator('[data-testid="tour-panel"]').waitFor({ state: 'visible' });
-      const expectedSlug = FEATURED_SLUGS[step];
+      const expectedSlug = FEATURED_SLUGS[step]!; // in-bounds loop index (step < length); narrows for CURATOR_NOTES[] under noUncheckedIndexedAccess
 
       // (1) the reader link for this step points at the expected slug
       const href = await page.locator('[data-testid="tour-reader-link"]').getAttribute('href');
