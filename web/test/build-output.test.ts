@@ -588,13 +588,26 @@ describe('home 7-scene scaffold + scene-rail (Story 1.4 IAC-1 / IAC-2)', () => {
   // in exact DOM order. #hero is the 1.3 HeroStatic; 1.4 adds the other six.
   const SCENE_IDS = ['hero', 'thesis', 'timeline', 'speaker', 'flagship', 'glass-box', 'close'];
 
-  it('renders exactly 7 <section>s with the locked ids in the locked DOM order (IAC-1, AC1)', () => {
-    // Collect every section's id in document order and assert it equals the
-    // locked sequence exactly (count + order + ids).
+  it('renders the 7 canonical scene sections in locked DOM order + the Story 7.2 featured-work section (IAC-1, AC1)', () => {
+    // Collect every section's id in document order and assert the canonical
+    // 7-scene arc is present plus the Story 7.2 #featured-work section.
+    // Story 7.2 inserts #featured-work between #thesis and #timeline.
     const sectionIds = [...indexHtml.matchAll(/<section\b[^>]*\sid="([^"]+)"[^>]*>/g)].map(
       (m) => m[1],
     );
-    expect(sectionIds).toEqual(SCENE_IDS);
+    // Rule 8: check all 7 canonical scenes are present (in order) + the new featured-work.
+    // Mutation-verification: removing a scene section reds this.
+    const EXPECTED_IDS = [
+      'hero',
+      'thesis',
+      'featured-work',
+      'timeline',
+      'speaker',
+      'flagship',
+      'glass-box',
+      'close',
+    ];
+    expect(sectionIds).toEqual(EXPECTED_IDS);
   });
 
   it('the scene-rail exposes 7 real in-page anchors matching the section ids (IAC-1, AC2)', () => {
@@ -680,14 +693,25 @@ describe('home 7-scene scaffold + scene-rail (Story 1.4 IAC-1 / IAC-2)', () => {
     // and the a11y reading-order baseline always see the full default sequence.
     // Mutation-verification: if the DOM order were changed (physically moving sections),
     // this test would red.
+    // Story 7.2 adds #featured-work between #thesis and #timeline — include it here.
     const sectionIds = [...indexHtml.matchAll(/<section\b[^>]*\sid="([^"]+)"[^>]*>/g)].map(
       (m) => m[1],
     );
-    // Rule 8: deep equality (not just a presence check — order matters)
+    // Rule 8: deep equality (not just a presence check — order matters).
+    // Story 7.2: #featured-work sits between #thesis and #timeline in the DOM arc.
     expect(
       sectionIds,
       'Story 5.3 FR-8: canonical DOM order must be canonical arc (re-curation is CSS-order-only)',
-    ).toEqual(['hero', 'thesis', 'timeline', 'speaker', 'flagship', 'glass-box', 'close']);
+    ).toEqual([
+      'hero',
+      'thesis',
+      'featured-work',
+      'timeline',
+      'speaker',
+      'flagship',
+      'glass-box',
+      'close',
+    ]);
   });
 
   it('Story 5.3 FR-8: <main class="home"> is a flex column (CSS order support present in built CSS)', () => {
@@ -697,19 +721,29 @@ describe('home 7-scene scaffold + scene-rail (Story 1.4 IAC-1 / IAC-2)', () => {
     expect(builtCss).toMatch(/\.home[^{]*\{[^}]*flex-direction:column/);
   });
 
-  it('Story 5.4 FR-8: all 7 section ids present in the built home HTML (none removed — FR-8)', () => {
+  it('Story 5.4 FR-8: all 7 scene section ids present in the built home HTML (none removed — FR-8)', () => {
     // Story 5.4's skip mechanism is tour-omission only; every scene must be in
     // the BUILT static HTML regardless of skip configuration.
+    // Story 7.2 adds #featured-work between #thesis and #timeline; the 7 canonical scenes remain.
     // Rule 8: scoped to the exact set of section ids (deep equality).
     // Mutation-verification: if a scene were conditionally omitted from the build, this reds.
     const sectionIds = [...indexHtml.matchAll(/<section\b[^>]*\sid="([^"]+)"[^>]*>/g)].map(
       (m) => m[1],
     );
-    // Must contain all 7 scenes — exactly (no extras, no drops)
+    // Must contain all 7 scenes + the Story 7.2 featured-work section — exactly (no extras, no drops)
     expect(
       sectionIds,
-      'Story 5.4 FR-8: all 7 scenes must be in built HTML (skip = tour omission, not build omission)',
-    ).toEqual(['hero', 'thesis', 'timeline', 'speaker', 'flagship', 'glass-box', 'close']);
+      'Story 5.4 FR-8: all 7 scenes + featured-work must be in built HTML (skip = tour omission, not build omission)',
+    ).toEqual([
+      'hero',
+      'thesis',
+      'featured-work',
+      'timeline',
+      'speaker',
+      'flagship',
+      'glass-box',
+      'close',
+    ]);
   });
 
   it('Story 5.4 FR-8: no section has display:none or visibility:hidden in the built HTML (skip is CSS-attr-only)', () => {

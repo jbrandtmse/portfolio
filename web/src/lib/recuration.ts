@@ -52,7 +52,48 @@ export const SCENE_IDS = [
 
 export type SceneId = (typeof SCENE_IDS)[number];
 
-/** A re-curation directive from the Guide SSE stream (Story 5.3 + 5.4). */
+/**
+ * The non-scene `<section id="featured-work">` (Story 7.2) lives in the SAME flex
+ * column (`main.home`) as the 7 scenes, in DOM order right after `#thesis`. It is
+ * NOT a re-curatable scene (it is not in SCENE_IDS), so the per-intent scene
+ * re-curation must NOT move it: it holds its curated slot (between thesis and
+ * timeline) on every render.
+ *
+ * COMPOSITION HARD GUARD (QA, Story 7.2):
+ *   The scene re-curation sets an explicit flex `order` (0..6) on each of the 7
+ *   scenes. If `#featured-work` were left at the flex DEFAULT `order: 0`, it would
+ *   TIE with `hero` (order 0) and — flexbox breaking the tie by DOM order — jump
+ *   to visual position 2 (right after hero), breaking the curated default arc on
+ *   EVERY JS-on render (even with no Guide interaction, the moment initRecuration
+ *   runs). To pin it to its curated slot we give it the SAME order as `#thesis`'s
+ *   current slot; because `#featured-work` follows `#thesis` in DOM order, the
+ *   flex tie-break then lands it immediately AFTER thesis — which is exactly its
+ *   curated position, for the default arc AND for any re-curated arc (it always
+ *   trails wherever thesis lands, holding a stable, non-jumping slot).
+ */
+export const FEATURED_WORK_SECTION_ID = 'featured-work';
+
+/**
+ * Pin `#featured-work` to its curated slot by giving it the same flex `order` as
+ * `#thesis`. The DOM tie-break (featured-work follows thesis in source order)
+ * lands it immediately after thesis — its curated position — without ever jumping
+ * to the order-0 collision with hero. Idempotent; safe to call on init and on
+ * every re-curation.
+ *
+ * @param thesisOrder - The flex `order` value assigned to `#thesis` in the
+ *   current arc (its index in the `order` array; the default arc = 1).
+ */
+function pinFeaturedWorkSection(thesisOrder: number): void {
+  const featured = document.querySelector<HTMLElement>(
+    `section#${CSS.escape(FEATURED_WORK_SECTION_ID)}`,
+  );
+  if (featured) {
+    featured.style.setProperty('--scene-order', String(thesisOrder));
+    featured.style.order = String(thesisOrder);
+  }
+}
+
+/** A re-curation directive from the Guide SSE stream (Story 5.3 + 5.4 + 7.2). */
 export interface RecurationDirective {
   intent: string;
   order: string[];
@@ -69,6 +110,14 @@ export interface RecurationDirective {
    * scene-rail jump anchors, and JS-off. We never hide or remove a scene node.
    */
   skip?: string[];
+  /**
+   * (Story 7.2, FR-25) OPTIONAL. Featured-work slug order for the home
+   * featured-work section. A permutation of the 4 featured slugs.
+   * Absent/undefined = curated default order (no reorder).
+   * ADDITIVE and backward-compatible — absent = no featured reorder.
+   * FR-8: DOM order stays the curated default; only CSS `order` changes.
+   */
+  featuredOrder?: string[];
 }
 
 /**
@@ -103,7 +152,7 @@ export function applyRecuration(directive: RecurationDirective, motionAllowed = 
   const main = document.querySelector<HTMLElement>('main.home');
   if (!main) return false;
 
-  const { order, deepen = [], skip = [] } = directive;
+  const { order, deepen = [], skip = [], featuredOrder } = directive;
 
   // Validate: order must be a permutation of all 7 scene IDs
   if (!order || order.length !== SCENE_IDS.length) return false;
@@ -118,6 +167,16 @@ export function applyRecuration(directive: RecurationDirective, motionAllowed = 
       section.style.order = String(i);
       applied++;
     }
+  }
+
+  // Re-pin the non-scene #featured-work section to its curated slot (after thesis)
+  // on EVERY re-curation, so it never collides at the flex default order:0 with
+  // #hero (which gets order 0 in every arc). #featured-work is NOT a re-curatable
+  // scene — it holds a stable slot trailing thesis (QA composition guard, Story
+  // 7.2). thesis's order in this arc = its index in the `order` array.
+  const thesisOrder = order.indexOf('thesis');
+  if (thesisOrder !== -1) {
+    pinFeaturedWorkSection(thesisOrder);
   }
 
   // ── (2) Apply deepen (Story 5.4 — set data-depth="deep" for deepened scenes) ──
@@ -159,8 +218,33 @@ export function applyRecuration(directive: RecurationDirective, motionAllowed = 
     }
   }
 
-  // ── (4) Drive the camera (Story 5.4 — inside onMotionAllowed gate) ──
+  // ── (4) Apply featured-work order (Story 7.2, FR-25 / FR-8) ─────────────
+  // Reorders the featured-work list items via CSS `order` on each <li>.
+  // DOM order UNCHANGED (FR-8: the curated default order is always the DOM order;
+  // CSS `order` changes the visual sequence for JS-on / motion-irrelevant visitors).
+  // ADDITIVE / backward-compat: absent featuredOrder = no reorder (show default).
+  if (featuredOrder && featuredOrder.length > 0) {
+    // The featured-work list uses [data-featured-work-list] and each item
+    // carries [data-featured-slug] so the controller can target them.
+    const featuredList = document.querySelector<HTMLElement>('[data-featured-work-list]');
+    if (featuredList) {
+      const items = featuredList.querySelectorAll<HTMLElement>('[data-featured-slug]');
+      items.forEach((item) => {
+        item.style.order = ''; // reset before applying
+      });
+      for (let i = 0; i < featuredOrder.length; i++) {
+        const slug = featuredOrder[i]!;
+        const item = featuredList.querySelector<HTMLElement>(`[data-featured-slug="${slug}"]`);
+        if (item) {
+          item.style.order = String(i);
+        }
+      }
+    }
+  }
+
+  // ── (5) Drive the camera (Story 5.4 — inside onMotionAllowed gate) ──
   // Camera driving + skip-omission are only active when motionAllowed = true.
+  // (numbering shifted from 4→5 in Story 7.2 when featured-work reorder was added)
   // Under reduced motion (motionAllowed = false) we degrade to the default
   // discrete-scene arc: all scenes scrollable, nothing skipped from the scroll.
   if (motionAllowed) {
@@ -217,6 +301,15 @@ export function initRecuration(): void {
       section.style.order = String(i);
     }
   });
+
+  // Pin the non-scene #featured-work section to its curated slot (after thesis)
+  // so it does NOT collide at the flex default order:0 with #hero. Without this,
+  // the moment initRecuration sets order on the 7 scenes, #featured-work (order 0)
+  // ties with #hero (order 0) and jumps to visual position 2 — breaking the
+  // curated default arc on every JS-on render (QA composition guard, Story 7.2).
+  // thesis is canonical index 1 → featured-work pins to order 1 and DOM-tie-breaks
+  // to sit immediately after thesis.
+  pinFeaturedWorkSection(SCENE_IDS.indexOf('thesis'));
 
   // Mark the main element as re-curation-ready (for tests + composability)
   main.setAttribute('data-recuration-ready', 'true');

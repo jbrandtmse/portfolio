@@ -47,6 +47,7 @@ import SceneRail from '../components/scene/SceneRail.astro';
 import InviteForm from '../islands/InviteForm';
 import { personJsonLd, profilePageJsonLd, serializeJsonLd } from '../lib/jsonld';
 import { CHANNEL_SAMEAS, PERSON, SITE_ORIGIN } from '../lib/person';
+import { FEATURED_WORK } from '../../../content/featured-work';
 
 /**
  * Follow/subscribe CTAs — sourced from CHANNEL_SAMEAS (the same [OPEN] channel
@@ -217,6 +218,73 @@ const homeJsonLd = serializeJsonLd([
             curated, chronological build-story is in the Glass Box below.
           </p>
         </div>
+      </div>
+    </section>
+
+    {/* ── Featured Work (Story 7.2, FR-25) — curated cross-Wing greatest-hits ── */}
+    {
+      /*
+      AC1: crawlable, followable links in curated default order. 0 executable JS added.
+      FR-8: DOM order = curated default (crawlable). Intent re-order is CSS `order` only
+      (web/src/lib/recuration.ts applyRecuration). Every item traces to content/wings.ts.
+      AC3 (#25): this section — curation/relevance-ordered — is the primary work surface;
+      not a reverse-chronological CV.
+    */
+    }
+    <section
+      id="featured-work"
+      class="scene scene--featured-work"
+      aria-labelledby="featured-work-title"
+      data-featured-work
+    >
+      <div class="scene__inner">
+        <Kicker>Featured work</Kicker>
+        <h2 id="featured-work-title" class="scene__title">The work, curated</h2>
+        <p class="scene__summary">
+          A cross-Wing selection of the work: technical, agentic, and creative — curated by
+          relevance, not chronology. Ask the Guide about your interest to see what matters to you
+          first.
+        </p>
+        {
+          /*
+          The featured-work list. DOM order = curated default (FR-8).
+          data-featured-work-list: hook for web recuration controller (applyRecuration).
+          Each item carries data-featured-slug so the controller can set CSS order.
+          0 executable JS — items are crawlable + followable with JS off.
+        */
+        }
+        <ul
+          class="featured-work__list"
+          role="list"
+          aria-label="Featured work"
+          data-featured-work-list
+        >
+          {
+            FEATURED_WORK.map((item) => (
+              <li class="featured-work__item" data-featured-slug={item.slug}>
+                <div class="featured-work__card">
+                  <span class="featured-work__wing-tag">{item.wing}</span>
+                  <p class="featured-work__title">
+                    {item.status === 'live' ? (
+                      <a class="featured-work__link" href={item.href}>
+                        {item.title}
+                        <span class="featured-work__arrow" aria-hidden="true">
+                          &rarr;
+                        </span>
+                      </a>
+                    ) : (
+                      <span class="featured-work__title-text">{item.title}</span>
+                    )}
+                  </p>
+                  <p class="featured-work__blurb">{item.blurb}</p>
+                </div>
+              </li>
+            ))
+          }
+        </ul>
+        <p class="featured-work__guide-note">
+          Tell the Guide your interest — it reorders this list to put what matters to you first.
+        </p>
       </div>
     </section>
 
@@ -918,6 +986,128 @@ const homeJsonLd = serializeJsonLd([
       color-mix(in srgb, var(--color-accent) 6%, var(--color-surface-base)) 100%
     );
   }
+
+  /* ── Featured Work section (Story 7.2, FR-25) ──────────────────────────────
+     The featured-work list uses flexbox with CSS `order` so the Guide can
+     reorder items by intent (FR-8: DOM order = curated default; CSS order only).
+     0 executable JS — items are crawlable and followable with JS off.
+     The list uses `display: flex; flex-wrap: wrap` so items reorder visually
+     via CSS `order` without touching the DOM order (FR-8).
+  */
+  .scene--featured-work {
+    background: var(--color-surface-raised);
+  }
+
+  .featured-work__list {
+    list-style: none;
+    margin: var(--space-5) 0 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+
+  .featured-work__item {
+    flex: 1 1 280px;
+    min-width: 240px;
+    /* CSS `order` is set by the Guide re-curation controller (applyRecuration).
+       Default (no JS / no directive): items appear in DOM (curated default) order.
+       The order property must be accessible for the controller to set it. */
+  }
+
+  .featured-work__card {
+    height: 100%;
+    padding: var(--space-4);
+    background: var(--color-surface-base);
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .featured-work__wing-tag {
+    display: inline-block;
+    font-family: var(--font-family-base);
+    font-size: 11px;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    padding: 2px 8px;
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-sm);
+    width: fit-content;
+  }
+
+  .featured-work__title {
+    margin: 0;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-primary);
+  }
+
+  .featured-work__link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    color: var(--color-accent);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-border-hairline);
+    padding-bottom: 1px;
+  }
+
+  .featured-work__link:hover {
+    color: var(--color-accent-hover);
+    border-bottom-color: var(--color-accent);
+  }
+
+  .featured-work__link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  .featured-work__arrow {
+    transition: transform 120ms ease;
+  }
+
+  .featured-work__link:hover .featured-work__arrow {
+    transform: translateX(3px);
+  }
+
+  .featured-work__title-text {
+    color: var(--color-ink-primary);
+  }
+
+  .featured-work__blurb {
+    margin: 0;
+    max-width: 52ch;
+    font-family: var(--font-family-base);
+    font-size: 14px;
+    font-weight: var(--font-weight-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+    flex: 1;
+  }
+
+  .featured-work__guide-note {
+    margin: var(--space-4) 0 0;
+    max-width: 60ch;
+    font-family: var(--font-family-base);
+    font-size: 13px;
+    color: var(--color-ink-secondary);
+    font-style: italic;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .featured-work__arrow {
+      transition: none;
+    }
+  }
+  /* ── END Featured Work ──────────────────────────────────────────────────── */
 
   /* Desktop: reserve the fixed scene-rail's 208px gutter + widen the side
      margins to the desktop scale. The scene-rail itself is position:fixed, so

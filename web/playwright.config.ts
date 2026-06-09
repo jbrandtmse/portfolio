@@ -319,5 +319,23 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
       testMatch: /wings\.spec\.ts/,
     },
+    // (Story 7.2) Home featured-work greatest-hits + Guide intent re-order.
+    // Desktop, JS on (JS-off cases run inline via browser.newContext()).
+    // Rule 7: proven to EXECUTE (registered here — was previously UNREGISTERED,
+    // so the whole spec silently never ran; QA HIGH discoverability fix). Exercises:
+    //   - AC1: #featured-work present + 4 items crawlable/followable JS-off (FR-8);
+    //   - AC2 (Rule 13): builder intent VISIBLY reorders the items (measured CSS
+    //     order changes) via the REAL GuidePanel SSE → applyRecuration path;
+    //   - AC2/FR-8: DOM order of items stays the curated default after the reorder;
+    //   - COMPOSITION (QA, Story 7.2): #featured-work SECTION holds its curated slot
+    //     (trails #thesis, never order-0-collides with #hero / jumps above thesis)
+    //     on a plain JS-on load AND after an organizer scene re-curation;
+    //   - AC3 (#25): the curated section is the primary work surface (not a CV).
+    // All via the serve-with-api.mjs prod-faithful proxy (GUIDE_LLM_STUB=1).
+    {
+      name: 'featured-work',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /featured-work\.spec\.ts/,
+    },
   ],
 });

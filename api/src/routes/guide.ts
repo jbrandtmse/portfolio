@@ -142,10 +142,25 @@ async function emitRecuration(
   order: string[],
   deepen: string[],
   skip: string[],
+  featuredOrder?: string[],
 ): Promise<void> {
+  // Build the payload — featuredOrder is OPTIONAL (Story 7.2, FR-25).
+  // Absent when intent === 'default' (curated default order shown on the client).
+  // A client ignoring featuredOrder (5.x-era) still works — backward-compat.
+  const payload: {
+    type: 'recuration';
+    intent: string;
+    order: string[];
+    deepen: string[];
+    skip: string[];
+    featuredOrder?: string[];
+  } = { type: 'recuration', intent, order, deepen, skip };
+  if (featuredOrder !== undefined) {
+    payload.featuredOrder = featuredOrder;
+  }
   await stream.writeSSE({
     event: 'recuration',
-    data: JSON.stringify({ type: 'recuration', intent, order, deepen, skip }),
+    data: JSON.stringify(payload),
   });
 }
 
@@ -308,6 +323,7 @@ guideRouter.post('/guide', async (c: Context) => {
       // client can begin re-ordering the scenes while the answer streams in.
       // Only emit for non-default intents (default = no change from canonical arc).
       // Story 5.4: includes deepen + skip from the server-owned tables.
+      // Story 7.2: includes featuredOrder from the server-owned INTENT_FEATURED_ORDER_TABLE.
       if (classifiedIntent !== 'default') {
         const directive = getDirectiveForIntent(classifiedIntent);
         await emitRecuration(
@@ -316,6 +332,7 @@ guideRouter.post('/guide', async (c: Context) => {
           directive.order,
           directive.deepen,
           directive.skip,
+          directive.featuredOrder,
         );
       }
 
