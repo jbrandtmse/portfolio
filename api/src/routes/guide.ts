@@ -53,12 +53,15 @@ export const RETRIEVAL_THRESHOLD = 0.5;
 const K = 5;
 
 /**
- * Hard ceiling on LLM streaming (ms). Raised 10s → 15s to absorb the tail
- * latency of reasoning-class mid-tier models (gpt-5-mini's first token can run
- * past 10s, tripping the abort → in-voice fallback). 15s keeps a graceful upper
- * bound while letting slow-but-valid grounded answers complete (NFR-4).
+ * Hard ceiling on LLM streaming (ms). Originally raised 10s → 15s to absorb
+ * the tail latency of reasoning-class models (e.g. gpt-5-mini's first token
+ * could run past 10s, tripping the abort → in-voice fallback). The default
+ * `GUIDE_LLM_MODEL` is now claude-haiku-4-5-20251001 (~2-3s end-to-end), so
+ * 15s is a comfortable safety margin over the fast default and absorbs
+ * per-deployment `GUIDE_LLM_MODEL` variance without constraining valid answers
+ * (NFR-4; spec reconciled Story 7.0).
  */
-const LLM_CEILING_MS = 15_000;
+export const LLM_CEILING_MS = 15_000;
 
 /** Canned fail-closed response (in-voice, no exclamation). */
 export const CANNED_NO_CONTEXT = "I don't have that documented.";
