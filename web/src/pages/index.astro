@@ -1,0 +1,924 @@
+---
+/**
+ * Home (`/`) — the cold-landing first impression (FR-1) and the locked 7-scene
+ * arc (Story 1.4, AC1). Story 1.3 built the calm, credible hero + the audience
+ * fork (the #hero scene); Story 1.4 lays the remaining six scenes and the
+ * persistent scene-rail (the FR-2 skip/progress affordance). Story 3.5 fills
+ * the #close scene: the embedded InviteForm island + follow/subscribe CTAs +
+ * a curated creative touch.
+ *
+ * Locked scene order (EXPERIENCE §"Scene order (Stage 1, locked)"; spine wins):
+ *   #hero → #thesis → #timeline → #speaker → #flagship → #glass-box → #close.
+ * DOM order = the locked order. #hero is the 1.3 HeroStatic.
+ *
+ * Scene content rules (Story 1.4 Dev Notes):
+ *   • Thesis (#thesis) — the ONE fully-authored non-hero scene. Carries the
+ *     canonical thesis line "The medium is the message." + a calm framing AND the
+ *     answer-first, entity-named first sentence for `/` (GEO/SEO substance —
+ *     names "Joshua R. Brandt, MSE" in the first sentence; EXPERIENCE §Voice →
+ *     Answer-first ledes).
+ *   • Teasers (#timeline/#speaker/#flagship/#glass-box) — each a Kicker + a 1–2
+ *     sentence summary + a real link to its Mirror route. Summarize-and-link
+ *     ONLY — never duplicate the Mirror body (UX-DR10; the clean Mirror wins the
+ *     citation). Each scene is a slot its epic fills (Epic 2: Timeline/Flagship/
+ *     Glass-Box; Epic 3: Speaker).
+ *   • Close (#close) — filled in Story 3.5: the embedded InviteForm island
+ *     (client:visible, deferred until visible — FCP unaffected), follow/subscribe
+ *     CTAs (0-JS data-umami-event, sourced from CHANNEL_SAMEAS), and a curated
+ *     Stage-1 creative touch (static poster + real <a>, no live runtime reads).
+ *
+ * Mirror routes (/timeline, /speaking, /work/loandemo, /glass-box, /invite) are
+ * created in Story 1.5 — the hrefs are correct now and 404 until then (forward
+ * reference, not a defect).
+ *
+ * Headings: exactly ONE <h1> (the hero positioning line, owned by HeroStatic);
+ * every scene title here is an <h2> — clean hierarchy (NFR-2/SEO).
+ *
+ * NFR-1: home ships TWO sanctioned executable surfaces: the one tiny scene-rail
+ * enhancement script (gated behind a two-layer reduced-motion gate, scoped to
+ * SceneRail) AND the React island (InviteForm, client:visible-deferred). The
+ * follow/subscribe CTAs (data-umami-event) and the creative-touch static poster
+ * are 0-JS — they add no app JS.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HeroStatic from '../components/hero/HeroStatic.astro';
+import Kicker from '../components/common/Kicker.astro';
+import SceneRail from '../components/scene/SceneRail.astro';
+import InviteForm from '../islands/InviteForm';
+import { personJsonLd, profilePageJsonLd, serializeJsonLd } from '../lib/jsonld';
+import { CHANNEL_SAMEAS, PERSON, SITE_ORIGIN } from '../lib/person';
+
+/**
+ * Follow/subscribe CTAs — sourced from CHANNEL_SAMEAS (the same [OPEN] channel
+ * roots used for Person.sameAs on /about). Labels and channel keys [OPEN] until
+ * Josh confirms the real handles. The `channel` value is the non-PII prop passed
+ * to data-umami-event-channel (0-JS, Umami handles the click — no app JS).
+ */
+const CHANNEL_CTAS = [
+  {
+    href: CHANNEL_SAMEAS[0] ?? 'https://www.youtube.com/',
+    label: 'Subscribe on YouTube [OPEN: handle]',
+    channel: 'youtube',
+    rel: 'me noopener',
+  },
+  {
+    href: CHANNEL_SAMEAS[1] ?? 'https://github.com/',
+    label: 'Follow on GitHub [OPEN: handle]',
+    channel: 'github',
+    rel: 'me noopener',
+  },
+  {
+    href: CHANNEL_SAMEAS[2] ?? 'https://suno.com/',
+    label: 'Listen on Suno [OPEN: handle]',
+    channel: 'suno',
+    rel: 'me noopener',
+  },
+] as const;
+
+// Home JSON-LD (Story 1.6, AC1; EXPERIENCE §"SEO/GEO floor"): the REAL Person +
+// a ProfilePage whose mainEntity is that Person. Same canonical Person facts as
+// /about (one source — web/src/lib/person.ts), serialized into the BaseLayout
+// `jsonld` slot below. The ProfilePage url is the site root (the home is the
+// person's canonical home). dateModified is intentionally omitted to keep the
+// output deterministic (NFR-6; Story 1.8 verifies byte-stability).
+const homeJsonLd = serializeJsonLd([
+  personJsonLd(PERSON),
+  profilePageJsonLd({ mainEntity: PERSON, url: `${SITE_ORIGIN}/` }),
+]);
+---
+
+<BaseLayout
+  title="Joshua R. Brandt, MSE"
+  description="A warm, structured, editorial portfolio for a 30-year engineer building at the frontier."
+>
+  {
+    /* Structured data — Person + ProfilePage (REAL), rendered server-side in
+      <head> via BaseLayout's jsonld slot. DATA, not executable JS (NFR-1). */
+  }
+  <script type="application/ld+json" slot="jsonld" is:inline set:html={homeJsonLd} />
+  {
+    /* The persistent scene-rail — the FR-2 skip/progress/jump affordance. It is
+     fixed chrome overlaying the scroll-native arc, so the scene DOM order below
+     is the locked order, untouched. */
+  }
+  <SceneRail />
+
+  {
+    /*
+    ── CINEMATIC STILL POSTER (Story 5.1, AC2 / NFR-1) ───────────────────────
+    The initial-paint static fallback for the WebGL set-piece. A pre-rendered SVG
+    of the drafting-grid/blueprint composition — zero executable JS, 0 incremental
+    script weight, fully visible before any user interaction.
+
+    Under prefers-reduced-motion / JS-off / before first interaction:
+      → this image IS the "set-piece" (the static baseline).
+    After first scroll/interaction (motion allowed):
+      → the WebGL canvas loads and the still fades out gracefully.
+
+    aria-hidden: purely decorative; all scene content is in the DOM.
+    The SVG is served from /cinematic/cinematic-still.svg (generated at build time
+    by scripts/build-cinematic-assets.ts — committed as a stable asset).
+  */
+  }
+  <div id="cinematic-still-poster" aria-hidden="true" class="cinematic-still">
+    <img
+      src="/cinematic/cinematic-still.svg"
+      alt=""
+      aria-hidden="true"
+      width="800"
+      height="500"
+      decoding="async"
+      loading="lazy"
+    />
+  </div>
+
+  {
+    /*
+    ── DEFERRED CINEMATIC BOOTSTRAP (Story 5.1, AC1 / AC3 / AC5 — NFR-1 critical) ─
+    The heavy GSAP + three.js + @react-three/fiber stack is loaded ONLY on the
+    FIRST real user scroll or interaction, INSIDE onMotionAllowed. This ensures:
+      - Lighthouse's no-interaction trace on `/` NEVER fetches the heavy chunk.
+      - The 256KB `/` script budget stays green (the bootstrap is a tiny shim).
+      - Under prefers-reduced-motion → onMotionAllowed no-ops → heavy stack is
+        never loaded (AC3: camera path disabled outright; WebGL never initialized).
+
+    One-shot listeners ({once: true, passive: true}); never preventDefault (FR-2).
+    NOT client:load, NOT client:visible, NOT requestIdleCallback alone.
+  */
+  }
+  <script>
+    import { onMotionAllowed } from '../lib/motion';
+
+    onMotionAllowed(() => {
+      // One-shot interaction/scroll trigger — Lighthouse never scrolls/interacts,
+      // so this import never fires in its trace.
+      let loaded = false;
+      const loadCinematic = (): void => {
+        if (loaded) return;
+        loaded = true;
+        // Dynamic import — the heavy chunk (GSAP + three + R3F) loads here,
+        // AFTER the first real user scroll/pointer/key event.
+        void import('../lib/cinematic/bootstrap').then((m) => m.boot());
+      };
+
+      const once: AddEventListenerOptions = { once: true, passive: true };
+      window.addEventListener('scroll', loadCinematic, once);
+      window.addEventListener('pointerdown', loadCinematic, once);
+      window.addEventListener('keydown', loadCinematic, once);
+    });
+  </script>
+
+  <main class="home">
+    {/* ── Scene 1 — Hero (the 1.3 HeroStatic; carries the single <h1>) ─────── */}
+    <section id="hero" aria-label="Introduction">
+      <HeroStatic />
+    </section>
+
+    {/* ── Scene 2 — Thesis (authored here; the one full non-hero scene) ─────── */}
+    <section id="thesis" class="scene scene--thesis" aria-labelledby="thesis-title">
+      <div class="scene__inner">
+        <Kicker>The thesis</Kicker>
+        <h2 id="thesis-title" class="scene__thesis-line">The medium is the message.</h2>
+        {/* ── skim tier (one-line essence) ─────────────────────────────────── */}
+        <p class="scene__skim">
+          Thirty years of shipping. Now building at the frontier. The site is the proof.
+        </p>
+        {/* ── overview tier (DEFAULT — current teaser content, unchanged) ───── */}
+        {/* Answer-first, entity-named lede for `/` (GEO/SEO; EXPERIENCE §Voice). */}
+        <p class="scene__lede">
+          Joshua R. Brandt, MSE is a software engineer with about thirty years of shipping
+          experience, now building at the frontier of agentic engineering.
+        </p>
+        <p class="scene__body">
+          This site is not a description of the work. It is the work — built in the open as a BMAD
+          Method project, so the proof and the portfolio are the same artifact. Everything below is
+          a way into that record.
+        </p>
+        {/* ── deep tier (expanded grounded detail — reuses committed content) ── */}
+        {
+          /*
+          Rule 9: every claim below traces to:
+            - The committed thesis lede above (thirty years, agentic frontier).
+            - The committed body above (built in the open, BMAD Method, proof + portfolio).
+            - The committed Glass Box framing — "the curated, chronological build-story"
+              (the /glass-box teaser on this page + the /glass-box/ Mirror route, which is
+              default-deny/curated). NO completeness claim ("every … is in the Glass Box")
+              is made — that would contradict the curated allowlist (Rule 9 fabrication class).
+          NO new facts introduced.
+          JS-off (no data-depth on <html>): .scene__deep is visible (reachable, FR-8).
+          JS-on + data-depth=overview or skim: CSS hides .scene__deep.
+          JS-on + data-depth=deep: CSS shows .scene__deep.
+        */
+        }
+        <div class="scene__deep">
+          <p class="scene__deep-body">
+            The portfolio and the proof are the same artifact — built in the open as a BMAD Method
+            project. Thirty years of shipping, now at the frontier of agentic engineering; the
+            curated, chronological build-story is in the Glass Box below.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    {/* ── Scene 3 — Master Timeline (teaser; Epic 2 fills it) ──────────────── */}
+    <section id="timeline" class="scene" aria-labelledby="timeline-title">
+      <div class="scene__inner">
+        <Kicker>Master Timeline</Kicker>
+        <h2 id="timeline-title" class="scene__title">Thirty years, on one spine</h2>
+        {/* ── skim tier ───────────────────────────────────────────────────── */}
+        <p class="scene__skim">A craft-arc from early shipping to the agentic turn.</p>
+        {/* ── overview tier (DEFAULT) ─────────────────────────────────────── */}
+        <p class="scene__summary">
+          A single craft-arc from the early shipping years to the agentic turn — the runway that
+          earns the frontier.
+        </p>
+        <p class="scene__more">
+          <a class="scene__link" href="/timeline/">
+            See the Master Timeline<span class="scene__arrow" aria-hidden="true">&rarr;</span>
+          </a>
+        </p>
+        {
+          /* ── deep tier ─────────────────────────────────────────────────────
+          Rule 9: summary traces to the committed teaser above (craft-arc,
+          early shipping to agentic turn, runway). Link unchanged.
+        */
+        }
+        <div class="scene__deep">
+          <p class="scene__deep-body">
+            The timeline maps the full craft progression — from the long runway of early shipping
+            years through the agentic turn — in a single chronological record. See the eras and the
+            work behind the frontier claim.
+          </p>
+          <p class="scene__more scene__more--deep">
+            <a class="scene__link" href="/timeline/">
+              See the Master Timeline<span class="scene__arrow" aria-hidden="true">&rarr;</span>
+            </a>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    {/* ── Scene 4 — Speaker (teaser; Epic 3 fills it; early–mid by design, SM-C1) */}
+    <section id="speaker" class="scene" aria-labelledby="speaker-title">
+      <div class="scene__inner">
+        <Kicker>Speaking</Kicker>
+        <h2 id="speaker-title" class="scene__title">Talks that show the build, live</h2>
+        {/* ── skim tier ───────────────────────────────────────────────────── */}
+        <p class="scene__skim">Signature talks. Book directly.</p>
+        {/* ── overview tier (DEFAULT) ─────────────────────────────────────── */}
+        <p class="scene__summary">
+          Signature talks and the reel, plus a direct way to book — for organizers who want the
+          frontier explained on a stage.
+        </p>
+        <p class="scene__more">
+          <a class="scene__link" href="/speaking/">
+            See speaking and book a talk<span class="scene__arrow" aria-hidden="true">&rarr;</span>
+          </a>
+        </p>
+        {
+          /* ── deep tier ─────────────────────────────────────────────────────
+          Rule 9: traces to the committed teaser above (signature talks, reel,
+          book, frontier explained on a stage). No new claims.
+        */
+        }
+        <div class="scene__deep">
+          <p class="scene__deep-body">
+            The speaking page carries the signature talks, a recorded reel, and a direct booking
+            path — for conference and event organizers who want the frontier explained on a stage by
+            someone who has shipped it.
+          </p>
+          <p class="scene__more scene__more--deep">
+            <a class="scene__link" href="/speaking/">
+              See speaking and book a talk
+              <span class="scene__arrow" aria-hidden="true">&rarr;</span>
+            </a>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    {/* ── Scene 5 — Flagship / loandemo (teaser; Epic 2 fills it) ──────────── */}
+    <section id="flagship" class="scene" aria-labelledby="flagship-title">
+      <div class="scene__inner">
+        <Kicker>Flagship</Kicker>
+        <h2 id="flagship-title" class="scene__title">loandemo, end to end</h2>
+        {/* ── skim tier ───────────────────────────────────────────────────── */}
+        <p class="scene__skim">A real product, intent to working software, agentic methods.</p>
+        {/* ── overview tier (DEFAULT) ─────────────────────────────────────── */}
+        <p class="scene__summary">
+          The flagship case study: a real product taken from intent to working software with agentic
+          methods.
+        </p>
+        <p class="scene__more">
+          <a class="scene__link" href="/work/loandemo/">
+            Read the loandemo case study<span class="scene__arrow" aria-hidden="true">&rarr;</span>
+          </a>
+        </p>
+        {
+          /* ── deep tier ─────────────────────────────────────────────────────
+          Rule 9: traces to the committed teaser above (real product, intent
+          to working software, agentic methods). No new claims.
+        */
+        }
+        <div class="scene__deep">
+          <p class="scene__deep-body">
+            The loandemo case study walks a real product from intent all the way to working software
+            using agentic engineering methods. It is the flagship demonstration of the approach this
+            portfolio documents.
+          </p>
+          <p class="scene__more scene__more--deep">
+            <a class="scene__link" href="/work/loandemo/">
+              Read the loandemo case study
+              <span class="scene__arrow" aria-hidden="true">&rarr;</span>
+            </a>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    {/* ── Scene 6 — Glass Box (teaser; Epic 2 fills it) ────────────────────── */}
+    <section id="glass-box" class="scene" aria-labelledby="glass-box-title">
+      <div class="scene__inner">
+        <Kicker>Glass Box</Kicker>
+        <h2 id="glass-box-title" class="scene__title">The build, with the lid off</h2>
+        {/* ── skim tier ───────────────────────────────────────────────────── */}
+        <p class="scene__skim">The curated build artifacts, in the order they were made.</p>
+        {/* ── overview tier (DEFAULT) ─────────────────────────────────────── */}
+        <p class="scene__summary">
+          The curated, chronological build-story behind this site — the actual artifacts, in the
+          order they were made.
+        </p>
+        <p class="scene__more">
+          <a class="scene__link" href="/glass-box/">
+            Open the Glass Box<span class="scene__arrow" aria-hidden="true">&rarr;</span>
+          </a>
+        </p>
+        {
+          /* ── deep tier ─────────────────────────────────────────────────────
+          Rule 9: traces to the committed teaser above (curated, chronological
+          build-story, actual artifacts, order they were made). No new claims.
+        */
+        }
+        <div class="scene__deep">
+          <p class="scene__deep-body">
+            The Glass Box is the curated, chronological record of how this site was built — the
+            actual artifacts in the order they were made. It is the build-story with the lid off.
+          </p>
+          <p class="scene__more scene__more--deep">
+            <a class="scene__link" href="/glass-box/">
+              Open the Glass Box<span class="scene__arrow" aria-hidden="true">&rarr;</span>
+            </a>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    {/* ── Scene 7 — Close (Story 3.5: embed, CTAs, creative touch) ──────── */}
+    <section id="close" class="scene scene--close" aria-labelledby="close-title">
+      <div class="scene__inner">
+        <Kicker>The close</Kicker>
+        <h2 id="close-title" class="scene__title">If the work fits what you are building</h2>
+        <p class="scene__summary">
+          The shortest path is a direct ask. Send an inquiry below, follow the work in progress, or
+          sample what is already out there.
+        </p>
+
+        {/* ── Invite: embedded InviteForm island (client:visible, FR-32/FR-36) ── */}
+        {
+          /*
+           * client:visible defers React hydration until the Close scrolls into view,
+           * so the cold-landing FCP is unaffected (NFR-1). The SSR'd <form> is in the
+           * HTML immediately (JS-off native POST → /invite/thanks/ baseline). The island
+           * adds the enhanced fetch path + inline aria-live confirmation. invite-submitted
+           * fires on success (wired in InviteForm.tsx, Story 3.5 Task 2).
+           */
+        }
+        <div class="close__invite">
+          <h3 class="close__sub-heading">Send an inquiry</h3>
+          <InviteForm client:visible />
+        </div>
+
+        {/* ── Follow: channel CTAs (0-JS, data-umami-event, sourced from CHANNEL_SAMEAS) ── */}
+        {
+          /*
+           * Real <a> links (followable JS-off). data-umami-event="channel-clicked" is
+           * the 0-JS analytics form: Umami's own script handles the click — no app JS
+           * added (NFR-1). Env-gated: inert without Umami (Rule 4). No PII (NFR-7).
+           */
+        }
+        <div class="close__follow">
+          <h3 class="close__sub-heading">Follow the work</h3>
+          <ul class="close__channel-list" role="list">
+            {
+              CHANNEL_CTAS.map(({ href, label, channel, rel }) => (
+                <li>
+                  <a
+                    class="close__channel-link"
+                    href={href}
+                    rel={rel}
+                    data-umami-event="channel-clicked"
+                    data-umami-event-channel={channel}
+                  >
+                    {label}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        {/* ── Creative touch: curated Stage-1 track (FR-23, Guardrail §9.1) ─── */}
+        {
+          /*
+           * A single curated piece — hardcoded [OPEN] URL (no live runtime reads of
+           * Suno/YouTube/GitHub; FR-23 / Guardrail §9.1). Static poster with a real
+           * <a> that works JS-off. The poster is a pure CSS block (no image asset,
+           * deterministic; NFR-6). Accessible name via aria-label on the link.
+           * Visible :focus-visible ring (NFR-2/AA). No autoplay.
+           */
+        }
+        <div class="close__creative">
+          <h3 class="close__sub-heading">A sample of the work</h3>
+          <a
+            class="close__creative-link"
+            href="https://suno.com/song/[OPEN: curated-track-id]"
+            rel="noopener"
+            aria-label="Listen to a curated track by Joshua R. Brandt, MSE on Suno [OPEN: track title]"
+            target="_blank"
+          >
+            <div class="close__creative-poster" aria-hidden="true">
+              <span class="close__creative-label">Listen on Suno</span>
+              <span class="close__creative-title">[OPEN: track title]</span>
+            </div>
+            <span class="close__creative-caption">
+              A curated track — Stage-1 creative output [OPEN: track title]
+            </span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  /* ── Cinematic still poster (Story 5.1, AC2 / NFR-1) ─────────────────────
+     The static fallback for the WebGL set-piece. Fixed behind the scenes,
+     covering the full viewport. `aria-hidden` and decorative (pointer-events:none).
+     On initial paint (before interaction), this image IS the set-piece.
+     After the WebGL canvas loads, this fades to 0 and is removed from the DOM.
+
+     CSS motion guard (NFR-2 Layer 1): the opacity transition is inside a
+     no-preference media query so reduced-motion never sees the animation.
+     Under reduced motion, the still is always visible (the static baseline). */
+  .cinematic-still {
+    position: fixed;
+    inset: 0;
+    z-index: -2; /* behind the WebGL canvas AND behind scene content */
+    pointer-events: none;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cinematic-still img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    opacity: 0.6;
+    /* Subtle scale so it feels like a wide composition, not a screenshot. */
+    transform: scale(1.05);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .cinematic-still {
+      /* Let JS-driven transitions run when motion is allowed. */
+      transition: opacity 0.6s ease;
+    }
+  }
+
+  /* ── Depth Dial tier visibility (Story 5.2, AC1/AC4) ─────────────────────
+     CSS shows/hides scene tiers by the root [data-depth] attribute set by the
+     depth-dial enhancement script. The three rules below are the CSS half of
+     progressive disclosure.
+
+     JS-off / no data-depth: the SKIM tier is hidden (it's the most stripped-
+     down tier; overview + deep are both in the DOM and visible — FR-8 "nothing
+     hidden", all content reachable). The overview tier is the default display.
+
+     data-depth="skim": only the skim tier and the title are visible.
+     data-depth="overview": the overview tier (default) and skim hidden.
+     data-depth="deep": everything shown (skim hidden, overview + deep visible).
+
+     Content-swap transitions: authored only under no-preference (NFR-2).
+  */
+
+  /* Always hide the skim one-liner when there's no depth set (JS-off) or
+     when depth = overview/deep. Only data-depth="skim" reveals it. */
+  .scene__skim {
+    display: none;
+  }
+
+  /* data-depth="skim": show skim, hide overview/deep tier content. */
+  :global(html[data-depth='skim']) .scene__skim {
+    display: block;
+  }
+
+  :global(html[data-depth='skim']) .scene__lede,
+  :global(html[data-depth='skim']) .scene__summary,
+  :global(html[data-depth='skim']) .scene__body,
+  :global(html[data-depth='skim']) .scene__more,
+  :global(html[data-depth='skim']) .scene__deep {
+    display: none;
+  }
+
+  /* The Close scene (the conversion ask + invite form) is deliberately NOT
+     tiered — it has no .scene__skim replacement. The GLOBAL skim-hide rule above
+     would otherwise strip its summary in Skim mode, leaving the title floating
+     above the form with no intro. The Close ask must read at EVERY depth, so
+     keep its summary visible in skim. (Story 5.2 CR — untiered-scene side-effect) */
+  :global(html[data-depth='skim']) .scene--close .scene__summary {
+    display: block;
+  }
+
+  /* data-depth="overview" (also the JS-on default): hide skim + deep. */
+  :global(html[data-depth='overview']) .scene__skim,
+  :global(html[data-depth='overview']) .scene__deep {
+    display: none;
+  }
+
+  /* data-depth="deep": show overview + deep; hide skim.
+     The overview content is already visible by default (display: block as set
+     below on .scene__summary etc.); the deep block was hidden by the default
+     above — explicitly show it here. */
+  :global(html[data-depth='deep']) .scene__skim {
+    display: none;
+  }
+
+  :global(html[data-depth='deep']) .scene__deep {
+    display: block;
+  }
+
+  /* JS-off (no data-depth): overview shows, deep shows (reachable, FR-8).
+     Skim remains hidden (it's just a one-liner and not the important content;
+     overview is the meaningful default). The :not([data-depth]) selector covers
+     the SSR/JS-off state. */
+  :global(html:not([data-depth])) .scene__skim {
+    display: none;
+  }
+
+  :global(html:not([data-depth])) .scene__deep {
+    display: block;
+  }
+
+  /* ── Per-scene deepen (Story 5.4 — director's-mode DEEPEN verb) ───────────
+     The Guide's director's-mode can DEEPEN individual scenes (organizer →
+     speaker + flagship, etc.) by setting data-depth="deep" on the SECTION
+     (web/src/lib/recuration.ts applyRecuration). This must reveal THAT scene's
+     deep tier even while the GLOBAL depth dial (html[data-depth]) is at its
+     default 'overview' (which hides .scene__deep for every scene, line ~546).
+
+     Without this rule the section-scoped data-depth="deep" attribute is inert:
+     the html[data-depth='overview'] .scene__deep { display:none } rule above has
+     equal specificity (0,2,1) and would tie-then-win on source order, so the
+     deepened scene's deep content would NEVER show — DEEPEN would be a no-op
+     (AC1: "a deepened scene at deep detail"). Placed AFTER the global rules so
+     it wins the source-order tie at equal specificity.
+
+     FR-8-safe: this only REVEALS additional (already-in-DOM) deep content for
+     the deepened scene; it never hides or removes anything. */
+  :global(section[data-depth='deep']) .scene__deep {
+    display: block;
+  }
+
+  :global(section[data-depth='deep']) .scene__skim {
+    display: none;
+  }
+
+  /* Optional content-swap transition — only when motion is allowed (NFR-2).
+     A simple fade-in for the depth tier swap; does NOT affect control operation. */
+  @media (prefers-reduced-motion: no-preference) {
+    .scene__deep,
+    .scene__skim {
+      animation: scene-depth-fade 200ms ease both;
+    }
+
+    @keyframes scene-depth-fade {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+  }
+
+  /* ── Re-curation flex order (Story 5.3, FR-10 / FR-8) ───────────────────
+     <main class="home"> is a flex column so that CSS `order` can re-sequence
+     the scenes VISUALLY without touching the DOM order (FR-8/NFR-3: crawlers
+     and JS-off visitors always see the canonical hero→…→close order).
+
+     Each <section> receives a CSS `order` value set by the web recuration
+     controller (web/src/lib/recuration.ts). Default (no JS / no directive) =
+     source order (the controller sets order=0,1,…,6 on init; without JS the
+     sections are in DOM order which is visually equivalent).
+
+     Reduced motion (NFR-2): the ORDER itself applies unconditionally (it is a
+     layout change, not an animation). Only the ORDER-CHANGE TRANSITION is
+     gated behind prefers-reduced-motion: no-preference (see below). */
+  .home {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Smooth scene reorder transition — only when motion is allowed (NFR-2).
+     200ms ease-in-out is perceptible but not jarring for a layout shift. */
+  @media (prefers-reduced-motion: no-preference) {
+    .home > section {
+      transition: order 0ms; /* CSS order cannot be transitioned; this is a placeholder */
+    }
+  }
+
+  /* The scenes are plain, sequential sections (AC4 — fully functional JS-off).
+     Each is a calm editorial band with generous whitespace; depth is tone +
+     hairline, never shadow (DESIGN §Elevation, the flat system). On desktop the
+     fixed scene-rail occupies the right 208px, so the scene content reserves
+     that gutter; on mobile the rail is a sticky top bar and no gutter is needed. */
+  .scene {
+    padding: var(--space-section-band) var(--space-margin-mobile);
+    border-top: 1px solid var(--color-border-hairline);
+  }
+
+  .scene__inner {
+    max-width: var(--measure-reading);
+    margin-inline: auto;
+  }
+
+  /* Scene titles — the <h2> beat. Source Serif 4 display-leaning. */
+  .scene__title,
+  .scene__thesis-line {
+    margin: var(--space-4) 0 0;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-h2);
+    font-weight: var(--font-weight-h2);
+    line-height: var(--line-height-h2);
+    letter-spacing: var(--letter-spacing-h2);
+    color: var(--color-ink-primary);
+    text-wrap: balance;
+  }
+
+  /* The thesis line is the focal sentence of its scene — eased up a touch. */
+  .scene--thesis .scene__thesis-line {
+    font-size: clamp(28px, 3.4vw, 44px);
+  }
+
+  .scene__lede {
+    margin: var(--space-5) 0 0;
+    max-width: 54ch;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-lede);
+    font-weight: var(--font-weight-lede);
+    line-height: var(--line-height-lede);
+    color: var(--color-ink-primary);
+  }
+
+  .scene__body,
+  .scene__summary {
+    margin: var(--space-4) 0 0;
+    max-width: 60ch;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+  }
+
+  /* Skim one-liner — a compact, trimmed-essence line. Matching body weight. */
+  .scene__skim {
+    margin: var(--space-4) 0 0;
+    max-width: 60ch;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+  }
+
+  /* Deep tier — expanded grounded detail block below the overview teaser. */
+  .scene__deep {
+    margin: var(--space-4) 0 0;
+    padding: var(--space-4);
+    border-left: 3px solid var(--color-border-hairline);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  }
+
+  .scene__deep-body {
+    margin: 0;
+    max-width: 60ch;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+    font-style: italic;
+  }
+
+  .scene__more--deep {
+    margin-top: var(--space-3);
+  }
+
+  .scene__more {
+    margin: var(--space-5) 0 0;
+  }
+
+  /* The teaser link — a quiet inline accent link (DESIGN inline-link pattern):
+     hairline underline that deepens on hover, an arrow that nudges. NOT a button
+     (the scenes summarize-and-link; the Mirror route is the destination). */
+  .scene__link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    font-family: var(--font-family-base);
+    font-size: 15px;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.01em;
+    color: var(--color-accent);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-border-hairline);
+    padding-bottom: 1px;
+    border-radius: var(--radius-sm);
+  }
+
+  .scene__link:hover {
+    color: var(--color-accent-hover);
+    border-bottom-color: var(--color-accent);
+  }
+
+  .scene__link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .scene__arrow {
+    transition: transform 120ms ease;
+  }
+
+  .scene__link:hover .scene__arrow {
+    transform: translateX(3px);
+  }
+
+  /* The Close scene gets a touch more breathing room as the final beat. */
+  .scene--close {
+    padding-bottom: var(--space-7);
+  }
+
+  /* ── Close scene sub-sections ──────────────────────────────────────────── */
+
+  .close__sub-heading {
+    margin: var(--space-6) 0 var(--space-3);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-ink-secondary);
+  }
+
+  .close__invite {
+    margin-top: var(--space-5);
+  }
+
+  /* ── Follow channel CTAs (0-JS; data-umami-event handled by Umami) ─────── */
+
+  .close__follow {
+    margin-top: var(--space-6);
+  }
+
+  .close__channel-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .close__channel-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 9px 16px;
+    font-family: var(--font-family-base);
+    font-size: 14px;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-accent);
+    text-decoration: none;
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-base);
+    transition:
+      border-color 0.1s ease,
+      color 0.1s ease;
+  }
+
+  .close__channel-link:hover {
+    color: var(--color-accent-hover);
+    border-color: var(--color-accent);
+  }
+
+  .close__channel-link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* ── Creative touch — static poster + curated <a> (0-JS; no autoplay) ─── */
+
+  .close__creative {
+    margin-top: var(--space-6);
+  }
+
+  .close__creative-link {
+    display: block;
+    max-width: 340px;
+    text-decoration: none;
+    color: inherit;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--color-border-hairline);
+  }
+
+  .close__creative-link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .close__creative-poster {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    padding: var(--space-5);
+    min-height: 140px;
+    background: linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--color-accent) 12%, var(--color-surface-base)) 0%,
+      color-mix(in srgb, var(--color-accent) 4%, var(--color-surface-base)) 100%
+    );
+  }
+
+  .close__creative-label {
+    display: block;
+    font-size: 11px;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+  }
+
+  .close__creative-title {
+    display: block;
+    font-size: 16px;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-ink-primary);
+    line-height: 1.3;
+  }
+
+  .close__creative-caption {
+    display: block;
+    padding: var(--space-3) var(--space-4);
+    font-size: 13px;
+    color: var(--color-ink-secondary);
+    background: var(--color-surface-base);
+    border-top: 1px solid var(--color-border-hairline);
+  }
+
+  .close__creative-link:hover .close__creative-poster {
+    background: linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--color-accent) 16%, var(--color-surface-base)) 0%,
+      color-mix(in srgb, var(--color-accent) 6%, var(--color-surface-base)) 100%
+    );
+  }
+
+  /* Desktop: reserve the fixed scene-rail's 208px gutter + widen the side
+     margins to the desktop scale. The scene-rail itself is position:fixed, so
+     this padding keeps content clear of it. The hero (#hero) manages its own
+     internal padding, so we only reserve the rail gutter on its right edge. */
+  @media (min-width: 1024px) {
+    .scene {
+      padding-right: calc(208px + var(--space-margin-desktop));
+      padding-left: var(--space-margin-desktop);
+    }
+
+    .home > #hero {
+      padding-right: 208px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scene__arrow {
+      transition: none;
+    }
+  }
+</style>

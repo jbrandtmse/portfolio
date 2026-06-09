@@ -1,0 +1,236 @@
+---
+/**
+ * FlagshipNode.astro — a milestone Dot + its static cluster of child Dots (Story 2.4, Task 2).
+ *
+ * A flagship node is a milestone Dot that expands to a small cluster of its Dots.
+ * In Stage 1 (this story) the cluster is STATIC — the dots are shown directly
+ * without a zoom gesture (Stage 2 / Epic 6 adds the zoom toggle).
+ *
+ * Each child Dot is a real `<a>` to its artifact:
+ *  • portfolio Dots → /glass-box/{slug}/ (Glass Box readers, 2.2/2.3)
+ *  • loandemo Dots → /work/loandemo/#… (forward-reference; 2.5 owns targets)
+ *
+ * 0 executable JS: no toggle, no scroll, no click handlers.
+ * The meaning lives in label/date/link text — the milestone dot is decorative.
+ *
+ * The host timeline.astro wraps each FlagshipNode in an <li> with aria-label.
+ */
+
+import TimelineDot from '../glassbox/TimelineDot.astro';
+import { formatDotDate } from '../../lib/timeline.ts';
+import type { TimelineDotEntry } from '../../lib/timeline.ts';
+import { cleanDescription, readerAffordance } from '../../lib/timeline-display.ts';
+
+interface Props {
+  label: string;
+  date: string;
+  description: string;
+  /**
+   * Optional reader href for the flagship itself (Story 6.2). Harvested
+   * epics/retros/course-corrections carry `[OPEN]` here → a clean
+   * "full reader coming (6.3/6.4)" affordance instead of a leaked sentinel.
+   */
+  href?: string;
+  /** Child dots in this flagship's cluster (ordered oldest → newest). */
+  cluster: TimelineDotEntry[];
+}
+
+const { label, date, description, href, cluster } = Astro.props;
+
+// Story 6.2: strip any leaked internal `[OPEN: …]` sentinel from visible prose,
+// and decide the flagship-level "reader" affordance from its own href. Shared
+// with ZoomableTimeline.tsx (web/src/lib/timeline-display.ts) so both surfaces agree.
+const cleanDesc = cleanDescription(description);
+const flagshipAffordance = readerAffordance(href);
+---
+
+<div class="flagship-node">
+  <div class="flagship-node__milestone-row">
+    <TimelineDot state="milestone" />
+    <div class="flagship-node__milestone-label">
+      <span class="flagship-node__title">{label}</span>
+      <time class="flagship-node__date" datetime={date}>
+        {formatDotDate(date)}
+      </time>
+      {cleanDesc && <p class="flagship-node__description">{cleanDesc}</p>}
+      {
+        flagshipAffordance.kind === 'coming' && (
+          <p class="flagship-node__reader-note">{flagshipAffordance.text}</p>
+        )
+      }
+      {
+        flagshipAffordance.kind === 'link' && (
+          <a class="flagship-node__reader-link" href={flagshipAffordance.href}>
+            {flagshipAffordance.label}
+          </a>
+        )
+      }
+    </div>
+  </div>
+
+  <ol class="flagship-node__cluster" aria-label={`Dots in ${label}`}>
+    {
+      cluster.map((dot) => {
+        const isExternal = dot.href.startsWith('http://') || dot.href.startsWith('https://');
+        const isOpen = dot.href === '[OPEN]';
+        return (
+          <li class="flagship-node__cluster-item">
+            <TimelineDot state={dot.state} />
+            <div class="flagship-node__cluster-label">
+              {isOpen ? (
+                <span class="flagship-node__dot-title flagship-node__dot-title--open">
+                  {dot.label} <span class="open-flag">[OPEN]</span>
+                </span>
+              ) : (
+                <a
+                  class="flagship-node__dot-link"
+                  href={dot.href}
+                  {...(isExternal ? { rel: 'noopener noreferrer' } : {})}
+                >
+                  {dot.label}
+                </a>
+              )}
+              {dot.date && !dot.date.startsWith('[') && (
+                <time class="flagship-node__dot-date" datetime={dot.date}>
+                  {formatDotDate(dot.date)}
+                </time>
+              )}
+              {dot.description && <span class="flagship-node__dot-desc">{dot.description}</span>}
+            </div>
+          </li>
+        );
+      })
+    }
+  </ol>
+</div>
+
+<style>
+  /* Flagship node wrapper */
+  .flagship-node {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  /* Milestone row: the 17px dot + label side by side */
+  .flagship-node__milestone-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .flagship-node__milestone-label {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .flagship-node__title {
+    font-size: var(--font-size-body);
+    font-weight: 600;
+    color: var(--color-ink-primary);
+    line-height: 1.3;
+  }
+
+  .flagship-node__date {
+    font-size: var(--font-size-meta, 12px);
+    color: var(--color-ink-secondary);
+  }
+
+  .flagship-node__description {
+    font-size: var(--font-size-meta, 12px);
+    color: var(--color-ink-secondary);
+    line-height: var(--line-height-body);
+    margin: 0;
+    max-width: 40ch;
+  }
+
+  /* Story 6.2: clean "full reader coming (6.3/6.4)" affordance for harvested
+     epics/retros whose Glass Box reader does not exist yet ([OPEN] status).
+     Replaces the leaked internal `[OPEN: no Glass Box reader yet]` sentinel. */
+  .flagship-node__reader-note {
+    font-size: var(--font-size-meta, 12px);
+    color: var(--color-ink-secondary);
+    font-style: italic;
+    line-height: var(--line-height-body);
+    margin: 0;
+    max-width: 40ch;
+  }
+
+  .flagship-node__reader-link {
+    font-size: var(--font-size-meta, 12px);
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    line-height: 1.3;
+  }
+
+  .flagship-node__reader-link:hover {
+    text-decoration-thickness: 2px;
+  }
+
+  /* Cluster: the list of child dots */
+  .flagship-node__cluster {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    margin-left: calc(17px + var(--space-3)); /* align under flagship title */
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .flagship-node__cluster-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+
+  .flagship-node__cluster-label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .flagship-node__dot-link {
+    font-size: var(--font-size-meta, 12px);
+    color: var(--color-accent);
+    /* Underline ensures link is distinguishable without color alone (WCAG 1.4.1;
+       link-in-text-block: non-color differentiation required in inline context). */
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    line-height: 1.3;
+  }
+
+  .flagship-node__dot-link:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+  }
+
+  .flagship-node__dot-title {
+    font-size: var(--font-size-meta, 12px);
+    color: var(--color-ink-secondary);
+    line-height: 1.3;
+  }
+
+  .open-flag {
+    font-style: italic;
+    /* Use ink-secondary (5.63:1 on surface-raised) — no opacity reduction
+       to maintain WCAG AA contrast on meaningful text. */
+    color: var(--color-ink-secondary);
+  }
+
+  .flagship-node__dot-date {
+    font-size: 12px; /* raise from 11px for better readability */
+    /* Use ink-secondary (5.63:1 on surface-raised); no opacity reduction
+       (reduced opacity on ink-meta-min drops below 4.5:1 AA floor). */
+    color: var(--color-ink-secondary);
+  }
+
+  .flagship-node__dot-desc {
+    font-size: 12px; /* raise from 11px; at 12px with ink-secondary: 5.63:1 AA pass */
+    color: var(--color-ink-secondary);
+    font-style: italic;
+    line-height: 1.3;
+  }
+</style>

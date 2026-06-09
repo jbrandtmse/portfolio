@@ -1,0 +1,59 @@
+---
+/**
+ * /glass-box/[artifact] — the Glass Box artifact reader route (Story 2.2, Task 2).
+ *
+ * A STATIC, prerendered dynamic route that emits one crawlable page per
+ * allowlisted BMAD artifact at `/glass-box/{slug}/` (trailing-slash form per
+ * Story 2.0 / Rule 2). Composed through MirrorLayout: answer-first, self-
+ * canonical, exactly one <h1> (the artifact title), 0 executable JS (NFR-1).
+ *
+ * BUILD-ORDERING (AC6):
+ *  `pnpm build` runs the render-glassbox pipeline BEFORE `astro build`, so the
+ *  glassbox.json is always present for the real build. A bare `astro build` (the
+ *  vitest build-output.test.ts path) on a clean checkout may find the JSON
+ *  absent — `getStaticPaths()` returns `[]` gracefully in that case (no crash,
+ *  zero pages emitted). Any test that asserts the reader pages exist MUST call
+ *  `renderGlassbox()` / `pnpm build` in its own beforeAll first (AC6, Dev Notes).
+ *
+ * EXACTLY ONE <h1> (AC3):
+ *  MirrorLayout renders the artifact title as the page's single <h1>. The body
+ *  markdown's own `#` headings are DEMOTED one level (#→h2, ##→h3, …) by the
+ *  ArtifactReader component's Marked renderer — the page never has a second <h1>.
+ *
+ * 0-JS (AC4, NFR-1):
+ *  The Marked conversion runs at build time (server-side in frontmatter). The
+ *  output is static HTML; there is no client script tag on this page.
+ */
+export const prerender = true;
+
+import MirrorLayout from '../../layouts/MirrorLayout.astro';
+import ArtifactReader from '../../components/glassbox/ArtifactReader.astro';
+import { loadGlassboxArtifacts } from '../../lib/glassbox';
+import type { GlassboxArtifact } from '../../lib/glassbox';
+
+export function getStaticPaths() {
+  // AC6 graceful degradation: returns [] if glassbox.json is absent.
+  const artifacts = loadGlassboxArtifacts();
+  return artifacts.map((artifact: GlassboxArtifact) => ({
+    params: { artifact: artifact.slug },
+    props: artifact,
+  }));
+}
+
+const artifact = Astro.props as GlassboxArtifact;
+// `slug` is intentionally not destructured — the URL param is set by
+// getStaticPaths(); this page renders the title/type/curatorNote/date/body.
+const { title, type, curatorNote, date, body } = artifact;
+
+// Answer-first lede — first sentence names the entity (GEO floor; UX-DR15).
+// The lede also names the artifact type and title for context.
+const lede = `Joshua R. Brandt, MSE built this ${type} artifact as part of the Glass Box — the open, auditable record of the real BMAD Method process behind this portfolio. The document below is the unedited original.`;
+
+// Self-canonical and page title — use the artifact title.
+const pageTitle = `${title} — Glass Box — Joshua R. Brandt, MSE`;
+const description = `Read the full ${type} artifact: ${title}. ${curatorNote}`;
+---
+
+<MirrorLayout heading={title} lede={lede} title={pageTitle} description={description}>
+  <ArtifactReader type={type} curatorNote={curatorNote} date={date} body={body} />
+</MirrorLayout>

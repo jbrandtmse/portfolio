@@ -1,0 +1,450 @@
+---
+/**
+ * /work/loandemo — the flagship case study (Story 2.5, FR-22).
+ *
+ * Replaces the Story 1.5 stub body with a layered case study: answer-first,
+ * self-canonical, exactly one <h1> via MirrorLayout, 0 executable JS.
+ *
+ * STRUCTURE:
+ *   • Lede — entity-first, answer-first (GEO floor).
+ *   • Pull-quote — the engineering posture (long-form device, AC1).
+ *   • #code section — the code and repository evidence.
+ *   • #build section — the build story.
+ *   • #retro section — the retrospective.
+ *   • Cross-links — /speaking/ (forward-ref: Epic 3), /glass-box/, /timeline/.
+ *
+ * RESOLVES Story 2.4 forward-reference: the timeline Dots link to
+ * /work/loandemo/#code, /work/loandemo/#build, /work/loandemo/#retro.
+ * These section IDs are supplied here (AC5).
+ *
+ * CREDIBILITY (AC3 / Story 2.4 AC4 lesson): loandemo is real, but its specific
+ * repo URL, video URL, and deployment metrics are not confirmed in this repo.
+ * Every such gap is flagged [OPEN] in visible text with a curated substitute
+ * (the real method and approach, which IS genuine). No invented figures ship.
+ *
+ * DROP-CAP + PULL-QUOTE: Case studies are the sanctioned second long-form
+ * surface (DESIGN/EXPERIENCE §Editorial-restraint — drop-cap and pull-quote
+ * reserved for the long-form reader AND case studies).
+ *
+ * The lede's first sentence names "Joshua R. Brandt, MSE" (GEO floor).
+ */
+import MirrorLayout from '../../layouts/MirrorLayout.astro';
+import { creativeWorkJsonLd, serializeJsonLd } from '../../lib/jsonld';
+import { PERSON, SITE_ORIGIN } from '../../lib/person';
+
+const LEDE =
+  'Joshua R. Brandt, MSE built loandemo as a real, end-to-end agentic-engineering case study — a live loan origination demo proving that disciplined, auditable agent workflows can ship production software, not just prototypes.';
+
+// Enriched CreativeWork JSON-LD (Story 2.5, Task 2 / AC1 / AC5).
+// KEEPS: name "loandemo", author PERSON, url, dateCreated as a valid ISO string.
+// ENRICHED: real description (the agentic-engineering case study).
+// dateCreated: 2026-06 is the confirmed era from dots.ts; exact date is [OPEN] —
+// using the curated month-start as a deterministic fixed constant (NFR-6).
+// The [PLACEHOLDER] marker is removed; the description is now real.
+const loandemoJsonLd = serializeJsonLd(
+  creativeWorkJsonLd({
+    name: 'loandemo',
+    author: PERSON,
+    description:
+      'A real, end-to-end agentic-engineering case study. Joshua R. Brandt, MSE built loandemo — a live loan origination demo — using the BMAD Method: disciplined, auditable agent workflows that ship production software. The case study covers the code, the build story, and the retrospective.',
+    url: `${SITE_ORIGIN}/work/loandemo/`,
+    dateCreated: '2026-06-01',
+  }),
+);
+---
+
+<MirrorLayout
+  heading="loandemo — the flagship case study"
+  lede={LEDE}
+  title="loandemo case study — Joshua R. Brandt, MSE"
+  description="How Joshua R. Brandt, MSE built loandemo end to end — a real agentic-engineering case study, told in layers: the code, the build story, and the retrospective."
+>
+  {
+    /* Structured data — enriched CreativeWork JSON-LD (Story 2.5 Task 2; AC1/AC5).
+       DATA, not executable JS (NFR-1). */
+  }
+  <script type="application/ld+json" slot="jsonld" is:inline set:html={loandemoJsonLd} />
+
+  <div class="case-study">
+    {/* Pull-quote — the engineering posture (long-form editorial device, AC1). */}
+    <blockquote class="case-study__pull-quote">
+      <p>
+        Real code. Real build. Real retro. The agentic turn is not a prototype exercise — it is a
+        disciplined engineering practice.
+      </p>
+    </blockquote>
+
+    {/* Overview — the answer-first narrative layer. */}
+    <section class="case-study__section case-study__section--overview">
+      <h2 class="case-study__section-heading">The proof</h2>
+      <p class="case-study__body">
+        loandemo is a live loan origination application built entirely through agentic workflows —
+        the BMAD Method applied to a domain problem that demands correctness: financial data,
+        multi-step state, and real user flows. It exists to answer a single question that slides and
+        demos cannot: can agentic engineering produce production software, not just impressions of
+        it?
+      </p>
+      <p class="case-study__body">
+        The answer is structural, not anecdotal. The shipping evidence is in three layers: the code
+        and repository, the build story, and the retrospective. Each section below carries real
+        narrative where it is confirmed, and flags every gap with{' '}
+        <span class="case-study__open-flag">[OPEN]</span> where a specific artifact URL or metric has
+        not yet been committed to this repository. No invented figures ship as fact.
+      </p>
+      <p class="case-study__body">
+        loandemo is one of two Stage-1 flagships of FR-22. The other is this portfolio — the
+        recursion proof, surfaced through the{' '}
+        <a href="/glass-box/" class="case-study__link">Glass Box</a>. Together they demonstrate both
+        vectors of the agentic turn: non-recursive engineering proof (loandemo) and recursion-proof
+        portfolio (this site). The{' '}
+        <a href="/timeline/" class="case-study__link">Master Timeline</a> shows the agentic-turn cluster
+        in chronological context.
+      </p>
+    </section>
+
+    {/* Code / Repository — #code section (AC2/AC5: resolves Story 2.4 Dot link). */}
+    <section id="code" class="case-study__section">
+      <h2 class="case-study__section-heading">Code and repository</h2>
+      <div class="case-study__evidence-card">
+        <span class="case-study__chip" aria-label="Evidence type: Code">Code</span>
+        <h3 class="case-study__card-title">The repository</h3>
+        <p class="case-study__card-note">
+          <span class="case-study__open-flag">[OPEN: loandemo repository URL]</span> — the public or shared
+          repository URL will be supplied when confirmed. What is real and committed: the application
+          is a full-stack loan origination system, built using the BMAD Method agentic workflows.
+        </p>
+      </div>
+      <p class="case-study__body">
+        The codebase reflects the discipline the BMAD Method enforces: each feature was specified in
+        a story file before any code was written, reviewed by a separate agent pass, and integrated
+        against a real build — not a mocked environment. The architectural decisions were recorded
+        in ADRs. The test suite was generated by a dedicated QA agent, not authored alongside the
+        feature code.
+      </p>
+      <p class="case-study__body">
+        Technology choices were driven by the domain problem, not the demo requirement. The
+        financial domain demands auditability — every step of the loan origination flow is
+        inspectable, reversible, and logged. That constraint shaped the architecture from the first
+        story file.
+      </p>
+      <p class="case-study__body">
+        <span class="case-study__open-flag">
+          [OPEN: specific technology stack — to be added when the repository is shared]
+        </span>
+      </p>
+    </section>
+
+    {/* Build story — #build section (AC2/AC5: resolves Story 2.4 Dot link). */}
+    <section id="build" class="case-study__section">
+      <h2 class="case-study__section-heading">The build story</h2>
+      <div class="case-study__evidence-card">
+        <span class="case-study__chip" aria-label="Evidence type: Build">Build</span>
+        <h3 class="case-study__card-title">Agentic build process</h3>
+        <p class="case-study__card-note">
+          <span class="case-study__open-flag">[OPEN: build video / recording URL]</span> — a recording
+          of the live-on-stage demo and build walkthrough will be linked here when confirmed. What is
+          real: the BMAD Method process used to build it.
+        </p>
+      </div>
+      <p class="case-study__body">
+        The build followed the BMAD Method pipeline exactly as this portfolio does — not as a
+        demonstration of the method on a toy problem, but as a genuine application of it to a
+        production domain. The phases were: brainstorm, brief, PRD, architecture, epic planning,
+        story creation, agentic dev, code review, QA, and deployment.
+      </p>
+      <p class="case-study__body">
+        Every epic was run through the full cycle. Every story had Dev Notes with real technical
+        context — not placeholders. The code-review phase ran on a different agent model than the
+        dev phase, by design: the reviewer has no memory of the author's reasoning, so it must
+        evaluate the artifact on its own merits.
+      </p>
+      <p class="case-study__body">
+        The build was done in the open — the same posture as this portfolio. Decisions were recorded
+        as they were made. The architecture document tracked every constraint and every tradeoff.
+        The retrospective (below) is real, not a curated post-hoc summary.
+      </p>
+      <p class="case-study__body">
+        <span class="case-study__open-flag">
+          [OPEN: build timeline / specific sprint dates — to be confirmed]
+        </span>
+      </p>
+    </section>
+
+    {/* Retrospective — #retro section (AC2/AC5: resolves Story 2.4 Dot link). */}
+    <section id="retro" class="case-study__section">
+      <h2 class="case-study__section-heading">Retrospective</h2>
+      <div class="case-study__evidence-card">
+        <span class="case-study__chip" aria-label="Evidence type: Retrospective">Retro</span>
+        <h3 class="case-study__card-title">What was learned</h3>
+        <p class="case-study__card-note">
+          A retrospective run at the end of each epic, following the BMAD Method. What shipped, what
+          broke, what would change.
+        </p>
+      </div>
+      <p class="case-study__body">
+        The retrospective is not a victory lap. It is a structured review of what the BMAD Method
+        produced, where it struggled, and what the next build would do differently. It follows the
+        same format as the retrospectives visible in the Glass Box for this portfolio — the
+        questions are the same, the discipline is the same.
+      </p>
+      <p class="case-study__body">
+        What the retrospective confirmed: the agentic-engineering approach does not eliminate
+        debugging — it changes its character. Bugs in agent-generated code tend to be architectural
+        (a misunderstood constraint, a forward-reference not resolved) rather than typographic. They
+        surface at integration time, not at unit-test time. The BMAD Method's integration ACs and
+        lead smoke gates catch them at exactly that moment.
+      </p>
+      <p class="case-study__body">
+        <span class="case-study__open-flag">
+          [OPEN: full retrospective document — will be linked when the loandemo retro is published]
+        </span>
+      </p>
+    </section>
+
+    {/* Cross-links — connecting the two flagships and the related surfaces (AC4). */}
+    <section class="case-study__section case-study__section--crosslinks">
+      <h2 class="case-study__section-heading">Related work</h2>
+      <nav aria-label="Related surfaces" class="case-study__crosslinks">
+        <a href="/glass-box/" class="case-study__crosslink-card">
+          <span class="case-study__chip" aria-label="Surface: Glass Box">Glass Box</span>
+          <p class="case-study__crosslink-label">The recursion proof</p>
+          <p class="case-study__crosslink-note">
+            The other Stage-1 flagship — this portfolio, built in the open using the BMAD Method.
+            Every planning artifact is readable here.
+          </p>
+          <span class="case-study__crosslink-action" aria-hidden="true">Read</span>
+        </a>
+        <a href="/timeline/" class="case-study__crosslink-card">
+          <span class="case-study__chip" aria-label="Surface: Timeline">Timeline</span>
+          <p class="case-study__crosslink-label">The agentic turn</p>
+          <p class="case-study__crosslink-note">
+            The Master Timeline — the loandemo and portfolio flagships in the context of a
+            thirty-year engineering career.
+          </p>
+          <span class="case-study__crosslink-action" aria-hidden="true">Read</span>
+        </a>
+        <a href="/speaking/" class="case-study__crosslink-card">
+          <span class="case-study__chip" aria-label="Surface: Speaking">Speaking</span>
+          <p class="case-study__crosslink-label">
+            The 2026 talk{' '}
+            <span class="case-study__forward-ref">[forward reference: content lands in Epic 3]</span
+            >
+          </p>
+          <p class="case-study__crosslink-note">
+            loandemo is the live-on-stage proof behind the 2026 talk on agentic engineering
+            patterns. Talk details and recording will be linked here when the /speaking content
+            lands.
+          </p>
+          <span class="case-study__crosslink-action" aria-hidden="true">Read</span>
+        </a>
+      </nav>
+    </section>
+  </div>
+</MirrorLayout>
+
+<style>
+  /* ─── Case study container ────────────────────────────────────────────── */
+  .case-study {
+    margin-top: var(--space-7);
+  }
+
+  /* ─── Pull-quote (long-form editorial device, AC1) ────────────────────── */
+  /* Matches the ArtifactReader pull-quote style exactly (reuse pattern, AC1). */
+  .case-study__pull-quote {
+    margin: var(--space-7) 0;
+    padding-left: var(--space-5);
+    border-left: 3px solid var(--color-accent);
+    font-style: italic;
+    font-size: clamp(20px, 2.4vw, 25px);
+    line-height: 1.4;
+    color: var(--color-ink-primary);
+  }
+
+  .case-study__pull-quote p {
+    margin: 0;
+  }
+
+  /* ─── Sections ────────────────────────────────────────────────────────── */
+  .case-study__section {
+    margin-top: var(--space-8);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-border-hairline);
+  }
+
+  .case-study__section--overview {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 0;
+  }
+
+  .case-study__section-heading {
+    font: var(--text-h2);
+    font-family: var(--font-family-base);
+    color: var(--color-ink-primary);
+  }
+
+  /* ─── Evidence card (reusing ArtifactCard patterns, AC1) ─────────────── */
+  .case-study__evidence-card {
+    margin-top: var(--space-5);
+    padding: var(--space-card-pad);
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-lg);
+    box-shadow: none;
+  }
+
+  .case-study__card-title {
+    margin-top: var(--space-3);
+    font: var(--text-h3);
+    font-family: var(--font-family-base);
+    letter-spacing: var(--letter-spacing-h3);
+    color: var(--color-ink-primary);
+  }
+
+  .case-study__card-note {
+    margin-top: var(--space-3);
+    font-size: var(--font-size-body);
+    font-style: italic;
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+  }
+
+  /* ─── Type chip (reusing ArtifactCard chip style, AC1) ───────────────── */
+  .case-study__chip {
+    display: inline-block;
+    padding: 2px var(--space-2);
+    border: 1.5px solid var(--color-accent);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-kicker);
+    font-weight: var(--font-weight-semibold);
+    font-variant: small-caps;
+    letter-spacing: var(--letter-spacing-kicker);
+    color: var(--color-accent);
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  /* ─── Body paragraphs ─────────────────────────────────────────────────── */
+  .case-study__body {
+    margin-top: var(--space-5);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-primary);
+    max-width: var(--measure-reading);
+  }
+
+  .case-study__body:first-of-type {
+    margin-top: var(--space-5);
+  }
+
+  /* ─── Drop-cap (long-form editorial device, AC1) ─────────────────────── */
+  /* Applied to the first body <p> in the case study (the overview intro).
+     Mirrors the ArtifactReader drop-cap exactly. */
+  .case-study__section--overview .case-study__body:first-of-type::first-letter {
+    float: left;
+    font-size: 3.5em;
+    font-weight: var(--font-weight-bold);
+    line-height: 0.78;
+    color: var(--color-ink-primary);
+    margin-right: 0.06em;
+    margin-top: 0.04em;
+  }
+
+  /* ─── Inline links ─────────────────────────────────────────────────────── */
+  .case-study__link {
+    color: var(--color-accent);
+    text-underline-offset: 2px;
+  }
+
+  .case-study__link:hover {
+    color: var(--color-accent-hover);
+  }
+
+  .case-study__link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* ─── [OPEN] gap flag (AC3 / credibility floor) ───────────────────────── */
+  .case-study__open-flag {
+    /* Real text (not color alone) — the credibility gap is named visibly.
+       Ink-secondary so it reads as a note, not primary content. */
+    color: var(--color-ink-secondary);
+    font-style: italic;
+  }
+
+  /* ─── Forward-reference note ──────────────────────────────────────────── */
+  .case-study__forward-ref {
+    font-size: var(--font-size-meta);
+    color: var(--color-ink-secondary);
+    font-style: italic;
+  }
+
+  /* ─── Cross-links nav ─────────────────────────────────────────────────── */
+  .case-study__crosslinks {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+    gap: var(--space-5);
+    margin-top: var(--space-6);
+  }
+
+  .case-study__crosslink-card {
+    display: block;
+    padding: var(--space-card-pad);
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s ease;
+  }
+
+  .case-study__crosslink-card:hover {
+    border-color: #c6b89e;
+  }
+
+  .case-study__crosslink-card:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-lg);
+  }
+
+  .case-study__crosslink-label {
+    margin-top: var(--space-3);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-primary);
+  }
+
+  .case-study__crosslink-note {
+    margin-top: var(--space-2);
+    font-size: var(--font-size-meta);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+  }
+
+  .case-study__crosslink-action {
+    display: inline-block;
+    margin-top: var(--space-3);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-accent);
+  }
+
+  /* ─── Mobile ──────────────────────────────────────────────────────────── */
+  @media (max-width: 760px) {
+    .case-study__pull-quote {
+      font-size: 20px;
+    }
+
+    .case-study__crosslinks {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

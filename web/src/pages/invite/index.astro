@@ -1,0 +1,34 @@
+---
+/**
+ * /invite/ — the Invite-Me form page (Story 3.4, AC1, Decision 1/5).
+ *
+ * Fleshes the Epic-1 /invite stub. The FIRST React island of the project:
+ * InviteForm renders a real <form action="/api/invite" method="POST"> that
+ * Astro SSRs into the static HTML — JS-off it is a native POST to /api/invite
+ * which 303-redirects to /invite/thanks/ (the resilience guarantee).
+ *
+ * With JS hydrated (client:visible), the island intercepts submit for the
+ * rich validation + fetch path. The island is the THIRD sanctioned client
+ * surface (after home scene-rail + /speaking copy). All other Mirror routes
+ * remain 0-executable-JS.
+ *
+ * NFR-1: /invite/ ships the React island (the previously-unreferenced
+ * client.*.js chunk is now legitimately used here — [1.2]/A4 resolved).
+ * NFR-6: SSR output is byte-deterministic (no new Date() in render).
+ * Rule 2: trailing-slash URL.
+ */
+import MirrorLayout from '../../layouts/MirrorLayout.astro';
+import InviteForm from '../../islands/InviteForm';
+
+const LEDE =
+  'Joshua R. Brandt, MSE takes speaking and collaboration inquiries here. Send a short note and he replies personally.';
+---
+
+<MirrorLayout
+  heading="Invite me"
+  lede={LEDE}
+  title="Invite me — Joshua R. Brandt, MSE"
+  description="Send Joshua R. Brandt, MSE a speaking or collaboration inquiry. A short note reaches him directly."
+>
+  <InviteForm client:visible />
+</MirrorLayout>

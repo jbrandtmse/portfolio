@@ -1,0 +1,27 @@
+{
+  "name": "@portfolio/shared",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./schemas": {
+      "types": "./src/schemas.ts",
+      "default": "./src/schemas.ts"
+    },
+    "./events": {
+      "types": "./src/events.ts",
+      "default": "./src/events.ts"
+    }
+  },
+  "main": "./src/schemas.ts",
+  "types": "./src/schemas.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}

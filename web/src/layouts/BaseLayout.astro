@@ -1,0 +1,119 @@
+---
+/**
+ * BaseLayout — the site-wide document shell (AC3).
+ *
+ * Provides <html lang="en">, head/meta, a named JSON-LD slot (empty now —
+ * Story 1.6 fills it), the page body slot, and the GLOBAL static-fallback Footer
+ * (Story 1.7) rendered on every page. Imports the design tokens, the self-hosted
+ * font, and the global baseline.
+ *
+ * Story 4.4 adds the site-wide GuidePill island (Decision 2 NFR-1 carve-out):
+ *   - The pill is mounted site-wide here with client:only="react" so it renders
+ *     ONLY in the browser — nothing is server-rendered for it. This is what keeps
+ *     the JS-off / no-hydration HTML clean: the pill is genuinely ABSENT from the
+ *     static HTML (not an SSR'd-but-inert button), satisfying AC1's "with JS off,
+ *     the pill is absent" (the JS-off e2e asserts the pill count is 0). A
+ *     client:idle pill would SSR an inert button into the no-JS HTML — the wrong
+ *     degradation — so client:only is deliberate here.
+ *   - The heavy GuidePanel is lazily loaded INSIDE the pill island — it does NOT
+ *     ship on a content route's initial page load (the load-bearing carve-out).
+ *   - Content routes (e.g. /about/) ship: the shared React runtime chunk + the
+ *     small GuidePill chunk. The GuidePanel chunk only loads when the Guide is
+ *     first opened.
+ *   - JS-off / island-failed: the pill is absent/inert; the Static Mirror beneath
+ *     is fully usable; the hero /faq link + the Mirror carry the Guide affordance.
+ *
+ * Consumed by: index.astro and every Mirror page; Story 1.5's MirrorLayout
+ * composes on top of it. Story 1.7 realizes the footer placeholder this layout
+ * reserved with the real <Footer/> (Mirror links + /browse), so EVERY page gets
+ * the static fallback.
+ */
+import Footer from '../components/common/Footer.astro';
+import GuidePill from '../islands/GuidePill';
+
+import '../styles/tokens.css';
+import '../styles/fonts.css';
+import '../styles/global.css';
+
+interface Props {
+  /** Document <title>. Page-specific; defaults to the canonical name. */
+  title?: string;
+  /** Meta description. Optional; omitted from <head> when not provided. */
+  description?: string;
+  /**
+   * Absolute canonical URL for this page. Optional; when provided, a
+   * <link rel="canonical"> is emitted in <head>. Mirror routes pass their own
+   * self URL (Story 1.5 MirrorLayout, UX-DR10); the home leaves it unset.
+   */
+  canonical?: string;
+}
+
+const { title = 'Joshua R. Brandt, MSE', description, canonical } = Astro.props;
+
+// Privacy-first analytics — the cookieless Umami <head> script (Story 1.10, AC2;
+// AR-10), ENV-GATED. Both PUBLIC_* vars must be set at BUILD time for the script
+// to render; otherwise NOTHING is emitted. This keeps the default / CI / test
+// build shipping ZERO analytics JS (NFR-1 0-JS-by-default; the build-output
+// 0-executable-script assertions stay green WITHOUT a live Umami). `PUBLIC_`
+// vars are config (the Umami host + the public website id), NOT secrets (NFR-5),
+// and are statically inlined by Vite at build time (see .env.example).
+const umamiSrc = import.meta.env.PUBLIC_UMAMI_SRC;
+const umamiWebsiteId = import.meta.env.PUBLIC_UMAMI_WEBSITE_ID;
+const umamiEnabled = Boolean(umamiSrc && umamiWebsiteId);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    {canonical && <link rel="canonical" href={canonical} />}
+
+    {/* JSON-LD structured data — populated by Story 1.6. Empty for now. */}
+    <slot name="jsonld" />
+
+    {
+      /*
+      Cookieless Umami analytics (Story 1.10, AC2; AR-10) — ENV-GATED: rendered
+      ONLY when BOTH PUBLIC_UMAMI_SRC and PUBLIC_UMAMI_WEBSITE_ID are set at build
+      time. When unset (the default / CI / test build), NOTHING is emitted, so the
+      static build ships 0 executable JS (NFR-1) and needs no live Umami. Umami is
+      cookieless and no-PII by default (no consent banner, no cookie). `is:inline`
+      keeps Astro from bundling this third-party script — it ships exactly as
+      authored, with data-website-id + defer preserved.
+    */
+    }
+    {umamiEnabled && <script is:inline defer src={umamiSrc} data-website-id={umamiWebsiteId} />}
+  </head>
+  <body>
+    {/* Page content. */}
+    <slot />
+
+    {
+      /*
+      Global static-fallback Footer (Story 1.7): real <a> links to every Mirror
+      route + the Wordmark, rendered on EVERY page so nothing is hidden behind
+      the cinematics or the Guide (FR-8). 0 executable JS. The link list is
+      sourced from lib/routes.ts (the single source of truth shared with /browse
+      and the sitemap).
+    */
+    }
+    <Footer />
+
+    {
+      /*
+      Guide pill — site-wide (Story 4.4, Decision 2 NFR-1 carve-out).
+      client:only="react": rendered client-side only (no SSR), so the pill is
+      genuinely ABSENT from the JS-off HTML (clean degradation — AC1; the JS-off
+      e2e asserts pill count 0), not an SSR'd-but-inert button. The GuidePanel is
+      lazily loaded inside the island — NOT on initial load.
+      JS-off / failed: pill absent/inert; Mirror + /faq carry the affordance.
+    */
+    }
+    <GuidePill client:only="react" />
+  </body>
+</html>

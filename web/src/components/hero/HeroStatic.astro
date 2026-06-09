@@ -1,0 +1,507 @@
+---
+/**
+ * HeroStatic — the calm, credible opening beat of the home Scene Arc and the
+ * audience fork (Story 1.3, AC1/AC2; FR-1). This is the cold-landing first
+ * impression: it says who Josh is in seconds and offers clear ways in, without
+ * front-loading spectacle ("the wow builds; restraint is the flex").
+ *
+ * Composition (DESIGN.md §Layout + mockups/hero.html — the spine wins on
+ * conflict; the mock carries some stale strings/hrefs, corrected here):
+ *   hero-top   → Wordmark (canonical name) + the "built in the open · a BMAD
+ *                Method project" framing, divided by a hairline.
+ *   hero-grid  → two columns on desktop (copy + portrait); a compact, stacked
+ *                name+headshot lockup on mobile. Wordmark, h1, framing, and the
+ *                whole fork sit ABOVE THE FOLD on both viewports.
+ *   copy       → Kicker eyebrow → the display-type <h1> positioning line → a
+ *                calm lede (positive-assertion, no hype) → THE FORK → the quiet
+ *                Guide entry.
+ *   portrait   → a styled [OPEN: headshot asset] placeholder: a "JRB" monogram
+ *                on a --color-surface-raised mat with faint corner registration
+ *                ticks and a small museum-style label. CSS/SVG only — NOT a
+ *                heavy image, NOT stock/AI imagery (NFR-1). It carries a
+ *                meaningful text alternative.
+ *
+ * THE FORK (AC2) — three real, keyboard-operable, JS-off-followable controls:
+ *   • Primary   "Explore"                       → #thesis   (in-page Scene-Arc
+ *      anchor; the #thesis scene is built in Story 1.4 — a same-page anchor,
+ *      harmless if not yet present).
+ *   • Secondary "I'm here to book a talk"        → /speaking (bypasses the Guide
+ *      + cinematic layer — protects SM-C1, never bury the organizer).
+ *   • Quiet     "Or ask my Guide about the work" → /faq      (a quiet inline
+ *      link, visually distinct from the two fork buttons; Epic 4 switches it to
+ *      open the Guide island in place of the /faq link).
+ *   /speaking and /faq are route stubs created in Story 1.5 — the hrefs are
+ *   correct now and 404 until 1.5 lands (sequencing, not a defect).
+ *
+ * 0 JS (NFR-1): no islands, no WebGL — pure markup + scoped CSS. This static
+ * hero IS the reduced-motion / JS-off experience (NFR-2): real <a>/<button>,
+ * visible :focus-visible rings, color is never the sole signal, exactly one
+ * <h1>. There is no spectacle to lose. NO exclamation marks anywhere (no hype).
+ *
+ * Reuses Story 1.2's Wordmark / Kicker / Button + the locked tokens; it does
+ * NOT re-author tokens or chrome. The scene-rail + scene anchors (1.4), the
+ * Mirror routes (1.5), and the Guide island (Epic 4) are out of scope here.
+ */
+import Wordmark from '../common/Wordmark.astro';
+import Kicker from '../common/Kicker.astro';
+import Button from '../common/Button.astro';
+
+// Canonical strings — exact casing/punctuation, do NOT normalize (EXPERIENCE.md
+// §Named strings; the spine locks these).
+// The positioning line is Title-case with NO trailing period and NO exclamation
+// (the lowercase "…frontier." with a period is the running-prose BIO tail form —
+// not used here).
+const POSITIONING_LINE = 'Seasoned, building at the frontier';
+const FRAMING = 'built in the open · a BMAD Method project';
+const HEADSHOT_LABEL = 'Joshua R. Brandt'; // museum-label name (the wordmark carries the full canonical form)
+---
+
+<div class="hero">
+  <div class="hero__top">
+    <Wordmark size="hero" />
+    {/* The calm "built in the open" framing — positive-assertion, no hype. */}
+    <span class="hero__framing">{FRAMING}</span>
+  </div>
+
+  <div class="hero__grid">
+    <div class="hero__copy">
+      <Kicker>Software Engineer · 30 Years</Kicker>
+
+      {/* The positioning line IS the page <h1> — the single h1 on the page. */}
+      <h1 class="hero__display">{POSITIONING_LINE}</h1>
+
+      <p class="hero__lede">
+        Thirty years shipping software, now all-in on agentic engineering. This site is not a
+        description of the work — it is the work. The medium is the message.
+      </p>
+
+      {/* THE FORK — two real fork buttons (the two primary ways in). */}
+      <div class="hero__fork">
+        <span class="hero__fork-tag">Two ways in</span>
+        <div class="hero__fork-row">
+          <Button href="#thesis" variant="primary" class="hero__fork-btn">Explore</Button>
+          <span class="hero__fork-sep" aria-hidden="true">or</span>
+          <Button href="/speaking/" variant="secondary" class="hero__fork-btn"
+            >I&rsquo;m here to book a talk</Button
+          >
+        </div>
+      </div>
+
+      {
+        /*
+        The quiet, understated Guide entry — distinct from the two fork buttons.
+        href="/faq/" is the JS-off fallback (navigates to the real /faq page).
+        When the GuidePill island is loaded (JS on), a small inline script
+        progressive-enhances the click to open the Guide instead (Decision 3,
+        AC1). The link remains a real <a> — followable JS-off, no regression.
+        (Story 4.4 wires this live; resolves the Epic-1 1.3 forward-reference.)
+      */
+      }
+      <p class="hero__guide-entry">
+        <a class="hero__guide-link" href="/faq/" id="hero-guide-entry" data-guide-entry>
+          <span class="hero__guide-lead">Or </span><span class="hero__guide-underline"
+            >ask my Guide about the work</span
+          ><span class="hero__guide-arrow" aria-hidden="true">&rarr;</span>
+        </a>
+      </p>
+
+      {
+        /*
+        Progressive enhancement: intercept the hero guide-entry click when the
+        island is available. Uses is:inline so it ships as a tiny inline script
+        (identical to the scene-rail pattern). Guards typeof window + the
+        nanostores import — if nanostores fails to load (unlikely), the /faq
+        fallback remains intact (graceful degradation).
+
+        Technique: import the store atom from the module map, then addEventListener.
+        Using a module script avoids globals and is SSR-safe (only runs client-side).
+        The module import is lazy — this script fires after page load, not blocking.
+      */
+      }
+      <script>
+        // Progressive enhancement: hero guide entry → open Guide instead of /faq.
+        // JS-off: the <a href="/faq/"> still navigates normally (no change needed).
+        // JS-on: dispatch a custom 'guide:open' event; GuidePill listens for it
+        // and sets $guideOpen = true. If the island is not yet booted, the event
+        // is ignored and the browser navigates to /faq/ via the href fallback.
+        (function () {
+          const link = document.getElementById('hero-guide-entry');
+          if (!link) return;
+          link.addEventListener('click', function (e) {
+            // Only intercept if the GuidePill island is ready (it marks itself
+            // by setting a data attribute on the document element when booted).
+            if (!document.documentElement.dataset.guideReady) return;
+            e.preventDefault();
+            window.dispatchEvent(new CustomEvent('guide:open'));
+          });
+        })();
+      </script>
+    </div>
+
+    {
+      /*
+      [OPEN: headshot asset] — a styled placeholder until the real headshot
+      lands. A "JRB" monogram on a raised cream mat with faint corner
+      registration ticks and a small museum-style label. CSS only — not stock,
+      not AI-generated, not a heavy image (NFR-1). The mat is an accessible
+      labeled region; the real headshot will carry a meaningful alt.
+    */
+    }
+    <figure class="hero__portrait">
+      <div
+        class="hero__mat"
+        role="img"
+        aria-label="Portrait of Joshua R. Brandt (placeholder — headshot to come)"
+      >
+        <span class="hero__mat-ticks" aria-hidden="true"></span>
+        <span class="hero__monogram" aria-hidden="true">JRB</span>
+        <span class="hero__mat-cap" aria-hidden="true">Portrait</span>
+      </div>
+      <figcaption class="hero__label">
+        <span class="hero__label-name">{HEADSHOT_LABEL}</span><span class="hero__label-meta"
+          >Portrait</span
+        >
+      </figcaption>
+    </figure>
+  </div>
+</div>
+
+<style>
+  /* The hero stage: a faint decorative drafting grid behind the calm, framed by
+     a hairline top rule. The grid is purely decorative (no content lives in it);
+     depth is tonal + hairline, never shadow (the flat/hairline system). */
+  .hero {
+    position: relative;
+    max-width: var(--measure-content);
+    margin-inline: auto;
+    padding: var(--space-section-band) var(--space-margin-desktop);
+    background:
+      linear-gradient(to right, var(--color-grid-line) 1px, transparent 1px) 0 0 / 104px 100%,
+      linear-gradient(to bottom, var(--color-grid-line) 1px, transparent 1px) 0 0 / 100% 104px,
+      var(--color-surface-base);
+  }
+
+  /* hero-top: wordmark (left) + the framing marker (right), divided by a hairline. */
+  .hero__top {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-3);
+    border-bottom: 1px solid var(--color-border-hairline);
+    padding-bottom: var(--space-4);
+    margin-bottom: var(--space-section-band);
+  }
+
+  .hero__framing {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-meta);
+    line-height: var(--line-height-meta);
+    letter-spacing: var(--letter-spacing-meta);
+    color: var(--color-ink-secondary);
+    white-space: nowrap;
+  }
+
+  /* Two-column composition (copy + portrait) on desktop. */
+  .hero__grid {
+    display: grid;
+    grid-template-columns: 1fr minmax(212px, 286px);
+    gap: clamp(36px, 4.6vw, 72px);
+    align-items: center;
+  }
+
+  .hero__copy {
+    max-width: var(--measure-reading);
+  }
+
+  /* THE DISPLAY — the focal element, the display-type positioning line. Source
+     Serif 4 with the optical-size axis pushed toward display (opsz 60). */
+  .hero__display {
+    margin-top: var(--space-5);
+    font-family: var(--font-family-base);
+    font-optical-sizing: auto;
+    font-variation-settings: 'opsz' 60;
+    font-size: var(--font-size-display);
+    font-weight: var(--font-weight-display);
+    line-height: var(--line-height-display);
+    letter-spacing: var(--letter-spacing-display);
+    color: var(--color-ink-primary);
+    /* Hold the two-word break tidy without splitting the canonical string in the
+       DOM: the h1 text stays the contiguous "Seasoned, building at the frontier". */
+    text-wrap: balance;
+  }
+
+  .hero__lede {
+    margin-top: var(--space-5);
+    max-width: 49ch;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-lede);
+    font-weight: var(--font-weight-lede);
+    line-height: var(--line-height-lede);
+    letter-spacing: var(--letter-spacing-lede);
+    color: var(--color-ink-secondary);
+  }
+
+  /* THE FORK — the two primary ways in, made legible by a quiet tag + an "or". */
+  .hero__fork {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-top: var(--space-7);
+  }
+
+  .hero__fork-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-meta);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-accent);
+  }
+
+  /* a short navy lead-tick before the tag (echoes the Kicker's single accent). */
+  .hero__fork-tag::before {
+    content: '';
+    width: 16px;
+    height: 1px;
+    background-color: var(--color-accent);
+  }
+
+  .hero__fork-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .hero__fork-sep {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-ink-secondary);
+  }
+
+  .hero__guide-entry {
+    margin-top: var(--space-6);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border-hairline);
+  }
+
+  /* The quiet Guide entry — an inline link, deliberately NOT a button, so it
+     reads as the understated third option (DESIGN: distinct from the fork). */
+  .hero__guide-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    font-family: var(--font-family-base);
+    font-size: 13.5px;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.02em;
+    color: var(--color-accent);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+  }
+
+  .hero__guide-lead {
+    color: var(--color-ink-secondary);
+    font-weight: var(--font-weight-regular);
+  }
+
+  /* the underline is on the phrase only — a hairline that deepens on hover. */
+  .hero__guide-underline {
+    border-bottom: 1px solid var(--color-accent);
+    padding-bottom: 2px;
+  }
+
+  .hero__guide-link:hover .hero__guide-underline {
+    border-bottom-color: var(--color-accent-hover);
+  }
+
+  /* Visible keyboard focus on the quiet link (the Button component carries its
+     own :focus-visible ring; this matches it for the inline link). */
+  .hero__guide-link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* PORTRAIT — the styled [OPEN] headshot placeholder. A raised cream mat with
+     faint corner registration ticks + a quiet monogram + a museum label. Flat
+     (tonal + hairline, no shadow). */
+  .hero__portrait {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+  }
+
+  .hero__mat {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 4 / 5;
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-lg);
+  }
+
+  /* faint corner registration ticks (decorative) — the Architect's order signal. */
+  .hero__mat-ticks {
+    position: absolute;
+    inset: 13px;
+    pointer-events: none;
+    background:
+      linear-gradient(var(--color-border-hairline), var(--color-border-hairline)) left 0 top 0 /
+        15px 1px no-repeat,
+      linear-gradient(var(--color-border-hairline), var(--color-border-hairline)) left 0 top 0 / 1px
+        15px no-repeat,
+      linear-gradient(var(--color-border-hairline), var(--color-border-hairline)) right 0 bottom 0 /
+        15px 1px no-repeat,
+      linear-gradient(var(--color-border-hairline), var(--color-border-hairline)) right 0 bottom 0 /
+        1px 15px no-repeat;
+  }
+
+  /* the quiet monogram — a placeholder mark, not a face, not AI imagery. */
+  .hero__monogram {
+    font-family: var(--font-family-base);
+    font-size: clamp(40px, 4.4vw, 60px);
+    font-weight: var(--font-weight-regular);
+    letter-spacing: 0.04em;
+    color: var(--color-ink-meta-min);
+  }
+
+  .hero__mat-cap {
+    position: absolute;
+    bottom: 16px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-family: var(--font-family-base);
+    font-size: 10px;
+    letter-spacing: var(--letter-spacing-kicker);
+    text-transform: uppercase;
+    color: var(--color-ink-meta-min);
+  }
+
+  /* the museum-style label under the mat: name + a quiet "Portrait" meta. */
+  .hero__label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border-hairline);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-ink-secondary);
+  }
+
+  .hero__label-name {
+    color: var(--color-ink-primary);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  /* ── Mobile (≤760px): the compact name+headshot lockup ──────────────────────
+     The known hard part — name + headshot + positioning + fork + Guide entry
+     ALL above a small fold. Solved with a horizontal name+headshot lockup at the
+     top, a tightened display scale (~33px), and stacked full-width fork buttons.
+     Presentation only — the DOM order is unchanged. */
+  @media (max-width: 760px) {
+    .hero {
+      padding: var(--space-6) var(--space-margin-mobile);
+    }
+
+    .hero__top {
+      align-items: center;
+      padding-bottom: var(--space-3);
+      margin-bottom: var(--space-5);
+    }
+
+    .hero__framing {
+      white-space: normal;
+      text-align: right;
+      max-width: 18ch;
+    }
+
+    /* single column; the portrait rises into a compact lockup beside the kicker. */
+    .hero__grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-5);
+      align-items: stretch;
+    }
+
+    /* the portrait becomes a small horizontal chip at the top of the copy column. */
+    .hero__portrait {
+      order: -1;
+      flex-direction: row;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    .hero__mat {
+      flex: 0 0 auto;
+      width: 84px;
+      border-radius: var(--radius-md);
+    }
+
+    .hero__mat-ticks {
+      inset: 7px;
+    }
+
+    .hero__monogram {
+      font-size: 26px;
+    }
+
+    .hero__mat-cap {
+      display: none;
+    }
+
+    /* the label sits to the right of the small mat, stacked. */
+    .hero__label {
+      flex: 1 1 auto;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-1);
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+    }
+
+    .hero__display {
+      margin-top: 0;
+      /* tightened display scale to hold the fold on a phone (DESIGN: ~33px). */
+      font-size: clamp(30px, 9vw, 36px);
+      line-height: 1;
+    }
+
+    .hero__lede {
+      margin-top: var(--space-4);
+    }
+
+    .hero__fork {
+      margin-top: var(--space-5);
+    }
+
+    /* stacked, full-width fork buttons; the "or" separator is redundant stacked. */
+    .hero__fork-row {
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--space-3);
+    }
+
+    .hero__fork-sep {
+      display: none;
+    }
+
+    .hero__fork-btn {
+      width: 100%;
+    }
+  }
+</style>

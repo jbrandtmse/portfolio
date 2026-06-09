@@ -1,0 +1,87 @@
+---
+/**
+ * /browse — the Lean Static Fallback index (Story 1.7; FR-8, UX-DR13).
+ *
+ * The crawlable, JS-off map of the whole site: a single answer-first page that
+ * lists and links every Mirror route with a one-line description, so a visitor
+ * with JavaScript off or a screen reader (and an answer engine) reaches 100% of
+ * the content the agent (Epic 4) will surface — "nothing is ever hidden behind
+ * the magic" (EXPERIENCE §"The static fallback"). Parity is re-verified as each
+ * later epic lands its route content; for Stage-1 the agent-reachable set IS the
+ * current Mirror routes, all of which this page links.
+ *
+ * Built through MirrorLayout (Story 1.5): answer-first lede whose FIRST SENTENCE
+ * names "Joshua R. Brandt, MSE" (GEO floor), exactly one <h1>, self-canonical,
+ * 0 executable JS. The link list is SOURCED from the route registry
+ * (lib/routes.ts) — the single source of truth shared with the global footer and
+ * the sitemap, so the three never drift. No exclamation marks (positive
+ * assertion, no hype).
+ */
+import MirrorLayout from '../layouts/MirrorLayout.astro';
+import { NAV_ROUTES, routeHref } from '../lib/routes';
+
+const LEDE =
+  'Joshua R. Brandt, MSE keeps every page on this site reachable without JavaScript. This is the complete index — each surface, linked, with a one-line note on what it holds.';
+---
+
+<MirrorLayout
+  heading="Browse the site"
+  lede={LEDE}
+  title="Browse — Joshua R. Brandt, MSE"
+  description="A crawlable index of every page on Joshua R. Brandt, MSE's site, reachable without JavaScript — each Mirror route linked with a one-line description."
+>
+  <nav class="browse-nav" aria-label="All site pages">
+    <ul class="browse-list">
+      {
+        NAV_ROUTES.map((route) => (
+          <li class="browse-item">
+            <a class="browse-link" href={routeHref(route.path)}>
+              {route.label}
+            </a>
+            <p class="browse-desc">{route.description}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+</MirrorLayout>
+
+<style>
+  /* A calm long-form list: real links + a one-line note each, generous spacing,
+     hairline separators only (the flat system). Token-driven throughout. */
+  .browse-list {
+    list-style: none;
+    margin: var(--space-6) 0 0;
+    padding: 0;
+  }
+
+  .browse-item {
+    padding: var(--space-4) 0;
+    border-top: 1px solid var(--color-border-hairline);
+  }
+
+  .browse-item:last-child {
+    border-bottom: 1px solid var(--color-border-hairline);
+  }
+
+  /* The route name — the link affordance carries a persistent underline so it
+     never relies on color alone (Accessibility Floor); the global :focus-visible
+     ring (global.css) makes keyboard focus visible. */
+  .browse-link {
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: underline;
+    text-decoration-color: var(--color-border-hairline);
+    text-underline-offset: 0.15em;
+  }
+
+  .browse-link:hover {
+    text-decoration-color: var(--color-accent);
+  }
+
+  .browse-desc {
+    margin-top: var(--space-2);
+    color: var(--color-ink-secondary);
+    line-height: var(--line-height-body);
+  }
+</style>

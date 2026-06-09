@@ -1,0 +1,89 @@
+---
+/**
+ * /faq — the FAQ Mirror route (Story 1.5 stub; fleshed by Story 4.2).
+ *
+ * ONE source (`FAQ_ITEMS` from web/src/data/faq.ts) feeds BOTH:
+ *   (a) the visible server-rendered <h3>/<p> pairs inside the `.faq` block, and
+ *   (b) the FAQPage JSON-LD (`faqPageJsonLd(FAQ_ITEMS)`).
+ *
+ * This is load-bearing (project-rules Rule 8 / Story 3.2 AC5 lesson): a single
+ * source guarantees the visible Q&A and the JSON-LD `mainEntity` can never drift.
+ * Tests scope assertions to the VISIBLE `.faq` <h3>/<p> elements — not a
+ * whole-document `toContain` the JSON-LD could satisfy.
+ *
+ * The lede names "Joshua R. Brandt, MSE" (GEO floor, UX-DR14). Answer-first:
+ * each <p> opens with the answer in the first sentence. 0 executable JS (NFR-1);
+ * the JSON-LD `<script type="application/ld+json">` is DATA, not executable JS.
+ * No exclamation marks (positive-assertion voice). URL form: /faq/ trailing-slash.
+ *
+ * Resolves:
+ *   (a) Story 4.1's `content/kb/faq.md` `route: /faq/` citation target.
+ *   (b) The 1.3 hero's quiet "ask my Guide" → /faq fallback (still valid).
+ */
+import MirrorLayout from '../layouts/MirrorLayout.astro';
+import { FAQ_ITEMS } from '../data/faq';
+import { faqPageJsonLd, serializeJsonLd } from '../lib/jsonld';
+
+const LEDE =
+  'Joshua R. Brandt, MSE answers the questions organizers and peers ask most. These answers are the same ones his Guide cites.';
+
+// Build the FAQPage JSON-LD from the SAME FAQ_ITEMS that render the visible Q&A.
+// One source → visible text and JSON-LD mainEntity provably cannot drift (Rule 8).
+const faqJsonLd = serializeJsonLd(faqPageJsonLd(FAQ_ITEMS));
+---
+
+<MirrorLayout
+  heading="Frequently asked questions"
+  lede={LEDE}
+  title="FAQ — Joshua R. Brandt, MSE"
+  description="Answers from Joshua R. Brandt, MSE to the questions organizers and peers ask most — the same answers his Guide cites."
+>
+  {
+    /* FAQPage structured data — DATA, not executable JS (NFR-1). Built from the
+      same FAQ_ITEMS as the visible Q&A below (single source, no drift — Rule 8). */
+  }
+  <script type="application/ld+json" slot="jsonld" is:inline set:html={faqJsonLd} />
+
+  {/* Visible Q&A — server-rendered, crawlable, JS-off readable (FR-7, UX-DR14). */}
+  <section class="faq" aria-label="Frequently asked questions">
+    {
+      FAQ_ITEMS.map((item) => (
+        <div class="faq__item">
+          <h3 class="faq__question">{item.question}</h3>
+          <p class="faq__answer">{item.answer}</p>
+        </div>
+      ))
+    }
+  </section>
+</MirrorLayout>
+
+<style>
+  .faq {
+    margin-top: var(--space-8);
+  }
+
+  .faq__item {
+    margin-bottom: var(--space-8);
+    padding-bottom: var(--space-8);
+    border-bottom: 1px solid var(--color-ink-tertiary, #d4c9b8);
+  }
+
+  .faq__item:last-child {
+    border-bottom: none;
+  }
+
+  .faq__question {
+    font-size: var(--font-size-h3, var(--font-size-body));
+    font-weight: 600;
+    line-height: var(--line-height-heading, 1.3);
+    margin-bottom: var(--space-3);
+    color: var(--color-ink-primary);
+  }
+
+  .faq__answer {
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-primary);
+    max-width: var(--measure-reading, 680px);
+  }
+</style>

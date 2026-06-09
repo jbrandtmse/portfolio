@@ -1,0 +1,4 @@
+# Placeholder so the curated knowledge-base folder exists in git before its
+# content arrives. The Guide's KB markdown (content/kb/*.md, chunked at headings)
+# lands here in Story 4.1, where scripts/build-content.ts indexes it into
+# api/data/ (the Orama KB index). Do not add KB markdown ahead of Story 4.1.

@@ -1,0 +1,139 @@
+---
+/**
+ * Footer — the global static-fallback footer (Story 1.7; FR-8, UX-DR5).
+ *
+ * The JS-off / screen-reader floor: a real <footer> landmark whose <nav> holds
+ * a real <a> to EVERY Mirror route (the canonical 10). Present on every page via
+ * BaseLayout, it guarantees "nothing is ever hidden behind the magic" — the
+ * agent, the cinematics, and JS-off all reach the same surfaces (EXPERIENCE
+ * §"The static fallback"; the footer + /browse reach 100% of agent-reachable
+ * content). On mobile the scene-rail collapses but this footer is unchanged.
+ *
+ * The link list is SOURCED from the route registry (lib/routes.ts) — the single
+ * source of truth shared with /browse and the sitemap, so the three never drift
+ * (Story 1.7 Task 1; no hardcoding the list in three places).
+ *
+ * Accessibility floor (EXPERIENCE §Accessibility-Floor; UX-DR5):
+ *   • Landmark — a <footer> (contentinfo) wrapping a labelled <nav>.
+ *   • Meaningful link text — each link is the route's real name (never "here").
+ *   • Visible focus — every link inherits the global :focus-visible navy ring
+ *     (global.css, Story 1.2); no per-link override needed.
+ *   • Color is never the sole signal — links carry a persistent hairline
+ *     underline; the current page is marked with aria-current="page" AND a bold
+ *     weight + a textual "(current)" affordance, not color alone.
+ *   • Ships 0 executable JS — pure markup + scoped CSS, no island (NFR-1). The
+ *     aria-current is computed at build time from Astro.url.
+ *
+ * Includes the canonical Wordmark as the site identity (DESIGN §Components →
+ * Wordmark). No exclamation marks (positive-assertion voice).
+ *
+ * Consumed by: BaseLayout (renders it globally) → every page, every later epic.
+ */
+import { NAV_ROUTES, routeHref } from '../../lib/routes';
+import Wordmark from './Wordmark.astro';
+
+// Normalize a path for current-route comparison: strip a trailing slash so the
+// directory-build pathname ("/about/") matches the registry path ("/about");
+// the site root ("/") stays "/". 0 JS — evaluated at build time per page.
+function normalize(path: string): string {
+  return path === '/' ? '/' : path.replace(/\/+$/, '');
+}
+
+const here = normalize(Astro.url.pathname);
+---
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <Wordmark as="p" size="compact" />
+    <nav class="site-footer__nav" aria-label="Site footer">
+      <ul class="site-footer__list">
+        {
+          NAV_ROUTES.map((route) => {
+            const isCurrent = normalize(route.path) === here;
+            return (
+              <li>
+                <a
+                  href={routeHref(route.path)}
+                  class:list={['site-footer__link', { 'site-footer__link--current': isCurrent }]}
+                  aria-current={isCurrent ? 'page' : undefined}
+                >
+                  {route.label}
+                  {/* Textual current-page marker — color/weight is never the
+                      sole signal (Accessibility Floor). */}
+                  {isCurrent && <span class="site-footer__current"> (current)</span>}
+                </a>
+              </li>
+            );
+          })
+        }
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+<style>
+  /* Flat/hairline system: a hairline top rule, token-driven spacing, no shadow.
+     The footer is calm meta chrome — secondary ink, the meta type ramp. */
+  .site-footer {
+    border-top: 1px solid var(--color-border-hairline);
+    margin-top: var(--space-section-band);
+    padding: var(--space-6) var(--space-margin-desktop);
+    background-color: var(--color-surface-base);
+  }
+
+  .site-footer__inner {
+    max-width: var(--measure-reading);
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  /* The wordmark sits at the top of the footer as the site identity. */
+  .site-footer :global(.wordmark) {
+    color: var(--color-ink-secondary);
+  }
+
+  .site-footer__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+    font: var(--text-meta);
+    letter-spacing: var(--letter-spacing-meta);
+  }
+
+  /* Links carry a PERSISTENT hairline underline so the affordance never relies
+     on color alone (Accessibility Floor). The accent color + global
+     :focus-visible ring come from global.css. */
+  .site-footer__link {
+    color: var(--color-ink-secondary);
+    text-decoration: underline;
+    text-decoration-color: var(--color-border-hairline);
+    text-underline-offset: 0.15em;
+  }
+
+  .site-footer__link:hover {
+    color: var(--color-accent-hover);
+    text-decoration-color: var(--color-accent);
+  }
+
+  /* Current page: bolder weight + the textual "(current)" marker carry the
+     state without color. */
+  .site-footer__link--current {
+    color: var(--color-ink-primary);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .site-footer__current {
+    font-weight: var(--font-weight-meta);
+  }
+
+  @media (max-width: 760px) {
+    .site-footer {
+      padding: var(--space-6) var(--space-margin-mobile);
+    }
+  }
+</style>

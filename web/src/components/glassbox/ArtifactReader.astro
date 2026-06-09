@@ -1,0 +1,279 @@
+---
+/**
+ * ArtifactReader.astro — the Glass Box long-form artifact reader (Story 2.2, Task 3).
+ *
+ * Renders one allowlisted BMAD artifact as a polished long-form document (UX-DR7,
+ * FR-13). Applied exclusively on the reader surface — never the index or chrome.
+ *
+ * ORDER: type chip · title (the page <h1>, in MirrorLayout slot) · curator note
+ *        · date · body (markdown→HTML at build time, headed headings demoted).
+ *
+ * LONG-FORM EDITORIAL DEVICES (reserved for this surface only):
+ *  • Drop-cap — first letter of the first body <p>, float left, ~3.5em, weight
+ *    700, --color-ink-primary, line-height ~0.78. CSS ::first-letter on .artifact-body > p:first-of-type.
+ *  • Pull-quotes — body <blockquote>s styled italic, clamp(20px,2.4vw,25px),
+ *    line-height 1.4, 2-3px navy (--color-accent) left rule. Never on the index.
+ *
+ * MARKDOWN RENDERING (AC4, NFR-1):
+ *  • Conversion happens at BUILD TIME in the .astro frontmatter via `marked`.
+ *  • The body headings are DEMOTED by one level (#→<h2>, ##→<h3>, …) so the
+ *    page keeps exactly ONE <h1> (the title, rendered by MirrorLayout, AC3).
+ *  • Code fences → static <pre><code> (no client-side highlight runtime).
+ *  • Output is safe static HTML — no <script>, no event handlers. The page stays
+ *    at 0 executable JS (NFR-1).
+ *
+ * TOKEN-DRIVEN: no hardcoded hex values or px sizes that a token already covers.
+ * Source Serif 4 is already self-hosted (Story 1.2).
+ */
+import { Marked } from 'marked';
+import type { RendererThis, Tokens } from 'marked';
+
+import { stripFrontmatter } from '../../../../scripts/lib/markdown.ts';
+
+interface Props {
+  type: string;
+  curatorNote: string;
+  date: string;
+  body: string;
+}
+
+const { type, curatorNote, date, body } = Astro.props;
+
+// --- Markdown → HTML (build-time, 0 client JS) ----------------------------
+//
+// Custom renderer: demote every heading by one level so the rendered body
+// contains no <h1> (the title is the page's single <h1>, from MirrorLayout).
+// Also strips the YAML frontmatter block (--- ... ---) that appears at the top
+// of some artifact markdown files (e.g. the brainstorm session).
+const articleMarked = new Marked({
+  renderer: {
+    // `this.parser.parseInline(token.tokens)` renders the heading's INLINE
+    // markdown (bold/code/links/emphasis) — using the raw `token.text` would
+    // ship the unparsed source (e.g. the PRD's `#### FR-1 … `[S1]`` headings
+    // would leak literal backticks instead of <code>). We then wrap that
+    // rendered inline HTML in the DEMOTED tag.
+    heading(this: RendererThis, token: Tokens.Heading) {
+      const demoted = Math.min(token.depth + 1, 6);
+      const inner = this.parser.parseInline(token.tokens);
+      return `<h${demoted}>${inner}</h${demoted}>\n`;
+    },
+  },
+  // gfm: true by default in marked — GitHub-style fenced code blocks supported.
+});
+
+// Strip leading YAML frontmatter (--- ... ---) if present so it doesn't
+// appear as literal text in the rendered body. Uses the shared hardened
+// stripFrontmatter helper (Story 4.0) which requires the opening fence to
+// be followed by a `key:` shaped line — so a bare `---` thematic break
+// at the start of the body is NOT mistaken for frontmatter (no over-strip).
+const strippedBody = stripFrontmatter(body);
+
+const bodyHtml: string = articleMarked.parse(strippedBody) as string;
+
+// Format the ISO-8601 date as a readable string.
+const displayDate = new Date(date).toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  timeZone: 'UTC',
+});
+---
+
+<div class="artifact-reader">
+  {/* Type chip — accent-outlined small-caps, the artifact type label. */}
+  <span class="artifact-reader__chip" aria-label={`Artifact type: ${type}`}>{type}</span>
+
+  {/* Curator note — italic, ink-secondary, one line. */}
+  <p class="artifact-reader__curator-note">{curatorNote}</p>
+
+  {/* Date — formatted ISO-8601 → human-readable. */}
+  <time class="artifact-reader__date" datetime={date}>{displayDate}</time>
+
+  {/* Body — markdown rendered at build time; no <script>; drop-cap + pull-quotes via CSS. */}
+  <div class="artifact-body" set:html={bodyHtml} />
+</div>
+
+<style>
+  /* ─── Container ──────────────────────────────────────────────────────── */
+  .artifact-reader {
+    margin-top: var(--space-7);
+  }
+
+  /* ─── Type chip ─────────────────────────────────────────────────────── */
+  /* Accent-outlined small-caps label, the artifact type (UX-DR7). */
+  .artifact-reader__chip {
+    display: inline-block;
+    padding: 3px var(--space-3);
+    border: 1.5px solid var(--color-accent);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-kicker);
+    font-weight: var(--font-weight-semibold);
+    font-variant: small-caps;
+    letter-spacing: var(--letter-spacing-kicker);
+    color: var(--color-accent);
+    text-transform: uppercase;
+  }
+
+  /* ─── Curator note ───────────────────────────────────────────────────── */
+  /* Italic, ink-secondary, body size. One editorial line (UX-DR7). */
+  .artifact-reader__curator-note {
+    margin-top: var(--space-5);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    font-style: italic;
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+  }
+
+  /* ─── Date ───────────────────────────────────────────────────────────── */
+  .artifact-reader__date {
+    display: block;
+    margin-top: var(--space-3);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-meta);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-ink-secondary);
+  }
+
+  /* ─── Body ───────────────────────────────────────────────────────────── */
+  /* The rendered markdown prose at the reading measure, Source Serif 4. */
+  .artifact-body {
+    margin-top: var(--space-7);
+    max-width: var(--measure-reading);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-primary);
+  }
+
+  /* Paragraph spacing inside the body. */
+  .artifact-body :global(p) {
+    margin-top: var(--space-5);
+  }
+
+  .artifact-body :global(p:first-of-type) {
+    margin-top: 0;
+  }
+
+  /* ─── Drop-cap (long-form only, reserved for reader; never index/chrome) ─ */
+  /* Float-left, ~3.5em, weight 700, --color-ink-primary, line-height ~0.78.
+     Applied via CSS ::first-letter on the very first body paragraph (UX-DR7). */
+  .artifact-body :global(> p:first-of-type)::first-letter {
+    float: left;
+    font-size: 3.5em;
+    font-weight: var(--font-weight-bold);
+    line-height: 0.78;
+    color: var(--color-ink-primary);
+    margin-right: 0.06em;
+    margin-top: 0.04em;
+  }
+
+  /* ─── Pull-quotes (long-form only, reserved for reader; never index/chrome) */
+  /* Body <blockquote>s: italic, clamp(20px,2.4vw,25px), line-height 1.4,
+     2-3px navy (--color-accent) left rule (UX-DR7). */
+  .artifact-body :global(blockquote) {
+    margin: var(--space-7) 0;
+    padding-left: var(--space-5);
+    border-left: 3px solid var(--color-accent);
+    font-style: italic;
+    font-size: clamp(20px, 2.4vw, 25px);
+    line-height: 1.4;
+    color: var(--color-ink-primary);
+  }
+
+  .artifact-body :global(blockquote p) {
+    margin: 0;
+  }
+
+  /* ─── Heading hierarchy (body headings are demoted; h2 = top-level in body) */
+  .artifact-body :global(h2) {
+    margin-top: var(--space-7);
+    font: var(--text-h2);
+    font-family: var(--font-family-base);
+    color: var(--color-ink-primary);
+  }
+
+  .artifact-body :global(h3) {
+    margin-top: var(--space-6);
+    font: var(--text-h3);
+    font-family: var(--font-family-base);
+    color: var(--color-ink-primary);
+  }
+
+  .artifact-body :global(h4),
+  .artifact-body :global(h5),
+  .artifact-body :global(h6) {
+    margin-top: var(--space-5);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-ink-primary);
+  }
+
+  /* ─── Lists ──────────────────────────────────────────────────────────── */
+  .artifact-body :global(ul),
+  .artifact-body :global(ol) {
+    margin-top: var(--space-4);
+    padding-left: var(--space-6);
+  }
+
+  .artifact-body :global(li) {
+    margin-top: var(--space-2);
+    line-height: var(--line-height-body);
+  }
+
+  /* ─── Code fences → static <pre><code> (no highlight runtime, NFR-1) ── */
+  .artifact-body :global(pre) {
+    margin-top: var(--space-5);
+    padding: var(--space-5);
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+    font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace;
+    font-size: 0.875em;
+    line-height: 1.6;
+  }
+
+  .artifact-body :global(code) {
+    font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace;
+    font-size: 0.9em;
+  }
+
+  .artifact-body :global(pre code) {
+    font-size: inherit;
+  }
+
+  /* ─── Inline links in body ───────────────────────────────────────────── */
+  .artifact-body :global(a) {
+    color: var(--color-accent);
+    text-underline-offset: 2px;
+  }
+
+  .artifact-body :global(a:hover) {
+    color: var(--color-accent-hover);
+  }
+
+  .artifact-body :global(a:focus-visible) {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* ─── Horizontal rules ───────────────────────────────────────────────── */
+  .artifact-body :global(hr) {
+    margin: var(--space-7) 0;
+    border: none;
+    border-top: 1px solid var(--color-border-hairline);
+  }
+
+  /* ─── Mobile adjustments ─────────────────────────────────────────────── */
+  @media (max-width: 760px) {
+    .artifact-body {
+      font-size: 17px;
+    }
+  }
+</style>
