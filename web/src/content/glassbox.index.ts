@@ -90,12 +90,14 @@ export const FEATURED_SLUGS: ReadonlyArray<FeaturedNode> = [
  * (never a dead link, never color alone) per AC2 + Dev Notes ("if confirmed
  * public, else flag [OPEN: public repo/commits URL]").
  *
- * Code review (Story 2.3): the repo is currently PRIVATE — an anonymous GET of
- * https://github.com/jbrandtmse/portfolio returns HTTP 404 (web + API). Shipping
- * repoPublic:true would emit a 404 link to every public visitor (a dead external
- * link in production, contradicting the "shipping, not an IOU" recursion proof).
- * Held at `false` until the repo is made public; flip to `true` in the same
- * change that publishes the repo (the [OPEN] flag de-ghosts to a live link).
+ * Post-Epic-6 (2026-06-09): the repo was made PUBLIC by the owner and the
+ * feature branch was merged to `main`, so an anonymous GET of
+ * https://github.com/jbrandtmse/portfolio resolves HTTP 200 and the default
+ * branch (main) now carries the full source — the recursion proof is honest.
+ * `repoPublic` flipped to `true`; the index de-ghosts the [OPEN] flag to a live
+ * "Public repository →" link. (Re-confirmed reachable anonymously before flip.)
+ * If the repo is ever made private again, flip back to `false` so the index
+ * reverts to the visible [OPEN] flag rather than shipping a dead 404 link.
  */
 export const SHIPPING_NODE: ShippingNode = {
   kind: 'shipping',
@@ -106,7 +108,7 @@ export const SHIPPING_NODE: ShippingNode = {
     'Shipping on day one of Epic 1, not an IOU. The site you are reading is the artifact.',
   href: 'https://joshuabrandt.abacusai.cloud/',
   repoHref: 'https://github.com/jbrandtmse/portfolio',
-  repoPublic: false,
+  repoPublic: true,
 };
 
 /**

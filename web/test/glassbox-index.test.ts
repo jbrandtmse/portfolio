@@ -324,16 +324,16 @@ describe('Story 2.3 AC5 — real glassbox.json data, slugs resolve, chronologica
     expect(indexHtml).toContain('Live · in progress');
   });
 
-  it('the repo link is gated on repoPublic — no dead 404 anchor when private (AC2)', () => {
-    // Code review (Story 2.3): the repo is currently PRIVATE (anonymous GET of
-    // the GitHub URL returns 404). AC2 + Dev Notes require the repo URL be
-    // flagged "[OPEN]" in VISIBLE TEXT until confirmed public — never shipped as
-    // a live anchor that 404s for every public visitor. With repoPublic:false the
-    // page must render the [OPEN: …] text and emit NO live repo anchor.
-    expect(indexHtml).toContain('[OPEN: public repo/commits URL to be confirmed]');
-    expect(indexHtml).not.toContain('href="https://github.com/jbrandtmse/portfolio"');
-    // The status is carried in text (WCAG 1.4.1 / AC2 — never color/shape alone).
-    expect(indexHtml).toContain('glass-box__repo-open');
+  it('the repo link is a live anchor when repoPublic is true (repo is public, AC2)', () => {
+    // Post-Epic-6 (2026-06-09): the repo was made PUBLIC and feature merged to
+    // main, so the anonymous GitHub URL resolves 200. With repoPublic:true the
+    // index MUST de-ghost the [OPEN] flag to a real "Public repository →" anchor
+    // (the recursion proof is now honest) and emit NO [OPEN] placeholder text.
+    expect(indexHtml).toContain('href="https://github.com/jbrandtmse/portfolio"');
+    expect(indexHtml).not.toContain('[OPEN: public repo/commits URL to be confirmed]');
+    expect(indexHtml).not.toContain('glass-box__repo-open');
+    // The link carries an accessible label (WCAG — never color/shape alone).
+    expect(indexHtml).toContain('Public repository');
   });
 });
 
