@@ -100,6 +100,26 @@ export const NAV_ROUTES: RouteEntry[] = [
     sourceFile: 'web/src/pages/invite/index.astro',
   },
   {
+    path: '/technical',
+    label: 'Technical work',
+    description:
+      'Production software and systems built through disciplined agentic engineering — the technical Wing.',
+    sourceFile: 'web/src/pages/technical.astro',
+  },
+  {
+    path: '/creative',
+    label: 'Creative work',
+    description: 'Music, generative art, and design — the creative Wing.',
+    sourceFile: 'web/src/pages/creative.astro',
+  },
+  {
+    path: '/agentic',
+    label: 'Agentic work',
+    description:
+      'Agent demonstrations, BMAD Method applications, and the live Guide — the agentic Wing.',
+    sourceFile: 'web/src/pages/agentic.astro',
+  },
+  {
     path: '/browse',
     label: 'Browse',
     description: 'This index: every page on the site, reachable without JavaScript.',

@@ -302,5 +302,22 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
       testMatch: /glassbox-map\.spec\.ts/,
     },
+    // (Story 7.1) The three Wing index routes — /technical/, /creative/, /agentic/.
+    // Desktop, JS on (the JS-off case runs inline via browser.newContext()).
+    // Rule 3 real-runtime evidence for the NEW user-facing surfaces:
+    //   - AC1: reachable (single 200, no hop), one <h1>, entity-first lede,
+    //     self-canonical, live items followable JS-off + resolve 200, footer +
+    //     /browse + sitemap link each Wing, 0 authored JS (Guide-pill carve-out),
+    //     CreativeWork JSON-LD, no exclamation, WCAG 2.1 AA (axe).
+    //   - AC2 / Rule 9 BROAD credibility audit (line-scoped, mutation-relevant):
+    //     no Stage-2 playable (vector-wars/voyager/christmas-elves) as a live link;
+    //     the Suno music uses the [OPEN: Suno profile URL] honest flag (no invented
+    //     URL, not a live <a>); every live href is a known real shipped surface.
+    //   - Rule 15: no internal "not-yet" plumbing sentinel in visible Wing prose.
+    {
+      name: 'wings',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /wings\.spec\.ts/,
+    },
   ],
 });

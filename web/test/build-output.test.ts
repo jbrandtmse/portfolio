@@ -127,11 +127,11 @@ function findNodeByType(html: string, type: string): Record<string, unknown> | u
 /* ──────────────────────────────────────────────────────────────────────────
  * Story 1.7 — the global static-fallback footer + /browse.
  *
- * The canonical 10 Mirror routes (the registry order, lib/routes.ts). The global
- * footer (on EVERY page) and /browse must each link all ten; the sitemap now
- * enumerates all ten. Kept here as the test's own copy so a registry drift that
- * silently drops a route still fails these assertions (ground-truth, not the
- * same array the source reads).
+ * The canonical Mirror routes (the registry order, lib/routes.ts). The global
+ * footer (on EVERY page) and /browse must each link all of them; the sitemap
+ * enumerates all of them. Kept here as the test's own copy so a registry drift
+ * that silently drops a route still fails these assertions (ground-truth, not the
+ * same array the source reads). Story 7.1 adds /technical/, /creative/, /agentic/.
  * ────────────────────────────────────────────────────────────────────────── */
 const ALL_MIRROR_ROUTES = [
   '/',
@@ -143,6 +143,9 @@ const ALL_MIRROR_ROUTES = [
   '/glass-box/',
   '/faq/',
   '/invite/',
+  '/technical/',
+  '/creative/',
+  '/agentic/',
   '/browse/',
 ] as const;
 
@@ -877,6 +880,9 @@ const MIRROR_ROUTES = [
   '/faq',
   '/invite',
   '/about',
+  '/technical',
+  '/creative',
+  '/agentic',
   '/browse',
 ] as const;
 // Note: MIRROR_ROUTES values are kept slashless here because routeHtmlPath() uses
