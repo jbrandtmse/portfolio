@@ -106,7 +106,7 @@ development_status:
   6-2-zoomable-master-timeline: done
   6-3-glass-box-guided-tour: done
   6-4-glass-box-explorable-map: done
-  epic-6-retrospective: optional
+  epic-6-retrospective: done
 
   # Epic 7: Wings, Playables & Video-Synced Repo
   epic-7: backlog

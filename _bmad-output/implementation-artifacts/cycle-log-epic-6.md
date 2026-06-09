@@ -38,3 +38,4 @@
 2026-06-09T01:55:00Z	Story 6.4	qa_complete	spawn_at=2026-06-09T01:26:00Z model=claude-opus-4-8 tests=web/test/glassbox-index.test.ts tests_added=4 defects_fixed=0 hardened=1 first_run_failures=0 clarifications=0 closing_sections_present=true note=dev_gate_was_red_lead_fixed_qa_confirmed_green_fresh
 2026-06-09T02:10:00Z	Story 6.4	cr_complete	spawn_at=2026-06-09T01:56:00Z model=claude-opus-4-8 resolved=0 deferred=0 dismissed=3 high=0 med=0 low=0 clarifications=0 closing_sections_present=true note=flagged_6.3_typecheck_escape_for_retro
 2026-06-09T02:20:00Z	Story 6.4	smoke_complete	method=browser result=pass iterations=1 defects_caught=0 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-6.4-smoke.md model=claude-opus-4-8
+2026-06-09T02:22:00Z	Story 6.4	committed	sha=91c7fcd submodules=

@@ -153,6 +153,26 @@ Durable rules for AI dev + code-review agents working on this project. Rules are
 
 **How to apply:** for every attribute/flag/property a story introduces to drive a visual change, write the assertion against the observable result (`getComputedStyle().display !== 'none'`, the element's measured position, the visible text), and confirm + test the consumer (the CSS rule / JS handler) that turns the signal into the outcome; mutation-verify the test reds when the consumer (not just the signal) is removed.
 
+## 14. Every stage ATTESTS the canonical gate's real EXIT CODE — a prose "green" claim is not verification
+
+**Context:** Every spawned pipeline stage (dev / QA / code-review) and the lead's per-story verification, whenever it claims the canonical gate (`pnpm test:all` = typecheck → lint → format:check → test → test:e2e → lh, plus `check-deterministic`) passed.
+
+**Rule:** A stage MUST run the canonical gate and report its **actual captured exit code** (`pnpm test:all; echo $?` → must be `0`), not a prose assertion like "all tests pass / gate green." A closing summary that claims pass WITHOUT the verbatim exit status is treated as **unverified** (Rule 10) — the downstream stage (and the lead) re-runs the gate fresh and does not trust the claim. Pay special attention to **typecheck**: `astro check` prints a human summary ("Result (N files): - 1 error … Failed") where a single error is easy to miss among dozens of hints/warnings — read the `Failed`/exit code, not the eye. A stage that finds the gate red must FIX it or HALT with `## Clarification Needed`; it must NEVER report red as "pre-existing/pass" (that is the "normalizing known failures" anti-pattern).
+
+**Why:** Epic 6 surfaced the SAME gate-attestation gap twice. (1) A latent `ts(2538)` error in `glassbox-tour.spec.ts:615` (`CURATOR_NOTES[expectedSlug]`, possibly-`undefined` under `noUncheckedIndexedAccess`) shipped in **Story 6.3** and slipped past 6.3's QA **and** code-review — both claimed "typecheck green" — surfacing only as a RED gate when **Story 6.4** ran `astro check` fresh (the lead recovered it per Rule 10). (2) Story 6.4's **dev** closing summary literally said "All tests pass" while leaving the gate RED at typecheck. In both cases a stage reported a gate-state it had not verified by exit code. (Epic 6 retro, 2026-06-09.)
+
+**How to apply:** every spawn prompt's verify step says "run `pnpm test:all` and `pnpm run check-deterministic`, capture and report each exit code (must be 0); do NOT claim pass without the exit status; if red, fix or HALT — never report red as pre-existing." The lead's smoke/commit gate confirms the exit-code attestation is present before committing; a missing/contradicted attestation triggers a fresh lead re-run (Rule 10).
+
+## 15. Internal "not-yet" sentinels must never render as user-visible prose — strip them in a SHARED display layer
+
+**Context:** Any surface that renders curated/harvested data fields (descriptions, labels, notes) where the underlying data may carry an INTERNAL placeholder/sentinel meaning "not available yet" (`[OPEN: no reader yet]`, a dev TODO marker, a `__PENDING__` token) — especially when the SAME data feeds more than one surface (a static SSR component AND a JS island).
+
+**Rule:** An internal "not-yet" sentinel MUST NOT leak into user-visible prose. Encode the *status* in a structured field (e.g. `href: '[OPEN]'`, a `status` enum) and have the **display layer** decide the rendering — a clean visitor-facing affordance (a link where one exists; a "coming soon" message otherwise) — via a **SHARED helper used by EVERY surface** (static component + island), so the surfaces can't diverge. Add a test asserting the **served visible text contains no sentinel substring** (e.g. no `[OPEN` outside non-rendered data islands), mutation-verified. NOTE: this is distinct from the project's **deliberate** credibility flags — `[ASSUMPTION]` and `[OPEN: <real reason>]` (e.g. loandemo's `[OPEN: repo URL — supplied by Story 2.5]`) are intentional honest visible markers and are EXEMPT; the rule targets internal "no reader/data yet" plumbing sentinels.
+
+**Why:** Story 6.1's harvest put `"<summary>. [OPEN: no Glass Box reader yet]"` in each non-planning Dot's `description`, so the internal "no reader yet" sentinel rendered into visitor-facing prose — 22× on the static `/timeline` (shipped in 6.1, missed by the 6.1 smoke) and again in the Story 6.2 zoom island. QA surfaced it; code-review fixed it by moving the status into the `href` and adding a shared `web/src/lib/timeline-display.ts` helper (`cleanDescription`/`readerAffordance`) used by BOTH the static `FlagshipNode.astro` AND the island — rendering a clean "Full reader coming in the guided tour and explorable map" affordance instead. A single-surface fix would have diverged the two. (Epic 6 retro, 2026-06-09.)
+
+**How to apply:** never interpolate an internal sentinel into a user-facing string field; carry status in structured data; centralize the display decision in one shared helper consumed by all surfaces; add a served-output test that greps the visible (non-data-island) HTML for the sentinel class and reds if it leaks; exempt the documented deliberate `[ASSUMPTION]`/`[OPEN: <reason>]` credibility flags.
+
 ---
 
 ## Project configuration notes (not rules — durable decisions the next epic-cycle run should honor)
