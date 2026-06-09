@@ -40,3 +40,4 @@
 2026-06-09T02:20:00Z	Story 6.4	smoke_complete	method=browser result=pass iterations=1 defects_caught=0 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-6.4-smoke.md model=claude-opus-4-8
 2026-06-09T02:22:00Z	Story 6.4	committed	sha=91c7fcd submodules=
 2026-06-09T02:40:00Z	Epic 6	retrospective_complete	source=epic-6-retro-2026-06-09.md rules_codified=14,15 model=claude-opus-4-8
+2026-06-09T02:45:00Z	Epic 6	epic_merged_to_feature	repos=. feature_sha=3c4043e merge_sha=3c4043e submodules=
