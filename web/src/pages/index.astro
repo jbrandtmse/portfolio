@@ -632,6 +632,24 @@ const homeJsonLd = serializeJsonLd([
     flex-direction: column;
   }
 
+  /* Fixed, full-viewport drafting grid behind the whole home page. The grid used
+     to live on the .hero box only (max-width + hero height), so it stopped at the
+     hero's foot and disappeared on scroll. As a fixed ::before it now FILLS the
+     viewport and PERSISTS down the page. Purely decorative (pointer-events:none),
+     the deepest backdrop. Mirrors the still-poster's z-index:-2 / canvas z-index:-1
+     stack — this sits behind both at -3. The 104px ruling + faint --color-grid-line
+     match the original hero grid exactly. */
+  .home::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -3;
+    pointer-events: none;
+    background:
+      linear-gradient(to right, var(--color-grid-line) 1px, transparent 1px) 0 0 / 104px 100%,
+      linear-gradient(to bottom, var(--color-grid-line) 1px, transparent 1px) 0 0 / 100% 104px;
+  }
+
   /* Smooth scene reorder transition — only when motion is allowed (NFR-2).
      200ms ease-in-out is perceptible but not jarring for a layout shift. */
   @media (prefers-reduced-motion: no-preference) {
