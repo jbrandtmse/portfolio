@@ -41,3 +41,4 @@
 2026-06-09T02:22:00Z	Story 6.4	committed	sha=91c7fcd submodules=
 2026-06-09T02:40:00Z	Epic 6	retrospective_complete	source=epic-6-retro-2026-06-09.md rules_codified=14,15 model=claude-opus-4-8
 2026-06-09T02:45:00Z	Epic 6	epic_merged_to_feature	repos=. feature_sha=3c4043e merge_sha=3c4043e submodules=
+2026-06-09T03:10:00Z	Epic 6	deployed_live	host=joshuabrandt.abacusai.cloud build_from=feature@0d64795 timeline=200 glass-box=200 api_guide=200 islands_hydrate=zoom+tour_chunks_200 failed_resources=0 sentinel_leak=0 model=claude-opus-4-8
