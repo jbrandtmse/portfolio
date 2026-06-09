@@ -194,28 +194,6 @@ export function applyRecuration(directive: RecurationDirective, motionAllowed = 
 }
 
 /**
- * Reset all scene CSS order, depth, and skip marks to the canonical DOM state.
- * Used when re-curation is cleared / the Guide is closed.
- *
- * Story 5.4: also clears the data-depth and data-skip attributes introduced
- * by the director's-mode deepen + skip verbs.
- */
-export function resetRecuration(): void {
-  if (typeof document === 'undefined') return;
-
-  SCENE_IDS.forEach((id) => {
-    const section = document.querySelector<HTMLElement>(`section#${CSS.escape(id)}`);
-    if (section) {
-      section.style.removeProperty('--scene-order');
-      section.style.removeProperty('order');
-      // Story 5.4: clear director's-mode marks
-      section.removeAttribute('data-depth');
-      section.removeAttribute('data-skip');
-    }
-  });
-}
-
-/**
  * Initialize the home page for re-curation support.
  *
  * - Ensures `<main class="home">` is a flex column (CSS handles this; this call

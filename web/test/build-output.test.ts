@@ -75,10 +75,22 @@ function countLdJsonScripts(html: string): number {
     .length;
 }
 
-/** Count EXECUTABLE scripts — every <script> that is NOT an ld+json data block. */
+/**
+ * Count EXECUTABLE scripts — every <script> that is NOT a JSON data block.
+ *
+ * Excluded:
+ *   - type="application/ld+json"  — structured-data blocks
+ *   - type="application/json"     — data islands (Story 6.2: timeline-data island)
+ *
+ * Story 6.2 adds a <script type="application/json" id="timeline-data"> on /timeline/.
+ * This is a JSON payload (not executable code), so it must not be counted here.
+ */
 function countExecutableScripts(html: string): number {
-  return allScriptTags(html).filter((tag) => !/type\s*=\s*["']application\/ld\+json["']/i.test(tag))
-    .length;
+  return allScriptTags(html).filter(
+    (tag) =>
+      !/type\s*=\s*["']application\/ld\+json["']/i.test(tag) &&
+      !/type\s*=\s*["']application\/json["']/i.test(tag),
+  ).length;
 }
 
 /**
@@ -971,9 +983,19 @@ describe('Story 1.5 — every Mirror route is a real, answer-first, self-canonic
         ).not.toMatch(/InviteForm\.[a-zA-Z0-9_-]+\.js/);
       }
 
-      // 3. Script count: /speaking has 3 (pill + copy enhancement), /invite has 3 (pill + InviteForm island).
-      //    All other Mirror routes have exactly 2 (the two pill-init scripts).
-      if (route === '/speaking' || route === '/invite') return;
+      // 3. Script count:
+      //    /speaking: 3 (pill + copy enhancement)
+      //    /invite: 3 (pill + InviteForm island)
+      //    /timeline: 3 (pill + deferred ZoomableTimeline mount shim — Story 6.2)
+      //    /glass-box: 3 (pill + deferred GlassBoxTour mount shim — Story 6.3)
+      //    All other Mirror routes: exactly 2 (the two pill-init scripts).
+      if (
+        route === '/speaking' ||
+        route === '/invite' ||
+        route === '/timeline' ||
+        route === '/glass-box'
+      )
+        return;
       expect(
         countExecutableScripts(html),
         `${route} must have exactly 2 executable scripts (Guide pill init scripts); all content routes share this pill carve-out`,
@@ -1432,17 +1454,24 @@ describe('Story 1.6 — JSON-LD is valid, parseable, and DATA (not executable JS
   it('routes WITHOUT a JSON-LD owner emit no ld+json (e.g. /timeline, /glass-box)', () => {
     // These stubs get their structured data in later epics; no ld+json yet.
     // Story 4.4: ALL routes now ship the site-wide Guide pill (2 exec scripts).
-    // The 0-executable-JS invariant for these routes is now updated to 2 (pill only).
+    // Story 6.2: /timeline ships 3 exec scripts (2 pill + 1 deferred ZoomableTimeline mount shim).
     // NOTE: /invite is excluded here — it ships the InviteForm island (3 exec scripts).
-    for (const route of ['/timeline', '/glass-box'] as const) {
-      const html = readFileSync(routeHtmlPath(route), 'utf8');
-      expect(countLdJsonScripts(html)).toBe(0);
-      // Story 4.4 carve-out: exactly 2 exec scripts (Guide pill init only, not more)
-      expect(
-        countExecutableScripts(html),
-        `${route} must have exactly 2 exec scripts (Guide pill only, no other app JS)`,
-      ).toBe(2);
-    }
+    const timelineHtml = readFileSync(routeHtmlPath('/timeline'), 'utf8');
+    expect(countLdJsonScripts(timelineHtml)).toBe(0);
+    // Story 6.2 carve-out: /timeline ships 3 exec scripts (pill + deferred mount shim).
+    expect(
+      countExecutableScripts(timelineHtml),
+      '/timeline must have exactly 3 exec scripts (Guide pill + deferred ZoomableTimeline mount shim)',
+    ).toBe(3);
+
+    const glasBoxHtml = readFileSync(routeHtmlPath('/glass-box'), 'utf8');
+    expect(countLdJsonScripts(glasBoxHtml)).toBe(0);
+    // Story 6.3 carve-out: /glass-box now has 3 exec scripts (Guide pill x2 + GlassBoxTour mount shim x1)
+    expect(
+      countExecutableScripts(glasBoxHtml),
+      '/glass-box must have exactly 3 exec scripts (Guide pill x2 + GlassBoxTour mount shim x1)',
+    ).toBe(3);
+
     // /invite has no ld+json but has the React island (Story 3.4) — assert separately.
     const inviteHtml = readFileSync(routeHtmlPath('/invite'), 'utf8');
     expect(countLdJsonScripts(inviteHtml)).toBe(0); // still no structured data
@@ -1649,6 +1678,8 @@ describe('Story 1.10 — env-gated Umami is OFF by default (AC2 / IAC-2; NFR-1)'
     for (const route of MIRROR_ROUTES) {
       if (route === '/speaking') continue; // carve-out — 3 exec scripts (pill + copy + extra init)
       if (route === '/invite') continue; // carve-out — 3 exec scripts (pill + InviteForm island)
+      if (route === '/timeline') continue; // carve-out — 3 exec scripts (pill + deferred ZoomableTimeline mount shim, Story 6.2)
+      if (route === '/glass-box') continue; // carve-out — 3 exec scripts (pill + deferred GlassBoxTour mount shim, Story 6.3)
       const html = readFileSync(routeHtmlPath(route), 'utf8');
       // Story 4.4: content routes ship exactly 2 exec scripts (the Guide pill init scripts)
       expect(
@@ -2418,26 +2449,47 @@ describe('Story 3.5 — home #close: InviteForm island + follow CTAs + creative 
  * ────────────────────────────────────────────────────────────────────────── */
 
 describe('Story 4.4 — Guide pill site-wide carve-out (AC1, AC5, Decision 2 NFR-1)', () => {
-  it('every content route (not / or /invite) ships exactly 2 exec scripts — the Guide pill init (per-route, specific — Rule 8)', () => {
+  it('every content route (not / or /invite) ships the correct exec-script count — the Guide pill init (per-route, specific — Rule 8)', () => {
     // The 2 exec scripts are Astro's client:idle hydration initializer for GuidePill.
     // They reference the shared React runtime + the tiny GuidePill wrapper.
     // This is per-route specific (Rule 8 — honest, not a whole-site toContain).
-    const CONTENT_ROUTES = [
+    //
+    // CARVE-OUT (Story 6.2): /timeline ships 3 exec scripts (2 pill + 1 deferred ZoomableTimeline
+    // mount shim). The shim is the onMotionAllowed gate + requestIdleCallback + dynamic import —
+    // the ZoomableTimeline island + GSAP chunks are NOT in the initial exec-script set.
+    const CONTENT_ROUTES_2 = [
       '/about',
-      '/timeline',
       '/faq',
       '/browse',
       '/speaking/reel',
       '/work/loandemo',
-      '/glass-box',
     ] as const;
-    for (const route of CONTENT_ROUTES) {
+    for (const route of CONTENT_ROUTES_2) {
       const html = readFileSync(routeHtmlPath(route), 'utf8');
       expect(
         countExecutableScripts(html),
         `${route}: must have exactly 2 exec scripts (Guide pill init); found different count`,
       ).toBe(2);
     }
+
+    // /timeline: 3 exec scripts (pill (2) + deferred ZoomableTimeline mount shim (1)).
+    const timelineHtml = readFileSync(routeHtmlPath('/timeline'), 'utf8');
+    expect(
+      countExecutableScripts(timelineHtml),
+      '/timeline: must have exactly 3 exec scripts (2 Guide pill + 1 deferred ZoomableTimeline mount shim)',
+    ).toBe(3);
+    // The heavy island chunk must NOT be in the initial exec set.
+    expect(timelineHtml).not.toMatch(/ZoomableTimeline\.[a-zA-Z0-9_-]+\.js/);
+    expect(timelineHtml).not.toMatch(/cinematic-gsap\.[a-zA-Z0-9_-]+\.js/);
+
+    // /glass-box: 3 exec scripts (pill (2) + deferred GlassBoxTour mount shim (1)) — Story 6.3.
+    const glasboxHtml = readFileSync(routeHtmlPath('/glass-box'), 'utf8');
+    expect(
+      countExecutableScripts(glasboxHtml),
+      '/glass-box: must have exactly 3 exec scripts (2 Guide pill + 1 deferred GlassBoxTour mount shim)',
+    ).toBe(3);
+    // The heavy island chunk must NOT be in the initial exec set.
+    expect(glasboxHtml).not.toMatch(/GlassBoxTour\.[a-zA-Z0-9_-]+\.js/);
   });
 
   it('every route is absent the GuidePanel chunk in initial HTML — lazy load is working (AC5, Decision 2)', () => {

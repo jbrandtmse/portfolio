@@ -46,8 +46,8 @@
 import { fileURLToPath } from 'node:url';
 
 import { buildKbIndexGenerator } from './build-kb-index.ts';
+import { harvestTimelineGenerator } from './harvest-timeline.ts';
 import { renderGlassboxGenerator } from './render-glassbox.ts';
-import { renderTimelineGenerator } from './render-timeline.ts';
 
 /**
  * A single content generator: a named, deterministic step that reads only from
@@ -81,9 +81,11 @@ export const CONTENT_GENERATORS: readonly Generator[] = [
   // Story 2.1: publish allowlist + Glass Box render pipeline (AR-13).
   // Reads content/glassbox.allowlist.ts → writes web/src/generated/glassbox.json.
   renderGlassboxGenerator,
-  // Story 2.4: Master Timeline hand-curated manifest (FR-16).
-  // Reads content/timeline/dots.ts → writes web/src/generated/timeline.json.
-  renderTimelineGenerator,
+  // Story 6.1: deterministic git→Dot auto-harvest (FR-17).
+  // Reads content/timeline.allowlist.ts + _bmad-output/ artifacts (via allowlist only)
+  // → merges with TIMELINE_SEED curated seed → writes web/src/generated/timeline.json.
+  // Replaces Stage-1 renderTimelineGenerator (hand-curated only).
+  harvestTimelineGenerator,
   // Story 4.1: build-kb-index generator (content/kb/*.md → Orama corpus → api/data/).
   // Reads content/kb/*.md (default-deny, sorted) → chunks at heading boundaries →
   // writes api/data/kb-index.json (gitignored, deterministic chunk corpus).

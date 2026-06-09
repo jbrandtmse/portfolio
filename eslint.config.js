@@ -2,6 +2,7 @@
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import astro from 'eslint-plugin-astro';
+import reactHooks from 'eslint-plugin-react-hooks';
 
 // Minimal Node global set (avoids pulling in the `globals` package for a
 // scaffold). Used for config files and the Node-runtime api service.
@@ -60,6 +61,23 @@ export default tseslint.config(
     files: ['**/*.d.ts'],
     rules: {
       '@typescript-eslint/triple-slash-reference': 'off',
+    },
+  },
+  {
+    // React hooks rules — scoped to the React .tsx islands ONLY (Rule 12
+    // mechanical guard, Story 6.0). Enables `react-hooks/exhaustive-deps` and
+    // `react-hooks/rules-of-hooks` as hard errors so stale-closure bugs of
+    // the Epic-5 class (5.2 `currentDepth`, 5.4 `motionAllowed`) are caught
+    // at lint time rather than in production.
+    //
+    // Scope is deliberate: `.astro` files and Node/api/scripts have no React
+    // hooks; widening would produce noise/false-positives there.
+    // When a future island lands outside `web/src/islands/`, widen the glob.
+    files: ['web/src/islands/**/*.{ts,tsx}'],
+    plugins: { 'react-hooks': reactHooks },
+    rules: {
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'error',
     },
   },
 );

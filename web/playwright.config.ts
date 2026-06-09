@@ -261,6 +261,17 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
       testMatch: /depth-dial\.spec\.ts/,
     },
+    // (Story 6.3) Glass Box guided tour — deferred React island.
+    // AC1: narrated step-through (visible narration + reader link per step, mutation-verified)
+    // AC2: reader link resolves 200; no ghost node reader links
+    // AC3: JS-off spine full (Rule 7); reduced-motion tour usable, no animated transitions
+    // AC4: narration traces to known curatorNotes (Rule 9)
+    // Information feature (not gated behind onMotionAllowed): mounts for all JS-on users.
+    {
+      name: 'glassbox-tour',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /glassbox-tour\.spec\.ts/,
+    },
     // (Story 5.3) Agent re-curation by stated intent. Desktop, JS on.
     // Rule 7: proven to EXECUTE (not skipped); exercises:
     //   (a) organizer → speaker at visual order 1 (CSS order property)
@@ -278,6 +289,18 @@ export default defineConfig({
       name: 'recuration',
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
       testMatch: /recuration\.spec\.ts/,
+    },
+    // (Story 6.4) Glass Box explorable map — static clustered phase-map section.
+    // AC1: 6 artifacts + live site grouped into 4 phases in order; free-browse.
+    // AC2: every featured node is a real <a> reachable JS-off (headline, Rule 7);
+    //      each featured reader resolves 200; ghosts non-link (Rule 9).
+    // AC3: credibility (curated strings, no fabricated ghost link); composition
+    //      (6.3 tour + spine + JS-off baseline intact); no new exec JS (map is static).
+    // Includes axe-core AA on the new map section.
+    {
+      name: 'glassbox-map',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /glassbox-map\.spec\.ts/,
     },
   ],
 });

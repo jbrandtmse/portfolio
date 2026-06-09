@@ -58,20 +58,26 @@ test.describe('Glass Box index — /glass-box/', () => {
     await expect(lede).toContainText(/^Joshua R\. Brandt, MSE/);
   });
 
-  test('ships exactly 2 executable scripts — Guide pill only (NFR-1, Story 4.4 carve-out)', async ({
+  test('ships exactly 3 executable scripts — Guide pill (2) + tour bootstrap (1) (Story 6.3)', async ({
     page,
   }) => {
     await page.goto(INDEX_PATH);
-    // Story 4.4: ALL routes ship the site-wide Guide pill (2 exec scripts).
+    // Story 4.4 carve-out: ALL routes ship 2 Guide pill scripts.
+    // Story 6.3 adds 1 tour bootstrap script (information feature, not decoration).
+    // application/json data islands do NOT count (they are not executable).
     const executableScripts = await page.evaluate(() => {
       const scripts = Array.from(document.querySelectorAll('script'));
-      return scripts.filter((s) => s.type !== 'application/ld+json' && s.type !== 'importmap')
-        .length;
+      return scripts.filter(
+        (s) =>
+          s.type !== 'application/ld+json' &&
+          s.type !== 'importmap' &&
+          s.type !== 'application/json',
+      ).length;
     });
     expect(
       executableScripts,
-      `/glass-box/ must ship exactly 2 exec scripts (Guide pill only); found ${executableScripts}`,
-    ).toBe(2);
+      `/glass-box/ must ship exactly 3 exec scripts (Guide pill x2 + tour x1); found ${executableScripts}`,
+    ).toBe(3);
   });
 
   test('card titles are h3 (not h1/h2) — clean heading hierarchy', async ({ page }) => {
@@ -243,7 +249,9 @@ test.describe('Glass Box index — artifact cards + links (AC5)', () => {
 
   test('the shipping node links the live site (real external link)', async ({ page }) => {
     await page.goto(INDEX_PATH);
-    const liveSiteLink = page.locator('a[href="https://joshuabrandt.abacusai.cloud/"]');
+    // Story 6.4: the live site link now also appears in the phase map — use .first()
+    // to avoid strict-mode violation (both links are real <a> tags — either is valid).
+    const liveSiteLink = page.locator('a[href="https://joshuabrandt.abacusai.cloud/"]').first();
     await expect(liveSiteLink).toBeAttached();
   });
 });
@@ -267,11 +275,16 @@ test.describe('Glass Box index — artifact cards + links (AC5)', () => {
 test.describe('Glass Box index — external live-site link honesty (Story 3.0, AC3/AC4)', () => {
   const LIVE_SITE_HREF = 'https://joshuabrandt.abacusai.cloud/';
 
+  // Story 6.4 note: the live site link now appears twice — once in the spine's
+  // ArtifactCard (`.artifact-card__link`) and once in the explorable map
+  // (`.glass-box__node-link`). These tests scope to the SPINE's ArtifactCard
+  // link (the surface these tests were written for — Rule 8 scoped assertion).
   test('the live-site anchor opens in the SAME tab (target="_self", rel=noopener)', async ({
     page,
   }) => {
     await page.goto(INDEX_PATH);
-    const liveLink = page.locator(`a[href="${LIVE_SITE_HREF}"]`);
+    // Scoped to the spine's ArtifactCard link (Rule 8: test the specific surface).
+    const liveLink = page.locator(`.glass-box__spine-section a[href="${LIVE_SITE_HREF}"]`);
     await expect(liveLink).toHaveCount(1);
     // Curated external link opens in place (by design) — the behavior the label
     // must be honest about.
@@ -283,7 +296,8 @@ test.describe('Glass Box index — external live-site link honesty (Story 3.0, A
     page,
   }) => {
     await page.goto(INDEX_PATH);
-    const liveLink = page.locator(`a[href="${LIVE_SITE_HREF}"]`);
+    // Scoped to the spine's ArtifactCard link (Rule 8: test the specific surface).
+    const liveLink = page.locator(`.glass-box__spine-section a[href="${LIVE_SITE_HREF}"]`);
     await expect(liveLink).toHaveCount(1);
     // It must carry an accessible label…
     const ariaLabel = await liveLink.getAttribute('aria-label');
@@ -300,7 +314,8 @@ test.describe('Glass Box index — external live-site link honesty (Story 3.0, A
     page,
   }) => {
     await page.goto(INDEX_PATH);
-    const liveLink = page.locator(`a[href="${LIVE_SITE_HREF}"]`);
+    // Scoped to the spine's ArtifactCard link (Rule 8: test the specific surface).
+    const liveLink = page.locator(`.glass-box__spine-section a[href="${LIVE_SITE_HREF}"]`);
     // The index passes externalLabel={`Visit the live site: ${href}`} — the
     // explicit label must be honored verbatim (not replaced by the default).
     await expect(liveLink).toHaveAttribute('aria-label', `Visit the live site: ${LIVE_SITE_HREF}`);
@@ -388,7 +403,8 @@ test.describe('Glass Box index — JS-off (AC4)', () => {
     }
 
     // The live site link should also be a real <a>.
-    const liveSiteLink = page.locator('a[href="https://joshuabrandt.abacusai.cloud/"]');
+    // Story 6.4: the live site link appears in both the spine and phase map — use .first().
+    const liveSiteLink = page.locator('a[href="https://joshuabrandt.abacusai.cloud/"]').first();
     await expect(liveSiteLink).toBeAttached();
 
     await context.close();
