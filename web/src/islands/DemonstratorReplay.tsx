@@ -44,7 +44,7 @@
  *   - Esc closes the replay and returns focus to the start button.
  *   - Decorative step-number indicators stay aria-hidden.
  */
-import React, { useCallback, useEffect, useId, useRef } from 'react';
+import React, { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useStore } from '@nanostores/react';
 import { $demoStep } from '../lib/store';
 
@@ -52,10 +52,15 @@ import { $demoStep } from '../lib/store';
 // Types
 // ---------------------------------------------------------------------------
 
+/** Watch/Learn mode for the Demonstrator (Story 9.2). */
+export type DemoMode = 'watch' | 'learn';
+
 export interface ReplayStage {
   id: number;
   stage: string;
   narration: string;
+  /** Step-by-step BMAD Method lesson for this stage (Story 9.2). */
+  teaching: string;
   artifacts: { label: string; href: string; status: 'live' | 'open' }[];
   observable: string;
 }
@@ -115,18 +120,26 @@ export function clearActiveSpineStage(): void {
 interface DemonstratorReplayProps {
   /** Ordered lifecycle stages from content/demonstrator.ts. */
   stages: ReplayStage[];
-  /** Answer-first framing lead text (for intro hint). */
+  /** Answer-first framing lead text for Watch mode intro hint. */
   framingLead: string;
+  /** Framing lead text for Learn mode intro hint. */
+  framingLeadLearn: string;
 }
 
 export function DemonstratorReplay({
   stages,
   framingLead,
+  framingLeadLearn,
 }: DemonstratorReplayProps): React.ReactElement {
   const step = useStore($demoStep);
   const replayId = useId();
   const startBtnRef = useRef<HTMLButtonElement>(null);
   const stepPanelRef = useRef<HTMLDivElement>(null);
+
+  // ---- Watch / Learn mode (Story 9.2) --------------------------------------
+  // Default: Watch mode (shows the 9.1 narration of what happened).
+  // Learn mode shows the 9.2 teaching (what the BMAD Method prescribes + why).
+  const [mode, setMode] = useState<DemoMode>('watch');
 
   // Whether the replay is open (step is a number, not null).
   const isOpen = step !== null;
@@ -166,6 +179,9 @@ export function DemonstratorReplay({
   }, []); // totalSteps not captured; only checks current > 0
 
   // ---- Scroll + focus when step changes ------------------------------------
+  // Rule 12: `mode` is in deps even though scrollToSpineStage does not depend
+  // on it — the effect re-runs on mode change to re-focus the panel, keeping
+  // keyboard users in context after a mode switch during an open replay.
   useEffect(() => {
     if (step === null) return;
     const activeStage = stepStage(stages, step);
@@ -175,7 +191,20 @@ export function DemonstratorReplay({
     requestAnimationFrame(() => {
       stepPanelRef.current?.focus();
     });
-  }, [step, stages]);
+  }, [step, stages, mode]);
+
+  // ---- Sync active mode to the static spine section (Story 9.2 / Rule 13) --
+  // Sets `data-active-mode` on `.demonstrator__spine-section` so CSS can hide
+  // the non-active mode content for JS-on visitors (the static baseline always
+  // shows both for JS-off). Mutation-verified: removing this effect leaves the
+  // spine always showing both modes regardless of the toggle.
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const spineSection = document.querySelector('.demonstrator__spine-section');
+    if (spineSection) {
+      spineSection.setAttribute('data-active-mode', mode);
+    }
+  }, [mode]);
 
   // ---- Keyboard handling ---------------------------------------------------
   const handleKeyDown = useCallback(
@@ -196,9 +225,39 @@ export function DemonstratorReplay({
 
   const activeStage = stepStage(stages, step);
 
+  // ---- Resolve the visible per-stage content based on mode -----------------
+  // Watch mode shows narration (9.1 — what happened).
+  // Learn mode shows teaching (9.2 — what the BMAD Method prescribes + why).
+  const visibleContent = activeStage
+    ? mode === 'learn'
+      ? activeStage.teaching
+      : activeStage.narration
+    : null;
+
   // ---- Render --------------------------------------------------------------
   return (
     <div className="dr" data-testid="demonstrator-replay" onKeyDown={handleKeyDown}>
+      {/* ── Watch / Learn mode toggle (Story 9.2) ───────────────────────── */}
+      {/* Keyboard-operable toggle; default Watch; switching shows teaching content. */}
+      <div className="dr__mode-toggle" role="group" aria-label="Demonstrator mode">
+        <button
+          className={`dr__mode-btn${mode === 'watch' ? ' dr__mode-btn--active' : ''}`}
+          data-testid="demo-mode-watch"
+          onClick={() => setMode('watch')}
+          aria-pressed={mode === 'watch'}
+        >
+          Watch
+        </button>
+        <button
+          className={`dr__mode-btn${mode === 'learn' ? ' dr__mode-btn--active' : ''}`}
+          data-testid="demo-mode-learn"
+          onClick={() => setMode('learn')}
+          aria-pressed={mode === 'learn'}
+        >
+          Learn
+        </button>
+      </div>
+
       {/* ── Start control (always visible) ──────────────────────────────── */}
       <div className="dr__start-row">
         <button
@@ -231,9 +290,10 @@ export function DemonstratorReplay({
           ref={stepPanelRef}
           className="dr__panel"
           data-testid="demo-panel"
+          data-demo-mode={mode}
           tabIndex={-1}
           role="region"
-          aria-label={`Replay step ${(step ?? 0) + 1} of ${totalSteps}: ${activeStage.stage}`}
+          aria-label={`${mode === 'learn' ? 'Learn' : 'Watch'} step ${(step ?? 0) + 1} of ${totalSteps}: ${activeStage.stage}`}
           aria-live="polite"
           aria-atomic="true"
         >
@@ -247,9 +307,10 @@ export function DemonstratorReplay({
             {activeStage.stage}
           </h3>
 
-          {/* Narration — from the manifest only (Rule 9) */}
-          <p className="dr__narration" data-testid="demo-narration">
-            {activeStage.narration}
+          {/* Per-stage content — narration (Watch) or teaching (Learn) */}
+          {/* Rule 13: visibleContent changes with mode — the visible text is the user-observable outcome. */}
+          <p className="dr__narration" data-testid="demo-narration" data-demo-content={mode}>
+            {visibleContent}
           </p>
 
           {/* Artifact links */}
@@ -315,7 +376,7 @@ export function DemonstratorReplay({
       {/* ── Intro hint when replay is closed ────────────────────────────── */}
       {!isOpen && (
         <p className="dr__intro-hint" data-testid="demo-intro-hint" aria-hidden="true">
-          {framingLead}
+          {mode === 'learn' ? framingLeadLearn : framingLead}
         </p>
       )}
     </div>

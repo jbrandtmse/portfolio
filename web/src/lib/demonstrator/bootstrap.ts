@@ -22,6 +22,7 @@ import type { ReplayStage } from '../../islands/DemonstratorReplay';
 interface ReplayData {
   stages: ReplayStage[];
   framingLead: string;
+  framingLeadLearn: string;
 }
 
 let booted = false;
@@ -77,6 +78,7 @@ export async function boot(): Promise<void> {
     createElement(DemonstratorReplay, {
       stages: data.stages,
       framingLead: data.framingLead,
+      framingLeadLearn: data.framingLeadLearn,
     }),
   );
 }

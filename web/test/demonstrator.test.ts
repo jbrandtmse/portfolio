@@ -69,6 +69,7 @@ const FIXTURE_STAGES: ReplayStage[] = [
     id: 1,
     stage: 'The brief',
     narration: 'A brief narration for the brief.',
+    teaching: 'A brief teaching for the brief stage.',
     artifacts: [{ label: 'Product Brief →', href: '/glass-box/product-brief/', status: 'live' }],
     observable: 'A published brief.',
   },
@@ -76,6 +77,7 @@ const FIXTURE_STAGES: ReplayStage[] = [
     id: 2,
     stage: 'Brainstorm and research',
     narration: 'A brief narration for brainstorm.',
+    teaching: 'A brief teaching for the brainstorm stage.',
     artifacts: [
       { label: 'Brainstorm Session →', href: '/glass-box/brainstorm/', status: 'live' },
       { label: 'Pre-Brief Research →', href: '/glass-box/pre-brief-research/', status: 'live' },
@@ -86,6 +88,7 @@ const FIXTURE_STAGES: ReplayStage[] = [
     id: 3,
     stage: 'The PRD',
     narration: 'A brief narration for the PRD.',
+    teaching: 'A brief teaching for the PRD stage.',
     artifacts: [
       { label: 'Product Requirements Document →', href: '/glass-box/prd/', status: 'live' },
     ],
@@ -468,5 +471,106 @@ describe('content/kb/demonstrator.md — Guide-grounding KB entry (Story 9.1 / R
     expect(kbContent, 'must have route frontmatter').toMatch(/^route:\s+\/demonstrator\//m);
     expect(kbContent, 'must have label frontmatter').toMatch(/^label:\s+/m);
     expect(kbContent, 'must have title frontmatter').toMatch(/^title:\s+/m);
+  });
+
+  // Story 9.2 additions — teaching layer documentation
+  it('references Watch mode and Learn mode (9.2 teaching layer)', () => {
+    expect(kbContent, 'demonstrator.md must describe Learn mode').toMatch(/\bLearn\b/);
+    expect(kbContent, 'demonstrator.md must describe Watch mode').toMatch(/\bWatch\b/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// (e) DEMONSTRATOR_STAGES teaching field — credibility (Story 9.2 / Rule 9)
+// ---------------------------------------------------------------------------
+
+describe('DEMONSTRATOR_STAGES teaching field credibility (Story 9.2 / Rule 9)', () => {
+  it('every stage has a non-empty teaching field', () => {
+    for (const stage of DEMONSTRATOR_STAGES) {
+      expect(
+        stage.teaching.trim().length,
+        `stage ${stage.id} must have a non-empty teaching field`,
+      ).toBeGreaterThan(0);
+    }
+  });
+
+  it('teaching is distinct from narration for every stage (not a copy)', () => {
+    // Mutation-verified: if teaching === narration for any stage, the toggle would
+    // show no visible content change (Rule 13 violation).
+    for (const stage of DEMONSTRATOR_STAGES) {
+      expect(
+        stage.teaching.trim(),
+        `stage ${stage.id} teaching must differ from narration`,
+      ).not.toBe(stage.narration.trim());
+    }
+  });
+
+  it('no stage teaching contains an exclamation mark (positive-assertion voice)', () => {
+    for (const stage of DEMONSTRATOR_STAGES) {
+      expect(stage.teaching, `stage ${stage.id} teaching must not contain "!"`).not.toContain('!');
+    }
+  });
+
+  it('no stage teaching references ADRs (no docs/adr/ in this project — Rule 9)', () => {
+    const ADR_CLASS = /\bADRs?\b|architecture decision records?|\bdocs\/adr\//i;
+    for (const stage of DEMONSTRATOR_STAGES) {
+      expect(
+        ADR_CLASS.test(stage.teaching),
+        `stage ${stage.id} teaching must not mention ADRs`,
+      ).toBe(false);
+    }
+  });
+
+  it('no stage teaching invents a BMAD acronym expansion — Rule 9 fabrication class (AC3)', () => {
+    // Rule 9: the BMAD acronym is NOT expanded in this project.
+    // "BMAD Method" is the correct reference; any invented expansion is a fabrication.
+    // Mutation-verified: adding "Build, Measure, Adapt, Deliver" to any teaching field
+    // reds this test.
+    const INVENTED_EXPANSION =
+      /Build,?\s+Measure[- ,]|build[- ]measure[- ]adapt|Agile[- ]Driven|Method[- ]Agile[- ]Driven/i;
+    for (const stage of DEMONSTRATOR_STAGES) {
+      expect(
+        INVENTED_EXPANSION.test(stage.teaching),
+        `stage ${stage.id} teaching must not invent a BMAD acronym expansion`,
+      ).toBe(false);
+    }
+  });
+
+  it('no stage teaching claims every planning artifact is published (Rule 9)', () => {
+    // Rule 9: only 6 Glass Box readers exist; claiming all artifacts are published is fabrication.
+    const ALL_PUBLISHED_CLAIM =
+      /every.*planning artifact.*published|all.*planning artifact.*published|all.*artifacts.*in the glass box/i;
+    for (const stage of DEMONSTRATOR_STAGES) {
+      expect(
+        ALL_PUBLISHED_CLAIM.test(stage.teaching),
+        `stage ${stage.id} teaching must not claim every planning artifact is published`,
+      ).toBe(false);
+    }
+  });
+
+  it('no stage teaching refers to "the BMAD Method" by an invented multi-word acronym expansion', () => {
+    // AC3 acronym-expansion guard: the project uses "the BMAD Method" — no expansion.
+    // Guard the class broadly: any "B___ M___ A___ D___" four-word expansion pattern.
+    const FOUR_WORD_EXPANSION = /\bB\w+\s+M\w+\s+A\w+\s+D\w+\b/;
+    for (const stage of DEMONSTRATOR_STAGES) {
+      expect(
+        FOUR_WORD_EXPANSION.test(stage.teaching),
+        `stage ${stage.id} teaching must not expand BMAD as a four-word acronym`,
+      ).toBe(false);
+    }
+  });
+
+  it('no stage teaching describes a step or role not in the real BMAD pipeline (Rule 9 — no fabricated methodology)', () => {
+    // Guard against invented roles/steps not in the real pipeline
+    // (brief → brainstorm/research → PRD → UX/architecture → epics → dev/QA/code-review/smoke → retro).
+    // Known real roles: dev, QA, code review, lead smoke, retrospective.
+    // Invented roles to forbid as fabrication signals (not in the real method).
+    const INVENTED_ROLES = /\bscrum master\b|\bproduct owner\b|\bsprint review\b|\bvelocity\b/i;
+    for (const stage of DEMONSTRATOR_STAGES) {
+      expect(
+        INVENTED_ROLES.test(stage.teaching),
+        `stage ${stage.id} teaching must not introduce invented methodology roles`,
+      ).toBe(false);
+    }
   });
 });

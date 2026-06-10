@@ -46,16 +46,21 @@ const LEDE =
 const FRAMING_LEAD =
   'Each stage below traces to a real, published artifact or a verifiable build event. Nothing here was reconstructed after the fact.';
 
+const FRAMING_LEAD_LEARN =
+  'The Learn mode walks through what the BMAD Method prescribes at each stage and why — grounded in the real methodology used to build this site.';
+
 // Replay data for the deferred island mount.
 const replayData = JSON.stringify({
   stages: DEMONSTRATOR_STAGES.map((s) => ({
     id: s.id,
     stage: s.stage,
     narration: s.narration,
+    teaching: s.teaching,
     artifacts: s.artifacts,
     observable: s.observable,
   })),
   framingLead: FRAMING_LEAD,
+  framingLeadLearn: FRAMING_LEAD_LEARN,
 });
 
 const demonstratorJsonLd = serializeJsonLd(
@@ -107,6 +112,12 @@ const demonstratorJsonLd = serializeJsonLd(
     <h2 class="demonstrator__spine-heading">The build lifecycle</h2>
     <ol class="demonstrator__spine" role="list">
       {
+        /*
+         * FR-8 / Story 9.2: BOTH modes' content are present in the static DOM.
+         * JS-off visitors read both the Watch narration and the Learn teaching
+         * for each stage. Each mode section is clearly labeled via a visible
+         * header. The JS-on island hides non-active mode content via CSS.
+         */
         DEMONSTRATOR_STAGES.map((stage) => (
           <li class="demonstrator__spine-item" data-demo-stage={stage.id}>
             {/* Stage number — decorative */}
@@ -116,7 +127,24 @@ const demonstratorJsonLd = serializeJsonLd(
 
             <div class="demonstrator__stage-body">
               <h3 class="demonstrator__stage-label">{stage.stage}</h3>
-              <p class="demonstrator__stage-narration">{stage.narration}</p>
+
+              {/* Watch mode content — the narration of what happened (9.1) */}
+              <div
+                class="demonstrator__mode-section demonstrator__mode-section--watch"
+                data-spine-mode="watch"
+              >
+                <p class="demonstrator__mode-label">Watch — how this site was built</p>
+                <p class="demonstrator__stage-narration">{stage.narration}</p>
+              </div>
+
+              {/* Learn mode content — BMAD Method teaching (9.2) */}
+              <div
+                class="demonstrator__mode-section demonstrator__mode-section--learn"
+                data-spine-mode="learn"
+              >
+                <p class="demonstrator__mode-label">Learn — what the BMAD Method prescribes</p>
+                <p class="demonstrator__stage-teaching">{stage.teaching}</p>
+              </div>
 
               {/* Artifact links — real <a> for live, honest note for open */}
               <div class="demonstrator__artifact-links">
@@ -310,6 +338,41 @@ const demonstratorJsonLd = serializeJsonLd(
     margin: 0;
   }
 
+  /* ─── Mode sections (FR-8 / Story 9.2) ─────────────────────────────────── */
+  /* JS-off: both mode sections visible, clearly labeled. */
+  .demonstrator__mode-section {
+    margin-bottom: var(--space-4);
+  }
+
+  .demonstrator__mode-label {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-ink-meta-min);
+    margin-bottom: var(--space-2);
+  }
+
+  .demonstrator__stage-teaching {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+    margin-bottom: var(--space-4);
+    max-width: var(--measure-reading);
+  }
+
+  /* JS-on: hide the non-active mode section when the island sets data-active-mode. */
+  /* Default (no attribute): show both for JS-off and before the island mounts. */
+  [data-active-mode='watch'] .demonstrator__mode-section--learn {
+    display: none;
+  }
+
+  [data-active-mode='learn'] .demonstrator__mode-section--watch {
+    display: none;
+  }
+
   /* ─── Active stage highlight (driven by DemonstratorReplay island) ──── */
   [data-demo-stage] {
     transition: none; /* instant by default */
@@ -371,6 +434,50 @@ const demonstratorJsonLd = serializeJsonLd(
     max-width: var(--measure-reading);
   }
 
+  /* ─── Watch / Learn mode toggle (Story 9.2) ─────────────────────────────── */
+  .dr__mode-toggle {
+    display: flex;
+    gap: var(--space-1);
+    margin-bottom: var(--space-5);
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-sm);
+    padding: var(--space-1);
+    width: fit-content;
+  }
+
+  .dr__mode-btn {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-meta);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-ink-secondary);
+    background: none;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-4);
+    cursor: pointer;
+  }
+
+  .dr__mode-btn--active {
+    background: var(--color-accent);
+    /* On-accent text: light cream on navy (the established GuidePill/InviteForm
+       pattern). `--color-bg` is undefined in tokens.css, so it resolved to the
+       inherited dark ink (#211b14) on the dark navy accent — a 1.48:1 contrast
+       AA failure on the active toggle (Story 9.2 QA / AC4 axe). */
+    color: var(--color-surface-base);
+  }
+
+  .dr__mode-btn:not(.dr__mode-btn--active):hover {
+    color: var(--color-ink-primary);
+    background: var(--color-surface-raised);
+  }
+
+  .dr__mode-btn:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
   .dr__start-row {
     display: flex;
     align-items: center;
@@ -393,7 +500,9 @@ const demonstratorJsonLd = serializeJsonLd(
 
   .dr__start-btn:hover {
     background: var(--color-accent);
-    color: var(--color-bg);
+    /* On-accent text: light cream on navy (same undefined-`--color-bg` fix as
+       the active mode toggle — kept consistent for the hover state). */
+    color: var(--color-surface-base);
   }
 
   .dr__start-btn:focus-visible {
@@ -426,7 +535,9 @@ const demonstratorJsonLd = serializeJsonLd(
     padding: var(--space-5);
     border: 1px solid var(--color-border-hairline);
     border-radius: var(--radius-sm);
-    background: var(--color-bg-subtle, var(--color-bg));
+    /* `--color-bg-subtle` and `--color-bg` are both undefined in tokens.css;
+       use the defined raised-surface token for the subtle panel mat. */
+    background: var(--color-surface-raised);
   }
 
   .dr__panel:focus {

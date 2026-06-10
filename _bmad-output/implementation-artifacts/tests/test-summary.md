@@ -1,31 +1,49 @@
-# Test Automation Summary — Story 9.1 (The Demonstrator), QA stage
+# Test Automation Summary — Story 9.2 (BMAD Build Walkthrough teaching layer), QA stage
 
 Date: 2026-06-10 · Stage: `qa-generate-e2e-tests` (epic-cycle) · Verified fresh (Rule 10).
 
 ## Gate exit codes (Rule 14/16)
+- `pnpm test:all` → exit **0** (typecheck `Result (125 files): 0 errors`; scripts 185, api 233, web 968 unit; e2e 464 passed / 0 skipped / 0 failed; Lighthouse pass).
+- `pnpm run check-deterministic` → exit **0** (web/dist byte-identical across two clean builds).
 
-- `pnpm test:all` → **exit 0** (typecheck → lint → format:check → test → test:e2e → lh; 1377 unit + 453 e2e + Lighthouse all green).
-- `pnpm run check-deterministic` → **exit 0** (web/dist byte-identical across two clean builds; 158 files; matching tree hash).
+## Defect found + fixed (AC4, HIGH — axe AA contrast)
+- `.dr__mode-btn--active` (the active Watch/Learn toggle, NEW in 9.2) used `color: var(--color-bg)`.
+  `--color-bg` is undefined in `tokens.css`, so the foreground resolved to inherited dark ink
+  (`#211b14`) on the dark navy accent (`#1e3a5f`) → **1.48:1 contrast, an AA failure** (need 4.5:1).
+  The active toggle text was effectively invisible. AC4 explicitly requires "axe AA 0 on
+  `/demonstrator/`", but the dedicated `axe.spec.ts` only audits `/` and `/about/` — so this
+  surface had no axe AA coverage and the defect shipped past dev.
+  Fixed to `var(--color-surface-base)` (the established on-accent light-cream pattern used by
+  GuidePill / InviteForm / GuidePanel). Sibling `.dr__start-btn:hover` and the `.dr__panel`
+  background carried the same undefined-token anti-pattern; fixed to defined tokens.
 
-## Credibility audit (Rule 9 — broad)
+## Tests hardened / added (`web/e2e/demonstrator.spec.ts`, `demonstrator` project — Rule 7)
+- [x] AC4 — `/demonstrator/` zero axe wcag2a/wcag2aa violations (default Watch) — NEW, closes the gap.
+- [x] AC4 — `/demonstrator/` zero axe wcag2a/wcag2aa violations (Learn mode, replay open) — NEW.
+- Demonstrator e2e project now 33 tests, all run (0 skipped).
 
-Built + served the real site; resolved every manifest link against `web/dist/`.
+## Mutation verification (all reverted clean)
+1. Inject "Build Measure Adapt Deploy" into a teaching field → both unit acronym guards RED. ✓
+2. Break the panel mode consumer (always-narration) → Rule 13 visible-teaching e2e RED. ✓
+3. Remove the `data-active-mode` spine effect → Rule 13 static-spine hide/show e2e RED. ✓
+4. Revert the AC4 contrast fix → new axe AA test RED (color-contrast serious, 1.48:1). ✓
 
-- 6 published Glass Box readers + `/timeline/` all resolve 200; live-site URL is the deployed origin; 4 ghost readers (architecture/epics/retrospective/shipping) correctly absent and rendered as honest non-link "coming in the Glass Box" spans.
-- Verified groundings: "47 ideas" (brainstorm `ideas_generated: 47`), "thirty-year arc" (timeline 1996–2026), "Source Serif 4" + "ink-on-cream" (UX Design reader).
-- **Two stale-count fabrications found + FIXED:** "Fourteen project rules" (actual 17) and "nine epics" (actual 10). Reworded to durable qualitative framing in `content/demonstrator.ts` + `content/kb/demonstrator.md`. Stage-4 observable "will be published" forward-promise softened to a present fact.
-- Final served output: no `[OPEN:`, no ADR, no invented BMAD expansion, no exclamation, no ghost-as-live link.
+## Rule 9 credibility audit (BROAD) — CLEAN
+Every `teaching` field + `content/kb/demonstrator.md` audited against `content/kb/bmad-method.md`
+and the real pipeline/rules: no invented BMAD acronym expansion, no fabricated methodology
+step/role/guarantee, no "every artifact published", no ADRs (no `docs/adr/` exists). BDD-shape
+(Given/When/Then), the four-pass dev→QA→code-review→smoke pipeline, and the
+codification-to-numbered-rules claim all trace to real artifacts.
 
-## Tests added / hardened (mutation-verified)
+## Rule 12 / Rule 13 / AC2
+- Rule 12: `react-hooks/exhaustive-deps` is a hard ESLint error; `DemonstratorReplay.tsx` lints
+  clean — `mode` is in both `useEffect` deps (no stale closure).
+- Rule 13: the visible per-stage content change (panel) AND the static-spine hide/show are both
+  asserted on observable outcomes, mutation-verified (see above).
+- AC2 / NFR-1: build-output test confirms `/demonstrator/` ships exactly 3 executable scripts
+  (2 Guide pill + 1 deferred bootstrap) — the toggle added NO second island; both modes' content
+  present in the static `<ol>`, labeled per mode.
 
-- `web/test/build-output.test.ts` (+3): every LIVE href resolves on the real build; no ghost reader linked as live `<a>`; no stale fixed epic/rule count in visible prose. All red on injected fabrication, revert green.
-- `scripts/build-kb-index.test.ts` (+1): generalized the architecture-doc credibility guard to cover epics/retrospective/shipping ghost docs (exempts `[OPEN:]`/`[ASSUMPTION]`). Mutation-verified.
-- `web/e2e/demonstrator.spec.ts` (+4): focus-moves-to-panel (AC1/Rule 13, mutation-verified); reduced-motion mounts+steps (AC2, via `page.emulateMedia`, non-vacuity asserted) + static spine under reduced motion; served ghost-link guard; served stale-count guard (scoped to prose, not decorative numbers).
-
-## Coverage
-
-- AC1 (replay observable): demonstrator e2e — 22 defined = 22 run, 0 skipped (Rule 7); registered `demonstrator` Playwright project.
-- AC2 (crawlable + safe + NFR-1): 8-item static `<ol>`, JS-off followable links, reduced-motion usable, 3 exec scripts (carve-out).
-- AC3 (credibility): manifest + served-output + KB guards above.
-- AC4 (composition): route in `routes.ts` (footer/sitemap, trailing-slash), KB indexed, CreativeWork JSON-LD valid, Glass Box tour unaffected (24/24 green), `$tourStep`/`$demoStep` independent.
-- Rule 12: `react-hooks/exhaustive-deps` clean on `DemonstratorReplay.tsx`.
+## No-regression
+9.1 Watch replay green; `GlassBoxTour` untouched (no glassbox files modified, no glassbox e2e
+failures).

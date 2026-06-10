@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-06T02:19:05Z
-last_updated: 2026-06-09T20:10:00Z
+last_updated: 2026-06-10T09:32:00Z
 project: portfolio
 project_key: NOKEY
 tracking_system: file-system
@@ -129,7 +129,7 @@ development_status:
   epic-9: in-progress
   9-0-epic-deferred-cleanup: done
   9-1-the-demonstrator: done
-  9-2-bmad-build-walkthrough: backlog
+  9-2-bmad-build-walkthrough: done
   9-3-speaker-one-sheet-epk: backlog
   epic-9-retrospective: optional
 
