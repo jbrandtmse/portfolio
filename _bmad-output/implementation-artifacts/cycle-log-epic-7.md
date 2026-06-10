@@ -37,3 +37,4 @@
 2026-06-10T02:45:00Z	Story 7.3	voyager_embed_smoke_complete	method=browser result=pass iframe_src=https://voyager.abacusai.cloud/ poster=real_saturn_frame nfr1_lazy=true gate_exit=0 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-7.3-voyager.png model=claude-opus-4-8
 2026-06-10T03:00:00Z	Story 7.3	committed	sha=3da4e54 submodules= note=voyager_embed+retro+rules;push_unblocked_via_PAT
 2026-06-10T03:02:00Z	Epic 7	epic_merged_to_feature	repos=. feature_sha=b58c437 merge_sha=b58c437 submodules= note=PORT-1-epic7_deleted_local+remote
+2026-06-10T03:30:00Z	Epic 7	deployed_live	host=joshuabrandt.abacusai.cloud build_from=feature@fdefa09 pages=23 wings=200 featured-work=live playables=vector-wars+christmas-elves_200 christmas-elves_canvas_boots=true voyager_hostname=200 api_guide=200_answers_ttft1899_nofallback model=claude-opus-4-8
