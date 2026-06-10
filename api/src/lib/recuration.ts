@@ -132,40 +132,78 @@ export const INTENT_SKIP_TABLE: Record<Intent, SceneId[]> = {
 // ---------------------------------------------------------------------------
 
 /**
- * The canonical slug list for the home featured-work set (Story 7.2).
+ * The canonical slug list for the home featured-work set (post-Epic-7 polish: 7 items).
  * Must match `FEATURED_SLUGS` in `content/featured-work.ts` and the
  * `data-featured-slug` attributes on the home page items.
  */
-export const FEATURED_SLUGS = ['loandemo', 'portfolio', 'guide', 'music'] as const;
+export const FEATURED_SLUGS = [
+  'loandemo',
+  'vector-wars',
+  'voyager',
+  'christmas-elves',
+  'portfolio',
+  'guide',
+  'music',
+] as const;
 
 export type FeaturedSlug = (typeof FEATURED_SLUGS)[number];
 
 /**
- * Intent → featured-work order TABLE (Story 7.2, FR-25).
+ * Intent → featured-work order TABLE (Story 7.2, FR-25; expanded post-Epic-7 polish).
  *
- * Each entry is a permutation of all 4 FEATURED_SLUGS — the curated default
+ * Each entry is a permutation of all 7 FEATURED_SLUGS — the curated default
  * order is `default`; non-default intents surface what matters most first.
  * The model NEVER emits this — it emits only the intent enum.
  *
  * Guard rules (enforced by assertFeaturedInvariants):
- *   (a) Every entry is a permutation of all 4 FEATURED_SLUGS (no drops, no additions).
- *   (b) `default` = the curated default order (loandemo → portfolio → guide → music).
+ *   (a) Every entry is a permutation of all 7 FEATURED_SLUGS (no drops, no additions).
+ *   (b) `default` = the curated default order
+ *       (loandemo → vector-wars → voyager → christmas-elves → portfolio → guide → music).
+ *
+ * Per-intent ordering rationale:
+ *   organizer — speaking/booking focus: guide first (the live agent), then portfolio
+ *     (the BMAD proof they want to audit), loandemo, christmas-elves (shows creative
+ *     range), voyager, vector-wars, music.
+ *   builder  — technical-curious: vector-wars first (striking Three.js demo), voyager
+ *     (real NASA SPICE-kernel sim), loandemo (flagship case study), portfolio (Glass Box),
+ *     guide, christmas-elves, music.
+ *   explorer — show me something cool: voyager first (stunning NASA cinematic sim),
+ *     vector-wars (retro 3D shooter), christmas-elves (fun playable), loandemo, portfolio,
+ *     guide, music.
  */
 export const INTENT_FEATURED_ORDER_TABLE: Record<Intent, FeaturedSlug[]> = {
-  // Default: curated default order
-  default: ['loandemo', 'portfolio', 'guide', 'music'],
-  // Organizer: speaking/booking focus → guide first (the live agent they'll interact with),
-  // then loandemo (the case study that shows the process), portfolio, music.
-  organizer: ['guide', 'loandemo', 'portfolio', 'music'],
-  // Builder/agentic-curious: the Glass Box (portfolio) first, then the Guide agent, loandemo, music.
-  builder: ['portfolio', 'guide', 'loandemo', 'music'],
-  // Explorer: show me something cool → loandemo (the flagship demo) first, then guide, portfolio, music.
-  explorer: ['loandemo', 'guide', 'portfolio', 'music'],
+  // Default: curated default order (loandemo anchors; playables next; agentic; music last)
+  default: ['loandemo', 'vector-wars', 'voyager', 'christmas-elves', 'portfolio', 'guide', 'music'],
+  // Organizer: speaking/booking focus → guide first, portfolio (BMAD proof), loandemo,
+  // christmas-elves (creative range), voyager, vector-wars, music.
+  organizer: [
+    'guide',
+    'portfolio',
+    'loandemo',
+    'christmas-elves',
+    'voyager',
+    'vector-wars',
+    'music',
+  ],
+  // Builder/agentic-curious: technical demos first → vector-wars, voyager, loandemo,
+  // portfolio (Glass Box), guide, christmas-elves, music.
+  builder: ['vector-wars', 'voyager', 'loandemo', 'portfolio', 'guide', 'christmas-elves', 'music'],
+  // Explorer: show me something cool → voyager first (NASA cinematic), vector-wars,
+  // christmas-elves (playable game), loandemo, portfolio, guide, music.
+  explorer: [
+    'voyager',
+    'vector-wars',
+    'christmas-elves',
+    'loandemo',
+    'portfolio',
+    'guide',
+    'music',
+  ],
 };
 
 /**
  * Assert that INTENT_FEATURED_ORDER_TABLE satisfies the permutation invariant:
- * every entry is a permutation of all 4 FEATURED_SLUGS (no drop, no add, no duplicate).
+ * every entry is a permutation of all 7 FEATURED_SLUGS (no drop, no add, no duplicate).
  *
  * Called at module load (startup) — throws so a misconfigured table is caught
  * immediately. Also exported for mutation-verification in tests (Rule 8).
@@ -181,7 +219,7 @@ export function assertFeaturedInvariants(): void {
     // (a) Same length
     if (order.length !== FEATURED_SLUGS.length) {
       throw new Error(
-        `[recuration] FEATURED VIOLATION: intent "${intent}" featuredOrder has ${order.length} items, expected ${FEATURED_SLUGS.length}`,
+        `[recuration] FEATURED VIOLATION: intent "${intent}" featuredOrder has ${order.length} items, expected ${FEATURED_SLUGS.length} (all FEATURED_SLUGS)`,
       );
     }
     // (a) All slugs valid
@@ -197,7 +235,7 @@ export function assertFeaturedInvariants(): void {
     for (let i = 0; i < sortedCanonical.length; i++) {
       if (sortedOrder[i] !== sortedCanonical[i]) {
         throw new Error(
-          `[recuration] FEATURED VIOLATION: intent "${intent}" featuredOrder is not a permutation of all 4 featured slugs. Got ${JSON.stringify(sortedOrder)}, expected ${JSON.stringify(sortedCanonical)}`,
+          `[recuration] FEATURED VIOLATION: intent "${intent}" featuredOrder is not a permutation of all ${FEATURED_SLUGS.length} featured slugs. Got ${JSON.stringify(sortedOrder)}, expected ${JSON.stringify(sortedCanonical)}`,
         );
       }
     }

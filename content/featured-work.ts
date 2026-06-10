@@ -16,12 +16,28 @@
  *  The Guide's re-curation engine maps intent → a permutation of this same set
  *  (server-owned `INTENT_FEATURED_ORDER_TABLE` in `api/src/lib/recuration.ts`);
  *  the DOM order is ALWAYS this curated default; only CSS `order` changes on intent.
+ *
+ *  7-item default (post-Epic-7 polish):
+ *    loandemo       — flagship case study (anchors the set)
+ *    vector-wars    — most immediately impressive playable (3D rail shooter)
+ *    voyager        — stunning technical showpiece (NASA trajectory sim)
+ *    christmas-elves — creative playable (Phaser puzzle game)
+ *    portfolio      — agentic Wing (the BMAD proof)
+ *    guide          — agentic Wing (the live grounded agent)
+ *    music          — open item (honest flag, always last)
  */
 
 import type { WingItem } from './wings.js';
 
 /** Stable slug — must match `INTENT_FEATURED_ORDER_TABLE` keys in the api. */
-export type FeaturedSlug = 'loandemo' | 'portfolio' | 'guide' | 'music';
+export type FeaturedSlug =
+  | 'loandemo'
+  | 'vector-wars'
+  | 'voyager'
+  | 'christmas-elves'
+  | 'portfolio'
+  | 'guide'
+  | 'music';
 
 /** A featured-work entry with its stable slug. */
 export interface FeaturedItem extends WingItem {
@@ -34,10 +50,13 @@ export interface FeaturedItem extends WingItem {
  * The curated featured-work set, in default order.
  *
  * ITEMS (all traced to real `content/wings.ts` entries):
- *   loandemo   — technical Wing, loandemo case study — live
- *   portfolio  — agentic Wing, this portfolio / BMAD proof — live
- *   guide      — agentic Wing, the Guide agent — live
- *   music      — creative Wing, Music on Suno — open (honest flag)
+ *   loandemo        — technical Wing, loandemo case study — live
+ *   vector-wars     — technical Wing, Three.js 3D rail shooter — live
+ *   voyager         — technical Wing, Voyager 1/2 cinematic mission replay — live
+ *   christmas-elves — creative Wing, Phaser puzzle game — live
+ *   portfolio       — agentic Wing, this portfolio / BMAD proof — live
+ *   guide           — agentic Wing, the Guide agent — live
+ *   music           — creative Wing, Music on Suno — open (honest flag)
  *
  * This is the CURATED DEFAULT order (FR-8 crawlable order = this DOM order).
  * The api INTENT_FEATURED_ORDER_TABLE permutes these slug names; it never
@@ -53,6 +72,36 @@ export const FEATURED_WORK: FeaturedItem[] = [
     status: 'live',
     wing: 'technical',
     sourceNote: 'content/wings.ts — technical Wing, item 0.',
+  },
+  {
+    slug: 'vector-wars',
+    title: 'Vector Wars — retro 3D rail shooter',
+    blurb:
+      'A retro-styled 3D rail shooter in the vein of the 1983 Star Wars arcade game, built with Three.js and Vite and playable live in the browser.',
+    href: '/work/vector-wars/',
+    status: 'live',
+    wing: 'technical',
+    sourceNote: 'content/wings.ts — technical Wing, item 1.',
+  },
+  {
+    slug: 'voyager',
+    title: 'Voyager — cinematic mission replay',
+    blurb:
+      'A high-fidelity, browser-based cinematic replay of the Voyager 1 and Voyager 2 missions. Real NASA/NAIF SPICE-kernel trajectories drive Three.js 3D rendering through the planetary encounters.',
+    href: '/work/voyager/',
+    status: 'live',
+    wing: 'technical',
+    sourceNote: 'content/wings.ts — technical Wing, item 2.',
+  },
+  {
+    slug: 'christmas-elves',
+    title: 'Christmas Elves — puzzle game',
+    blurb:
+      "A Lemmings-inspired Christmas puzzle game built with Phaser 3 and TypeScript. Guide elves from the sleigh to the tree by assigning abilities to overcome each level's obstacles.",
+    href: '/work/christmas-elves/',
+    status: 'live',
+    wing: 'creative',
+    sourceNote: 'content/wings.ts — creative Wing, item 1.',
   },
   {
     slug: 'portfolio',

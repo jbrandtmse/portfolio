@@ -612,9 +612,10 @@ describe("getDirectiveForIntent() — full director's directive (Story 5.4, AC1)
           Array.isArray(directive.featuredOrder),
           `${intent} featuredOrder must be an array`,
         ).toBe(true);
-        expect(directive.featuredOrder, `${intent} featuredOrder must have 4 slugs`).toHaveLength(
-          FEATURED_SLUGS.length,
-        );
+        expect(
+          directive.featuredOrder,
+          `${intent} featuredOrder must have ${FEATURED_SLUGS.length} slugs`,
+        ).toHaveLength(FEATURED_SLUGS.length);
       }
     }
   });
@@ -646,7 +647,7 @@ describe('assertFeaturedInvariants() — real INTENT_FEATURED_ORDER_TABLE is val
     expect(() => assertFeaturedInvariants()).not.toThrow();
   });
 
-  it('every intent featuredOrder has exactly 4 slugs (permutation — no drops, no additions)', () => {
+  it('every intent featuredOrder has exactly 7 slugs (permutation — no drops, no additions)', () => {
     for (const [intent, order] of Object.entries(INTENT_FEATURED_ORDER_TABLE)) {
       // Rule 8: scoped to the length field
       // Mutation-verification: truncate any entry → this reds.
@@ -691,11 +692,14 @@ describe('assertFeaturedInvariants() — real INTENT_FEATURED_ORDER_TABLE is val
     }
   });
 
-  it('default intent featuredOrder = curated default order (loandemo→portfolio→guide→music)', () => {
+  it('default intent featuredOrder = curated default order (loandemo→vector-wars→voyager→christmas-elves→portfolio→guide→music)', () => {
     // Rule 8: scoped to default entry contents
     // Mutation-verification: changing the default order reds this.
     expect(INTENT_FEATURED_ORDER_TABLE.default).toEqual([
       'loandemo',
+      'vector-wars',
+      'voyager',
+      'christmas-elves',
       'portfolio',
       'guide',
       'music',
@@ -706,7 +710,15 @@ describe('assertFeaturedInvariants() — real INTENT_FEATURED_ORDER_TABLE is val
     const originalDefault = INTENT_FEATURED_ORDER_TABLE.default;
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (INTENT_FEATURED_ORDER_TABLE as any).default = ['loandemo', 'portfolio', 'guide'];
+      (INTENT_FEATURED_ORDER_TABLE as any).default = [
+        'loandemo',
+        'vector-wars',
+        'voyager',
+        'christmas-elves',
+        'portfolio',
+        'guide',
+        // music intentionally omitted → wrong length
+      ];
       expect(() => assertFeaturedInvariants()).toThrow('[recuration] FEATURED VIOLATION');
     } finally {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -718,7 +730,15 @@ describe('assertFeaturedInvariants() — real INTENT_FEATURED_ORDER_TABLE is val
     const originalDefault = INTENT_FEATURED_ORDER_TABLE.default;
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (INTENT_FEATURED_ORDER_TABLE as any).default = ['loandemo', 'portfolio', 'guide', 'INVENTED'];
+      (INTENT_FEATURED_ORDER_TABLE as any).default = [
+        'loandemo',
+        'vector-wars',
+        'voyager',
+        'christmas-elves',
+        'portfolio',
+        'guide',
+        'INVENTED',
+      ];
       expect(() => assertFeaturedInvariants()).toThrow('[recuration] FEATURED VIOLATION');
     } finally {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -730,7 +750,15 @@ describe('assertFeaturedInvariants() — real INTENT_FEATURED_ORDER_TABLE is val
     const originalDefault = INTENT_FEATURED_ORDER_TABLE.default;
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (INTENT_FEATURED_ORDER_TABLE as any).default = ['loandemo', 'loandemo', 'guide', 'music'];
+      (INTENT_FEATURED_ORDER_TABLE as any).default = [
+        'loandemo',
+        'loandemo',
+        'voyager',
+        'christmas-elves',
+        'portfolio',
+        'guide',
+        'music',
+      ];
       expect(() => assertFeaturedInvariants()).toThrow('[recuration] FEATURED VIOLATION');
     } finally {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

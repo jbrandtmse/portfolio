@@ -48,10 +48,10 @@ beforeAll(() => {
 // ---------------------------------------------------------------------------
 
 describe('FEATURED_WORK data integrity (Story 7.2 AC4, Rule 9, Rule 8)', () => {
-  it('FEATURED_WORK has exactly 4 items (loandemo, portfolio, guide, music)', () => {
+  it('FEATURED_WORK has exactly 7 items (loandemo, vector-wars, voyager, christmas-elves, portfolio, guide, music)', () => {
     // Rule 8: scoped to length and slug presence.
     // Mutation-verification: adding/removing an item reds this.
-    expect(FEATURED_WORK).toHaveLength(4);
+    expect(FEATURED_WORK).toHaveLength(7);
   });
 
   it('FEATURED_SLUGS matches FEATURED_WORK slugs in order', () => {
@@ -103,14 +103,16 @@ describe('FEATURED_WORK data integrity (Story 7.2 AC4, Rule 9, Rule 8)', () => {
     );
   });
 
-  it('no 7.3 playable items (vector-wars, voyager, christmas-elves) are in the featured set', () => {
-    // Rule 9: the unbuilt 7.3 playables are NOT featured (they stay "more coming" on the Wings).
+  it('all 3 playable items (vector-wars, voyager, christmas-elves) ARE in the featured set', () => {
+    // Post-Epic-7 polish: the playables are now live and ARE featured (Step 1).
+    // Rule 8: scoped to each playable slug — findFeaturedItem uses the real module.
+    // Mutation-verification: removing a playable from featured set reds this.
     const playableSlugs = ['vector-wars', 'voyager', 'christmas-elves'];
     for (const slug of playableSlugs) {
       expect(
         findFeaturedItem(slug),
-        `"${slug}" must NOT be in the featured set (it is a Story 7.3 playable)`,
-      ).toBeUndefined();
+        `"${slug}" must be in the featured set (live playable — post-Epic-7 polish)`,
+      ).toBeDefined();
     }
   });
 
@@ -146,7 +148,7 @@ describe('home featured-work section in built output (Story 7.2 AC1, Rule 3)', (
     expect(indexHtml).toContain('data-featured-work-list');
   });
 
-  it('all 4 featured slug data attributes are present in the built output (AC1)', () => {
+  it('all 7 featured slug data attributes are present in the built output (AC1)', () => {
     for (const slug of FEATURED_SLUGS) {
       // Rule 8: scoped to each slug — not a whole-document toContain on the list.
       // Mutation-verification: removing any item reds this.
@@ -171,7 +173,8 @@ describe('home featured-work section in built output (Story 7.2 AC1, Rule 3)', (
   });
 
   it('the curated default order appears in DOM order (loandemo first, music last — FR-8)', () => {
-    // FR-8: DOM order = curated default. The loandemo item must appear before music in the HTML.
+    // FR-8: DOM order = curated default (7-item set).
+    // loandemo must be first, music must be last.
     // Rule 8: positional check using indexOf.
     // Mutation-verification: reordering FEATURED_WORK in content/featured-work.ts → this reds.
     const loandemoPos = indexHtml.indexOf('data-featured-slug="loandemo"');
@@ -180,6 +183,17 @@ describe('home featured-work section in built output (Story 7.2 AC1, Rule 3)', (
       loandemoPos,
       'loandemo must appear in DOM before music (curated default order, FR-8)',
     ).toBeLessThan(musicPos);
+    // Verify playables appear after loandemo and before portfolio/guide/music.
+    const vectorWarsPos = indexHtml.indexOf('data-featured-slug="vector-wars"');
+    const portfolioPos = indexHtml.indexOf('data-featured-slug="portfolio"');
+    expect(
+      loandemoPos,
+      'loandemo must appear before vector-wars in DOM (curated default)',
+    ).toBeLessThan(vectorWarsPos);
+    expect(
+      vectorWarsPos,
+      'vector-wars must appear before portfolio in DOM (curated default)',
+    ).toBeLessThan(portfolioPos);
   });
 
   it('the featured-work section has a heading (h2) for SEO/hierarchy', () => {
@@ -266,8 +280,8 @@ describe('AC3 (#25): no reverse-chronological CV as primary work surface (Story 
     ).not.toMatch(/aria-label="[^"]*(?:year|date)[^"]*"/);
   });
 
-  it('the primary work surfaces (featured-work) are present and non-empty', () => {
-    // Positive assertion: the curated featured-work surface exists (non-empty).
+  it('the primary work surfaces (featured-work) are present and non-empty (7 items)', () => {
+    // Positive assertion: the curated featured-work surface exists (non-empty, 7 items).
     // Rule 8: scoped to the featured-work list and item count.
     // This is the #25 guarantee: the primary surface is curated, not a CV.
     for (const slug of FEATURED_SLUGS) {
@@ -276,5 +290,21 @@ describe('AC3 (#25): no reverse-chronological CV as primary work surface (Story 
         `#25: primary surface must include curated item "${slug}" (not a reverse-chron CV)`,
       ).toContain(`data-featured-slug="${slug}"`);
     }
+  });
+
+  it('the home page has Wing browse links (/technical/, /creative/, /agentic/) in the featured-work section', () => {
+    // Post-Epic-7 polish: a "Browse all by Wing" affordance with links to the three Wings.
+    // Rule 2: trailing-slash form via routeHref().
+    // Rule 8: scoped to the specific hrefs in the built HTML.
+    // Mutation-verification: removing the Wing nav → these reds.
+    expect(indexHtml, 'home featured-work section must link to /technical/').toContain(
+      'href="/technical/"',
+    );
+    expect(indexHtml, 'home featured-work section must link to /creative/').toContain(
+      'href="/creative/"',
+    );
+    expect(indexHtml, 'home featured-work section must link to /agentic/"').toContain(
+      'href="/agentic/"',
+    );
   });
 });

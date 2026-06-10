@@ -92,8 +92,16 @@ test('AC1: home featured-work section is present with all 4 items in DOM (JS off
       'AC1: #featured-work section must be present in JS-off DOM',
     ).toBeAttached();
 
-    // All 4 featured items must be present.
-    const FEATURED_SLUGS = ['loandemo', 'portfolio', 'guide', 'music'];
+    // All 7 featured items must be present (post-Epic-7 polish: 3 playables added).
+    const FEATURED_SLUGS = [
+      'loandemo',
+      'vector-wars',
+      'voyager',
+      'christmas-elves',
+      'portfolio',
+      'guide',
+      'music',
+    ];
     for (const slug of FEATURED_SLUGS) {
       await expect(
         page.locator(`[data-featured-slug="${slug}"]`),
@@ -104,6 +112,9 @@ test('AC1: home featured-work section is present with all 4 items in DOM (JS off
     // Live items must have real <a href> links (followable JS-off).
     const liveItems: { slug: string; href: string }[] = [
       { slug: 'loandemo', href: '/work/loandemo/' },
+      { slug: 'vector-wars', href: '/work/vector-wars/' },
+      { slug: 'voyager', href: '/work/voyager/' },
+      { slug: 'christmas-elves', href: '/work/christmas-elves/' },
       { slug: 'portfolio', href: '/glass-box/' },
       { slug: 'guide', href: '/faq/' },
     ];
@@ -135,11 +146,14 @@ test('AC1: curated DOM order (loandemo first, music last — FR-8 crawlable defa
       return Array.from(items).map((el) => el.getAttribute('data-featured-slug') ?? '');
     });
 
-    // FR-8: DOM order must be the curated default (loandemo → portfolio → guide → music).
+    // FR-8: DOM order must be the curated default (7-item set, post-Epic-7 polish).
     // Rule 8: deep equality on the ordered array.
     // Mutation-verification: reordering FEATURED_WORK in content/featured-work.ts → reds this.
     expect(domOrder, 'FR-8: featured-work DOM order must be the curated default').toEqual([
       'loandemo',
+      'vector-wars',
+      'voyager',
+      'christmas-elves',
       'portfolio',
       'guide',
       'music',
@@ -169,8 +183,16 @@ test('AC1: curated DOM order (loandemo first, music last — FR-8 crawlable defa
 test('AC2: builder intent reorders featured-work via CSS order (Rule 13 — visible change)', async ({
   page,
 }) => {
-  // The server-owned builder featuredOrder from INTENT_FEATURED_ORDER_TABLE.
-  const builderFeaturedOrder = ['portfolio', 'guide', 'loandemo', 'music'];
+  // The server-owned builder featuredOrder from INTENT_FEATURED_ORDER_TABLE (7 slugs).
+  const builderFeaturedOrder = [
+    'vector-wars',
+    'voyager',
+    'loandemo',
+    'portfolio',
+    'guide',
+    'christmas-elves',
+    'music',
+  ];
   // Also provide the scene order for the canned event.
   const builderSceneOrder = [
     'hero',
@@ -237,24 +259,29 @@ test('AC2: builder intent reorders featured-work via CSS order (Rule 13 — visi
   );
 
   // Now assert the VISIBLE featured-work reorder (Rule 13 — observable outcome).
-  // portfolio (builder first) must have CSS order 0.
-  // loandemo (builder third) must have CSS order 2.
-  // music (builder last) must have CSS order 3.
+  // builder order: vector-wars(0), voyager(1), loandemo(2), portfolio(3), guide(4), christmas-elves(5), music(6).
   //
   // Rule 8: scoped to specific item CSS order values.
   // Mutation-verification: removing the featured-work block from applyRecuration
-  // → portfolio stays at '' (no style.order set) → this reds.
+  // → vector-wars stays at '' (no style.order set) → this reds.
+  const vectorWarsOrder = await getFeaturedItemOrder(page, 'vector-wars');
+  const voyagerOrder = await getFeaturedItemOrder(page, 'voyager');
+  const loandemoOrder = await getFeaturedItemOrder(page, 'loandemo');
   const portfolioOrder = await getFeaturedItemOrder(page, 'portfolio');
   const guideOrder = await getFeaturedItemOrder(page, 'guide');
-  const loandemoOrder = await getFeaturedItemOrder(page, 'loandemo');
+  const christmasElvesOrder = await getFeaturedItemOrder(page, 'christmas-elves');
   const musicOrder = await getFeaturedItemOrder(page, 'music');
 
-  expect(portfolioOrder, 'builder: portfolio must be at CSS order 0 (first in builder view)').toBe(
-    0,
-  );
-  expect(guideOrder, 'builder: guide must be at CSS order 1').toBe(1);
+  expect(
+    vectorWarsOrder,
+    'builder: vector-wars must be at CSS order 0 (first in builder view)',
+  ).toBe(0);
+  expect(voyagerOrder, 'builder: voyager must be at CSS order 1').toBe(1);
   expect(loandemoOrder, 'builder: loandemo must be at CSS order 2').toBe(2);
-  expect(musicOrder, 'builder: music must be at CSS order 3 (last)').toBe(3);
+  expect(portfolioOrder, 'builder: portfolio must be at CSS order 3').toBe(3);
+  expect(guideOrder, 'builder: guide must be at CSS order 4').toBe(4);
+  expect(christmasElvesOrder, 'builder: christmas-elves must be at CSS order 5').toBe(5);
+  expect(musicOrder, 'builder: music must be at CSS order 6 (last)').toBe(6);
 });
 
 // ---------------------------------------------------------------------------
@@ -271,7 +298,15 @@ test('AC2 / FR-8: DOM order stays curated default after CSS order reorder', asyn
     'speaker',
     'close',
   ];
-  const builderFeaturedOrder = ['portfolio', 'guide', 'loandemo', 'music'];
+  const builderFeaturedOrder = [
+    'vector-wars',
+    'voyager',
+    'loandemo',
+    'portfolio',
+    'guide',
+    'christmas-elves',
+    'music',
+  ];
 
   await page.route('**/api/guide', (route) => {
     if (route.request().method() !== 'POST') {
@@ -329,7 +364,15 @@ test('AC2 / FR-8: DOM order stays curated default after CSS order reorder', asyn
   expect(
     domOrder,
     'FR-8: featured-work DOM order must stay the curated default after CSS reorder',
-  ).toEqual(['loandemo', 'portfolio', 'guide', 'music']);
+  ).toEqual([
+    'loandemo',
+    'vector-wars',
+    'voyager',
+    'christmas-elves',
+    'portfolio',
+    'guide',
+    'music',
+  ]);
 });
 
 // ---------------------------------------------------------------------------
@@ -431,7 +474,15 @@ test('COMPOSITION: #featured-work holds a stable slot (trails #thesis, no hero c
     'thesis',
     'close',
   ];
-  const organizerFeaturedOrder = ['guide', 'loandemo', 'portfolio', 'music'];
+  const organizerFeaturedOrder = [
+    'guide',
+    'portfolio',
+    'loandemo',
+    'christmas-elves',
+    'voyager',
+    'vector-wars',
+    'music',
+  ];
 
   await page.route('**/api/guide', (route) => {
     if (route.request().method() !== 'POST') {
@@ -516,7 +567,10 @@ test('AC3 (#25): home page has the curated featured-work section (not a reverse-
   ).toBeAttached();
 
   const featuredItems = page.locator('[data-featured-work-list] [data-featured-slug]');
-  await expect(featuredItems, '#25: featured-work must have exactly 4 items').toHaveCount(4);
+  await expect(
+    featuredItems,
+    '#25: featured-work must have exactly 7 items (post-Epic-7 polish)',
+  ).toHaveCount(7);
 
   // The section heading must be present (curated, labeled clearly).
   await expect(
