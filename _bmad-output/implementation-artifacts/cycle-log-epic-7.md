@@ -35,3 +35,5 @@
 2026-06-10T01:05:00Z	Story 7.3	push_blocked	sha=7d857ca branch=PORT-1-epic7 reason=github_connector_token_empty_oauth_scopes_403 local_commit_safe=true note=7.0-7.2_pushed_ok_earlier;needs_josh_reauth_github_connector_or_manual_push
 2026-06-10T01:30:00Z	Epic 7	retrospective_complete	source=epic-7-retro-2026-06-10.md rules_codified=16,17 model=claude-opus-4-8
 2026-06-10T02:45:00Z	Story 7.3	voyager_embed_smoke_complete	method=browser result=pass iframe_src=https://voyager.abacusai.cloud/ poster=real_saturn_frame nfr1_lazy=true gate_exit=0 evidence=_bmad-output/implementation-artifacts/smoke-evidence/story-7.3-voyager.png model=claude-opus-4-8
+2026-06-10T03:00:00Z	Story 7.3	committed	sha=3da4e54 submodules= note=voyager_embed+retro+rules;push_unblocked_via_PAT
+2026-06-10T03:02:00Z	Epic 7	epic_merged_to_feature	repos=. feature_sha=b58c437 merge_sha=b58c437 submodules= note=PORT-1-epic7_deleted_local+remote
