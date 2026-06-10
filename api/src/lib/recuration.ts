@@ -122,6 +122,92 @@ export const INTENT_SKIP_TABLE: Record<Intent, SceneId[]> = {
 };
 
 // ---------------------------------------------------------------------------
+// Featured-work slugs + INTENT_FEATURED_ORDER_TABLE (Story 7.2, FR-25)
+//
+// The model NEVER emits a featured order — it only emits the intent enum.
+// The api maps intent→featuredOrder via this server-owned table.
+//
+// Guard: every entry must be a permutation of all 4 FEATURED_SLUGS (no drop,
+// no add, no fabrication). Verified by assertFeaturedInvariants() at startup.
+// ---------------------------------------------------------------------------
+
+/**
+ * The canonical slug list for the home featured-work set (Story 7.2).
+ * Must match `FEATURED_SLUGS` in `content/featured-work.ts` and the
+ * `data-featured-slug` attributes on the home page items.
+ */
+export const FEATURED_SLUGS = ['loandemo', 'portfolio', 'guide', 'music'] as const;
+
+export type FeaturedSlug = (typeof FEATURED_SLUGS)[number];
+
+/**
+ * Intent → featured-work order TABLE (Story 7.2, FR-25).
+ *
+ * Each entry is a permutation of all 4 FEATURED_SLUGS — the curated default
+ * order is `default`; non-default intents surface what matters most first.
+ * The model NEVER emits this — it emits only the intent enum.
+ *
+ * Guard rules (enforced by assertFeaturedInvariants):
+ *   (a) Every entry is a permutation of all 4 FEATURED_SLUGS (no drops, no additions).
+ *   (b) `default` = the curated default order (loandemo → portfolio → guide → music).
+ */
+export const INTENT_FEATURED_ORDER_TABLE: Record<Intent, FeaturedSlug[]> = {
+  // Default: curated default order
+  default: ['loandemo', 'portfolio', 'guide', 'music'],
+  // Organizer: speaking/booking focus → guide first (the live agent they'll interact with),
+  // then loandemo (the case study that shows the process), portfolio, music.
+  organizer: ['guide', 'loandemo', 'portfolio', 'music'],
+  // Builder/agentic-curious: the Glass Box (portfolio) first, then the Guide agent, loandemo, music.
+  builder: ['portfolio', 'guide', 'loandemo', 'music'],
+  // Explorer: show me something cool → loandemo (the flagship demo) first, then guide, portfolio, music.
+  explorer: ['loandemo', 'guide', 'portfolio', 'music'],
+};
+
+/**
+ * Assert that INTENT_FEATURED_ORDER_TABLE satisfies the permutation invariant:
+ * every entry is a permutation of all 4 FEATURED_SLUGS (no drop, no add, no duplicate).
+ *
+ * Called at module load (startup) — throws so a misconfigured table is caught
+ * immediately. Also exported for mutation-verification in tests (Rule 8).
+ */
+export function assertFeaturedInvariants(): void {
+  const sortedCanonical = [...FEATURED_SLUGS].sort();
+  const slugSet = new Set<string>(FEATURED_SLUGS);
+
+  for (const [intent, order] of Object.entries(INTENT_FEATURED_ORDER_TABLE) as [
+    Intent,
+    FeaturedSlug[],
+  ][]) {
+    // (a) Same length
+    if (order.length !== FEATURED_SLUGS.length) {
+      throw new Error(
+        `[recuration] FEATURED VIOLATION: intent "${intent}" featuredOrder has ${order.length} items, expected ${FEATURED_SLUGS.length}`,
+      );
+    }
+    // (a) All slugs valid
+    for (const slug of order) {
+      if (!slugSet.has(slug)) {
+        throw new Error(
+          `[recuration] FEATURED VIOLATION: intent "${intent}" featuredOrder contains unknown slug "${slug}"`,
+        );
+      }
+    }
+    // (a) Full permutation (no duplicates — sort and compare)
+    const sortedOrder = [...order].sort();
+    for (let i = 0; i < sortedCanonical.length; i++) {
+      if (sortedOrder[i] !== sortedCanonical[i]) {
+        throw new Error(
+          `[recuration] FEATURED VIOLATION: intent "${intent}" featuredOrder is not a permutation of all 4 featured slugs. Got ${JSON.stringify(sortedOrder)}, expected ${JSON.stringify(sortedCanonical)}`,
+        );
+      }
+    }
+  }
+}
+
+// Run featured guard at module load.
+assertFeaturedInvariants();
+
+// ---------------------------------------------------------------------------
 // SM-C1 startup assertion (server-side permutation + hero-first + speaker-present guard)
 // ---------------------------------------------------------------------------
 
@@ -450,19 +536,34 @@ export interface DirectorDirective {
    * Empty array = no skipping (default arc).
    */
   skip: SceneId[];
+  /**
+   * (Story 7.2, FR-25) OPTIONAL. Featured-work slug order from
+   * INTENT_FEATURED_ORDER_TABLE. The model NEVER emits this — the api
+   * maps intent→featuredOrder via the server-owned table.
+   * Absent/undefined for 'default' intent (no reorder — show curated default).
+   */
+  featuredOrder?: FeaturedSlug[];
 }
 
 /**
  * Return the full SM-C1-guarded director's directive for a given intent.
- * All three components (order, deepen, skip) come EXCLUSIVELY from the
+ * All components (order, deepen, skip, featuredOrder) come EXCLUSIVELY from the
  * server-owned tables — the model never emits any of them.
  *
- * Story 5.4: this is the single source for the `recuration` SSE event payload.
+ * Story 5.4: the single source for the `recuration` SSE event payload.
+ * Story 7.2: adds `featuredOrder` (OPTIONAL — absent for `default` intent,
+ * backward-compatible with 5.x clients).
  */
 export function getDirectiveForIntent(intent: Intent): DirectorDirective {
-  return {
+  const directive: DirectorDirective = {
     order: INTENT_ORDER_TABLE[intent],
     deepen: INTENT_DEEPEN_TABLE[intent],
     skip: INTENT_SKIP_TABLE[intent],
   };
+  // Story 7.2: include featuredOrder for non-default intents only (backward-compat).
+  // A 5.x-era client ignoring featuredOrder still works — absent = curated default.
+  if (intent !== 'default') {
+    directive.featuredOrder = INTENT_FEATURED_ORDER_TABLE[intent];
+  }
+  return directive;
 }

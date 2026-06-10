@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-label="Vector Wars stylized title card">
+  <!--
+    Vector Wars — STYLIZED TITLE CARD (Story 7.3).
+    This is an honest, clearly-branded vector title card, NOT a gameplay
+    screenshot. The game is a WebGL 2.0 rail shooter that cannot be rendered
+    in the headless build environment (it prints "WebGL 2.0 NOT DETECTED"
+    here), so no real gameplay frame exists to capture. The page alt/caption
+    presents this as a title card, not as a literal screenshot of play.
+    Play the real game live at /playables/vector-wars/ (needs WebGL 2.0).
+  -->
+  <defs>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- Black background -->
+  <rect width="1280" height="720" fill="#000"/>
+  <!-- Perspective grid lines (floor) -->
+  <g stroke="#00ff41" stroke-width="1" opacity="0.4">
+    <!-- Horizontal lines -->
+    <line x1="0" y1="520" x2="1280" y2="520"/>
+    <line x1="0" y1="560" x2="1280" y2="560"/>
+    <line x1="0" y1="600" x2="1280" y2="600"/>
+    <line x1="0" y1="640" x2="1280" y2="640"/>
+    <line x1="0" y1="680" x2="1280" y2="680"/>
+    <line x1="0" y1="720" x2="1280" y2="720"/>
+    <!-- Vertical lines radiating to horizon (640,480) -->
+    <line x1="640" y1="480" x2="0" y2="720"/>
+    <line x1="640" y1="480" x2="128" y2="720"/>
+    <line x1="640" y1="480" x2="256" y2="720"/>
+    <line x1="640" y1="480" x2="384" y2="720"/>
+    <line x1="640" y1="480" x2="512" y2="720"/>
+    <line x1="640" y1="480" x2="640" y2="720"/>
+    <line x1="640" y1="480" x2="768" y2="720"/>
+    <line x1="640" y1="480" x2="896" y2="720"/>
+    <line x1="640" y1="480" x2="1024" y2="720"/>
+    <line x1="640" y1="480" x2="1152" y2="720"/>
+    <line x1="640" y1="480" x2="1280" y2="720"/>
+  </g>
+  <!-- Stars -->
+  <g fill="#00ff41" opacity="0.8">
+    <circle cx="120" cy="80" r="1.5"/>
+    <circle cx="340" cy="50" r="1"/>
+    <circle cx="560" cy="120" r="1.5"/>
+    <circle cx="780" cy="40" r="1"/>
+    <circle cx="950" cy="90" r="1.5"/>
+    <circle cx="1100" cy="60" r="1"/>
+    <circle cx="200" cy="200" r="1"/>
+    <circle cx="450" cy="160" r="1.5"/>
+    <circle cx="700" cy="220" r="1"/>
+    <circle cx="900" cy="170" r="1.5"/>
+    <circle cx="1150" cy="200" r="1"/>
+    <circle cx="80" cy="300" r="1"/>
+    <circle cx="300" cy="350" r="1.5"/>
+    <circle cx="1000" cy="310" r="1"/>
+    <circle cx="1200" cy="380" r="1.5"/>
+  </g>
+  <!-- Player ship (wire triangle, glowing green) — decorative vector motif -->
+  <g stroke="#00ff41" stroke-width="3" fill="none" filter="url(#glow)">
+    <polygon points="640,430 610,480 670,480"/>
+    <!-- Engine glow -->
+    <line x1="625" y1="480" x2="620" y2="500" stroke-width="2" opacity="0.7"/>
+    <line x1="640" y1="480" x2="640" y2="505" stroke-width="2" opacity="0.9"/>
+    <line x1="655" y1="480" x2="660" y2="500" stroke-width="2" opacity="0.7"/>
+  </g>
+  <!-- Title -->
+  <text x="640" y="280" text-anchor="middle" font-family="monospace" font-size="72" font-weight="bold" fill="#00ff41" filter="url(#glow)" letter-spacing="10">VECTOR WARS</text>
+  <!-- Subtitle -->
+  <text x="640" y="330" text-anchor="middle" font-family="monospace" font-size="22" fill="#00ff41" opacity="0.7" letter-spacing="4">RAIL SHOOTER · THREE.JS · BROWSER</text>
+  <!-- Honest framing: this is a title card, not a gameplay capture -->
+  <text x="640" y="380" text-anchor="middle" font-family="monospace" font-size="16" fill="#00ff41" opacity="0.55" letter-spacing="3">TITLE CARD · PLAY LIVE BELOW</text>
+</svg>

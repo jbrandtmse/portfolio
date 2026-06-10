@@ -15,6 +15,17 @@ import { expect, test } from '@playwright/test';
  */
 
 const SCENE_IDS = ['hero', 'thesis', 'timeline', 'speaker', 'flagship', 'glass-box', 'close'];
+// Story 7.2 adds #featured-work between #thesis and #timeline; the full home DOM order:
+const ALL_HOME_SECTION_IDS = [
+  'hero',
+  'thesis',
+  'featured-work',
+  'timeline',
+  'speaker',
+  'flagship',
+  'glass-box',
+  'close',
+];
 
 test.describe('home / with JavaScript disabled', () => {
   test('renders the hero (one <h1>) without any JS', async ({ page }) => {
@@ -22,10 +33,18 @@ test.describe('home / with JavaScript disabled', () => {
     await expect(page.locator('h1')).toHaveText('Seasoned, building at the frontier');
   });
 
-  test('the 7 scenes are present in the locked sequential DOM order', async ({ page }) => {
+  test('the 7 scenes + featured-work are present in the locked sequential DOM order (Story 7.2)', async ({
+    page,
+  }) => {
     await page.goto('/');
     const ids = await page.locator('main section[id]').evaluateAll((els) => els.map((el) => el.id));
-    expect(ids).toEqual(SCENE_IDS);
+    // Story 7.2: #featured-work sits between #thesis and #timeline.
+    // ALL_HOME_SECTION_IDS is the locked DOM order; SCENE_IDS (the 7 guided tour scenes) are a subset.
+    expect(ids).toEqual(ALL_HOME_SECTION_IDS);
+    // All 7 canonical tour-scene IDs must also be present (belt-and-suspenders FR-8 guard).
+    for (const sceneId of SCENE_IDS) {
+      expect(ids).toContain(sceneId);
+    }
   });
 
   test('the audience fork + footer + /browse are real, followable links (JS-off)', async ({

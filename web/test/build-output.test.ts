@@ -127,11 +127,11 @@ function findNodeByType(html: string, type: string): Record<string, unknown> | u
 /* ──────────────────────────────────────────────────────────────────────────
  * Story 1.7 — the global static-fallback footer + /browse.
  *
- * The canonical 10 Mirror routes (the registry order, lib/routes.ts). The global
- * footer (on EVERY page) and /browse must each link all ten; the sitemap now
- * enumerates all ten. Kept here as the test's own copy so a registry drift that
- * silently drops a route still fails these assertions (ground-truth, not the
- * same array the source reads).
+ * The canonical Mirror routes (the registry order, lib/routes.ts). The global
+ * footer (on EVERY page) and /browse must each link all of them; the sitemap
+ * enumerates all of them. Kept here as the test's own copy so a registry drift
+ * that silently drops a route still fails these assertions (ground-truth, not the
+ * same array the source reads). Story 7.1 adds /technical/, /creative/, /agentic/.
  * ────────────────────────────────────────────────────────────────────────── */
 const ALL_MIRROR_ROUTES = [
   '/',
@@ -140,9 +140,15 @@ const ALL_MIRROR_ROUTES = [
   '/speaking/',
   '/speaking/reel/',
   '/work/loandemo/',
+  '/work/vector-wars/',
+  '/work/voyager/',
+  '/work/christmas-elves/',
   '/glass-box/',
   '/faq/',
   '/invite/',
+  '/technical/',
+  '/creative/',
+  '/agentic/',
   '/browse/',
 ] as const;
 
@@ -406,6 +412,9 @@ describe('built home page (web/dist/index.html)', () => {
       '/speaking',
       '/speaking/reel',
       '/work/loandemo',
+      '/work/vector-wars',
+      '/work/voyager',
+      '/work/christmas-elves',
       '/glass-box',
       '/faq',
       '/invite',
@@ -585,13 +594,26 @@ describe('home 7-scene scaffold + scene-rail (Story 1.4 IAC-1 / IAC-2)', () => {
   // in exact DOM order. #hero is the 1.3 HeroStatic; 1.4 adds the other six.
   const SCENE_IDS = ['hero', 'thesis', 'timeline', 'speaker', 'flagship', 'glass-box', 'close'];
 
-  it('renders exactly 7 <section>s with the locked ids in the locked DOM order (IAC-1, AC1)', () => {
-    // Collect every section's id in document order and assert it equals the
-    // locked sequence exactly (count + order + ids).
+  it('renders the 7 canonical scene sections in locked DOM order + the Story 7.2 featured-work section (IAC-1, AC1)', () => {
+    // Collect every section's id in document order and assert the canonical
+    // 7-scene arc is present plus the Story 7.2 #featured-work section.
+    // Story 7.2 inserts #featured-work between #thesis and #timeline.
     const sectionIds = [...indexHtml.matchAll(/<section\b[^>]*\sid="([^"]+)"[^>]*>/g)].map(
       (m) => m[1],
     );
-    expect(sectionIds).toEqual(SCENE_IDS);
+    // Rule 8: check all 7 canonical scenes are present (in order) + the new featured-work.
+    // Mutation-verification: removing a scene section reds this.
+    const EXPECTED_IDS = [
+      'hero',
+      'thesis',
+      'featured-work',
+      'timeline',
+      'speaker',
+      'flagship',
+      'glass-box',
+      'close',
+    ];
+    expect(sectionIds).toEqual(EXPECTED_IDS);
   });
 
   it('the scene-rail exposes 7 real in-page anchors matching the section ids (IAC-1, AC2)', () => {
@@ -677,14 +699,25 @@ describe('home 7-scene scaffold + scene-rail (Story 1.4 IAC-1 / IAC-2)', () => {
     // and the a11y reading-order baseline always see the full default sequence.
     // Mutation-verification: if the DOM order were changed (physically moving sections),
     // this test would red.
+    // Story 7.2 adds #featured-work between #thesis and #timeline — include it here.
     const sectionIds = [...indexHtml.matchAll(/<section\b[^>]*\sid="([^"]+)"[^>]*>/g)].map(
       (m) => m[1],
     );
-    // Rule 8: deep equality (not just a presence check — order matters)
+    // Rule 8: deep equality (not just a presence check — order matters).
+    // Story 7.2: #featured-work sits between #thesis and #timeline in the DOM arc.
     expect(
       sectionIds,
       'Story 5.3 FR-8: canonical DOM order must be canonical arc (re-curation is CSS-order-only)',
-    ).toEqual(['hero', 'thesis', 'timeline', 'speaker', 'flagship', 'glass-box', 'close']);
+    ).toEqual([
+      'hero',
+      'thesis',
+      'featured-work',
+      'timeline',
+      'speaker',
+      'flagship',
+      'glass-box',
+      'close',
+    ]);
   });
 
   it('Story 5.3 FR-8: <main class="home"> is a flex column (CSS order support present in built CSS)', () => {
@@ -694,19 +727,29 @@ describe('home 7-scene scaffold + scene-rail (Story 1.4 IAC-1 / IAC-2)', () => {
     expect(builtCss).toMatch(/\.home[^{]*\{[^}]*flex-direction:column/);
   });
 
-  it('Story 5.4 FR-8: all 7 section ids present in the built home HTML (none removed — FR-8)', () => {
+  it('Story 5.4 FR-8: all 7 scene section ids present in the built home HTML (none removed — FR-8)', () => {
     // Story 5.4's skip mechanism is tour-omission only; every scene must be in
     // the BUILT static HTML regardless of skip configuration.
+    // Story 7.2 adds #featured-work between #thesis and #timeline; the 7 canonical scenes remain.
     // Rule 8: scoped to the exact set of section ids (deep equality).
     // Mutation-verification: if a scene were conditionally omitted from the build, this reds.
     const sectionIds = [...indexHtml.matchAll(/<section\b[^>]*\sid="([^"]+)"[^>]*>/g)].map(
       (m) => m[1],
     );
-    // Must contain all 7 scenes — exactly (no extras, no drops)
+    // Must contain all 7 scenes + the Story 7.2 featured-work section — exactly (no extras, no drops)
     expect(
       sectionIds,
-      'Story 5.4 FR-8: all 7 scenes must be in built HTML (skip = tour omission, not build omission)',
-    ).toEqual(['hero', 'thesis', 'timeline', 'speaker', 'flagship', 'glass-box', 'close']);
+      'Story 5.4 FR-8: all 7 scenes + featured-work must be in built HTML (skip = tour omission, not build omission)',
+    ).toEqual([
+      'hero',
+      'thesis',
+      'featured-work',
+      'timeline',
+      'speaker',
+      'flagship',
+      'glass-box',
+      'close',
+    ]);
   });
 
   it('Story 5.4 FR-8: no section has display:none or visibility:hidden in the built HTML (skip is CSS-attr-only)', () => {
@@ -873,10 +916,16 @@ const MIRROR_ROUTES = [
   '/speaking',
   '/speaking/reel',
   '/work/loandemo',
+  '/work/vector-wars',
+  '/work/voyager',
+  '/work/christmas-elves',
   '/glass-box',
   '/faq',
   '/invite',
   '/about',
+  '/technical',
+  '/creative',
+  '/agentic',
   '/browse',
 ] as const;
 // Note: MIRROR_ROUTES values are kept slashless here because routeHtmlPath() uses
@@ -988,12 +1037,19 @@ describe('Story 1.5 — every Mirror route is a real, answer-first, self-canonic
       //    /invite: 3 (pill + InviteForm island)
       //    /timeline: 3 (pill + deferred ZoomableTimeline mount shim — Story 6.2)
       //    /glass-box: 3 (pill + deferred GlassBoxTour mount shim — Story 6.3)
+      //    /work/vector-wars, /work/christmas-elves:
+      //      3 (pill + click-to-play loader script — Story 7.3 NFR-1 carve-out;
+      //         the game JS lives in the iframe, this tiny loader is the only
+      //         portfolio-owned script beyond the pill).
       //    All other Mirror routes: exactly 2 (the two pill-init scripts).
       if (
         route === '/speaking' ||
         route === '/invite' ||
         route === '/timeline' ||
-        route === '/glass-box'
+        route === '/glass-box' ||
+        route === '/work/vector-wars' ||
+        route === '/work/voyager' || // external embed: 3 scripts (pill + click-to-play loader)
+        route === '/work/christmas-elves'
       )
         return;
       expect(
@@ -1566,6 +1622,10 @@ describe('Story 1.6 — generated sitemap.xml (AC3 / IAC-2)', () => {
         if (entry.isDirectory()) {
           // Skip Astro's hashed asset dir — it holds no routable pages.
           if (entry.name === '_astro') continue;
+          // Skip vendored game bundles (Story 7.3: dist/playables/ holds the
+          // built HTML from external repos — these are not portfolio routes and
+          // must not appear in the sitemap; the sitemap covers /work/<slug>/ pages).
+          if (base === '' && entry.name === 'playables') continue;
           out.push(...liveRouteLocs(join(dir, entry.name), `${base}/${entry.name}`));
         } else if (entry.name === 'index.html') {
           // dist/index.html → "/"; dist/about/index.html → "/about/", etc. The
@@ -1680,6 +1740,9 @@ describe('Story 1.10 — env-gated Umami is OFF by default (AC2 / IAC-2; NFR-1)'
       if (route === '/invite') continue; // carve-out — 3 exec scripts (pill + InviteForm island)
       if (route === '/timeline') continue; // carve-out — 3 exec scripts (pill + deferred ZoomableTimeline mount shim, Story 6.2)
       if (route === '/glass-box') continue; // carve-out — 3 exec scripts (pill + deferred GlassBoxTour mount shim, Story 6.3)
+      if (route === '/work/vector-wars') continue; // carve-out — 3 exec scripts (pill + click-to-play loader, Story 7.3)
+      if (route === '/work/voyager') continue; // carve-out — 3 exec scripts (pill + click-to-play loader, external embed)
+      if (route === '/work/christmas-elves') continue; // carve-out — 3 exec scripts (pill + click-to-play loader, Story 7.3)
       const html = readFileSync(routeHtmlPath(route), 'utf8');
       // Story 4.4: content routes ship exactly 2 exec scripts (the Guide pill init scripts)
       expect(
@@ -2542,5 +2605,239 @@ describe('Story 4.4 — Guide pill site-wide carve-out (AC1, AC5, Decision 2 NFR
     expect(aboutHtml).not.toMatch(/InviteForm\.[a-zA-Z0-9_-]+\.js/);
     // And the GuidePanel chunk is absent on initial load (lazy carve-out)
     expect(aboutHtml).not.toMatch(/GuidePanel\.[a-zA-Z0-9_-]+\.js/);
+  });
+});
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Story 7.3 — Playable project embeds: vector-wars, christmas-elves.
+ * (voyager stays "coming" — its Git-LFS-backed asset bundle was not vendored, so
+ *  the embed cannot render; QA 2026-06-09. It is asserted ABSENT below.)
+ *
+ * AC1: each built page exists + has real source-repo link + CreativeWork ld+json.
+ * AC2: lazy-load isolation — the click-to-play script does NOT set iframe.src at
+ *   paint time; the game JS lives ONLY in the iframe; the playable bundles are not
+ *   referenced by the /work/<slug>/ portfolio page's own scripts.
+ * AC3: Wings + featured-work reflect now-live playables (no "more coming" for them).
+ * AC4: vendored bundles exist in public/; no sentinel leaks in served HTML.
+ * Rule 9: real descriptions + repo links; no fabricated claims.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+describe('Story 7.3 — playable project embeds (AC1 / AC2 / AC4 / NFR-1 isolation)', () => {
+  // Vendored playables: the game bundle lives in web/public/playables/<slug>/ and
+  // the iframe src is a local /playables/<slug>/ path.
+  const PLAYABLE_ROUTES = ['/work/vector-wars', '/work/christmas-elves'] as const;
+  const GAME_SLUGS = ['vector-wars', 'christmas-elves'] as const;
+
+  // All playable routes — including voyager (external embed, no vendored bundle).
+  // These tests apply to every /work/<slug>/ page regardless of embed type.
+  const ALL_PLAYABLE_ROUTES = [
+    '/work/vector-wars',
+    '/work/voyager',
+    '/work/christmas-elves',
+  ] as const;
+
+  it.each(ALL_PLAYABLE_ROUTES)('builds a real index.html for %s (AC1)', (route) => {
+    expect(existsSync(routeHtmlPath(route))).toBe(true);
+    const html = readFileSync(routeHtmlPath(route), 'utf8');
+    expect(html).toMatch(/<html lang="en"[\s>]/);
+  });
+
+  it.each(ALL_PLAYABLE_ROUTES)('has exactly one <h1> (clean hierarchy) on %s (AC1)', (route) => {
+    const html = readFileSync(routeHtmlPath(route), 'utf8');
+    expect((html.match(/<h1\b/g) ?? []).length).toBe(1);
+  });
+
+  it.each(ALL_PLAYABLE_ROUTES)(
+    'opens answer-first — lede starts with "Joshua R. Brandt, MSE" on %s (GEO floor)',
+    (route) => {
+      const html = readFileSync(routeHtmlPath(route), 'utf8');
+      expect(firstParagraphText(html).startsWith('Joshua R. Brandt, MSE')).toBe(true);
+    },
+  );
+
+  it.each(ALL_PLAYABLE_ROUTES)(
+    'links the real public GitHub source repo on %s (AC1 / Rule 9)',
+    (route) => {
+      const html = readFileSync(routeHtmlPath(route), 'utf8');
+      const slug = route.replace('/work/', '');
+      expect(html, `${route} must link to github.com/jbrandtmse/${slug}`).toContain(
+        `github.com/jbrandtmse/${slug}`,
+      );
+    },
+  );
+
+  it.each(ALL_PLAYABLE_ROUTES)('emits a valid CreativeWork ld+json on %s (AC1)', (route) => {
+    const html = readFileSync(routeHtmlPath(route), 'utf8');
+    const work = findNodeByType(html, 'CreativeWork');
+    expect(work, `${route} must have a CreativeWork ld+json node`).toBeDefined();
+    expect(work!['@context']).toBe('https://schema.org');
+    expect(typeof work!.name).toBe('string');
+    expect((work!.author as Record<string, unknown>)['@type']).toBe('Person');
+    expect(typeof work!.description).toBe('string');
+    expect(typeof work!.url).toBe('string');
+  });
+
+  it.each(ALL_PLAYABLE_ROUTES)(
+    'ships exactly 3 executable scripts on %s — Guide pill (2) + click-to-play loader (1) (AC2 / NFR-1)',
+    (route) => {
+      const html = readFileSync(routeHtmlPath(route), 'utf8');
+      const count = countExecutableScripts(html);
+      expect(
+        count,
+        `${route} must have exactly 3 exec scripts (Guide pill x2 + click-to-play loader)`,
+      ).toBe(3);
+    },
+  );
+
+  it.each(PLAYABLE_ROUTES)(
+    'the click-to-play script does NOT hard-code the iframe src (iframe.src only set on click) — %s (AC2 / NFR-1)',
+    (route) => {
+      const html = readFileSync(routeHtmlPath(route), 'utf8');
+      // Confirm the trigger div exists (the JS-off poster path) — no <iframe> in the static HTML.
+      // Rule 8: the loader script sets iframe.src at click time, so the static HTML must NOT
+      // contain a direct <iframe src="/playables/..."> — that would load the game on paint.
+      // The game src is present ONLY inside the inline click handler as a JS string literal.
+      expect(
+        html,
+        `${route} must NOT have a static <iframe src="/playables/..."> (lazy-load: src set on click only)`,
+      ).not.toMatch(/<iframe\b[^>]*\bsrc="\/playables\//);
+      // The poster image is in the static HTML (JS-off fallback path).
+      expect(html, `${route} must have the poster image in static HTML (JS-off fallback)`).toMatch(
+        /playable-embed__poster/,
+      );
+      // The fallback "Play →" link or direct link is present for JS-off users.
+      expect(html, `${route} must have a direct /playables/ link (JS-off fallback path)`).toMatch(
+        /href="\/playables\//,
+      );
+    },
+  );
+
+  it.each(PLAYABLE_ROUTES)(
+    'game bundle does NOT appear in the portfolio page scripts (NFR-1 isolation) on %s',
+    (route) => {
+      const html = readFileSync(routeHtmlPath(route), 'utf8');
+      // The vendored game bundles are in public/playables/ but must NOT be
+      // statically referenced by any <script src=...> or <link rel="modulepreload">
+      // in the portfolio page — they load inside the iframe only.
+      expect(
+        html,
+        `${route}: game bundle must NOT appear as a <script src> in portfolio HTML (NFR-1 isolation)`,
+      ).not.toMatch(/<script\b[^>]*\bsrc="\/playables\//);
+      expect(
+        html,
+        `${route}: game bundle must NOT appear as a modulepreload in portfolio HTML (NFR-1 isolation)`,
+      ).not.toMatch(/rel="modulepreload"[^>]*href="\/playables\//);
+    },
+  );
+
+  it.each(GAME_SLUGS)(
+    'vendored playable bundle exists in web/public/playables/%s/ (AC4 / NFR-6)',
+    (slug) => {
+      const indexPath = join(webRoot, 'public', 'playables', slug, 'index.html');
+      expect(
+        existsSync(indexPath),
+        `web/public/playables/${slug}/index.html must exist (vendored game bundle)`,
+      ).toBe(true);
+    },
+  );
+
+  it.each(GAME_SLUGS)(
+    'vendored playable at %s has a poster image (real screenshot/representative art)',
+    (slug) => {
+      const base = join(webRoot, 'public', 'playables', slug);
+      const hasPoster =
+        existsSync(join(base, 'poster.png')) ||
+        existsSync(join(base, 'poster.jpg')) ||
+        existsSync(join(base, 'poster.jpeg')) ||
+        existsSync(join(base, 'poster.svg'));
+      expect(
+        hasPoster,
+        `web/public/playables/${slug}/poster.<ext> must exist (real poster image)`,
+      ).toBe(true);
+    },
+  );
+
+  // Rule 8/13 — assert the USER-OBSERVABLE outcome: every poster <img src> the
+  // built page references must resolve to a real file in dist/. The plain
+  // "a poster file exists" check above is vacuous against a ref↔file mismatch
+  // (e.g. the page says poster.png but the file is poster.jpg → a broken image
+  // the visitor actually sees). This binds the served reference to the asset.
+  it.each(PLAYABLE_ROUTES)(
+    'every poster image the page references resolves to a real file in dist/ on %s (no broken <img>)',
+    (route) => {
+      const html = readFileSync(routeHtmlPath(route), 'utf8');
+      const posterRefs = [
+        ...html.matchAll(/<img\b[^>]*\bsrc="(\/playables\/[^"]+?\/poster\.[a-z]+)"/g),
+      ].map((m) => m[1]!);
+      expect(
+        posterRefs.length,
+        `${route} must reference at least one /playables/<slug>/poster.<ext> image`,
+      ).toBeGreaterThan(0);
+      for (const ref of posterRefs) {
+        const fsPath = join(distDir, ...ref.split('/').filter(Boolean));
+        expect(
+          existsSync(fsPath),
+          `${route} references poster ${ref} but ${fsPath} does not exist in the build (broken image)`,
+        ).toBe(true);
+      }
+    },
+  );
+
+  it.each(ALL_PLAYABLE_ROUTES)(
+    'contains no exclamation marks in copy (positive-assertion voice) on %s',
+    (route) => {
+      const html = readFileSync(routeHtmlPath(route), 'utf8');
+      const copyOnly = html
+        .replace(/<!doctype html>/i, '')
+        .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<!--[\s\S]*?-->/g, '');
+      expect(copyOnly, `${route} must contain no exclamation marks in copy`).not.toContain('!');
+    },
+  );
+
+  // voyager SPECIAL CASE — external embed (not a vendored bundle).
+  // The /work/voyager/ portfolio page IS built; the iframe loads the external
+  // https://voyager.abacusai.cloud/ on click. Only the poster exists locally.
+  it('voyager IS a built live route (external embed — /work/voyager/ page exists)', () => {
+    expect(
+      existsSync(routeHtmlPath('/work/voyager')),
+      'dist/work/voyager/index.html must exist (voyager is now a live external-embed page)',
+    ).toBe(true);
+    // The local poster asset IS present (real rendered frame from the sim).
+    const posterPath = join(webRoot, 'public', 'playables', 'voyager', 'poster.png');
+    expect(
+      existsSync(posterPath),
+      'web/public/playables/voyager/poster.png must exist (real rendered frame)',
+    ).toBe(true);
+    // But NO vendored game bundle in /playables/voyager/ (external embed, not vendored).
+    expect(
+      existsSync(join(distDir, 'playables', 'voyager', 'index.html')),
+      'dist/playables/voyager/index.html must NOT exist (voyager is an external embed — no local bundle)',
+    ).toBe(false);
+  });
+
+  it('voyager external embed: the page sets iframe.src to the EXTERNAL URL; no local vendored bundle path', () => {
+    const html = readFileSync(routeHtmlPath('/work/voyager'), 'utf8');
+    // The click-to-play script sets the external URL — must contain the external origin.
+    expect(
+      html,
+      '/work/voyager/ must reference the external embed URL https://voyager.abacusai.cloud/',
+    ).toContain('https://voyager.abacusai.cloud/');
+    // The poster IS from the local /playables/voyager/ path (the ONLY local asset).
+    expect(html, '/work/voyager/ poster must come from /playables/voyager/poster.png').toContain(
+      '/playables/voyager/poster.png',
+    );
+    // The page must NOT set an <iframe src="/playables/voyager/"> (no local bundle index).
+    // Rule 8: scoped to the iframe src attribute pattern, not the poster img.
+    expect(
+      html,
+      '/work/voyager/ must NOT have a static or JS <iframe src="/playables/voyager/"> (no vendored bundle)',
+    ).not.toMatch(/<iframe\b[^>]*\bsrc="\/playables\/voyager\//);
+    // The click-handler in the inline <script> must NOT set src="/playables/voyager/..."
+    // (it must set the external URL). Check the entire script section.
+    expect(
+      html,
+      '/work/voyager/ click-handler must NOT reference /playables/voyager/ as the iframe src',
+    ).not.toMatch(/iframe\.src\s*=\s*["']\/playables\/voyager\//);
   });
 });

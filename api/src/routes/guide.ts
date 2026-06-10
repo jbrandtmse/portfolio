@@ -53,12 +53,15 @@ export const RETRIEVAL_THRESHOLD = 0.5;
 const K = 5;
 
 /**
- * Hard ceiling on LLM streaming (ms). Raised 10s → 15s to absorb the tail
- * latency of reasoning-class mid-tier models (gpt-5-mini's first token can run
- * past 10s, tripping the abort → in-voice fallback). 15s keeps a graceful upper
- * bound while letting slow-but-valid grounded answers complete (NFR-4).
+ * Hard ceiling on LLM streaming (ms). Originally raised 10s → 15s to absorb
+ * the tail latency of reasoning-class models (e.g. gpt-5-mini's first token
+ * could run past 10s, tripping the abort → in-voice fallback). The default
+ * `GUIDE_LLM_MODEL` is now claude-haiku-4-5-20251001 (~2-3s end-to-end), so
+ * 15s is a comfortable safety margin over the fast default and absorbs
+ * per-deployment `GUIDE_LLM_MODEL` variance without constraining valid answers
+ * (NFR-4; spec reconciled Story 7.0).
  */
-const LLM_CEILING_MS = 15_000;
+export const LLM_CEILING_MS = 15_000;
 
 /** Canned fail-closed response (in-voice, no exclamation). */
 export const CANNED_NO_CONTEXT = "I don't have that documented.";
@@ -139,10 +142,25 @@ async function emitRecuration(
   order: string[],
   deepen: string[],
   skip: string[],
+  featuredOrder?: string[],
 ): Promise<void> {
+  // Build the payload — featuredOrder is OPTIONAL (Story 7.2, FR-25).
+  // Absent when intent === 'default' (curated default order shown on the client).
+  // A client ignoring featuredOrder (5.x-era) still works — backward-compat.
+  const payload: {
+    type: 'recuration';
+    intent: string;
+    order: string[];
+    deepen: string[];
+    skip: string[];
+    featuredOrder?: string[];
+  } = { type: 'recuration', intent, order, deepen, skip };
+  if (featuredOrder !== undefined) {
+    payload.featuredOrder = featuredOrder;
+  }
   await stream.writeSSE({
     event: 'recuration',
-    data: JSON.stringify({ type: 'recuration', intent, order, deepen, skip }),
+    data: JSON.stringify(payload),
   });
 }
 
@@ -305,6 +323,7 @@ guideRouter.post('/guide', async (c: Context) => {
       // client can begin re-ordering the scenes while the answer streams in.
       // Only emit for non-default intents (default = no change from canonical arc).
       // Story 5.4: includes deepen + skip from the server-owned tables.
+      // Story 7.2: includes featuredOrder from the server-owned INTENT_FEATURED_ORDER_TABLE.
       if (classifiedIntent !== 'default') {
         const directive = getDirectiveForIntent(classifiedIntent);
         await emitRecuration(
@@ -313,6 +332,7 @@ guideRouter.post('/guide', async (c: Context) => {
           directive.order,
           directive.deepen,
           directive.skip,
+          directive.featuredOrder,
         );
       }
 
