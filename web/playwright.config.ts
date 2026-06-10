@@ -302,5 +302,60 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
       testMatch: /glassbox-map\.spec\.ts/,
     },
+    // (Story 7.1) The three Wing index routes — /technical/, /creative/, /agentic/.
+    // Desktop, JS on (the JS-off case runs inline via browser.newContext()).
+    // Rule 3 real-runtime evidence for the NEW user-facing surfaces:
+    //   - AC1: reachable (single 200, no hop), one <h1>, entity-first lede,
+    //     self-canonical, live items followable JS-off + resolve 200, footer +
+    //     /browse + sitemap link each Wing, 0 authored JS (Guide-pill carve-out),
+    //     CreativeWork JSON-LD, no exclamation, WCAG 2.1 AA (axe).
+    //   - AC2 / Rule 9 BROAD credibility audit (line-scoped, mutation-relevant):
+    //     no Stage-2 playable (vector-wars/voyager/christmas-elves) as a live link;
+    //     the Suno music uses the [OPEN: Suno profile URL] honest flag (no invented
+    //     URL, not a live <a>); every live href is a known real shipped surface.
+    //   - Rule 15: no internal "not-yet" plumbing sentinel in visible Wing prose.
+    {
+      name: 'wings',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /wings\.spec\.ts/,
+    },
+    // (Story 7.2) Home featured-work greatest-hits + Guide intent re-order.
+    // Desktop, JS on (JS-off cases run inline via browser.newContext()).
+    // Rule 7: proven to EXECUTE (registered here — was previously UNREGISTERED,
+    // so the whole spec silently never ran; QA HIGH discoverability fix). Exercises:
+    //   - AC1: #featured-work present + 4 items crawlable/followable JS-off (FR-8);
+    //   - AC2 (Rule 13): builder intent VISIBLY reorders the items (measured CSS
+    //     order changes) via the REAL GuidePanel SSE → applyRecuration path;
+    //   - AC2/FR-8: DOM order of items stays the curated default after the reorder;
+    //   - COMPOSITION (QA, Story 7.2): #featured-work SECTION holds its curated slot
+    //     (trails #thesis, never order-0-collides with #hero / jumps above thesis)
+    //     on a plain JS-on load AND after an organizer scene re-curation;
+    //   - AC3 (#25): the curated section is the primary work surface (not a CV).
+    // All via the serve-with-api.mjs prod-faithful proxy (GUIDE_LLM_STUB=1).
+    {
+      name: 'featured-work',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /featured-work\.spec\.ts/,
+    },
+    // (Story 7.3) Playable project embeds — /work/vector-wars/ + /work/christmas-elves/.
+    // Desktop, JS on (JS-off cases run inline via browser.newContext()).
+    // Rule 7: proven to EXECUTE (registered here — the 7.2 lesson: an unregistered
+    // spec runs 0 times). Rule 3 real-runtime evidence for the NEW playable surfaces:
+    //   - reachable (single 200, no hop), one <h1>, entity-first lede, real source-
+    //     repo link (Rule 9), static poster loads (not a broken <img>);
+    //   - NFR-1 lazy-load: no /playables/<slug>/ game asset loads before activation;
+    //     clicking Play swaps in <iframe src="/playables/<slug>/"> which resolves 200;
+    //   - the vendored game index references only RESOLVABLE boot assets (the
+    //     base-path-mismatch regression guard — voyager's bug class);
+    //   - JS-off graceful fallback: poster + "Play →" link + repo link remain;
+    //   - christmas-elves (Phaser/Canvas2D) BOOTS headless — a <canvas> renders in
+    //     the iframe (game JS ran). vector-wars (WebGL 2.0) is NOT WebGL-gameplay-
+    //     verified here (headless env lacks WebGL2) — only page/embed/asset-resolve.
+    //   voyager is ABSENT — "coming" (incomplete LFS asset bundle).
+    {
+      name: 'playables',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /playables\.spec\.ts/,
+    },
   ],
 });

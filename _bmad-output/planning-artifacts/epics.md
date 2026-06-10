@@ -96,7 +96,7 @@ This document provides the complete epic and story breakdown for **portfolio** (
 - **NFR-1 — Performance.** FCP < ~2s on mid-range mobile; main-page JS < ~200–250KB gzipped; at most one fixed WebGL canvas site-wide; heavy stack (WebGL, large embeds) lazy-loaded (`client:visible`/`client:idle`); compressed WebGL assets (KTX2/Basis/Draco) with static fallback.
 - **NFR-2 — Accessibility (WCAG 2.1 AA).** Two-layer `prefers-reduced-motion` gate (CSS media query **and** JS init-guard — do not init GSAP/ScrollTrigger/WebGL; show static hero); the Guide widget `role="dialog"` (non-modal) with `role="log"` transcript + `aria-live="polite"` batched **per-message, not per-token**, focus management, real `<button>` elements, fully keyboard-operable; WebGL canvas `aria-hidden` decorative with DOM equivalents; avoid Lenis/smooth-scroll or gate behind reduced-motion; color never the sole signal.
 - **NFR-3 — SEO/GEO (first-class).** SSG-prerender all key routes; the Static Mirror exposes all agent-revealed facts as real HTML (verifiable via `view-source` + find, JS off); answer-first intros, clean heading hierarchy, Q&A blocks, plain-text key facts; do not block AI crawlers; brand/name present in short answers; JSON-LD per FR-35.
-- **NFR-4 — Agent reliability & latency.** Responses stream; retrieval is from the build-time index only; empty/low-score context skips the model call; the agent backend is a single small service behind nginx; TTFT < ~1.5s, hard ceiling ~10s before a graceful fallback message, retrieval adds < ~200ms; knowledge horizon = last build ("fresh-as-of-last-build", not "never stale").
+- **NFR-4 — Agent reliability & latency.** Responses stream; retrieval is from the build-time index only; empty/low-score context skips the model call; the agent backend is a single small service behind nginx; TTFT < ~1.5s, hard ceiling ~15s before a graceful fallback message (absorbs reasoning-class tail latency and per-deployment `GUIDE_LLM_MODEL` variance), retrieval adds < ~200ms; knowledge horizon = last build ("fresh-as-of-last-build", not "never stale").
 - **NFR-5 — Static, key-free runtime.** All non-agent content is prebuilt static assets served by nginx; the only dynamic components are the agent backend and the Invite-Me endpoint; no runtime API keys or external rate limits in the content path.
 - **NFR-6 — Maintainability.** Code-as-CMS; content added only via git/BMAD (`/bmad-correct-course`); KB index and Glass Box teaser data regenerate deterministically at build time from real artifacts; the automated Timeline-Dot harvest is a Stage 2 capability.
 - **NFR-7 — Observability.** Privacy-first analytics (FR-36) + server logs sufficient to measure the §13 success metrics and detect agent retrieval misses (the documented trigger to consider embeddings).
@@ -792,7 +792,7 @@ So that I get the case made with receipts — and an honest "I don't know" other
 
 **Given** latency limits
 **When** the model is slow or the endpoint is down
-**Then** TTFT targets < ~1.5s, a hard ceiling ~10s yields a graceful in-voice fallback message + Mirror links (not a raw error), and retrieval adds < ~200ms (NFR-4).
+**Then** TTFT targets < ~1.5s, a hard ceiling ~15s (absorbs reasoning-class tail latency and per-deployment `GUIDE_LLM_MODEL` variance) yields a graceful in-voice fallback message + Mirror links (not a raw error), and retrieval adds < ~200ms (NFR-4).
 
 ### Story 4.4: The Guide island — non-modal panel, citations & visible thinking
 

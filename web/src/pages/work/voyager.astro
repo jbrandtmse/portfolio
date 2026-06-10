@@ -1,0 +1,358 @@
+---
+/**
+ * /work/voyager/ — playable project page (voyager external embed).
+ *
+ * Voyager is a high-fidelity, browser-based cinematic replay of the Voyager 1
+ * and Voyager 2 missions, built by Joshua R. Brandt, MSE. It uses real NASA/NAIF
+ * SPICE-kernel trajectories and Three.js 3D rendering to reconstruct each
+ * planetary encounter — Jupiter, Saturn, Uranus, Neptune — with a chapter-by-
+ * chapter narrative. The sim is live at https://voyager.abacusai.cloud/ and the
+ * source is public at https://github.com/jbrandtmse/voyager.
+ *
+ * SPECIAL CASE — EXTERNAL EMBED (not a vendored bundle):
+ *   The large Voyager asset bundle (SPICE kernels, KTX2 textures, 3D models,
+ *   trajectory data) is NOT vendored in this repo — it lives at its own origin,
+ *   https://voyager.abacusai.cloud/. The click-to-play loader sets
+ *   iframe.src = 'https://voyager.abacusai.cloud/' (cross-origin) on click.
+ *   The ONLY local asset is /playables/voyager/poster.png (a real rendered frame).
+ *
+ * NFR-1 (0-JS isolation): the voyager sim JS executes ONLY inside the cross-origin
+ *   iframe, loaded on demand (click-to-play). The portfolio page itself ships the
+ *   site-wide Guide pill (2 executable scripts) + the tiny click-to-play loader.
+ *   The game JS never runs in the portfolio's own execution context.
+ *
+ * Rule 2 (URL form): route registered in routes.ts via routeHref().
+ * Rule 9 (credibility): real sim, real repo, real trajectories, grounded claims.
+ * Rule 15: no internal plumbing sentinels in visible copy.
+ */
+import MirrorLayout from '../../layouts/MirrorLayout.astro';
+import { creativeWorkJsonLd, serializeJsonLd } from '../../lib/jsonld';
+import { PERSON, SITE_ORIGIN } from '../../lib/person';
+
+const LEDE =
+  'Joshua R. Brandt, MSE built Voyager — a high-fidelity, browser-based cinematic replay of the Voyager 1 and Voyager 2 missions — using real NASA/NAIF SPICE-kernel trajectories and Three.js 3D rendering. The simulation is live in the browser and the full source is publicly available on GitHub.';
+
+const voyagerJsonLd = serializeJsonLd(
+  creativeWorkJsonLd({
+    name: 'Voyager — cinematic mission replay',
+    author: PERSON,
+    description:
+      'A high-fidelity, browser-based cinematic replay of the Voyager 1 and Voyager 2 missions, built by Joshua R. Brandt, MSE. Real NASA/NAIF SPICE-kernel trajectories drive Three.js 3D rendering through a chapter-by-chapter narrative of the planetary encounters: Jupiter, Saturn, Uranus, and Neptune.',
+    url: `${SITE_ORIGIN}/work/voyager/`,
+    dateCreated: '2025-01-01',
+  }),
+);
+---
+
+<MirrorLayout
+  heading="Voyager — cinematic mission replay"
+  lede={LEDE}
+  title="Voyager — Joshua R. Brandt, MSE"
+  description="Voyager: a browser-based cinematic replay of the Voyager 1 and Voyager 2 missions, built by Joshua R. Brandt, MSE with real SPICE-kernel trajectories and Three.js."
+>
+  <script type="application/ld+json" slot="jsonld" is:inline set:html={voyagerJsonLd} />
+
+  <div class="playable-page">
+    {/* Sim description */}
+    <section class="playable-page__overview">
+      <p class="playable-page__body">
+        Voyager reconstructs the Voyager 1 and Voyager 2 missions in the browser — chapter by
+        chapter through each planetary encounter. The trajectories are drawn from real NASA/NAIF
+        SPICE kernels (the same ephemeris data used by mission-planning software), so the geometry,
+        timing, and relative positions of spacecraft and planets match the actual missions. Three.js
+        renders the 3D scenes; a narrative track frames each encounter.
+      </p>
+      <p class="playable-page__body">
+        Voyager 1 flew past Jupiter (March 1979) and Saturn (November 1980); Voyager 2 flew past
+        Jupiter (July 1979), Saturn (August 1981), Uranus (January 1986), and Neptune (August 1989).
+        The simulation covers all seven encounters across both spacecraft.
+      </p>
+      <p class="playable-page__links">
+        <a
+          href="https://github.com/jbrandtmse/voyager"
+          class="playable-page__repo-link"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Public repository — github.com/jbrandtmse/voyager
+        </a>
+      </p>
+    </section>
+
+    {/* Lazy embed — click-to-play (NFR-1: iframe src only set on activation) */}
+    <section class="playable-page__embed-section" id="play">
+      <h2 class="playable-page__embed-heading">Run Voyager</h2>
+      <div class="playable-embed" id="voyager-embed">
+        {
+          /*
+           * JS-off fallback: poster + direct link to https://voyager.abacusai.cloud/
+           * (the live external sim). No local /playables/voyager/ bundle exists.
+           */
+        }
+        <noscript>
+          <a href="https://voyager.abacusai.cloud/" class="playable-embed__fallback-link">
+            <img
+              src="/playables/voyager/poster.png"
+              alt="Voyager sim — a rendered frame of the Saturn encounter. Click to open and run the live cinematic replay."
+              class="playable-embed__poster"
+              width="1254"
+              height="900"
+            />
+            <span class="playable-embed__play-label">Run Voyager</span>
+          </a>
+        </noscript>
+        {/* With JS: poster shown until click, then iframe loads the external sim */}
+        <div class="playable-embed__trigger" id="voy-trigger">
+          <img
+            src="/playables/voyager/poster.png"
+            alt="Voyager sim — a rendered frame of the Saturn encounter. Click to run the live cinematic replay in the browser."
+            class="playable-embed__poster"
+            width="1254"
+            height="900"
+          />
+          <button
+            class="playable-embed__play-btn"
+            type="button"
+            aria-label="Launch the Voyager cinematic sim in the browser"
+          >
+            Run Voyager
+          </button>
+        </div>
+        {/* Fallback links always visible below the embed for keyboard/no-pointer users */}
+        <p class="playable-embed__direct-link">
+          <a
+            href="https://voyager.abacusai.cloud/"
+            class="playable-page__link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Open Voyager in a new tab
+          </a>
+          &nbsp;·&nbsp;
+          <a
+            href="https://github.com/jbrandtmse/voyager"
+            class="playable-page__link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Source on GitHub
+          </a>
+        </p>
+      </div>
+    </section>
+
+    {/* Tech notes */}
+    <section class="playable-page__section">
+      <h2 class="playable-page__section-heading">Technical notes</h2>
+      <ul class="playable-page__list">
+        <li>NASA/NAIF SPICE kernels — the actual mission ephemeris data for trajectory accuracy</li>
+        <li>Three.js for 3D rendering (spacecraft, planets, trajectories)</li>
+        <li>TypeScript throughout with strict mode</li>
+        <li>Vite for bundling</li>
+        <li>
+          Deployed at its own origin (https://voyager.abacusai.cloud/) — the asset bundle is too
+          large to vendor in this portfolio repo
+        </li>
+        <li>Requires a modern browser with WebGL support</li>
+      </ul>
+    </section>
+  </div>
+
+  {
+    /*
+     * Click-to-play loader — NFR-1: iframe src is NOT set until the visitor clicks.
+     * This is an EXTERNAL cross-origin embed: the iframe loads https://voyager.abacusai.cloud/
+     * (NOT a /playables/ path — no local bundle exists). The voyager sim JS runs only
+     * inside that cross-origin iframe, never in the portfolio page's own context.
+     * This is the ONLY executable JS on this page beyond the site-wide Guide pill.
+     */
+  }
+  <script>
+    (() => {
+      const trigger = document.getElementById('voy-trigger');
+      const container = document.getElementById('voyager-embed');
+      if (!trigger || !container) return;
+      const activate = () => {
+        const iframe = document.createElement('iframe');
+        iframe.src = 'https://voyager.abacusai.cloud/';
+        iframe.title = 'Voyager — cinematic mission replay';
+        iframe.setAttribute('allowfullscreen', '');
+        iframe.setAttribute('loading', 'eager');
+        iframe.className = 'playable-embed__iframe';
+        trigger.replaceWith(iframe);
+      };
+      trigger.addEventListener('click', activate);
+    })();
+  </script>
+</MirrorLayout>
+
+<style>
+  /* ─── Playable page container ────────────────────────────────────────── */
+  .playable-page {
+    margin-top: var(--space-7);
+  }
+
+  /* ─── Overview ────────────────────────────────────────────────────────── */
+  .playable-page__overview {
+    margin-bottom: var(--space-7);
+  }
+
+  .playable-page__body {
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-primary);
+    max-width: var(--measure-reading);
+    margin-top: var(--space-5);
+  }
+
+  .playable-page__body:first-of-type {
+    margin-top: 0;
+  }
+
+  .playable-page__links {
+    margin-top: var(--space-5);
+  }
+
+  .playable-page__repo-link,
+  .playable-page__link {
+    color: var(--color-accent);
+    text-underline-offset: 2px;
+    font-size: var(--font-size-body);
+  }
+
+  .playable-page__repo-link:hover,
+  .playable-page__link:hover {
+    color: var(--color-accent-hover, var(--color-accent));
+  }
+
+  /* ─── Embed section ───────────────────────────────────────────────────── */
+  .playable-page__embed-section {
+    border-top: 1px solid var(--color-border-hairline);
+    padding-top: var(--space-6);
+    margin-bottom: var(--space-8);
+  }
+
+  .playable-page__embed-heading {
+    font: var(--text-h2);
+    font-family: var(--font-family-base);
+    color: var(--color-ink-primary);
+    margin-bottom: var(--space-5);
+  }
+
+  /* ─── Embed widget ────────────────────────────────────────────────────── */
+  .playable-embed {
+    position: relative;
+    width: 100%;
+    max-width: 960px;
+  }
+
+  .playable-embed__trigger {
+    position: relative;
+    cursor: pointer;
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    aspect-ratio: 139 / 100;
+    background: #000;
+  }
+
+  .playable-embed__poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .playable-embed__play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: var(--space-3) var(--space-6);
+    background: var(--color-accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: background 0.15s ease;
+  }
+
+  .playable-embed__play-btn:hover {
+    background: var(--color-accent-hover, #16314f);
+  }
+
+  .playable-embed__play-btn:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .playable-embed__iframe {
+    width: 100%;
+    aspect-ratio: 139 / 100;
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-md);
+    display: block;
+    background: #000;
+  }
+
+  .playable-embed__fallback-link {
+    display: block;
+    position: relative;
+  }
+
+  .playable-embed__play-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: var(--space-3) var(--space-6);
+    background: var(--color-accent);
+    color: #fff;
+    border-radius: var(--radius-md);
+    font-family: var(--font-family-base);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .playable-embed__direct-link {
+    margin-top: var(--space-3);
+    font-size: var(--font-size-meta);
+    color: var(--color-ink-secondary);
+  }
+
+  /* ─── Section ─────────────────────────────────────────────────────────── */
+  .playable-page__section {
+    margin-top: var(--space-8);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-border-hairline);
+  }
+
+  .playable-page__section-heading {
+    font: var(--text-h2);
+    font-family: var(--font-family-base);
+    color: var(--color-ink-primary);
+    margin-bottom: var(--space-4);
+  }
+
+  .playable-page__list {
+    margin-top: var(--space-4);
+    padding-left: var(--space-5);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-primary);
+  }
+
+  .playable-page__list li {
+    margin-top: var(--space-2);
+  }
+
+  /* ─── Mobile ──────────────────────────────────────────────────────────── */
+  @media (max-width: 760px) {
+    .playable-embed {
+      max-width: 100%;
+    }
+  }
+</style>

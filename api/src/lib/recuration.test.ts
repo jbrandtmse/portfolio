@@ -1,5 +1,5 @@
 /**
- * recuration.test.ts — unit tests for api/src/lib/recuration.ts (Story 5.3 + 5.4).
+ * recuration.test.ts — unit tests for api/src/lib/recuration.ts (Story 5.3 + 5.4 + 7.2).
  *
  * Story 5.3 tests:
  *  AC3: assertSmc1Invariants() — the real table is SM-C1-valid (mutation-verified).
@@ -15,16 +15,25 @@
  *  getDirectiveForIntent() — returns order + deepen + skip from server tables.
  *  FR-8: skip = tour omission only; every scene id in skip is a real SceneId.
  *
+ * Story 7.2 tests (AC2/AC4, FR-25):
+ *  assertFeaturedInvariants() — real INTENT_FEATURED_ORDER_TABLE is permutation-valid (mutation-verified).
+ *  INTENT_FEATURED_ORDER_TABLE — every entry is a permutation of all 4 FEATURED_SLUGS.
+ *  getDirectiveForIntent() — returns featuredOrder for non-default intents (ADDITIVE/backward-compat).
+ *  default intent → no featuredOrder (backward-compat; client shows curated default).
+ *
  *  Rule 8: assertions scoped to specific fields; real module exports used (not inline copies).
  *  Mutation-verified: noted per test (removing table constraints reds the SM-C1 test).
  */
 import { describe, expect, it, vi, afterEach } from 'vitest';
 import {
+  FEATURED_SLUGS,
   INTENT_DEEPEN_TABLE,
+  INTENT_FEATURED_ORDER_TABLE,
   INTENT_ORDER_TABLE,
   INTENT_SKIP_TABLE,
   SCENE_IDS,
   VALID_INTENTS,
+  assertFeaturedInvariants,
   assertSmc1Invariants,
   classifyIntent,
   classifyIntentStub,
@@ -581,5 +590,195 @@ describe("getDirectiveForIntent() — full director's directive (Story 5.4, AC1)
       expect(directive.skip).not.toContain('hero');
       expect(directive.skip).not.toContain('close');
     }
+  });
+
+  // Story 7.2: getDirectiveForIntent() returns featuredOrder for non-default intents
+  it('Story 7.2: non-default intents include featuredOrder (ADDITIVE, server-owned)', () => {
+    for (const intent of VALID_INTENTS) {
+      const directive = getDirectiveForIntent(intent);
+      if (intent === 'default') {
+        // Backward-compat: default intent MUST NOT include featuredOrder
+        // (absent = client shows curated default order; Rule 8 — scoped check).
+        // Mutation-verification: if default were to emit featuredOrder, this reds.
+        expect(
+          directive.featuredOrder,
+          'default intent must NOT have featuredOrder (backward-compat)',
+        ).toBeUndefined();
+      } else {
+        // Non-default: featuredOrder MUST be present and be a permutation of all 4 slugs.
+        // Rule 8: scoped to featuredOrder field.
+        // Mutation-verification: removing featuredOrder from getDirectiveForIntent → this reds.
+        expect(
+          Array.isArray(directive.featuredOrder),
+          `${intent} featuredOrder must be an array`,
+        ).toBe(true);
+        expect(
+          directive.featuredOrder,
+          `${intent} featuredOrder must have ${FEATURED_SLUGS.length} slugs`,
+        ).toHaveLength(FEATURED_SLUGS.length);
+      }
+    }
+  });
+
+  it('Story 7.2: featuredOrder comes from INTENT_FEATURED_ORDER_TABLE (server-owned; model never emits)', () => {
+    for (const intent of VALID_INTENTS) {
+      if (intent === 'default') continue;
+      const directive = getDirectiveForIntent(intent);
+      // Rule 8: reference equality — same array as the table (not a copy).
+      // Mutation-verification: if getDirectiveForIntent returned a copy, this might still pass,
+      // but ensures the source is the real table (not an inline value).
+      expect(directive.featuredOrder).toBe(INTENT_FEATURED_ORDER_TABLE[intent]);
+    }
+  });
+});
+
+// ===========================================================================
+// Story 7.2 tests: INTENT_FEATURED_ORDER_TABLE + assertFeaturedInvariants
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// assertFeaturedInvariants() — real INTENT_FEATURED_ORDER_TABLE is permutation-valid (AC4)
+// ---------------------------------------------------------------------------
+
+describe('assertFeaturedInvariants() — real INTENT_FEATURED_ORDER_TABLE is valid (Story 7.2, AC4)', () => {
+  it('assertFeaturedInvariants() does not throw on the real table (Rule 8 — real module)', () => {
+    // The real table is guarded at module load; re-call confirms it.
+    // Mutation-verification: corrupt any entry → this throws.
+    expect(() => assertFeaturedInvariants()).not.toThrow();
+  });
+
+  it('every intent featuredOrder has exactly 7 slugs (permutation — no drops, no additions)', () => {
+    for (const [intent, order] of Object.entries(INTENT_FEATURED_ORDER_TABLE)) {
+      // Rule 8: scoped to the length field
+      // Mutation-verification: truncate any entry → this reds.
+      expect(
+        order.length,
+        `intent "${intent}" featuredOrder must have ${FEATURED_SLUGS.length} slugs`,
+      ).toBe(FEATURED_SLUGS.length);
+    }
+  });
+
+  it('every intent featuredOrder contains only valid FEATURED_SLUGS (no invented slugs)', () => {
+    const slugSet = new Set<string>(FEATURED_SLUGS);
+    for (const [intent, order] of Object.entries(INTENT_FEATURED_ORDER_TABLE)) {
+      for (const slug of order) {
+        // Rule 8: scoped to slug membership
+        // Mutation-verification: add an invented slug → this reds + assertFeaturedInvariants reds.
+        expect(
+          slugSet.has(slug),
+          `intent "${intent}" featuredOrder contains unknown slug "${slug}"`,
+        ).toBe(true);
+      }
+    }
+  });
+
+  it('every intent featuredOrder is a permutation of all 4 FEATURED_SLUGS (no duplicates)', () => {
+    const sortedCanonical = [...FEATURED_SLUGS].sort();
+    for (const [intent, order] of Object.entries(INTENT_FEATURED_ORDER_TABLE)) {
+      const sortedOrder = [...order].sort();
+      // Rule 8: deep equality on sorted arrays (detects drops/additions/duplicates)
+      // Mutation-verification: replace a slug with a duplicate → sorted arrays differ → reds.
+      expect(
+        sortedOrder,
+        `intent "${intent}" featuredOrder must be a permutation of all 4 featured slugs`,
+      ).toEqual(sortedCanonical);
+    }
+  });
+
+  it('INTENT_FEATURED_ORDER_TABLE has an entry for all 4 intents', () => {
+    for (const intent of VALID_INTENTS) {
+      // Rule 8: real module export
+      expect(Object.prototype.hasOwnProperty.call(INTENT_FEATURED_ORDER_TABLE, intent)).toBe(true);
+    }
+  });
+
+  it('default intent featuredOrder = curated default order (loandemo→vector-wars→voyager→christmas-elves→portfolio→guide→music)', () => {
+    // Rule 8: scoped to default entry contents
+    // Mutation-verification: changing the default order reds this.
+    expect(INTENT_FEATURED_ORDER_TABLE.default).toEqual([
+      'loandemo',
+      'vector-wars',
+      'voyager',
+      'christmas-elves',
+      'portfolio',
+      'guide',
+      'music',
+    ]);
+  });
+
+  it('assertFeaturedInvariants() THROWS on a bad entry (wrong length) — mutation-verification', () => {
+    const originalDefault = INTENT_FEATURED_ORDER_TABLE.default;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (INTENT_FEATURED_ORDER_TABLE as any).default = [
+        'loandemo',
+        'vector-wars',
+        'voyager',
+        'christmas-elves',
+        'portfolio',
+        'guide',
+        // music intentionally omitted → wrong length
+      ];
+      expect(() => assertFeaturedInvariants()).toThrow('[recuration] FEATURED VIOLATION');
+    } finally {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (INTENT_FEATURED_ORDER_TABLE as any).default = originalDefault;
+    }
+  });
+
+  it('assertFeaturedInvariants() THROWS on a bad entry (unknown slug) — mutation-verification', () => {
+    const originalDefault = INTENT_FEATURED_ORDER_TABLE.default;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (INTENT_FEATURED_ORDER_TABLE as any).default = [
+        'loandemo',
+        'vector-wars',
+        'voyager',
+        'christmas-elves',
+        'portfolio',
+        'guide',
+        'INVENTED',
+      ];
+      expect(() => assertFeaturedInvariants()).toThrow('[recuration] FEATURED VIOLATION');
+    } finally {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (INTENT_FEATURED_ORDER_TABLE as any).default = originalDefault;
+    }
+  });
+
+  it('assertFeaturedInvariants() THROWS on a bad entry (duplicate slug) — mutation-verification', () => {
+    const originalDefault = INTENT_FEATURED_ORDER_TABLE.default;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (INTENT_FEATURED_ORDER_TABLE as any).default = [
+        'loandemo',
+        'loandemo',
+        'voyager',
+        'christmas-elves',
+        'portfolio',
+        'guide',
+        'music',
+      ];
+      expect(() => assertFeaturedInvariants()).toThrow('[recuration] FEATURED VIOLATION');
+    } finally {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (INTENT_FEATURED_ORDER_TABLE as any).default = originalDefault;
+    }
+  });
+
+  it('different intents produce different featured orderings (relevance is meaningful)', () => {
+    // At least one non-default intent differs at position 0 from another.
+    // Rule 8: scoped to positions in the order arrays.
+    // Mutation-verification: if all intents returned identical orders, the reorder engine would be a no-op.
+    const organizerFirst = INTENT_FEATURED_ORDER_TABLE.organizer[0];
+    const builderFirst = INTENT_FEATURED_ORDER_TABLE.builder[0];
+    const explorerFirst = INTENT_FEATURED_ORDER_TABLE.explorer[0];
+
+    // At least two of the three non-default intents must differ at position [0].
+    const positions = new Set([organizerFirst, builderFirst, explorerFirst]);
+    expect(
+      positions.size,
+      'at least two non-default intents must differ at position [0]',
+    ).toBeGreaterThan(1);
   });
 });

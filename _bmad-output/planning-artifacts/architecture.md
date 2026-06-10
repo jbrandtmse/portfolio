@@ -74,7 +74,8 @@ grouped into architectural subsystems. Stage-1 set:
 - NFR-3 SEO/GEO (first-class): SSG-prerender all key routes; Static Mirror verifiable via
   view-source + JS-off; answer-first ledes; canonical/sitemap/robots(AI-crawler allow-list).
   Underwrites the #1 speaking goal.
-- NFR-4 Agent reliability/latency: build-time index only; TTFT <~1.5s, hard ceiling ~10s,
+- NFR-4 Agent reliability/latency: build-time index only; TTFT <~1.5s, hard ceiling ~15s
+  (absorbs reasoning-class tail latency and per-deployment `GUIDE_LLM_MODEL` variance),
   retrieval <~200ms; knowledge horizon = last build ("fresh-as-of-last-build", not "never stale").
 - NFR-5 Static, key-free runtime: only two dynamic components — the Guide backend and the
   Invite-Me endpoint; everything else prebuilt static served by nginx; no runtime API keys.
@@ -278,7 +279,7 @@ FR-17) · Adaptive Soundtrack (Stage 2; Suno regen prereq) · in-chat speaking-i
 
 - **Style:** minimal REST on Hono 4; two endpoints only.
 - `POST /api/guide` — {query, threadContext} → retrieve → ground → **SSE stream** (Hono
-  `streamSSE`); TTFT <~1.5s, hard ceiling ~10s → graceful in-voice fallback (NFR-4); per-message
+  `streamSSE`); TTFT <~1.5s, hard ceiling ~15s (absorbs per-deployment `GUIDE_LLM_MODEL` variance) → graceful in-voice fallback (NFR-4); per-message
   boundaries so the client batches `aria-live` per message (NFR-2). Endpoint-down → in-voice
   apology + Mirror links (closes the UX "Guide unavailable" gap).
 - `POST /api/invite` — JSON → Zod validate → persist (Drizzle) → notify owner (Nodemailer) →
@@ -444,7 +445,7 @@ No PII, no inquiry message bodies in logs.
 
 **Error handling:** central Hono error middleware → safe `{error:{code,message}}` + status; React
 islands wrapped in error boundaries — a failing island degrades to the static content beneath it
-(never a white-screen). The Guide on timeout (~10s)/endpoint-down → in-voice fallback + Mirror
+(never a white-screen). The Guide on timeout (~15s)/endpoint-down → in-voice fallback + Mirror
 links, not a raw error.
 **Validation:** Zod at the API boundary is authoritative; islands add inline validation for UX
 only. Never trust client validation alone.
@@ -710,7 +711,7 @@ supported (a goal, honestly, not a guarantee — red-team L5).
 font subset + Lighthouse-CI budget · NFR-2 → shared reduced-motion gate + non-modal Guide contract
 + AA tokens (UX spines authoritative) + Playwright JS-off/reduced-motion · NFR-3 → SSG Mirror +
 answer-first/canonical `MirrorLayout` + JSON-LD + robots/sitemap + `view-source` check · NFR-4 →
-SSE streaming + in-memory build-time index + fail-closed + ~10s fallback (targets pending load
+SSE streaming + in-memory build-time index + fail-closed + ~15s fallback (targets pending load
 test) · NFR-5 → static + two endpoints + secrets server-side via VM metadata · NFR-6 → code-as-CMS
 deterministic pipeline · NFR-7 → Umami + structured logs + `retrieval_miss` logging.
 

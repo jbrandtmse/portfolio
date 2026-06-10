@@ -16,7 +16,7 @@ import Footer from '../src/components/common/Footer.astro';
  *
  * The build-output suite (build-output.test.ts) already proves the footer's
  * contract on the ASSEMBLED page from a real `astro build`: present on the home +
- * every Mirror route + /browse, a labelled <nav>, a real <a> to all 10 routes,
+ * every Mirror route + /browse, a labelled <nav>, a real <a> to all Mirror routes,
  * 0 executable JS, and the Wordmark identity. This file does NOT re-assert those
  * page-level facts. It closes what the page suite leaves uncovered, pinned at the
  * COMPONENT boundary (independent of any page or BaseLayout):
@@ -30,7 +30,7 @@ import Footer from '../src/components/common/Footer.astro';
  *      URL pins that logic in isolation (the per-page assembled HTML can't vary
  *      the URL freely the way a direct render can).
  *   2. The component's OWN prop/URL -> DOM contract: the labelled <nav> landmark,
- *      a real <a> to every one of the canonical 10 routes, the Wordmark identity,
+ *      a real <a> to every one of the canonical routes, the Wordmark identity,
  *      and 0 <script> — proven on the component directly, not via index.astro.
  *
  * NOTE on Astro.url under the Container API: routeData does NOT populate
@@ -40,10 +40,12 @@ import Footer from '../src/components/common/Footer.astro';
  * resolves Astro.url.pathname to "/" (the site root), so Home is current.
  */
 
-// The canonical 10 Mirror routes (registry order, lib/routes.ts) — the footer
+// The canonical Mirror routes (registry order, lib/routes.ts) — the footer
 // must link every one. Kept as the test's own ground-truth copy so a registry
 // drift that silently drops a route still fails here (not the same array the
-// component reads).
+// component reads). Story 7.1 adds /technical/, /creative/, /agentic/.
+// Story 7.3 adds /work/vector-wars/, /work/christmas-elves/.
+// voyager is now LIVE as an external embed → adds /work/voyager/.
 const ALL_MIRROR_ROUTES = [
   '/',
   '/about/',
@@ -51,9 +53,15 @@ const ALL_MIRROR_ROUTES = [
   '/speaking/',
   '/speaking/reel/',
   '/work/loandemo/',
+  '/work/vector-wars/',
+  '/work/voyager/',
+  '/work/christmas-elves/',
   '/glass-box/',
   '/faq/',
   '/invite/',
+  '/technical/',
+  '/creative/',
+  '/agentic/',
   '/browse/',
 ] as const;
 
@@ -77,14 +85,14 @@ describe('Footer.astro — the global static-fallback contract in isolation (AC1
     expect(html).toMatch(/<nav\b[^>]*\saria-label="[^"]+"/);
   });
 
-  it('renders a real <a> to every one of the canonical 10 Mirror routes (followable JS-off)', () => {
+  it('renders a real <a> to every one of the canonical Mirror routes (followable JS-off)', () => {
     for (const route of ALL_MIRROR_ROUTES) {
       const hrefPattern = new RegExp(`<a\\b[^>]*\\shref="${route.replace(/\//g, '\\/')}"[^>]*>`);
       expect(html, `footer link to ${route}`).toMatch(hrefPattern);
     }
   });
 
-  it('links EXACTLY the 10 canonical routes — no missing / extra link (registry parity)', () => {
+  it('links EXACTLY the canonical routes — no missing / extra link (registry parity)', () => {
     // Every <a href> in the footer, in DOM order, must equal the canonical set
     // exactly (count + membership). Guards a registry drift adding/removing a
     // route from the footer (the single-source-of-truth contract, Task 1).

@@ -81,6 +81,26 @@ export const NAV_ROUTES: RouteEntry[] = [
     sourceFile: 'web/src/pages/work/loandemo.astro',
   },
   {
+    path: '/work/vector-wars',
+    label: 'Vector Wars — 3D rail shooter',
+    description:
+      'A retro-styled 3D rail shooter built with Three.js and Vite, playable live in the browser.',
+    sourceFile: 'web/src/pages/work/vector-wars.astro',
+  },
+  {
+    path: '/work/voyager',
+    label: 'Voyager — cinematic mission replay',
+    description:
+      'A browser-based cinematic replay of the Voyager 1 and 2 missions with real NASA/NAIF SPICE-kernel trajectories and Three.js 3D rendering.',
+    sourceFile: 'web/src/pages/work/voyager.astro',
+  },
+  {
+    path: '/work/christmas-elves',
+    label: 'Christmas Elves — puzzle game',
+    description: 'A Lemmings-inspired Christmas puzzle game built with Phaser 3 and TypeScript.',
+    sourceFile: 'web/src/pages/work/christmas-elves.astro',
+  },
+  {
     path: '/glass-box',
     label: 'Glass Box',
     description:
@@ -98,6 +118,26 @@ export const NAV_ROUTES: RouteEntry[] = [
     label: 'Invite Josh',
     description: 'Send a short note to invite Josh to speak or collaborate.',
     sourceFile: 'web/src/pages/invite/index.astro',
+  },
+  {
+    path: '/technical',
+    label: 'Technical work',
+    description:
+      'Production software and systems built through disciplined agentic engineering — the technical Wing.',
+    sourceFile: 'web/src/pages/technical.astro',
+  },
+  {
+    path: '/creative',
+    label: 'Creative work',
+    description: 'Music, generative art, and design — the creative Wing.',
+    sourceFile: 'web/src/pages/creative.astro',
+  },
+  {
+    path: '/agentic',
+    label: 'Agentic work',
+    description:
+      'Agent demonstrations, BMAD Method applications, and the live Guide — the agentic Wing.',
+    sourceFile: 'web/src/pages/agentic.astro',
   },
   {
     path: '/browse',

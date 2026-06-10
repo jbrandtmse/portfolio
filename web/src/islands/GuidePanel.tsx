@@ -320,9 +320,18 @@ export function GuidePanel({ pillRef }: { pillRef?: React.RefObject<HTMLButtonEl
               // GuidePanel → recuration controller → CSS `order` (DOM unchanged, FR-8).
               // Story 5.4: pass deepen/skip + motionAllowed so the controller
               // can apply depth tiers + drive the camera inside the motion gate.
+              // Story 7.2: pass featuredOrder (OPTIONAL) so the controller
+              // reorders the home featured-work items via CSS `order`. A client
+              // receiving a 5.x event (no featuredOrder) still works — absent = no reorder.
               const rec = parsed as RecurationEvent;
               applyRecuration(
-                { intent: rec.intent, order: rec.order, deepen: rec.deepen, skip: rec.skip },
+                {
+                  intent: rec.intent,
+                  order: rec.order,
+                  deepen: rec.deepen,
+                  skip: rec.skip,
+                  featuredOrder: rec.featuredOrder,
+                },
                 motionAllowed,
               );
             } else if (parsed.type === 'token') {

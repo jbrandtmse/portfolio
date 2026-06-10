@@ -322,7 +322,7 @@ test('(d) re-curation applied in place — URL unchanged, no navigation (AC2)', 
 // (e) AC2 / FR-8: JS-off → canonical DOM order unchanged
 // ---------------------------------------------------------------------------
 
-test('(e) JS-off: canonical DOM order hero→thesis→timeline→speaker→flagship→glass-box→close (FR-8)', async ({
+test('(e) JS-off: canonical DOM order hero→thesis→featured-work→timeline→speaker→flagship→glass-box→close (FR-8, Story 7.2)', async ({
   browser,
 }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
@@ -338,9 +338,11 @@ test('(e) JS-off: canonical DOM order hero→thesis→timeline→speaker→flags
 
     // Rule 8: deep equality on the ordered array (not just presence checks)
     // Mutation-verification: if the DOM order were changed, this would red.
+    // Story 7.2: #featured-work sits between #thesis and #timeline in the canonical arc.
     expect(sectionIds, 'JS-off: DOM section order must be the canonical arc (FR-8)').toEqual([
       'hero',
       'thesis',
+      'featured-work',
       'timeline',
       'speaker',
       'flagship',
@@ -348,8 +350,8 @@ test('(e) JS-off: canonical DOM order hero→thesis→timeline→speaker→flags
       'close',
     ]);
 
-    // ALL 7 scenes must be in the DOM (nothing hidden by re-curation — FR-8)
-    expect(sectionIds).toHaveLength(7);
+    // All 8 sections (7 scenes + featured-work) must be in the DOM (nothing hidden by re-curation — FR-8)
+    expect(sectionIds).toHaveLength(8);
   } finally {
     await context.close();
   }
@@ -1109,11 +1111,24 @@ test('(l) Story 5.4 FR-8: canonical DOM order unchanged after director cut (skip
 
   // Rule 8: deep equality on the ordered array (order matters)
   // Mutation-verification: if applyRecuration physically moved sections in the DOM, this reds.
+  // Story 7.2: #featured-work sits between #thesis and #timeline in the canonical arc.
   expect(
     sectionIds,
     'Story 5.4 FR-8: canonical DOM order must be unchanged after director cut',
-  ).toEqual(['hero', 'thesis', 'timeline', 'speaker', 'flagship', 'glass-box', 'close']);
+  ).toEqual([
+    'hero',
+    'thesis',
+    'featured-work',
+    'timeline',
+    'speaker',
+    'flagship',
+    'glass-box',
+    'close',
+  ]);
 
-  // All 7 must be present (nothing removed)
-  expect(sectionIds, 'all 7 scenes must be present in DOM after director cut').toHaveLength(7);
+  // All 8 (7 scenes + featured-work) must be present (nothing removed)
+  expect(
+    sectionIds,
+    'all 8 sections (7 scenes + featured-work) must be present in DOM after director cut',
+  ).toHaveLength(8);
 });

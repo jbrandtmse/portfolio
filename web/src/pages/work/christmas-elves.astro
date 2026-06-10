@@ -1,0 +1,326 @@
+---
+/**
+ * /work/christmas-elves/ — playable project page (Story 7.3; FR-26).
+ *
+ * Christmas Elves is a real, public GitHub project by Joshua R. Brandt, MSE:
+ * a Lemmings-inspired Christmas puzzle game built with Phaser 3 and TypeScript,
+ * playable live in the browser. The built game bundle is vendored in
+ * web/public/playables/christmas-elves/ and served via a lazy iframe.
+ *
+ * NFR-1 (0-JS isolation): game JS runs ONLY inside the iframe, loaded on demand.
+ * NFR-6 (determinism): vendored static dist, byte-stable.
+ * Rule 2 (URL form): route registered in routes.ts via routeHref().
+ * Rule 9 (credibility): real game, real repo, real description.
+ */
+import MirrorLayout from '../../layouts/MirrorLayout.astro';
+import { creativeWorkJsonLd, serializeJsonLd } from '../../lib/jsonld';
+import { PERSON, SITE_ORIGIN } from '../../lib/person';
+
+const LEDE =
+  "Joshua R. Brandt, MSE built Christmas Elves — a Lemmings-inspired Christmas puzzle game in Phaser 3 and TypeScript, playable live in the browser. Guide elves from the sleigh to the Christmas tree by assigning abilities to overcome each level's obstacles. The full source is publicly available on GitHub.";
+
+const christmasElvesJsonLd = serializeJsonLd(
+  creativeWorkJsonLd({
+    name: 'Christmas Elves',
+    author: PERSON,
+    description:
+      'A Lemmings-inspired Christmas puzzle game built by Joshua R. Brandt, MSE with Phaser 3 and TypeScript. Guide elves from the sleigh to the Christmas tree by assigning abilities — Sparkler, Stacker, Glider, Climber — to overcome obstacles before time runs out.',
+    url: `${SITE_ORIGIN}/work/christmas-elves/`,
+    dateCreated: '2026-01-01',
+  }),
+);
+---
+
+<MirrorLayout
+  heading="Christmas Elves — Lemmings-inspired puzzle game"
+  lede={LEDE}
+  title="Christmas Elves — Joshua R. Brandt, MSE"
+  description="Christmas Elves: a Lemmings-inspired Christmas puzzle game built by Joshua R. Brandt, MSE with Phaser 3 and TypeScript. Play it live in the browser."
+>
+  <script type="application/ld+json" slot="jsonld" is:inline set:html={christmasElvesJsonLd} />
+
+  <div class="playable-page">
+    {/* Game description */}
+    <section class="playable-page__overview">
+      <p class="playable-page__body">
+        Christmas Elves is a Lemmings-inspired puzzle game: guide elves from the sleigh to the
+        Christmas tree before time runs out. Each level places elves on a platform landscape with
+        gaps, drops, and walls. You assign special abilities — Sparkler (burns through walls),
+        Stacker (builds horizontal platforms), Glider (parachutes safely over drops), and Climber
+        (scales vertical surfaces) — by clicking the ability panel and then the elf to apply it.
+      </p>
+      <p class="playable-page__body">
+        Built with Phaser 3 for physics and sprite management, TypeScript for type safety, and Vite
+        as the bundler. Click an ability, click an elf. Deliver the gifts.
+      </p>
+      <p class="playable-page__links">
+        <a
+          href="https://github.com/jbrandtmse/christmas-elves"
+          class="playable-page__repo-link"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Public repository — github.com/jbrandtmse/christmas-elves
+        </a>
+      </p>
+    </section>
+
+    {/* Lazy embed — click-to-play (NFR-1) */}
+    <section class="playable-page__embed-section" id="play">
+      <h2 class="playable-page__embed-heading">Play Christmas Elves</h2>
+      <div class="playable-embed" id="elves-embed">
+        {/* JS-off fallback */}
+        <noscript>
+          <a href="/playables/christmas-elves/" class="playable-embed__fallback-link">
+            <img
+              src="/playables/christmas-elves/poster.png"
+              alt="Christmas Elves game — click to open"
+              class="playable-embed__poster"
+              width="928"
+              height="864"
+            />
+            <span class="playable-embed__play-label">Play Christmas Elves</span>
+          </a>
+        </noscript>
+        {/* With JS: poster shown until click */}
+        <div class="playable-embed__trigger" id="elves-trigger">
+          <img
+            src="/playables/christmas-elves/poster.png"
+            alt="Christmas Elves level — elves crossing platforms. Click to play."
+            class="playable-embed__poster"
+            width="928"
+            height="864"
+          />
+          <button
+            class="playable-embed__play-btn"
+            type="button"
+            aria-label="Launch Christmas Elves in the browser"
+          >
+            Play Christmas Elves
+          </button>
+        </div>
+        <p class="playable-embed__direct-link">
+          <a href="/playables/christmas-elves/" class="playable-page__link">
+            Open Christmas Elves in a new tab
+          </a>
+          &nbsp;·&nbsp;
+          <a
+            href="https://github.com/jbrandtmse/christmas-elves"
+            class="playable-page__link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Source on GitHub
+          </a>
+        </p>
+      </div>
+    </section>
+
+    {/* How to play */}
+    <section class="playable-page__section">
+      <h2 class="playable-page__section-heading">How to play</h2>
+      <ul class="playable-page__list">
+        <li>Click an ability in the panel (Sparkler, Stacker, Glider, or Climber) to select it</li>
+        <li>Click an elf to apply the selected ability to it</li>
+        <li>Guide enough elves to the Christmas tree before time runs out</li>
+        <li>Each ability has a limited number of uses per level</li>
+      </ul>
+    </section>
+
+    {/* Tech notes */}
+    <section class="playable-page__section">
+      <h2 class="playable-page__section-heading">Technical notes</h2>
+      <ul class="playable-page__list">
+        <li>Phaser 3 for game physics, sprite management, and canvas rendering</li>
+        <li>TypeScript with Vite as the bundler</li>
+        <li>Desktop browsers on Chrome, Firefox, and Edge</li>
+      </ul>
+    </section>
+  </div>
+
+  {/* Click-to-play loader — NFR-1 */}
+  <script>
+    (() => {
+      const trigger = document.getElementById('elves-trigger');
+      if (!trigger) return;
+      const activate = () => {
+        const iframe = document.createElement('iframe');
+        iframe.src = '/playables/christmas-elves/';
+        iframe.title = 'Christmas Elves puzzle game';
+        iframe.setAttribute('allowfullscreen', '');
+        iframe.setAttribute('loading', 'eager');
+        iframe.className = 'playable-embed__iframe';
+        trigger.replaceWith(iframe);
+      };
+      trigger.addEventListener('click', activate);
+    })();
+  </script>
+</MirrorLayout>
+
+<style>
+  /* ─── Playable page container ────────────────────────────────────────── */
+  .playable-page {
+    margin-top: var(--space-7);
+  }
+
+  .playable-page__overview {
+    margin-bottom: var(--space-7);
+  }
+
+  .playable-page__body {
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-primary);
+    max-width: var(--measure-reading);
+    margin-top: var(--space-5);
+  }
+
+  .playable-page__body:first-of-type {
+    margin-top: 0;
+  }
+
+  .playable-page__links {
+    margin-top: var(--space-5);
+  }
+
+  .playable-page__repo-link,
+  .playable-page__link {
+    color: var(--color-accent);
+    text-underline-offset: 2px;
+    font-size: var(--font-size-body);
+  }
+
+  .playable-page__repo-link:hover,
+  .playable-page__link:hover {
+    color: var(--color-accent-hover, var(--color-accent));
+  }
+
+  /* ─── Embed section ───────────────────────────────────────────────────── */
+  .playable-page__embed-section {
+    border-top: 1px solid var(--color-border-hairline);
+    padding-top: var(--space-6);
+    margin-bottom: var(--space-8);
+  }
+
+  .playable-page__embed-heading {
+    font: var(--text-h2);
+    font-family: var(--font-family-base);
+    color: var(--color-ink-primary);
+    margin-bottom: var(--space-5);
+  }
+
+  /* ─── Embed widget ────────────────────────────────────────────────────── */
+  .playable-embed {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+  }
+
+  .playable-embed__trigger {
+    position: relative;
+    cursor: pointer;
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: #0d2818;
+  }
+
+  .playable-embed__poster {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .playable-embed__play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: var(--space-3) var(--space-6);
+    background: var(--color-accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: background 0.15s ease;
+  }
+
+  .playable-embed__play-btn:hover {
+    background: var(--color-accent-hover, #16314f);
+  }
+
+  .playable-embed__play-btn:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .playable-embed__iframe {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-md);
+    display: block;
+    background: #0d2818;
+  }
+
+  .playable-embed__fallback-link {
+    display: block;
+    position: relative;
+  }
+
+  .playable-embed__play-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: var(--space-3) var(--space-6);
+    background: var(--color-accent);
+    color: #fff;
+    border-radius: var(--radius-md);
+    font-family: var(--font-family-base);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .playable-embed__direct-link {
+    margin-top: var(--space-3);
+    font-size: var(--font-size-meta);
+    color: var(--color-ink-secondary);
+  }
+
+  /* ─── Section ─────────────────────────────────────────────────────────── */
+  .playable-page__section {
+    margin-top: var(--space-8);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-border-hairline);
+  }
+
+  .playable-page__section-heading {
+    font: var(--text-h2);
+    font-family: var(--font-family-base);
+    color: var(--color-ink-primary);
+    margin-bottom: var(--space-4);
+  }
+
+  .playable-page__list {
+    margin-top: var(--space-4);
+    padding-left: var(--space-5);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-primary);
+  }
+
+  .playable-page__list li {
+    margin-top: var(--space-2);
+  }
+
+  /* ─── Mobile ──────────────────────────────────────────────────────────── */
+  @media (max-width: 760px) {
+    .playable-embed {
+      max-width: 100%;
+    }
+  }
+</style>

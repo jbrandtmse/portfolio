@@ -175,10 +175,11 @@ const HEADSHOT_LABEL = 'Joshua R. Brandt'; // museum-label name (the wordmark ca
     max-width: var(--measure-content);
     margin-inline: auto;
     padding: var(--space-section-band) var(--space-margin-desktop);
-    background:
-      linear-gradient(to right, var(--color-grid-line) 1px, transparent 1px) 0 0 / 104px 100%,
-      linear-gradient(to bottom, var(--color-grid-line) 1px, transparent 1px) 0 0 / 100% 104px,
-      var(--color-surface-base);
+    /* The drafting grid moved to a FIXED, full-viewport layer (`.home::before` in
+       index.astro) so it fills the whole page and persists on scroll — it used to
+       live on this hero box only (max-width + hero height), so it stopped at the
+       hero's foot and vanished on scroll. The hero is transparent over it. */
+    background: transparent;
   }
 
   /* hero-top: wordmark (left) + the framing marker (right), divided by a hairline. */

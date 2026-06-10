@@ -1,0 +1,125 @@
+---
+/**
+ * /agentic/ — the Agentic Wing greatest-hits index (Story 7.1; FR-24).
+ *
+ * A crawlable, self-canonical, 0-JS index of Joshua R. Brandt, MSE's agentic
+ * work. Reads from the Wings curated manifest (content/wings.ts). Built through
+ * MirrorLayout: answer-first lede naming "Joshua R. Brandt, MSE", exactly one
+ * <h1>, self-canonical, 0 executable JS.
+ *
+ * Modeled on web/src/pages/browse.astro (the MirrorLayout greatest-hits pattern).
+ *
+ * CREDIBILITY (Rule 9): both items trace to real, live shipped surfaces —
+ * /glass-box/ (the BMAD Method planning artifacts) and /faq/ (the Guide entry).
+ * RULE 2 (URL form): all internal links via routeHref() (trailing-slash form).
+ * NFR-1: 0 executable JS — no <script> that executes.
+ */
+import MirrorLayout from '../layouts/MirrorLayout.astro';
+import { creativeWorkJsonLd, serializeJsonLd } from '../lib/jsonld';
+import { PERSON, SITE_ORIGIN } from '../lib/person';
+import { routeHref } from '../lib/routes';
+import { WINGS } from '../../../content/wings';
+
+const wing = WINGS.find((w) => w.id === 'agentic');
+if (!wing) throw new Error('Agentic wing not found in content/wings.ts');
+
+const wingJsonLd = serializeJsonLd(
+  creativeWorkJsonLd({
+    name: wing.pageTitle,
+    author: PERSON,
+    description: wing.metaDescription,
+    url: `${SITE_ORIGIN}/agentic/`,
+    dateCreated: '2026-06-09',
+  }),
+);
+---
+
+<MirrorLayout
+  heading="Agentic work"
+  lede={wing.lede}
+  title={wing.pageTitle}
+  description={wing.metaDescription}
+>
+  <script type="application/ld+json" slot="jsonld" is:inline set:html={wingJsonLd} />
+
+  <section class="wing-index">
+    <p class="wing-index__domain">{wing.domain}</p>
+
+    <nav class="wing-nav" aria-label="Agentic work items">
+      <ul class="wing-list">
+        {
+          wing.items
+            .filter((item) => item.status === 'live')
+            .map((item) => (
+              <li class="wing-item">
+                <a class="wing-link" href={routeHref(item.href)}>
+                  {item.title}
+                </a>
+                <p class="wing-desc">{item.blurb}</p>
+              </li>
+            ))
+        }
+      </ul>
+    </nav>
+
+    {wing.moreComing !== false && <p class="wing-more-coming">{wing.moreComing}</p>}
+  </section>
+</MirrorLayout>
+
+<style>
+  /* Wing index — a calm greatest-hits list. Token-driven throughout. */
+  .wing-index {
+    margin-top: var(--space-6);
+  }
+
+  .wing-index__domain {
+    color: var(--color-ink-secondary);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    border-top: 1px solid var(--color-border-hairline);
+    padding-top: var(--space-4);
+    margin-bottom: var(--space-6);
+  }
+
+  .wing-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .wing-item {
+    padding: var(--space-4) 0;
+    border-top: 1px solid var(--color-border-hairline);
+  }
+
+  .wing-item:last-child {
+    border-bottom: 1px solid var(--color-border-hairline);
+  }
+
+  .wing-link {
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: underline;
+    text-decoration-color: var(--color-border-hairline);
+    text-underline-offset: 0.15em;
+  }
+
+  .wing-link:hover {
+    text-decoration-color: var(--color-accent);
+  }
+
+  .wing-desc {
+    margin-top: var(--space-2);
+    color: var(--color-ink-secondary);
+    line-height: var(--line-height-body);
+  }
+
+  .wing-more-coming {
+    margin-top: var(--space-6);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border-hairline);
+    color: var(--color-ink-secondary);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+  }
+</style>
