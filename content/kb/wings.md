@@ -22,7 +22,9 @@ The Technical Wing collects production software and systems built through discip
 
 - **loandemo** (/work/loandemo/) — the flagship case study. A real loan origination system built end to end using the BMAD Method: auditable agentic workflows, a real test suite, and a real retrospective. It answers the key question: can agentic engineering produce production software, not just impressions of it?
 
-More technical work is coming. Interactive technical demonstrations (vector-wars, voyager) land in the next stage.
+- **Vector Wars** (/work/vector-wars/) — a retro-styled 3D rail shooter in the vein of the 1983 Star Wars arcade cabinet, built with Three.js and Vite and playable live in the browser. Real-time 3D game architecture: rail camera, per-frame collision detection, and a level progression system — no game engine framework. Public repo: github.com/jbrandtmse/vector-wars.
+
+Voyager — a browser-based cinematic replay of the Voyager 1 and Voyager 2 missions, built with Three.js, TypeScript, and Vite — is real, public work (github.com/jbrandtmse/voyager) and is coming as a live embed once its full asset bundle is vendored.
 
 ## Creative Wing — /creative/
 
@@ -32,7 +34,7 @@ The Creative Wing collects music, generative art, and design work.
 
 - **Music on Suno** — original music composed and produced on Suno. [OPEN: Suno profile URL] — the profile link will be added when confirmed. Josh's Suno presence is a real, established channel; the specific profile URL is not yet committed to this repository.
 
-More creative work is coming. An interactive christmas-elves piece lands in the next stage.
+- **Christmas Elves** (/work/christmas-elves/) — a Lemmings-inspired Christmas puzzle game built with Phaser 3 and TypeScript. Guide elves from the sleigh to the Christmas tree by assigning abilities — Sparkler, Stacker, Glider, Climber — to overcome each level's obstacles. Playable live in the browser. Public repo: github.com/jbrandtmse/christmas-elves.
 
 ## Agentic Wing — /agentic/
 

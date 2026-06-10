@@ -81,6 +81,19 @@ export const NAV_ROUTES: RouteEntry[] = [
     sourceFile: 'web/src/pages/work/loandemo.astro',
   },
   {
+    path: '/work/vector-wars',
+    label: 'Vector Wars — 3D rail shooter',
+    description:
+      'A retro-styled 3D rail shooter built with Three.js and Vite, playable live in the browser.',
+    sourceFile: 'web/src/pages/work/vector-wars.astro',
+  },
+  {
+    path: '/work/christmas-elves',
+    label: 'Christmas Elves — puzzle game',
+    description: 'A Lemmings-inspired Christmas puzzle game built with Phaser 3 and TypeScript.',
+    sourceFile: 'web/src/pages/work/christmas-elves.astro',
+  },
+  {
     path: '/glass-box',
     label: 'Glass Box',
     description:

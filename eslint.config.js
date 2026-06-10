@@ -37,6 +37,9 @@ export default tseslint.config(
       // generated/compiled binaries (Basis Universal transcoder, Draco decoder)
       // and must not be linted.
       'web/public/cinematic/*.js',
+      // Vendored game bundles (Story 7.3) — built dists from external repos.
+      // These are pre-compiled static assets, not portfolio source code.
+      'web/public/playables/**',
     ],
   },
   js.configs.recommended,

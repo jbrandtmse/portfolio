@@ -10,6 +10,10 @@ pnpm-lock.yaml
 # and must not be reformatted.
 web/public/cinematic/*.js
 
+# Vendored game bundles (Story 7.3) — built dists from external repos.
+# These are pre-compiled static assets with their own formatting style.
+web/public/playables/
+
 # Pre-existing BMAD tooling, planning artifacts, and docs are owned by their
 # own workflows and authored in their own style — Prettier governs only the
 # application scaffold (web/api/shared + root config), not these.

@@ -337,5 +337,25 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
       testMatch: /featured-work\.spec\.ts/,
     },
+    // (Story 7.3) Playable project embeds — /work/vector-wars/ + /work/christmas-elves/.
+    // Desktop, JS on (JS-off cases run inline via browser.newContext()).
+    // Rule 7: proven to EXECUTE (registered here — the 7.2 lesson: an unregistered
+    // spec runs 0 times). Rule 3 real-runtime evidence for the NEW playable surfaces:
+    //   - reachable (single 200, no hop), one <h1>, entity-first lede, real source-
+    //     repo link (Rule 9), static poster loads (not a broken <img>);
+    //   - NFR-1 lazy-load: no /playables/<slug>/ game asset loads before activation;
+    //     clicking Play swaps in <iframe src="/playables/<slug>/"> which resolves 200;
+    //   - the vendored game index references only RESOLVABLE boot assets (the
+    //     base-path-mismatch regression guard — voyager's bug class);
+    //   - JS-off graceful fallback: poster + "Play →" link + repo link remain;
+    //   - christmas-elves (Phaser/Canvas2D) BOOTS headless — a <canvas> renders in
+    //     the iframe (game JS ran). vector-wars (WebGL 2.0) is NOT WebGL-gameplay-
+    //     verified here (headless env lacks WebGL2) — only page/embed/asset-resolve.
+    //   voyager is ABSENT — "coming" (incomplete LFS asset bundle).
+    {
+      name: 'playables',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /playables\.spec\.ts/,
+    },
   ],
 });

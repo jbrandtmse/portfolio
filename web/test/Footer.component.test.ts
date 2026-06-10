@@ -44,6 +44,8 @@ import Footer from '../src/components/common/Footer.astro';
 // must link every one. Kept as the test's own ground-truth copy so a registry
 // drift that silently drops a route still fails here (not the same array the
 // component reads). Story 7.1 adds /technical/, /creative/, /agentic/.
+// Story 7.3 adds /work/vector-wars/, /work/christmas-elves/ (voyager stays
+// "coming" — its LFS-backed asset bundle was not vendored; QA 2026-06-09).
 const ALL_MIRROR_ROUTES = [
   '/',
   '/about/',
@@ -51,6 +53,8 @@ const ALL_MIRROR_ROUTES = [
   '/speaking/',
   '/speaking/reel/',
   '/work/loandemo/',
+  '/work/vector-wars/',
+  '/work/christmas-elves/',
   '/glass-box/',
   '/faq/',
   '/invite/',

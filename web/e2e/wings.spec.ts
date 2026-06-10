@@ -28,8 +28,9 @@ import { expect, test } from '@playwright/test';
  *   - WCAG 2.1 AA (axe-core).
  *
  * AC2 / Rule 9 BROAD credibility audit (line-scoped, mutation-relevant):
- *   - The Stage-2 playables (vector-wars / voyager / christmas-elves) NEVER appear
- *     as a built/live item link — only inside the honest "more coming" note.
+ *   - Story 7.3: the two self-contained playables (vector-wars, christmas-elves)
+ *     ARE live item links; voyager stays "coming" (incomplete LFS asset bundle)
+ *     and NEVER appears as a built/live link — only in the honest "more coming" note.
  *   - The Suno music uses the deliberate `[OPEN: Suno profile URL]` honest flag —
  *     no invented Suno URL, no invented track title, and the music item is NOT a
  *     real <a href> (it is a non-link span, since its href is the [OPEN] flag).
@@ -55,26 +56,34 @@ interface WingCase {
   heading: string;
   /** Live item links the Wing must render as real, resolving <a>s. */
   liveItems: LiveItem[];
-  /** A fragment of the honest "more coming" copy that MUST be present. */
-  moreComing: string;
+  /**
+   * A fragment of the honest "more coming" copy that MUST be present, OR false
+   * when the Wing is complete (moreComing: false) — Story 7.3 made technical and
+   * creative complete so they no longer carry a "more coming" note.
+   */
+  moreComing: string | false;
 }
 
 // The exact trailing-slash href set the live items must resolve to. Hard-coded as
 // ground truth (Rule 8) — these are the real shipped surfaces from the allocation
 // table, NOT read from content/wings.ts.
+// Story 7.3 update: vector-wars (Technical) + christmas-elves (Creative) are now
+// LIVE items. voyager stays "coming" (its Git-LFS-backed asset bundle was not
+// vendored, so the embed cannot render — QA 2026-06-09).
 const WINGS: WingCase[] = [
   {
     path: '/technical/',
     heading: 'Technical work',
-    liveItems: [{ href: '/work/loandemo/' }],
-    moreComing: 'More technical work is coming',
+    liveItems: [{ href: '/work/loandemo/' }, { href: '/work/vector-wars/' }],
+    // Technical still has voyager coming → honest moreComing note names it.
+    moreComing: 'Voyager',
   },
   {
     path: '/creative/',
     heading: 'Creative work',
-    // Creative's only item is the [OPEN: Suno profile URL] music — NOT a live <a>.
-    liveItems: [],
-    moreComing: 'More creative work is coming',
+    // Creative's [OPEN: Suno] music is a non-link span; christmas-elves is now a live <a>.
+    liveItems: [{ href: '/work/christmas-elves/' }],
+    moreComing: false, // creative is now complete (Story 7.3)
   },
   {
     path: '/agentic/',
@@ -85,10 +94,6 @@ const WINGS: WingCase[] = [
 ];
 
 const SITE_ORIGIN = 'https://joshuabrandt.abacusai.cloud';
-
-// The Stage-2 playables that arrive in Story 7.3 — they must NEVER appear as a
-// built/live item link here (Rule 9 fabrication class b). Lower-cased substrings.
-const PLAYABLES = ['vector-wars', 'voyager', 'christmas-elves'];
 
 test.describe('Wings — /technical/, /creative/, /agentic/ (Story 7.1)', () => {
   for (const wing of WINGS) {
@@ -150,16 +155,26 @@ test.describe('Wings — /technical/, /creative/, /agentic/ (Story 7.1)', () => 
         }
       });
 
-      test('shows the honest "more coming" affordance — calm, no exclamation (AC2)', async ({
+      test('handles "more coming" affordance correctly — present when set, absent when Wing is complete (AC2)', async ({
         page,
       }) => {
         await page.goto(wing.path);
         const moreComing = page.locator('.wing-more-coming');
-        await expect(moreComing).toHaveCount(1);
-        await expect(moreComing).toContainText(wing.moreComing);
-        // No hype: the affordance carries no exclamation mark.
-        const text = (await moreComing.textContent()) ?? '';
-        expect(text, `"more coming" on ${wing.path} carries no exclamation`).not.toContain('!');
+        if (wing.moreComing === false) {
+          // Wing is complete (Story 7.3 made technical + creative complete) —
+          // the .wing-more-coming element must NOT be present.
+          await expect(
+            moreComing,
+            `${wing.path} must NOT have a .wing-more-coming element when Wing is complete`,
+          ).toHaveCount(0);
+        } else {
+          // Wing is still thin — the affordance must be present and calm.
+          await expect(moreComing).toHaveCount(1);
+          await expect(moreComing).toContainText(wing.moreComing);
+          // No hype: the affordance carries no exclamation mark.
+          const text = (await moreComing.textContent()) ?? '';
+          expect(text, `"more coming" on ${wing.path} carries no exclamation`).not.toContain('!');
+        }
       });
 
       test('the Wing is linked from the global footer (AC1: reachable without the agent)', async ({
@@ -302,66 +317,79 @@ test.describe('Wings — /technical/, /creative/, /agentic/ (Story 7.1)', () => 
    * adding a fabricated entry to content/wings.ts reds the matching test.
    * ──────────────────────────────────────────────────────────────────────── */
 
-  test('Rule 9 — no Stage-2 playable (vector-wars / voyager / christmas-elves) appears as a LIVE item link on any Wing', async ({
+  test('Rule 9 — shipped Story 7.3 playables ARE live links; voyager is NOT a live link', async ({
     page,
   }) => {
-    // The playables are Story 7.3 work → "more coming", NEVER a built/live link.
-    // Scope to the Wing item list's anchor hrefs: assert NO live <a href> on any
-    // Wing points at (or names) a playable. (They may appear ONLY inside the calm
-    // "more coming" prose, which is asserted separately below.)
-    for (const wing of WINGS) {
-      await page.goto(wing.path);
-      const itemHrefs = await page
-        .locator('.wing-list a')
-        .evaluateAll((els) =>
-          els.map((e) => (e as HTMLAnchorElement).getAttribute('href')?.toLowerCase() ?? ''),
-        );
-      const itemLinkText = await page
-        .locator('.wing-list a')
-        .evaluateAll((els) => els.map((e) => (e.textContent ?? '').toLowerCase()));
-      for (const playable of PLAYABLES) {
-        for (const href of itemHrefs) {
-          expect(
-            href.includes(playable),
-            `${wing.path}: playable "${playable}" must NOT be a live item href (it is 7.3 "more coming")`,
-          ).toBe(false);
-        }
-        for (const txt of itemLinkText) {
-          expect(
-            txt.includes(playable),
-            `${wing.path}: playable "${playable}" must NOT be a live item link label (it is 7.3 "more coming")`,
-          ).toBe(false);
-        }
-      }
-    }
-  });
-
-  test('Rule 9 — the playables appear (if at all) ONLY inside the honest "more coming" note, never as built work', async ({
-    page,
-  }) => {
-    // Where a playable name IS mentioned (technical: vector-wars/voyager;
-    // creative: christmas-elves), it must live in the .wing-more-coming note —
-    // proving it is framed as "coming", not shipped. This binds the framing, not
-    // just the absence-as-a-link above.
+    // Story 7.3 made vector-wars live on Technical + christmas-elves live on Creative.
+    // voyager stays "coming" (incomplete LFS bundle) → it must NOT be a live <a>.
+    // Mutation-verified: removing a shipped item reds; re-adding voyager as a live
+    // link reds.
     const technical = WINGS.find((w) => w.path === '/technical/')!;
     await page.goto(technical.path);
-    const techMoreText = (await page.locator('.wing-more-coming').textContent()) ?? '';
+    const techHrefs = await page
+      .locator('.wing-list a')
+      .evaluateAll((els) =>
+        els.map((e) => (e as HTMLAnchorElement).getAttribute('href')?.toLowerCase() ?? ''),
+      );
     expect(
-      techMoreText.toLowerCase(),
-      'technical "more coming" frames vector-wars as coming',
-    ).toContain('vector-wars');
+      techHrefs.some((h) => h.includes('vector-wars')),
+      'technical Wing must have a live item link for "vector-wars"',
+    ).toBe(true);
     expect(
-      techMoreText.toLowerCase(),
-      'technical "more coming" frames voyager as coming',
-    ).toContain('voyager');
+      techHrefs.some((h) => h.includes('voyager')),
+      'voyager must NOT be a live item link on Technical (it is "coming")',
+    ).toBe(false);
+    const creative = WINGS.find((w) => w.path === '/creative/')!;
+    await page.goto(creative.path);
+    const creativeHrefs = await page
+      .locator('.wing-list a')
+      .evaluateAll((els) =>
+        els.map((e) => (e as HTMLAnchorElement).getAttribute('href')?.toLowerCase() ?? ''),
+      );
+    expect(
+      creativeHrefs.some((h) => h.includes('christmas-elves')),
+      'creative Wing must have a live item link for "christmas-elves"',
+    ).toBe(true);
+  });
+
+  test('Rule 9 — shipped playables are live items; voyager appears ONLY in the "more coming" note', async ({
+    page,
+  }) => {
+    // Technical keeps a calm "more coming" note naming voyager (still coming);
+    // its shipped playable (vector-wars) is a live link, not framing prose.
+    // Creative is complete (christmas-elves live, Suno [OPEN]) → no more-coming note.
+    const technical = WINGS.find((w) => w.path === '/technical/')!;
+    await page.goto(technical.path);
+    const techMore = page.locator('.wing-more-coming');
+    await expect(
+      techMore,
+      'technical Wing keeps a "more coming" note (voyager coming)',
+    ).toHaveCount(1);
+    await expect(techMore, 'technical "more coming" frames voyager as coming').toContainText(
+      /voyager/i,
+    );
+    // vector-wars is a real item link (not framing prose); voyager is NOT a link.
+    const techHrefs = await page
+      .locator('.wing-list a')
+      .evaluateAll((els) =>
+        els.map((e) => (e as HTMLAnchorElement).getAttribute('href')?.toLowerCase() ?? ''),
+      );
+    expect(techHrefs.some((h) => h.includes('vector-wars'))).toBe(true);
+    expect(techHrefs.some((h) => h.includes('voyager'))).toBe(false);
 
     const creative = WINGS.find((w) => w.path === '/creative/')!;
     await page.goto(creative.path);
-    const creativeMoreText = (await page.locator('.wing-more-coming').textContent()) ?? '';
-    expect(
-      creativeMoreText.toLowerCase(),
-      'creative "more coming" frames christmas-elves as coming',
-    ).toContain('christmas-elves');
+    // No more-coming element on creative.
+    await expect(
+      page.locator('.wing-more-coming'),
+      'creative Wing has no .wing-more-coming (complete)',
+    ).toHaveCount(0);
+    const creativeHrefs = await page
+      .locator('.wing-list a')
+      .evaluateAll((els) =>
+        els.map((e) => (e as HTMLAnchorElement).getAttribute('href')?.toLowerCase() ?? ''),
+      );
+    expect(creativeHrefs.some((h) => h.includes('christmas-elves'))).toBe(true);
   });
 
   test('Rule 9 — the Suno music uses the deliberate [OPEN: Suno profile URL] honest flag (no invented URL, not a live <a>)', async ({
@@ -394,7 +422,15 @@ test.describe('Wings — /technical/, /creative/, /agentic/ (Story 7.1)', () => 
   }) => {
     // The closed allow-list of real, grounded targets from the allocation table.
     // Any live Wing item link OUTSIDE this set is a fabrication → red.
-    const ALLOWED = new Set(['/work/loandemo/', '/glass-box/', '/faq/']);
+    // Story 7.3 update: the two self-contained playable routes are now live
+    // surfaces. voyager is NOT here — it stays "coming" (incomplete LFS bundle).
+    const ALLOWED = new Set([
+      '/work/loandemo/',
+      '/glass-box/',
+      '/faq/',
+      '/work/vector-wars/',
+      '/work/christmas-elves/',
+    ]);
     for (const wing of WINGS) {
       await page.goto(wing.path);
       const liveHrefs = await page.locator('.wing-list a').evaluateAll((els) =>

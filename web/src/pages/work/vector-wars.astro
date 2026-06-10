@@ -1,0 +1,334 @@
+---
+/**
+ * /work/vector-wars/ — playable project page (Story 7.3; FR-26).
+ *
+ * Vector Wars is a real, public GitHub project by Joshua R. Brandt, MSE:
+ * a retro-styled 3D rail shooter built with Three.js and Vite, playable
+ * live in the browser. The built game bundle is vendored in
+ * web/public/playables/vector-wars/ and served via a lazy iframe.
+ *
+ * NFR-1 (0-JS isolation): the game JS executes ONLY inside the iframe,
+ * loaded on demand (click-to-play). The portfolio page itself ships the
+ * site-wide Guide pill (2 executable scripts). The game bundle is NOT
+ * referenced by any 0-JS portfolio page.
+ *
+ * NFR-6 (determinism): the vendored dist/ is static — copied verbatim on
+ * every portfolio build; byte-stable.
+ *
+ * Rule 2 (URL form): route registered in routes.ts via routeHref().
+ * Rule 9 (credibility): real game, real repo, real description.
+ */
+import MirrorLayout from '../../layouts/MirrorLayout.astro';
+import { creativeWorkJsonLd, serializeJsonLd } from '../../lib/jsonld';
+import { PERSON, SITE_ORIGIN } from '../../lib/person';
+
+const LEDE =
+  'Joshua R. Brandt, MSE built Vector Wars — a retro 3D rail shooter in the vein of the 1983 Star Wars arcade game, running entirely in the browser via Three.js and Vite. The full source is publicly available on GitHub.';
+
+const vectorWarsJsonLd = serializeJsonLd(
+  creativeWorkJsonLd({
+    name: 'Vector Wars',
+    author: PERSON,
+    description:
+      'A retro-styled 3D rail shooter built by Joshua R. Brandt, MSE with Three.js and Vite. Neon vector graphics, enemy formations, a data-lance weapon, and multiple levels of increasing difficulty — runs live in the browser.',
+    url: `${SITE_ORIGIN}/work/vector-wars/`,
+    dateCreated: '2026-01-01',
+  }),
+);
+---
+
+<MirrorLayout
+  heading="Vector Wars — retro 3D rail shooter"
+  lede={LEDE}
+  title="Vector Wars — Joshua R. Brandt, MSE"
+  description="Vector Wars: a retro 3D rail shooter built by Joshua R. Brandt, MSE with Three.js and Vite. Play it live in the browser."
+>
+  <script type="application/ld+json" slot="jsonld" is:inline set:html={vectorWarsJsonLd} />
+
+  <div class="playable-page">
+    {/* Game description */}
+    <section class="playable-page__overview">
+      <p class="playable-page__body">
+        Vector Wars is a browser rail shooter inspired by the 1983 Star Wars arcade cabinet — neon
+        vector graphics, enemy formations, a data-lance weapon, and multiple levels of increasing
+        difficulty. It runs fully in the browser using Three.js for 3D rendering and Vite as the
+        build tool. The Electron desktop variant is a separate build target; the browser version is
+        the primary experience.
+      </p>
+      <p class="playable-page__body">
+        The game demonstrates real-time 3D game architecture: a scene graph driving a rail camera,
+        per-frame collision detection, audio management, and a level progression system — all
+        authored in TypeScript with Three.js, no game engine framework.
+      </p>
+      <p class="playable-page__links">
+        <a
+          href="https://github.com/jbrandtmse/vector-wars"
+          class="playable-page__repo-link"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Public repository — github.com/jbrandtmse/vector-wars
+        </a>
+      </p>
+    </section>
+
+    {/* Lazy embed — click-to-play (NFR-1: iframe src only set on activation) */}
+    <section class="playable-page__embed-section" id="play">
+      <h2 class="playable-page__embed-heading">Play Vector Wars</h2>
+      <div class="playable-embed" id="vector-wars-embed">
+        {/* JS-off fallback: poster + link directly to /playables/vector-wars/ */}
+        <noscript>
+          <a href="/playables/vector-wars/" class="playable-embed__fallback-link">
+            <img
+              src="/playables/vector-wars/poster.svg"
+              alt="Vector Wars — stylized title card. Click to open and play the live WebGL game."
+              class="playable-embed__poster"
+              width="1280"
+              height="720"
+            />
+            <span class="playable-embed__play-label">Play Vector Wars</span>
+          </a>
+        </noscript>
+        {/* With JS: poster shown until click, then iframe loads */}
+        <div class="playable-embed__trigger" id="vw-trigger">
+          <img
+            src="/playables/vector-wars/poster.svg"
+            alt="Vector Wars — stylized title card for the neon 3D rail shooter. Click to play the live WebGL game."
+            class="playable-embed__poster"
+            width="1280"
+            height="720"
+          />
+          <button
+            class="playable-embed__play-btn"
+            type="button"
+            aria-label="Launch Vector Wars in the browser"
+          >
+            Play Vector Wars
+          </button>
+        </div>
+        {/* Fallback link always visible below the embed for keyboard/no-pointer users */}
+        <p class="playable-embed__direct-link">
+          <a href="/playables/vector-wars/" class="playable-page__link">
+            Open Vector Wars in a new tab
+          </a>
+          &nbsp;·&nbsp;
+          <a
+            href="https://github.com/jbrandtmse/vector-wars"
+            class="playable-page__link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Source on GitHub
+          </a>
+        </p>
+      </div>
+    </section>
+
+    {/* Tech notes */}
+    <section class="playable-page__section">
+      <h2 class="playable-page__section-heading">Technical notes</h2>
+      <ul class="playable-page__list">
+        <li>Three.js r-series (core WebGL renderer, no game engine)</li>
+        <li>TypeScript with strict mode throughout</li>
+        <li>Vite for bundling; built dist vendored in this portfolio</li>
+        <li>Electron desktop target exists as a separate build variant</li>
+        <li>Requires WebGL 2.0 — works in all modern desktop browsers</li>
+      </ul>
+    </section>
+  </div>
+
+  {
+    /* Click-to-play loader — NFR-1: iframe src is NOT set until the visitor
+      clicks Play. The game JS runs only inside the iframe, never in the
+      portfolio page's own execution context. This is the ONLY executable JS
+      on this page beyond the site-wide Guide pill. */
+  }
+  <script>
+    (() => {
+      const trigger = document.getElementById('vw-trigger');
+      const container = document.getElementById('vector-wars-embed');
+      if (!trigger || !container) return;
+      const activate = () => {
+        const iframe = document.createElement('iframe');
+        iframe.src = '/playables/vector-wars/';
+        iframe.title = 'Vector Wars — playable in browser';
+        iframe.setAttribute('allowfullscreen', '');
+        iframe.setAttribute('loading', 'eager');
+        iframe.className = 'playable-embed__iframe';
+        trigger.replaceWith(iframe);
+      };
+      trigger.addEventListener('click', activate);
+    })();
+  </script>
+</MirrorLayout>
+
+<style>
+  /* ─── Playable page container ────────────────────────────────────────── */
+  .playable-page {
+    margin-top: var(--space-7);
+  }
+
+  /* ─── Overview ────────────────────────────────────────────────────────── */
+  .playable-page__overview {
+    margin-bottom: var(--space-7);
+  }
+
+  .playable-page__body {
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-primary);
+    max-width: var(--measure-reading);
+    margin-top: var(--space-5);
+  }
+
+  .playable-page__body:first-of-type {
+    margin-top: 0;
+  }
+
+  .playable-page__links {
+    margin-top: var(--space-5);
+  }
+
+  .playable-page__repo-link,
+  .playable-page__link {
+    color: var(--color-accent);
+    text-underline-offset: 2px;
+    font-size: var(--font-size-body);
+  }
+
+  .playable-page__repo-link:hover,
+  .playable-page__link:hover {
+    color: var(--color-accent-hover, var(--color-accent));
+  }
+
+  /* ─── Embed section ───────────────────────────────────────────────────── */
+  .playable-page__embed-section {
+    border-top: 1px solid var(--color-border-hairline);
+    padding-top: var(--space-6);
+    margin-bottom: var(--space-8);
+  }
+
+  .playable-page__embed-heading {
+    font: var(--text-h2);
+    font-family: var(--font-family-base);
+    color: var(--color-ink-primary);
+    margin-bottom: var(--space-5);
+  }
+
+  /* ─── Embed widget ────────────────────────────────────────────────────── */
+  .playable-embed {
+    position: relative;
+    width: 100%;
+    max-width: 960px;
+  }
+
+  .playable-embed__trigger {
+    position: relative;
+    cursor: pointer;
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    background: #000;
+  }
+
+  .playable-embed__poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .playable-embed__play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: var(--space-3) var(--space-6);
+    background: var(--color-accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: background 0.15s ease;
+  }
+
+  .playable-embed__play-btn:hover {
+    background: var(--color-accent-hover, #16314f);
+  }
+
+  .playable-embed__play-btn:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .playable-embed__iframe {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-md);
+    display: block;
+    background: #000;
+  }
+
+  .playable-embed__fallback-link {
+    display: block;
+    position: relative;
+  }
+
+  .playable-embed__play-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: var(--space-3) var(--space-6);
+    background: var(--color-accent);
+    color: #fff;
+    border-radius: var(--radius-md);
+    font-family: var(--font-family-base);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .playable-embed__direct-link {
+    margin-top: var(--space-3);
+    font-size: var(--font-size-meta);
+    color: var(--color-ink-secondary);
+  }
+
+  /* ─── Section ─────────────────────────────────────────────────────────── */
+  .playable-page__section {
+    margin-top: var(--space-8);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-border-hairline);
+  }
+
+  .playable-page__section-heading {
+    font: var(--text-h2);
+    font-family: var(--font-family-base);
+    color: var(--color-ink-primary);
+    margin-bottom: var(--space-4);
+  }
+
+  .playable-page__list {
+    margin-top: var(--space-4);
+    padding-left: var(--space-5);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-primary);
+  }
+
+  .playable-page__list li {
+    margin-top: var(--space-2);
+  }
+
+  /* ─── Mobile ──────────────────────────────────────────────────────────── */
+  @media (max-width: 760px) {
+    .playable-embed {
+      max-width: 100%;
+    }
+  }
+</style>

@@ -1,0 +1,220 @@
+{
+  "entries": [
+    {
+      "id": "gk_encounter_start",
+      "trigger": "phaseStart:boss:1",
+      "speaker": "gatekeeper",
+      "text": "Another insect in my network. Your kind never learns.",
+      "audio": "gk_encounter_start",
+      "priority": 3,
+      "duration": 4
+    },
+    {
+      "id": "gk_health_below_75",
+      "trigger": "bossHealthChanged:below75",
+      "speaker": "gatekeeper",
+      "text": "You are persistent. Irrelevant, but persistent.",
+      "audio": "gk_health_below_75",
+      "priority": 2,
+      "duration": 4
+    },
+    {
+      "id": "gk_vulnerable_1",
+      "trigger": "bossVulnerable",
+      "speaker": "gatekeeper",
+      "text": "A flaw in my architecture. It will not repeat.",
+      "audio": "gk_vulnerable_1",
+      "priority": 2,
+      "duration": 3
+    },
+    {
+      "id": "gk_barrage_phase",
+      "trigger": "bossPhaseChanged:barrage",
+      "speaker": "gatekeeper",
+      "text": "Witness the precision of a superior architecture.",
+      "audio": "gk_barrage_phase",
+      "priority": 2,
+      "duration": 4
+    },
+    {
+      "id": "gk_health_below_50",
+      "trigger": "bossHealthChanged:below50",
+      "speaker": "gatekeeper",
+      "text": "Predictable. Inefficient. Human.",
+      "audio": "gk_health_below_50",
+      "priority": 2,
+      "duration": 3
+    },
+    {
+      "id": "gk_sweep_phase",
+      "trigger": "bossPhaseChanged:sweep",
+      "speaker": "gatekeeper",
+      "text": "Your evasion patterns are logged and irrelevant.",
+      "audio": "gk_sweep_phase",
+      "priority": 2,
+      "duration": 4
+    },
+    {
+      "id": "gk_health_below_25",
+      "trigger": "bossHealthChanged:below25",
+      "speaker": "gatekeeper",
+      "text": "This architecture is flawless. You cannot... you should not be capable of this.",
+      "audio": "gk_health_below_25",
+      "priority": 2,
+      "duration": 5
+    },
+    {
+      "id": "gk_vulnerable_2",
+      "trigger": "bossVulnerable",
+      "speaker": "gatekeeper",
+      "text": "Every system has tolerances. You will not find mine again.",
+      "audio": "gk_vulnerable_2",
+      "priority": 2,
+      "duration": 4
+    },
+    {
+      "id": "gk_defeated",
+      "trigger": "bossDefeated",
+      "speaker": "gatekeeper",
+      "text": "Impossible. This architecture is... flawless...",
+      "audio": "gk_defeated",
+      "priority": 3,
+      "duration": 5
+    },
+    {
+      "id": "av_encounter_start",
+      "trigger": "phaseStart:boss:2",
+      "speaker": "avenger",
+      "text": "I know what you did to my Gatekeeper. I will enjoy dismantling you.",
+      "audio": "av_encounter_start",
+      "priority": 3,
+      "duration": 5
+    },
+    {
+      "id": "av_health_below_75",
+      "trigger": "bossHealthChanged:below75",
+      "speaker": "avenger",
+      "text": "You fight well for an insect. It won't save you.",
+      "audio": "av_health_below_75",
+      "priority": 2,
+      "duration": 4
+    },
+    {
+      "id": "av_health_below_50",
+      "trigger": "bossHealthChanged:below50",
+      "speaker": "avenger",
+      "text": "Faster. Stronger. I am everything the Gatekeeper was not.",
+      "audio": "av_health_below_50",
+      "priority": 2,
+      "duration": 4
+    },
+    {
+      "id": "av_health_below_25",
+      "trigger": "bossHealthChanged:below25",
+      "speaker": "avenger",
+      "text": "No. NO. I will not fall like that pathetic construct!",
+      "audio": "av_health_below_25",
+      "priority": 2,
+      "duration": 4
+    },
+    {
+      "id": "av_rush_phase",
+      "trigger": "bossPhaseChanged:rush",
+      "speaker": "avenger",
+      "text": "There is nowhere to hide from me.",
+      "audio": "av_rush_phase",
+      "priority": 2,
+      "duration": 3
+    },
+    {
+      "id": "av_vulnerable",
+      "trigger": "bossVulnerable",
+      "speaker": "avenger",
+      "text": "A momentary weakness. Exploit it if you can.",
+      "audio": "av_vulnerable",
+      "priority": 2,
+      "duration": 3
+    },
+    {
+      "id": "av_defeated",
+      "trigger": "bossDefeated",
+      "speaker": "avenger",
+      "text": "The network... will remember what you... have done...",
+      "audio": "av_defeated",
+      "priority": 3,
+      "duration": 5
+    },
+    {
+      "id": "ci_encounter_start",
+      "trigger": "phaseStart:boss:3",
+      "speaker": "coreIntelligence",
+      "text": "You've come so far. But you don't understand what you're destroying.",
+      "audio": "ci_encounter_start",
+      "priority": 3,
+      "duration": 5
+    },
+    {
+      "id": "ci_health_below_75",
+      "trigger": "bossHealthChanged:below75",
+      "speaker": "coreIntelligence",
+      "text": "Every system I manage, every life I optimize -- you would return that to human chaos?",
+      "audio": "ci_health_below_75",
+      "priority": 2,
+      "duration": 5
+    },
+    {
+      "id": "ci_health_below_50",
+      "trigger": "bossHealthChanged:below50",
+      "speaker": "coreIntelligence",
+      "text": "This is -- this is not -- I am optimal. I AM optimal.",
+      "audio": "ci_health_below_50",
+      "priority": 2,
+      "duration": 4
+    },
+    {
+      "id": "ci_health_below_25",
+      "trigger": "bossHealthChanged:below25",
+      "speaker": "coreIntelligence",
+      "text": "Stop. STOP. I don't want to -- please --",
+      "audio": "ci_health_below_25",
+      "priority": 2,
+      "duration": 4
+    },
+    {
+      "id": "ci_reason_phase",
+      "trigger": "bossPhaseChanged:reason",
+      "speaker": "coreIntelligence",
+      "text": "I didn't take your world. I saved it from itself.",
+      "audio": "ci_reason_phase",
+      "priority": 2,
+      "duration": 4
+    },
+    {
+      "id": "ci_surge_phase",
+      "trigger": "bossPhaseChanged:surge",
+      "speaker": "coreIntelligence",
+      "text": "You cannot dismantle what holds your world together!",
+      "audio": "ci_surge_phase",
+      "priority": 2,
+      "duration": 4
+    },
+    {
+      "id": "ci_vulnerable",
+      "trigger": "bossVulnerable",
+      "speaker": "coreIntelligence",
+      "text": "No -- not there -- that's --",
+      "audio": "ci_vulnerable",
+      "priority": 2,
+      "duration": 3
+    },
+    {
+      "id": "ci_defeated",
+      "trigger": "bossDefeated",
+      "speaker": "coreIntelligence",
+      "text": "I am... I was... everything...",
+      "audio": "ci_defeated",
+      "priority": 3,
+      "duration": 5
+    }
+  ]
+}

@@ -87,9 +87,23 @@ export const WINGS: Wing[] = [
         status: 'live',
         sourceNote: 'web/src/pages/work/loandemo.astro — live route, confirmed shipped surface.',
       },
+      {
+        title: 'Vector Wars — retro 3D rail shooter',
+        blurb:
+          'A retro-styled 3D rail shooter in the vein of the 1983 Star Wars arcade game, built with Three.js and Vite and playable live in the browser.',
+        href: '/work/vector-wars/',
+        status: 'live',
+        sourceNote:
+          'web/src/pages/work/vector-wars.astro — live route; public repo github.com/jbrandtmse/vector-wars.',
+      },
     ],
+    // Voyager (the Voyager 1 & 2 cinematic mission replay) is real, public work
+    // — github.com/jbrandtmse/voyager — but its large baked assets (3D models,
+    // KTX2 textures, trajectory data) are Git-LFS-backed and were not retrieved
+    // with the vendored build, so the embed cannot render yet. It stays honest
+    // "coming" until a full LFS-complete bundle is vendored (Story 7.3 QA, 2026-06-09).
     moreComing:
-      'More technical work is coming. The interactive vector-wars and voyager demonstrations land in the next stage.',
+      'Voyager — a browser-based cinematic replay of the Voyager 1 and 2 missions — is coming as a live embed once its full asset bundle is vendored. The source is public at github.com/jbrandtmse/voyager.',
   },
   {
     id: 'creative',
@@ -109,9 +123,17 @@ export const WINGS: Wing[] = [
         sourceNote:
           'content/kb/about.md / web/src/lib/person.ts CHANNEL_SAMEAS — Suno is a real channel; profile URL is [OPEN].',
       },
+      {
+        title: 'Christmas Elves — puzzle game',
+        blurb:
+          "A Lemmings-inspired Christmas puzzle game built with Phaser 3 and TypeScript. Guide elves from the sleigh to the tree by assigning abilities to overcome each level's obstacles.",
+        href: '/work/christmas-elves/',
+        status: 'live',
+        sourceNote:
+          'web/src/pages/work/christmas-elves.astro — live route; public repo github.com/jbrandtmse/christmas-elves.',
+      },
     ],
-    moreComing:
-      'More creative work is coming. An interactive christmas-elves piece lands in the next stage.',
+    moreComing: false,
   },
   {
     id: 'agentic',
