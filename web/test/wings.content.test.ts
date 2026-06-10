@@ -40,8 +40,8 @@ const KB_DOCS: Array<{ filename: string; content: string }> = readdirSync(kbDir)
   .map((filename) => ({ filename, content: readFileSync(join(kbDir, filename), 'utf8') }));
 
 // The closed allow-list of real, grounded LIVE targets (updated Story 7.3: the
-// two self-contained playables are now live; voyager stays "coming" — its
-// Git-LFS-backed asset bundle was not vendored, so the embed cannot render).
+// three playables are now live: vector-wars, christmas-elves, and voyager
+// (voyager is now a live external embed at https://voyager.abacusai.cloud/).
 // Any 'live' Wing item href OUTSIDE this set is a fabrication.
 const ALLOWED_LIVE_HREFS = new Set([
   '/work/loandemo/',
@@ -50,11 +50,12 @@ const ALLOWED_LIVE_HREFS = new Set([
   // Story 7.3: two self-contained playable project pages are now live
   '/work/vector-wars/',
   '/work/christmas-elves/',
+  // voyager is now LIVE as an external embed at https://voyager.abacusai.cloud/
+  '/work/voyager/',
 ]);
 
-// The Story 7.3 playables. vector-wars + christmas-elves shipped live; voyager
-// stays "coming" (incomplete LFS asset bundle — QA 2026-06-09).
-const PLAYABLES = ['vector-wars', 'christmas-elves'];
+// All three playables are now live.
+const PLAYABLES = ['vector-wars', 'christmas-elves', 'voyager'];
 
 // Fabricated artifact-type claims for the Glass Box. The Glass Box index actually
 // publishes brainstorm / research / brief / UX / PRD artifacts — NOT ADRs, and the
@@ -87,36 +88,32 @@ describe('content/wings.ts — the curated manifest is grounded (AC2 / Rule 9)',
     }
   });
 
-  it('Story 7.3 shipped playables (vector-wars / christmas-elves) are LIVE items; voyager is NOT live', () => {
-    // Story 7.3 made vector-wars (Technical) + christmas-elves (Creative) live.
-    // voyager stays "coming" (incomplete LFS bundle). Mutation-verified: reds if
-    // a shipped playable is removed/demoted, OR if voyager is re-added as live
-    // without its full asset bundle.
+  it('all three playables (vector-wars / christmas-elves / voyager) are LIVE items', () => {
+    // vector-wars (Technical) + christmas-elves (Creative) shipped in Story 7.3.
+    // voyager (Technical) is now a live external embed at https://voyager.abacusai.cloud/.
+    // Mutation-verified: reds if a shipped playable is removed/demoted.
     const technical = findWing('technical')!;
     const vw = technical.items.find((i) => i.href === '/work/vector-wars/');
     expect(vw, 'technical Wing has a vector-wars live item').toBeDefined();
     expect(vw!.status, 'vector-wars item is status:live').toBe('live');
-    // voyager must NOT be a live item — it is honest "coming" prose only.
+    // voyager IS now a live item (external embed — not a vendored bundle).
     const voy = technical.items.find((i) => i.href === '/work/voyager/');
-    expect(voy, 'voyager must NOT be a live Wing item (incomplete asset bundle)').toBeUndefined();
+    expect(voy, 'technical Wing has a voyager live item (external embed)').toBeDefined();
+    expect(voy!.status, 'voyager item is status:live').toBe('live');
     const creative = findWing('creative')!;
     const elves = creative.items.find((i) => i.href === '/work/christmas-elves/');
     expect(elves, 'creative Wing has a christmas-elves live item').toBeDefined();
     expect(elves!.status, 'christmas-elves item is status:live').toBe('live');
   });
 
-  it('technical moreComing names voyager as coming; creative moreComing is false (Story 7.3)', () => {
-    // Technical still has voyager coming → honest moreComing string naming it.
+  it('technical moreComing is false (voyager now live); creative moreComing is false', () => {
+    // voyager is now a live external embed → technical is complete → moreComing: false.
     // Creative is complete (christmas-elves live, Suno [OPEN]) → moreComing false.
     const technical = findWing('technical')!;
     expect(
-      typeof technical.moreComing === 'string' && technical.moreComing.length > 0,
-      'technical moreComing is an honest string (voyager still coming)',
-    ).toBe(true);
-    expect(
-      String(technical.moreComing).toLowerCase(),
-      'technical moreComing frames voyager as coming',
-    ).toContain('voyager');
+      technical.moreComing,
+      'technical moreComing is false (voyager is now live as an external embed)',
+    ).toBe(false);
     const creative = findWing('creative')!;
     expect(creative.moreComing, 'creative moreComing is false (christmas-elves now live)').toBe(
       false,
@@ -141,19 +138,18 @@ describe('content/wings.ts — the curated manifest is grounded (AC2 / Rule 9)',
     }
   });
 
-  it('agentic + technical carry honest "more coming" affordances; creative is complete (Story 7.3)', () => {
-    // Story 7.3: technical (vector-wars live + loandemo) still has voyager coming →
-    // honest moreComing string. Creative (christmas-elves live + Suno [OPEN]) is
-    // complete → moreComing false. Agentic (2 live) still carries a coming note.
-    // Every moreComing string is calm — no exclamation (Rule 9 / no hype).
-    for (const id of ['technical', 'agentic'] as const) {
-      const wing = findWing(id)!;
-      expect(
-        typeof wing.moreComing === 'string' && wing.moreComing.length > 0,
-        `${id} carries an honest moreComing affordance`,
-      ).toBe(true);
-      expect(String(wing.moreComing), `${id} moreComing has no exclamation`).not.toContain('!');
-    }
+  it('agentic carries an honest "more coming" affordance; technical + creative are complete', () => {
+    // voyager is now live → technical is complete → moreComing: false.
+    // Creative (christmas-elves live + Suno [OPEN]) is complete → moreComing false.
+    // Agentic (2 live) still carries a coming note — calm, no exclamation.
+    const agentic = findWing('agentic')!;
+    expect(
+      typeof agentic.moreComing === 'string' && agentic.moreComing.length > 0,
+      'agentic carries an honest moreComing affordance',
+    ).toBe(true);
+    expect(String(agentic.moreComing), 'agentic moreComing has no exclamation').not.toContain('!');
+    const technical = findWing('technical')!;
+    expect(technical.moreComing, 'technical moreComing is false (voyager now live)').toBe(false);
     const creative = findWing('creative')!;
     expect(creative.moreComing, 'creative moreComing is false (Wing complete)').toBe(false);
   });
@@ -180,19 +176,19 @@ describe('content/kb/wings.md — the Guide-grounding KB entry is grounded (AC2 
     ).toBe(false);
   });
 
-  it('names the shipped Story 7.3 playables as live work items; voyager only in "coming" prose', () => {
-    // Story 7.3 made vector-wars + christmas-elves live → each on a live-work bullet.
-    // voyager stays "coming" (incomplete LFS bundle) → it must NOT be on a live bullet,
-    // and the KB must NOT reference a /work/voyager/ page (no such page is built).
+  it('names all three playables as live work items; voyager is on a live bullet with /work/voyager/', () => {
+    // All three playables are now live: vector-wars, christmas-elves, and voyager.
+    // voyager is a live external embed at https://voyager.abacusai.cloud/ and is
+    // referenced by its portfolio page /work/voyager/.
     expect(wingsKb, 'wings.md references /work/vector-wars/').toContain('/work/vector-wars/');
     expect(wingsKb, 'wings.md references /work/christmas-elves/').toContain(
       '/work/christmas-elves/',
     );
     expect(
       wingsKb.includes('/work/voyager/'),
-      'wings.md must NOT reference a /work/voyager/ page (voyager is "coming", not built)',
-    ).toBe(false);
-    // Confirm the shipped playables appear on live-work bullet lines (start "- **")
+      'wings.md must reference /work/voyager/ (voyager is now live)',
+    ).toBe(true);
+    // Confirm all three playables appear on live-work bullet lines (start "- **")
     const lines = wingsKb.split('\n');
     const liveBullets = lines.filter((l) => l.trim().startsWith('- **'));
     const bulletText = liveBullets.join('\n').toLowerCase();
@@ -202,11 +198,6 @@ describe('content/kb/wings.md — the Guide-grounding KB entry is grounded (AC2 
         `wings.md has a live-work bullet for "${playable}"`,
       ).toBe(true);
     }
-    // voyager must NOT appear on any live-work bullet — only in "coming" prose.
-    expect(
-      bulletText.includes('voyager'),
-      'wings.md must NOT have a live-work bullet for voyager (it is "coming")',
-    ).toBe(false);
   });
 
   it('references each real Wing route and the grounded live surfaces (Guide can cite them — AC3)', () => {

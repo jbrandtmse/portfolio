@@ -67,16 +67,19 @@ interface WingCase {
 // The exact trailing-slash href set the live items must resolve to. Hard-coded as
 // ground truth (Rule 8) — these are the real shipped surfaces from the allocation
 // table, NOT read from content/wings.ts.
-// Story 7.3 update: vector-wars (Technical) + christmas-elves (Creative) are now
-// LIVE items. voyager stays "coming" (its Git-LFS-backed asset bundle was not
-// vendored, so the embed cannot render — QA 2026-06-09).
+// voyager is now LIVE as an external embed at https://voyager.abacusai.cloud/
+// (portfolio page /work/voyager/ embeds it). All three playables are live.
 const WINGS: WingCase[] = [
   {
     path: '/technical/',
     heading: 'Technical work',
-    liveItems: [{ href: '/work/loandemo/' }, { href: '/work/vector-wars/' }],
-    // Technical still has voyager coming → honest moreComing note names it.
-    moreComing: 'Voyager',
+    liveItems: [
+      { href: '/work/loandemo/' },
+      { href: '/work/vector-wars/' },
+      { href: '/work/voyager/' },
+    ],
+    // Technical is now complete (voyager live as external embed) → no moreComing.
+    moreComing: false,
   },
   {
     path: '/creative/',
@@ -317,13 +320,12 @@ test.describe('Wings — /technical/, /creative/, /agentic/ (Story 7.1)', () => 
    * adding a fabricated entry to content/wings.ts reds the matching test.
    * ──────────────────────────────────────────────────────────────────────── */
 
-  test('Rule 9 — shipped Story 7.3 playables ARE live links; voyager is NOT a live link', async ({
+  test('Rule 9 — all three playables are now live links (voyager external embed is live)', async ({
     page,
   }) => {
-    // Story 7.3 made vector-wars live on Technical + christmas-elves live on Creative.
-    // voyager stays "coming" (incomplete LFS bundle) → it must NOT be a live <a>.
-    // Mutation-verified: removing a shipped item reds; re-adding voyager as a live
-    // link reds.
+    // vector-wars (Technical) + christmas-elves (Creative) shipped in Story 7.3.
+    // voyager (Technical) is now a live external embed at https://voyager.abacusai.cloud/.
+    // Mutation-verified: removing a shipped item reds.
     const technical = WINGS.find((w) => w.path === '/technical/')!;
     await page.goto(technical.path);
     const techHrefs = await page
@@ -337,8 +339,8 @@ test.describe('Wings — /technical/, /creative/, /agentic/ (Story 7.1)', () => 
     ).toBe(true);
     expect(
       techHrefs.some((h) => h.includes('voyager')),
-      'voyager must NOT be a live item link on Technical (it is "coming")',
-    ).toBe(false);
+      'voyager must be a live item link on Technical (external embed is live)',
+    ).toBe(true);
     const creative = WINGS.find((w) => w.path === '/creative/')!;
     await page.goto(creative.path);
     const creativeHrefs = await page
@@ -352,30 +354,26 @@ test.describe('Wings — /technical/, /creative/, /agentic/ (Story 7.1)', () => 
     ).toBe(true);
   });
 
-  test('Rule 9 — shipped playables are live items; voyager appears ONLY in the "more coming" note', async ({
+  test('Rule 9 — all three playables are live items; technical + creative Wings are complete (no more-coming)', async ({
     page,
   }) => {
-    // Technical keeps a calm "more coming" note naming voyager (still coming);
-    // its shipped playable (vector-wars) is a live link, not framing prose.
+    // voyager is now a live external embed → technical is complete → no more-coming note.
     // Creative is complete (christmas-elves live, Suno [OPEN]) → no more-coming note.
     const technical = WINGS.find((w) => w.path === '/technical/')!;
     await page.goto(technical.path);
-    const techMore = page.locator('.wing-more-coming');
+    // Technical is now complete — no .wing-more-coming element.
     await expect(
-      techMore,
-      'technical Wing keeps a "more coming" note (voyager coming)',
-    ).toHaveCount(1);
-    await expect(techMore, 'technical "more coming" frames voyager as coming').toContainText(
-      /voyager/i,
-    );
-    // vector-wars is a real item link (not framing prose); voyager is NOT a link.
+      page.locator('.wing-more-coming'),
+      'technical Wing must NOT have a .wing-more-coming element (voyager now live)',
+    ).toHaveCount(0);
+    // All three Technical playables are real item links.
     const techHrefs = await page
       .locator('.wing-list a')
       .evaluateAll((els) =>
         els.map((e) => (e as HTMLAnchorElement).getAttribute('href')?.toLowerCase() ?? ''),
       );
     expect(techHrefs.some((h) => h.includes('vector-wars'))).toBe(true);
-    expect(techHrefs.some((h) => h.includes('voyager'))).toBe(false);
+    expect(techHrefs.some((h) => h.includes('voyager'))).toBe(true);
 
     const creative = WINGS.find((w) => w.path === '/creative/')!;
     await page.goto(creative.path);
@@ -422,14 +420,15 @@ test.describe('Wings — /technical/, /creative/, /agentic/ (Story 7.1)', () => 
   }) => {
     // The closed allow-list of real, grounded targets from the allocation table.
     // Any live Wing item link OUTSIDE this set is a fabrication → red.
-    // Story 7.3 update: the two self-contained playable routes are now live
-    // surfaces. voyager is NOT here — it stays "coming" (incomplete LFS bundle).
+    // voyager is now live as an external embed at https://voyager.abacusai.cloud/
+    // with portfolio page /work/voyager/.
     const ALLOWED = new Set([
       '/work/loandemo/',
       '/glass-box/',
       '/faq/',
       '/work/vector-wars/',
       '/work/christmas-elves/',
+      '/work/voyager/',
     ]);
     for (const wing of WINGS) {
       await page.goto(wing.path);

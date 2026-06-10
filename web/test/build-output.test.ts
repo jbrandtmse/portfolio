@@ -141,6 +141,7 @@ const ALL_MIRROR_ROUTES = [
   '/speaking/reel/',
   '/work/loandemo/',
   '/work/vector-wars/',
+  '/work/voyager/',
   '/work/christmas-elves/',
   '/glass-box/',
   '/faq/',
@@ -412,6 +413,7 @@ describe('built home page (web/dist/index.html)', () => {
       '/speaking/reel',
       '/work/loandemo',
       '/work/vector-wars',
+      '/work/voyager',
       '/work/christmas-elves',
       '/glass-box',
       '/faq',
@@ -915,6 +917,7 @@ const MIRROR_ROUTES = [
   '/speaking/reel',
   '/work/loandemo',
   '/work/vector-wars',
+  '/work/voyager',
   '/work/christmas-elves',
   '/glass-box',
   '/faq',
@@ -1045,6 +1048,7 @@ describe('Story 1.5 — every Mirror route is a real, answer-first, self-canonic
         route === '/timeline' ||
         route === '/glass-box' ||
         route === '/work/vector-wars' ||
+        route === '/work/voyager' || // external embed: 3 scripts (pill + click-to-play loader)
         route === '/work/christmas-elves'
       )
         return;
@@ -1737,6 +1741,7 @@ describe('Story 1.10 — env-gated Umami is OFF by default (AC2 / IAC-2; NFR-1)'
       if (route === '/timeline') continue; // carve-out — 3 exec scripts (pill + deferred ZoomableTimeline mount shim, Story 6.2)
       if (route === '/glass-box') continue; // carve-out — 3 exec scripts (pill + deferred GlassBoxTour mount shim, Story 6.3)
       if (route === '/work/vector-wars') continue; // carve-out — 3 exec scripts (pill + click-to-play loader, Story 7.3)
+      if (route === '/work/voyager') continue; // carve-out — 3 exec scripts (pill + click-to-play loader, external embed)
       if (route === '/work/christmas-elves') continue; // carve-out — 3 exec scripts (pill + click-to-play loader, Story 7.3)
       const html = readFileSync(routeHtmlPath(route), 'utf8');
       // Story 4.4: content routes ship exactly 2 exec scripts (the Guide pill init scripts)
@@ -2618,22 +2623,31 @@ describe('Story 4.4 — Guide pill site-wide carve-out (AC1, AC5, Decision 2 NFR
  * ────────────────────────────────────────────────────────────────────────── */
 
 describe('Story 7.3 — playable project embeds (AC1 / AC2 / AC4 / NFR-1 isolation)', () => {
+  // Vendored playables: the game bundle lives in web/public/playables/<slug>/ and
+  // the iframe src is a local /playables/<slug>/ path.
   const PLAYABLE_ROUTES = ['/work/vector-wars', '/work/christmas-elves'] as const;
-
   const GAME_SLUGS = ['vector-wars', 'christmas-elves'] as const;
 
-  it.each(PLAYABLE_ROUTES)('builds a real index.html for %s (AC1)', (route) => {
+  // All playable routes — including voyager (external embed, no vendored bundle).
+  // These tests apply to every /work/<slug>/ page regardless of embed type.
+  const ALL_PLAYABLE_ROUTES = [
+    '/work/vector-wars',
+    '/work/voyager',
+    '/work/christmas-elves',
+  ] as const;
+
+  it.each(ALL_PLAYABLE_ROUTES)('builds a real index.html for %s (AC1)', (route) => {
     expect(existsSync(routeHtmlPath(route))).toBe(true);
     const html = readFileSync(routeHtmlPath(route), 'utf8');
     expect(html).toMatch(/<html lang="en"[\s>]/);
   });
 
-  it.each(PLAYABLE_ROUTES)('has exactly one <h1> (clean hierarchy) on %s (AC1)', (route) => {
+  it.each(ALL_PLAYABLE_ROUTES)('has exactly one <h1> (clean hierarchy) on %s (AC1)', (route) => {
     const html = readFileSync(routeHtmlPath(route), 'utf8');
     expect((html.match(/<h1\b/g) ?? []).length).toBe(1);
   });
 
-  it.each(PLAYABLE_ROUTES)(
+  it.each(ALL_PLAYABLE_ROUTES)(
     'opens answer-first — lede starts with "Joshua R. Brandt, MSE" on %s (GEO floor)',
     (route) => {
       const html = readFileSync(routeHtmlPath(route), 'utf8');
@@ -2641,7 +2655,7 @@ describe('Story 7.3 — playable project embeds (AC1 / AC2 / AC4 / NFR-1 isolati
     },
   );
 
-  it.each(PLAYABLE_ROUTES)(
+  it.each(ALL_PLAYABLE_ROUTES)(
     'links the real public GitHub source repo on %s (AC1 / Rule 9)',
     (route) => {
       const html = readFileSync(routeHtmlPath(route), 'utf8');
@@ -2652,7 +2666,7 @@ describe('Story 7.3 — playable project embeds (AC1 / AC2 / AC4 / NFR-1 isolati
     },
   );
 
-  it.each(PLAYABLE_ROUTES)('emits a valid CreativeWork ld+json on %s (AC1)', (route) => {
+  it.each(ALL_PLAYABLE_ROUTES)('emits a valid CreativeWork ld+json on %s (AC1)', (route) => {
     const html = readFileSync(routeHtmlPath(route), 'utf8');
     const work = findNodeByType(html, 'CreativeWork');
     expect(work, `${route} must have a CreativeWork ld+json node`).toBeDefined();
@@ -2663,7 +2677,7 @@ describe('Story 7.3 — playable project embeds (AC1 / AC2 / AC4 / NFR-1 isolati
     expect(typeof work!.url).toBe('string');
   });
 
-  it.each(PLAYABLE_ROUTES)(
+  it.each(ALL_PLAYABLE_ROUTES)(
     'ships exactly 3 executable scripts on %s — Guide pill (2) + click-to-play loader (1) (AC2 / NFR-1)',
     (route) => {
       const html = readFileSync(routeHtmlPath(route), 'utf8');
@@ -2769,7 +2783,7 @@ describe('Story 7.3 — playable project embeds (AC1 / AC2 / AC4 / NFR-1 isolati
     },
   );
 
-  it.each(PLAYABLE_ROUTES)(
+  it.each(ALL_PLAYABLE_ROUTES)(
     'contains no exclamation marks in copy (positive-assertion voice) on %s',
     (route) => {
       const html = readFileSync(routeHtmlPath(route), 'utf8');
@@ -2781,19 +2795,49 @@ describe('Story 7.3 — playable project embeds (AC1 / AC2 / AC4 / NFR-1 isolati
     },
   );
 
-  // Rule 9 — voyager is NOT shipped as a live embed: its Git-LFS-backed asset
-  // bundle (3D models, KTX2 textures, trajectory data) was not retrieved with the
-  // vendored build, so the game cannot render. It stays honest "coming". Assert no
-  // /work/voyager/ page was built and no voyager bundle was vendored — a future
-  // re-add WITHOUT the complete assets reds here (QA 2026-06-09).
-  it('voyager is NOT a built live route (stays honest "coming" — incomplete asset bundle)', () => {
+  // voyager SPECIAL CASE — external embed (not a vendored bundle).
+  // The /work/voyager/ portfolio page IS built; the iframe loads the external
+  // https://voyager.abacusai.cloud/ on click. Only the poster exists locally.
+  it('voyager IS a built live route (external embed — /work/voyager/ page exists)', () => {
     expect(
       existsSync(routeHtmlPath('/work/voyager')),
-      'dist/work/voyager/index.html must NOT exist (voyager is "coming", not a shipped embed)',
-    ).toBe(false);
+      'dist/work/voyager/index.html must exist (voyager is now a live external-embed page)',
+    ).toBe(true);
+    // The local poster asset IS present (real rendered frame from the sim).
+    const posterPath = join(webRoot, 'public', 'playables', 'voyager', 'poster.png');
     expect(
-      existsSync(join(distDir, 'playables', 'voyager')),
-      'dist/playables/voyager/ must NOT exist (the LFS-incomplete bundle was not vendored)',
+      existsSync(posterPath),
+      'web/public/playables/voyager/poster.png must exist (real rendered frame)',
+    ).toBe(true);
+    // But NO vendored game bundle in /playables/voyager/ (external embed, not vendored).
+    expect(
+      existsSync(join(distDir, 'playables', 'voyager', 'index.html')),
+      'dist/playables/voyager/index.html must NOT exist (voyager is an external embed — no local bundle)',
     ).toBe(false);
+  });
+
+  it('voyager external embed: the page sets iframe.src to the EXTERNAL URL; no local vendored bundle path', () => {
+    const html = readFileSync(routeHtmlPath('/work/voyager'), 'utf8');
+    // The click-to-play script sets the external URL — must contain the external origin.
+    expect(
+      html,
+      '/work/voyager/ must reference the external embed URL https://voyager.abacusai.cloud/',
+    ).toContain('https://voyager.abacusai.cloud/');
+    // The poster IS from the local /playables/voyager/ path (the ONLY local asset).
+    expect(html, '/work/voyager/ poster must come from /playables/voyager/poster.png').toContain(
+      '/playables/voyager/poster.png',
+    );
+    // The page must NOT set an <iframe src="/playables/voyager/"> (no local bundle index).
+    // Rule 8: scoped to the iframe src attribute pattern, not the poster img.
+    expect(
+      html,
+      '/work/voyager/ must NOT have a static or JS <iframe src="/playables/voyager/"> (no vendored bundle)',
+    ).not.toMatch(/<iframe\b[^>]*\bsrc="\/playables\/voyager\//);
+    // The click-handler in the inline <script> must NOT set src="/playables/voyager/..."
+    // (it must set the external URL). Check the entire script section.
+    expect(
+      html,
+      '/work/voyager/ click-handler must NOT reference /playables/voyager/ as the iframe src',
+    ).not.toMatch(/iframe\.src\s*=\s*["']\/playables\/voyager\//);
   });
 });

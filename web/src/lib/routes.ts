@@ -88,6 +88,13 @@ export const NAV_ROUTES: RouteEntry[] = [
     sourceFile: 'web/src/pages/work/vector-wars.astro',
   },
   {
+    path: '/work/voyager',
+    label: 'Voyager — cinematic mission replay',
+    description:
+      'A browser-based cinematic replay of the Voyager 1 and 2 missions with real NASA/NAIF SPICE-kernel trajectories and Three.js 3D rendering.',
+    sourceFile: 'web/src/pages/work/voyager.astro',
+  },
+  {
     path: '/work/christmas-elves',
     label: 'Christmas Elves — puzzle game',
     description: 'A Lemmings-inspired Christmas puzzle game built with Phaser 3 and TypeScript.',

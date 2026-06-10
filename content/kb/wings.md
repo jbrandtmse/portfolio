@@ -24,7 +24,7 @@ The Technical Wing collects production software and systems built through discip
 
 - **Vector Wars** (/work/vector-wars/) — a retro-styled 3D rail shooter in the vein of the 1983 Star Wars arcade cabinet, built with Three.js and Vite and playable live in the browser. Real-time 3D game architecture: rail camera, per-frame collision detection, and a level progression system — no game engine framework. Public repo: github.com/jbrandtmse/vector-wars.
 
-Voyager — a browser-based cinematic replay of the Voyager 1 and Voyager 2 missions, built with Three.js, TypeScript, and Vite — is real, public work (github.com/jbrandtmse/voyager) and is coming as a live embed once its full asset bundle is vendored.
+- **Voyager** (/work/voyager/) — a high-fidelity, browser-based cinematic replay of the Voyager 1 and Voyager 2 missions. Real NASA/NAIF SPICE-kernel trajectories drive Three.js 3D rendering through a chapter-by-chapter narrative of the planetary encounters: Jupiter, Saturn, Uranus, and Neptune. The simulation runs live at https://voyager.abacusai.cloud/ and is embedded on the portfolio page. Public repo: github.com/jbrandtmse/voyager.
 
 ## Creative Wing — /creative/
 

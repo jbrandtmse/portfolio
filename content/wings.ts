@@ -96,14 +96,17 @@ export const WINGS: Wing[] = [
         sourceNote:
           'web/src/pages/work/vector-wars.astro — live route; public repo github.com/jbrandtmse/vector-wars.',
       },
+      {
+        title: 'Voyager — cinematic mission replay',
+        blurb:
+          'A high-fidelity, browser-based cinematic replay of the Voyager 1 and Voyager 2 missions. Real NASA/NAIF SPICE-kernel trajectories drive Three.js 3D rendering through the planetary encounters: Jupiter, Saturn, Uranus, and Neptune.',
+        href: '/work/voyager/',
+        status: 'live',
+        sourceNote:
+          'web/src/pages/work/voyager.astro — live route; external embed at https://voyager.abacusai.cloud/; public repo github.com/jbrandtmse/voyager.',
+      },
     ],
-    // Voyager (the Voyager 1 & 2 cinematic mission replay) is real, public work
-    // — github.com/jbrandtmse/voyager — but its large baked assets (3D models,
-    // KTX2 textures, trajectory data) are Git-LFS-backed and were not retrieved
-    // with the vendored build, so the embed cannot render yet. It stays honest
-    // "coming" until a full LFS-complete bundle is vendored (Story 7.3 QA, 2026-06-09).
-    moreComing:
-      'Voyager — a browser-based cinematic replay of the Voyager 1 and 2 missions — is coming as a live embed once its full asset bundle is vendored. The source is public at github.com/jbrandtmse/voyager.',
+    moreComing: false,
   },
   {
     id: 'creative',

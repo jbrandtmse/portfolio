@@ -47,3 +47,22 @@ Story 7.3 retrieves Josh's REAL game repos from git and embeds them as lazy ifra
 ## Conclusion
 
 FR-26 is delivered: two of Josh's real games play live in the browser as lazy, NFR-1-isolated, deterministic embeds linked to their real public repos — christmas-elves provably boots its Phaser canvas on the real runtime; vector-wars renders its page + honest title-card poster + real WebGL game bundle (gameplay on real hardware). Voyager stays honestly "coming" rather than shipping a hollow 155MB origin-root-only bundle (Rule-9 floor preserved); its dedicated-hostname path is recorded for Josh. Defects caught by this smoke beyond the automated tiers: 0 (the dev's masked typecheck-OOM / format:check / fabricated-poster / hollow-voyager were caught by the lead Rule-10 recovery + QA; this smoke independently confirms the honest final state on the real runtime).
+
+---
+
+## Voyager external-embed addendum (2026-06-10) — all three playables now live
+
+After Josh created `voyager.abacusai.cloud`, the voyager sim was deployed to its own origin-root hostname (the lead remediation's finding: it's 155MB + origin-root-architected, so it can't be a subpath bundle). The portfolio `/work/voyager/` page now embeds it cross-origin. **Lead smoke (browser, real runtime) — PASS:**
+
+| Check | Result |
+| --- | --- |
+| `/work/voyager/` route 200, one `<h1>` "Voyager — cinematic mission replay" | yes |
+| NFR-1 lazy: no iframe before activation | yes |
+| poster real provenance (real Saturn-encounter sim frame; alt makes no faux-screenshot claim) | yes — `/playables/voyager/poster.png` |
+| real source-repo link | yes — `github.com/jbrandtmse/voyager` |
+| activate -> iframe `src` = the LIVE hostname | yes — `https://voyager.abacusai.cloud/` (200) |
+| credibility (Rule 9): real SPICE-kernel trajectories, real encounter dates (Jupiter 1979 -> Neptune 1989), Three.js | yes, all grounded |
+| console on activation | only `THREE.WebGLRenderer: WebGL context could not be created` — FROM the loaded sim (confirms the cross-origin embed loaded the real game); headless env lacks WebGL2, so 3D renders on real hardware. Not a defect. |
+| gate | `pnpm test:all` exit 0 (884 vitest + 425 e2e incl. 7 new voyager e2e in the registered `playables` project); `check-deterministic` exit 0 (23 pages, byte-identical) |
+
+All three of Josh's real games are live: vector-wars + christmas-elves vendored in-repo; voyager embedded from its dedicated origin-root hostname. Technical Wing complete (loandemo + vector-wars + voyager); `moreComing: false`.

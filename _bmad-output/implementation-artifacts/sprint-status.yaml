@@ -112,10 +112,10 @@ development_status:
   epic-7: in-progress
   7-0-epic-6-deferred-cleanup: done
   7-1-distinct-wings-technical-creative-agentic: done
-  7-2-greatest-hits-relevance-ordered: review
+  7-2-greatest-hits-relevance-ordered: done
   7-3-playable-project-embeds: done
-  7-4-video-synced-repo: backlog
-  epic-7-retrospective: optional
+  7-4-video-synced-repo: backlog  # DEFERRED by Josh (2026-06-09) until a real talk/demo video exists — see cycle-log + epic-7 retro
+  epic-7-retrospective: done
 
   # Epic 8: Creative Lab & Adaptive Soundtrack
   epic-8: backlog

@@ -1,14 +1,14 @@
 import { expect, test } from '@playwright/test';
 
 /**
- * Playable project embeds e2e spec — /work/vector-wars/ + /work/christmas-elves/
- * (Story 7.3, FR-26 / Rule 3 real-runtime, Rule 7 discoverability).
+ * Playable project embeds e2e spec — /work/vector-wars/, /work/christmas-elves/,
+ * and /work/voyager/ (Story 7.3 + voyager live external embed).
  *
  * This spec is registered as the `playables` Playwright project in
  * playwright.config.ts (testMatch /playables\.spec\.ts/) so it is PROVEN to run
  * in the default suite (the 7.2 lesson: an unregistered spec runs 0 times).
  *
- * What it verifies on the REAL built runtime:
+ * What it verifies on the REAL built runtime for vector-wars + christmas-elves:
  *   - The /work/<slug>/ page is reachable (single 200, no hop) with one <h1>.
  *   - The answer-first lede names "Joshua R. Brandt, MSE" (GEO floor).
  *   - The real public source-repo link (github.com/jbrandtmse/<slug>) is present.
@@ -26,9 +26,19 @@ import { expect, test } from '@playwright/test';
  *     (the game prints "WebGL 2.0 NOT DETECTED"), so WebGL GAMEPLAY is NOT
  *     asserted here — it is covered by the game's own suite + real hardware.
  *
- * voyager is intentionally ABSENT — its Git-LFS-backed asset bundle (3D models,
- * KTX2 textures, trajectory data) was not vendored, so the embed cannot render;
- * it stays honest "coming" (asserted in build-output.test.ts + wings specs).
+ * voyager SPECIAL CASE — external cross-origin embed:
+ *   voyager is live at https://voyager.abacusai.cloud/ (its own origin). It is
+ *   NOT a vendored bundle. The click-to-play loader sets
+ *   iframe.src = 'https://voyager.abacusai.cloud/' (cross-origin). We CANNOT
+ *   assert a <canvas> inside the cross-origin iframe (Playwright cannot inspect
+ *   cross-origin iframe contents). We CAN assert:
+ *   - /work/voyager/ is reachable (single 200, one <h1>, entity-first lede).
+ *   - The local poster (/playables/voyager/poster.png) renders + loads.
+ *   - NFR-1 lazy-load: the external URL is NOT fetched on initial paint.
+ *   - Clicking Play sets <iframe src="https://voyager.abacusai.cloud/"> (the
+ *     src attribute is correct — cross-origin contents are NOT inspected).
+ *   - The repo link (github.com/jbrandtmse/voyager) is present.
+ *   - JS-off fallback links to https://voyager.abacusai.cloud/ (external direct link).
  */
 
 interface PlayableCase {
@@ -203,4 +213,99 @@ test.describe('Playable project embeds — /work/<slug>/ (Story 7.3)', () => {
       }
     });
   }
+});
+
+// ── voyager SPECIAL CASE — external cross-origin embed ────────────────────────
+//
+// voyager is live at https://voyager.abacusai.cloud/ (not a vendored bundle).
+// The portfolio page /work/voyager/ click-to-play sets the iframe src to the
+// external URL. This suite asserts what IS verifiable without reading cross-
+// origin iframe contents (Rule 7: proven to execute in the `playables` project).
+test.describe('voyager — external cross-origin embed (/work/voyager/)', () => {
+  const PATH = '/work/voyager/';
+  const EXTERNAL_URL = 'https://voyager.abacusai.cloud/';
+  const REPO_URL = 'https://github.com/jbrandtmse/voyager';
+
+  test('is reachable at the trailing-slash URL (single 200, no redirect) with one <h1>', async ({
+    page,
+  }) => {
+    const response = await page.goto(PATH);
+    expect(response?.status(), `${PATH} must be a 200 (canonical trailing-slash)`).toBe(200);
+    await expect(page.locator('h1')).toHaveCount(1);
+  });
+
+  test('the lede leads with "Joshua R. Brandt, MSE" (entity-first, GEO floor)', async ({
+    page,
+  }) => {
+    await page.goto(PATH);
+    await expect(page.locator('.mirror__lede')).toContainText(/^Joshua R\. Brandt, MSE/);
+  });
+
+  test('links the real public GitHub source repo (Rule 9 credibility)', async ({ page }) => {
+    await page.goto(PATH);
+    const repoLink = page.locator(`a[href="${REPO_URL}"]`);
+    await expect(repoLink.first(), `${PATH} must link ${REPO_URL}`).toBeVisible();
+  });
+
+  test('the local poster image renders (the pre-activation surface, /playables/voyager/poster.png)', async ({
+    page,
+  }) => {
+    await page.goto(PATH);
+    const poster = page.locator('.playable-embed__trigger .playable-embed__poster');
+    await expect(poster).toBeVisible();
+    const src = await poster.getAttribute('src');
+    expect(src, 'voyager poster src must be /playables/voyager/poster.png').toBe(
+      '/playables/voyager/poster.png',
+    );
+    // Must actually load (not a broken image).
+    const naturalWidth = await poster.evaluate((img) => (img as HTMLImageElement).naturalWidth);
+    expect(naturalWidth, 'voyager poster must load (not a broken <img>)').toBeGreaterThan(0);
+  });
+
+  test('NFR-1 lazy-load — the external URL is NOT fetched on initial paint', async ({ page }) => {
+    const externalRequests: string[] = [];
+    page.on('request', (req) => {
+      const url = req.url();
+      if (url.startsWith(EXTERNAL_URL)) externalRequests.push(url);
+    });
+    await page.goto(PATH);
+    await page.waitForLoadState('networkidle');
+    // The external voyager URL must NOT be requested before the visitor activates the embed.
+    expect(
+      externalRequests,
+      `no request to ${EXTERNAL_URL} must be made before activation (NFR-1 lazy). Got: ${externalRequests.join(', ')}`,
+    ).toHaveLength(0);
+  });
+
+  test('activating the embed sets the iframe src to the EXTERNAL URL (cross-origin — src attr only)', async ({
+    page,
+  }) => {
+    await page.goto(PATH);
+    // Click the play button (the click-to-play loader swaps in the iframe).
+    await page.locator('.playable-embed__play-btn').click();
+    const iframe = page.locator('iframe.playable-embed__iframe');
+    await expect(iframe).toBeVisible();
+    // Assert the iframe src attribute is the external URL.
+    // We do NOT inspect cross-origin iframe contents (Rule 7 / NFR-1 isolation).
+    const src = await iframe.getAttribute('src');
+    expect(src, 'activated iframe src must be the external voyager URL').toBe(EXTERNAL_URL);
+  });
+
+  test('JS-OFF — poster + external direct link + repo link remain (graceful fallback)', async ({
+    browser,
+  }) => {
+    const ctx = await browser.newContext({ javaScriptEnabled: false });
+    const p = await ctx.newPage();
+    const resp = await p.goto(PATH);
+    expect(resp?.status(), 'voyager page is server-rendered (reachable JS-off)').toBe(200);
+    // The <noscript> fallback links to the EXTERNAL sim (not a /playables/ path).
+    const directLink = p.locator(`a[href="${EXTERNAL_URL}"]`);
+    expect(
+      await directLink.count(),
+      `a direct ${EXTERNAL_URL} link is present JS-off`,
+    ).toBeGreaterThan(0);
+    // The repo link is present JS-off too.
+    await expect(p.locator(`a[href="${REPO_URL}"]`).first()).toBeVisible();
+    await ctx.close();
+  });
 });
