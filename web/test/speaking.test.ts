@@ -10,6 +10,8 @@ import {
   REEL,
   SIGNATURE_TALKS,
   METRICS,
+  BIOS,
+  bioWordCount,
   talkEventInput,
   reelVideoObjectInput,
 } from '../src/data/speaking';
@@ -350,6 +352,68 @@ describe('speaking.ts data module', () => {
     expect(input.uploadDate).toBe('2026-01-01');
     expect(input.thumbnailUrl).toBeTruthy();
     expect(input.contentUrl).toBeTruthy();
+  });
+});
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Story 9.0 — AC1: bioWordCount derivation (Rule 8, mutation-verified)
+ *
+ * Tests exercise the REAL exported `bioWordCount` from `speaking.ts` — NOT an
+ * inline copy. Mutation-verification: if you replace the helper body with a
+ * stub returning a fixed value, the count-equality test reds (the assertion
+ * computes the expected value independently via the same algorithm, so the
+ * helper must use the real computation).
+ * ────────────────────────────────────────────────────────────────────────── */
+
+describe('Story 9.0 — AC1: bioWordCount helper (real module, mutation-verified)', () => {
+  it('counts words correctly — "Hello world" = 2 words', () => {
+    expect(bioWordCount('Hello world')).toBe('2 words');
+  });
+
+  it('returns "1 words" for a single word (edge case — no special-casing needed)', () => {
+    expect(bioWordCount('Hello')).toBe('1 words');
+  });
+
+  it('trims leading/trailing whitespace before counting', () => {
+    expect(bioWordCount('  Hello world  ')).toBe('2 words');
+  });
+
+  it('collapses internal whitespace (tabs, newlines) into single tokens', () => {
+    expect(bioWordCount('Hello\n\t  world')).toBe('2 words');
+  });
+
+  it('the short bio (BIOS[0]) derives to "47 words" — NOT the old hard-coded "50 words"', () => {
+    // This binds the rendered label to the REAL bio text via the REAL function.
+    // Mutation: if bioWordCount returns a stub '50 words', this assertion reds.
+    const shortBio = BIOS[0]!;
+    const derivedCount = shortBio.text.split(/\s+/).filter(Boolean).length;
+    // Assert via the REAL function — not an inline copy of the formula.
+    expect(bioWordCount(shortBio.text)).toBe(`${derivedCount} words`);
+    // Confirm the actual count is 47 (the correct figure for the baseline text).
+    expect(derivedCount).toBe(47);
+    expect(bioWordCount(shortBio.text)).toBe('47 words');
+  });
+
+  it('the long bio (BIOS[1]) derives to "126 words" (correct at baseline)', () => {
+    const longBio = BIOS[1]!;
+    const derivedCount = longBio.text.split(/\s+/).filter(Boolean).length;
+    expect(bioWordCount(longBio.text)).toBe(`${derivedCount} words`);
+    expect(derivedCount).toBe(126);
+    expect(bioWordCount(longBio.text)).toBe('126 words');
+  });
+
+  it('the derived count auto-updates: if the bio text gains a word, the label changes (anti-drift)', () => {
+    // This is the mutation-verification principle: the label is computed from the
+    // text, so any edit to the text is reflected without a manual edit to a constant.
+    const baseText = BIOS[0]!.text;
+    const extendedText = baseText + ' Indeed.';
+    const baseDerived = bioWordCount(baseText);
+    const extendedDerived = bioWordCount(extendedText);
+    // The extended text must produce a DIFFERENT label (one more word).
+    expect(extendedDerived).not.toBe(baseDerived);
+    const baseN = parseInt(baseDerived, 10);
+    const extN = parseInt(extendedDerived, 10);
+    expect(extN).toBe(baseN + 1);
   });
 });
 

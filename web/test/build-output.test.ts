@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { BIOS } from '../src/data/speaking';
+import { BIOS, bioWordCount } from '../src/data/speaking';
 import { PERSON } from '../src/lib/person';
 
 /**
@@ -1240,6 +1240,60 @@ describe('Story 3.2 — AC5 short-bio anti-drift: the VISIBLE bio === PERSON.des
     // The long bio extends the short — both end on the lowercase running tail.
     expect(firstBioText.endsWith('seasoned, building at the frontier.')).toBe(true);
     expect(secondBioText).toContain('seasoned, building at the frontier.');
+  });
+});
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Story 9.0 — AC1: rendered word-count label derives from real bio text
+ *
+ * Scoped to the `.bio-block__wordcount` spans in the served HTML — NOT a
+ * whole-document `toContain` (Rule 8). The expected label is computed by
+ * bioWordCount(BIOS[n].text) — the REAL module function — so any drift
+ * between the rendered text and the derivation function reds here.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+describe('Story 9.0 — AC1: word-count label in served HTML derived from bio text (Rule 8)', () => {
+  let speakingHtml9 = '';
+  beforeAll(() => {
+    speakingHtml9 = readFileSync(routeHtmlPath('/speaking'), 'utf8');
+  });
+
+  /** Extract the text content of `.bio-block__wordcount` spans from the HTML. */
+  function extractWordCountSpans(html: string): string[] {
+    return [...html.matchAll(/<span class="bio-block__wordcount"[^>]*>([\s\S]*?)<\/span>/g)].map(
+      (m) => m[1]!.replace(/<[^>]+>/g, '').trim(),
+    );
+  }
+
+  it('renders exactly 2 bio-block__wordcount spans (one per BioBlock)', () => {
+    const spans = extractWordCountSpans(speakingHtml9);
+    expect(spans.length, 'should have one wordcount span per BioBlock').toBe(2);
+  });
+
+  it('the first wordcount span equals bioWordCount(BIOS[0].text) — 47 words, not 50', () => {
+    // Scoped assertion: only the FIRST span, not the whole document (Rule 8).
+    const spans = extractWordCountSpans(speakingHtml9);
+    const expected = bioWordCount(BIOS[0]!.text);
+    expect(spans[0]).toBe(expected);
+    // Concrete baseline guard: the label is '47 words', not '50 words'.
+    expect(spans[0]).toBe('47 words');
+    expect(spans[0]).not.toBe('50 words');
+  });
+
+  it('the second wordcount span equals bioWordCount(BIOS[1].text) — 126 words', () => {
+    const spans = extractWordCountSpans(speakingHtml9);
+    const expected = bioWordCount(BIOS[1]!.text);
+    expect(spans[1]).toBe(expected);
+    expect(spans[1]).toBe('126 words');
+  });
+
+  it('the word-count label does not contain hard-coded "50 words" anywhere on /speaking', () => {
+    // Mutation guard: if bioWordCount is replaced with a stub returning '50 words',
+    // the above assertions also red; this provides an extra visible signal.
+    const spans = extractWordCountSpans(speakingHtml9);
+    for (const span of spans) {
+      expect(span).not.toBe('50 words');
+    }
   });
 });
 

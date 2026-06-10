@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
-import { BIOS } from '../src/data/speaking';
+import { BIOS, bioWordCount } from '../src/data/speaking';
 import { PERSON } from '../src/lib/person';
 
 /**
@@ -519,5 +519,121 @@ test.describe('/speaking/ — reel is the lead item & credibility floor is visib
     expect(bodyText).toContain('[ASSUMPTION]');
     expect(bodyText).toContain('Veteran IC');
     expect(bodyText).toContain('[OPEN');
+  });
+});
+
+// ─── Story 9.0 — AC1: rendered word-count equals derived count of rendered text
+// ─── Story 9.0 — AC2: copy-button accessible name tracks copied/reverted state
+//
+// AC1 (Rule 8, mutation-verified): the `.bio-block__wordcount` text is the
+// DERIVED count of the RENDERED bio text — not a hardcoded literal. The test
+// reads the text content of the rendered bio, recomputes the count using the
+// same algorithm as `bioWordCount`, and asserts they match. Mutation: changing
+// the derivation to return '50 words' breaks this (the DOM shows '50', but the
+// computed count of the 47-word bio produces '47 words').
+//
+// AC2 (Rule 13, user-observable): asserts the button's accessible name via
+// `getByRole('button', { name })` — the accessibility-tree name, not just a
+// data attribute — changes after clicking (copied state) and reverts.
+// Real-runtime evidence (skill-rules Rule 3).
+
+test.describe('/speaking/ — Story 9.0 AC1: rendered word-count is derived from actual text', () => {
+  test('the short-bio word-count label equals the derived count of the rendered bio text (not a hard-coded literal)', async ({
+    page,
+  }) => {
+    await page.goto('/speaking/');
+
+    // Read the rendered bio text from the FIRST bio-block paragraph.
+    const firstBioText = await page.locator('.bio-block__text').first().textContent();
+    expect(firstBioText).toBeTruthy();
+
+    // Derive the count from the REAL rendered text — same algorithm as bioWordCount.
+    const derivedCount = firstBioText!.trim().split(/\s+/).filter(Boolean).length;
+    const expectedLabel = `${derivedCount} words`;
+
+    // Assert the rendered word-count span shows THAT computed label.
+    // Scoped to the FIRST bio-block's wordcount span (Rule 8 — not whole-doc).
+    const firstWordCountSpan = page.locator('.bio-block').first().locator('.bio-block__wordcount');
+    await expect(firstWordCountSpan).toHaveText(expectedLabel);
+
+    // Cross-check: the derived label matches the bioWordCount helper output
+    // (binds the rendered label to the REAL module function — Rule 8).
+    expect(expectedLabel).toBe(bioWordCount(BIOS[0]!.text));
+
+    // And confirm the concrete value at baseline (47 words, not 50).
+    expect(expectedLabel).toBe('47 words');
+  });
+
+  test('the long-bio word-count label equals the derived count of the rendered long bio text', async ({
+    page,
+  }) => {
+    await page.goto('/speaking/');
+
+    const longBioText = await page.locator('.bio-block__text').nth(1).textContent();
+    expect(longBioText).toBeTruthy();
+
+    const derivedCount = longBioText!.trim().split(/\s+/).filter(Boolean).length;
+    const expectedLabel = `${derivedCount} words`;
+
+    const secondWordCountSpan = page.locator('.bio-block').nth(1).locator('.bio-block__wordcount');
+    await expect(secondWordCountSpan).toHaveText(expectedLabel);
+
+    expect(expectedLabel).toBe(bioWordCount(BIOS[1]!.text));
+    expect(expectedLabel).toBe('126 words');
+  });
+});
+
+test.describe('/speaking/ — Story 9.0 AC2: copy-button accessible name tracks copied/reverted state', () => {
+  test.use({ permissions: ['clipboard-read', 'clipboard-write'] });
+
+  test('copy button accessible name changes to copied state, then reverts (Rule 13 — user-observable name via accessibility tree)', async ({
+    page,
+  }) => {
+    await page.goto('/speaking/');
+
+    // The initial accessible name of the first copy button.
+    const initialName = `Copy ${BIOS[0]!.label}`;
+    const copiedName = `Copied ✓ — ${BIOS[0]!.label}`;
+
+    // Confirm the button is reachable by its initial accessible name (pre-click).
+    const copyBtn = page.getByRole('button', { name: initialName });
+    await expect(copyBtn).toBeVisible();
+
+    // Click — triggers the copy path + aria-label update.
+    await copyBtn.click();
+
+    // The accessible name MUST change to the copied-state label (AC2 — Rule 13).
+    // This uses getByRole with { name } so it fails if the aria-label is not set
+    // correctly — a data-attribute-only change would NOT satisfy this.
+    await expect(page.getByRole('button', { name: copiedName })).toBeVisible();
+
+    // The role="status" announcement is still present (existing behaviour kept).
+    const statusRegion = page.locator('.bio-block__status').first();
+    await expect(statusRegion).toHaveText(/Copied/);
+
+    // After REVERT_MS (2200ms) the button reverts to its initial accessible name.
+    await expect(page.getByRole('button', { name: initialName })).toBeVisible({
+      timeout: 4000,
+    });
+
+    // And the copied-state name is gone (reverted).
+    await expect(page.getByRole('button', { name: copiedName })).toHaveCount(0);
+  });
+
+  test('the second copy button (long bio) accessible name also tracks its own state', async ({
+    page,
+  }) => {
+    await page.goto('/speaking/');
+
+    const initialName = `Copy ${BIOS[1]!.label}`;
+    const copiedName = `Copied ✓ — ${BIOS[1]!.label}`;
+
+    const copyBtn2 = page.getByRole('button', { name: initialName });
+    await expect(copyBtn2).toBeVisible();
+    await copyBtn2.click();
+
+    await expect(page.getByRole('button', { name: copiedName })).toBeVisible();
+    // Reverts within timeout.
+    await expect(page.getByRole('button', { name: initialName })).toBeVisible({ timeout: 4000 });
   });
 });
