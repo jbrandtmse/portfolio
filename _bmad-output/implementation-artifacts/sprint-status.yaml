@@ -128,7 +128,7 @@ development_status:
   # Epic 9: The Demonstrator & Speaker EPK
   epic-9: in-progress
   9-0-epic-deferred-cleanup: done
-  9-1-the-demonstrator: backlog
+  9-1-the-demonstrator: done
   9-2-bmad-build-walkthrough: backlog
   9-3-speaker-one-sheet-epk: backlog
   epic-9-retrospective: optional

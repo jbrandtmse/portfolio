@@ -1,0 +1,569 @@
+---
+/**
+ * /demonstrator/ — The Demonstrator (Story 9.1; FR-11).
+ *
+ * A curated, replayable step-through of how THIS portfolio was built via the
+ * BMAD Method (intent → brief → brainstorm/research → PRD → UX/architecture →
+ * epics → build pipeline → retrospective → working software), drawn entirely
+ * from the real artifacts already in the repo (Glass Box readers, Master
+ * Timeline, cycle-log telemetry).
+ *
+ * DATA: consumes content/demonstrator.ts (the curated lifecycle manifest).
+ *       That manifest is the single source of truth for this route.
+ *
+ * BASELINE (JS-off / crawlable — FR-8 / AC2):
+ *   Every stage renders as a real <li> in a crawlable <ol> (class="demonstrator__spine").
+ *   Every artifact link is a real <a> followable with JS off. Nothing is hidden.
+ *
+ * ENHANCEMENT (JS-on — AC1):
+ *   A <script type="application/json" id="demonstrator-replay-data"> data island
+ *   embeds replay data for the bootstrap to consume. An inline <script> loads
+ *   bootstrap.ts via requestIdleCallback (light, deferred). The DemonstratorReplay
+ *   island mounts for all JS-on users (information feature, not motion).
+ *
+ * NFR-1: this page adds exactly 1 executable <script> (the deferred bootstrap
+ *   shim), joining the 2 Guide-pill scripts — total 3 executable scripts.
+ *
+ * CREDIBILITY (Rule 9):
+ *   Every artifact href traces to a real published artifact or honest [OPEN] note.
+ *   No invented stats; no non-published artifact; no ADR references.
+ *
+ * JSON-LD: emits a schema.org CreativeWork node (the Demonstrator surface).
+ *
+ * DISTINCT FROM THE GLASS BOX TOUR (6.3):
+ *   The Glass Box tour walks the artifacts (documents, /glass-box/).
+ *   The Demonstrator replays the BUILD LIFECYCLE using artifacts as evidence.
+ *   Different framing, different route, different island. The tour is UNTOUCHED.
+ */
+import MirrorLayout from '../layouts/MirrorLayout.astro';
+import { creativeWorkJsonLd, serializeJsonLd } from '../lib/jsonld';
+import { PERSON, SITE_ORIGIN } from '../lib/person';
+import { DEMONSTRATOR_STAGES } from '../../../content/demonstrator';
+
+const LEDE =
+  'Joshua R. Brandt, MSE built this portfolio in the open via the BMAD Method — from a one-page brief to production software, with every stage documented and auditable. The Demonstrator is a curated, replayable step-through of that process, drawn from the real artifacts already in the Glass Box.';
+
+const FRAMING_LEAD =
+  'Each stage below traces to a real, published artifact or a verifiable build event. Nothing here was reconstructed after the fact.';
+
+// Replay data for the deferred island mount.
+const replayData = JSON.stringify({
+  stages: DEMONSTRATOR_STAGES.map((s) => ({
+    id: s.id,
+    stage: s.stage,
+    narration: s.narration,
+    artifacts: s.artifacts,
+    observable: s.observable,
+  })),
+  framingLead: FRAMING_LEAD,
+});
+
+const demonstratorJsonLd = serializeJsonLd(
+  creativeWorkJsonLd({
+    name: 'The Demonstrator — how this portfolio was built via the BMAD Method',
+    author: PERSON,
+    description:
+      'A curated, replayable step-through of how Joshua R. Brandt, MSE built this portfolio via the BMAD Method — from intent to working software, drawn from real artifacts.',
+    url: `${SITE_ORIGIN}/demonstrator/`,
+    dateCreated: '2026-06-10',
+  }),
+);
+---
+
+<MirrorLayout
+  heading="The Demonstrator"
+  lede={LEDE}
+  title="The Demonstrator — Joshua R. Brandt, MSE"
+  description="A curated, replayable step-through of how this portfolio was built via the BMAD Method — from intent to working software, with every stage grounded to real artifacts."
+>
+  <script type="application/ld+json" slot="jsonld" is:inline set:html={demonstratorJsonLd} />
+
+  {/* ── Framing section ──────────────────────────────────────────────── */}
+  <section class="demonstrator__framing" aria-label="About the Demonstrator">
+    <p class="demonstrator__framing-lead">
+      {FRAMING_LEAD}
+    </p>
+    <p class="demonstrator__boundary-note">
+      The <a href="/glass-box/" class="demonstrator__link">Glass Box</a> holds the curated planning artifacts.
+      The <a href="/timeline/" class="demonstrator__link">Master Timeline</a>
+      shows thirty years of shipping. The Demonstrator shows how those came together for this project.
+    </p>
+  </section>
+
+  {/* ── Replay data island (consumed by bootstrap.ts at runtime) ─────── */}
+  <script type="application/json" id="demonstrator-replay-data" set:html={replayData} />
+
+  {/* ── Lifecycle spine (AC1/AC2 — static, crawlable, JS-off baseline) ── */}
+  {
+    /*
+    FR-8: the spine IS a semantic <ol>. Every stage's content and real
+    artifact links are present in DOM order and followable with JS off.
+    The DemonstratorReplay island is a stepped enhancement, NOT a gate.
+    Story 9.1: each <li> carries data-demo-stage="{id}" so the island can
+    scroll to and highlight the active stage.
+  */
+  }
+  <section class="demonstrator__spine-section" aria-label="BMAD build lifecycle stages">
+    <h2 class="demonstrator__spine-heading">The build lifecycle</h2>
+    <ol class="demonstrator__spine" role="list">
+      {
+        DEMONSTRATOR_STAGES.map((stage) => (
+          <li class="demonstrator__spine-item" data-demo-stage={stage.id}>
+            {/* Stage number — decorative */}
+            <span class="demonstrator__stage-num" aria-hidden="true">
+              {stage.id}
+            </span>
+
+            <div class="demonstrator__stage-body">
+              <h3 class="demonstrator__stage-label">{stage.stage}</h3>
+              <p class="demonstrator__stage-narration">{stage.narration}</p>
+
+              {/* Artifact links — real <a> for live, honest note for open */}
+              <div class="demonstrator__artifact-links">
+                {stage.artifacts.map((artifact) =>
+                  artifact.status === 'live' ? (
+                    <a class="demonstrator__artifact-link" href={artifact.href}>
+                      {artifact.label}
+                    </a>
+                  ) : (
+                    <span class="demonstrator__artifact-open">{artifact.label}</span>
+                  ),
+                )}
+              </div>
+
+              {/* Observable result */}
+              <p class="demonstrator__observable">{stage.observable}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+</MirrorLayout>
+
+<style>
+  /* ─── Framing section ─────────────────────────────────────────────────── */
+  .demonstrator__framing {
+    margin-top: var(--space-7);
+    max-width: var(--measure-reading);
+  }
+
+  .demonstrator__framing-lead {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+  }
+
+  .demonstrator__boundary-note {
+    margin-top: var(--space-5);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+  }
+
+  .demonstrator__link {
+    color: var(--color-accent);
+    text-decoration-line: underline;
+    text-underline-offset: 2px;
+  }
+
+  .demonstrator__link:hover {
+    color: var(--color-accent-hover);
+  }
+
+  .demonstrator__link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* ─── Spine section ───────────────────────────────────────────────────── */
+  .demonstrator__spine-section {
+    margin-top: var(--space-section-band);
+  }
+
+  .demonstrator__spine-heading {
+    font: var(--text-h2);
+    font-family: var(--font-family-base);
+    letter-spacing: var(--letter-spacing-h2);
+    color: var(--color-ink-primary);
+    margin-bottom: var(--space-7);
+  }
+
+  .demonstrator__spine {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* ─── Spine item ─────────────────────────────────────────────────────── */
+  .demonstrator__spine-item {
+    display: flex;
+    gap: var(--space-5);
+    align-items: flex-start;
+    position: relative;
+    padding-bottom: var(--space-7);
+    border-left: 1px solid var(--color-border-hairline);
+    padding-left: var(--space-6);
+  }
+
+  .demonstrator__spine-item:last-child {
+    border-left: 1px solid transparent; /* retain layout, hide line */
+    padding-bottom: 0;
+  }
+
+  /* ─── Stage number circle ────────────────────────────────────────────── */
+  .demonstrator__stage-num {
+    position: absolute;
+    left: calc(-1 * var(--space-3) - 1px); /* centered on the left border */
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--space-6);
+    height: var(--space-6);
+    border-radius: 50%;
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-border-hairline);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-ink-secondary);
+    flex-shrink: 0;
+  }
+
+  /* ─── Stage body ─────────────────────────────────────────────────────── */
+  .demonstrator__stage-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .demonstrator__stage-label {
+    font: var(--text-h3, inherit);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-ink-primary);
+    margin-bottom: var(--space-3);
+  }
+
+  .demonstrator__stage-narration {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+    margin-bottom: var(--space-4);
+    max-width: var(--measure-reading);
+  }
+
+  /* ─── Artifact links ─────────────────────────────────────────────────── */
+  .demonstrator__artifact-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+
+  .demonstrator__artifact-link {
+    display: inline-block;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-accent);
+    text-decoration-line: underline;
+    text-underline-offset: 2px;
+  }
+
+  .demonstrator__artifact-link:hover {
+    color: var(--color-accent-hover);
+  }
+
+  .demonstrator__artifact-link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  .demonstrator__artifact-open {
+    display: inline-block;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-ink-ghost);
+  }
+
+  /* ─── Observable result ──────────────────────────────────────────────── */
+  .demonstrator__observable {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-style: italic;
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+    border-left: 2px solid var(--color-border-hairline);
+    padding-left: var(--space-3);
+    margin: 0;
+  }
+
+  /* ─── Active stage highlight (driven by DemonstratorReplay island) ──── */
+  [data-demo-stage] {
+    transition: none; /* instant by default */
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    [data-demo-stage] {
+      transition: outline 200ms ease;
+    }
+  }
+
+  [data-demo-active='true'] {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 4px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* ─── Mobile ──────────────────────────────────────────────────────────── */
+  @media (max-width: 760px) {
+    .demonstrator__spine-item {
+      gap: var(--space-3);
+      padding-left: var(--space-5);
+    }
+  }
+</style>
+
+{
+  /*
+  ── DemonstratorReplay deferred mount (Story 9.1) ────────────────────────
+  Information feature — mount for ALL JS-on visitors (not just motion-allowed).
+  requestIdleCallback (or setTimeout fallback) defers the import so initial
+  page load is not blocked.
+  NOTE: this adds 1 executable <script> → the page ships 3 exec scripts total
+  (2 Guide-pill + this deferred bootstrap). The build-output test asserts this.
+*/
+}
+<script>
+  // Deferred idle mount — NOT gated behind onMotionAllowed (information feature).
+  let booted = false;
+  const loadReplay = (): void => {
+    if (booted) return;
+    booted = true;
+    void import('../lib/demonstrator/bootstrap').then((m) => m.boot());
+  };
+
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(loadReplay, { timeout: 2000 });
+  } else {
+    setTimeout(loadReplay, 200);
+  }
+</script>
+
+<style is:global>
+  /* ─── DemonstratorReplay island styles ─────────────────────────────────── */
+  /* Using is:global so the dynamically-mounted React island can inherit them. */
+
+  .dr {
+    margin-bottom: var(--space-7);
+    max-width: var(--measure-reading);
+  }
+
+  .dr__start-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .dr__start-btn {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-meta);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-accent);
+    background: none;
+    border: 1px solid var(--color-accent);
+    border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-4);
+    cursor: pointer;
+  }
+
+  .dr__start-btn:hover {
+    background: var(--color-accent);
+    color: var(--color-bg);
+  }
+
+  .dr__start-btn:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .dr__close-btn {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    color: var(--color-ink-secondary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: var(--space-2);
+    border-radius: var(--radius-sm);
+  }
+
+  .dr__close-btn:hover {
+    color: var(--color-ink-primary);
+  }
+
+  .dr__close-btn:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .dr__panel {
+    margin-top: var(--space-5);
+    padding: var(--space-5);
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-subtle, var(--color-bg));
+  }
+
+  .dr__panel:focus {
+    outline: none;
+  }
+
+  .dr__panel:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .dr__step-indicator {
+    display: block;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-meta);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-ink-meta-min);
+    margin-bottom: var(--space-3);
+  }
+
+  .dr__step-title {
+    font: var(--text-h3, inherit);
+    font-family: var(--font-family-base);
+    color: var(--color-ink-primary);
+    margin: 0 0 var(--space-3);
+  }
+
+  .dr__narration {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-body);
+    line-height: var(--line-height-body);
+    color: var(--color-ink-secondary);
+    margin: 0 0 var(--space-4);
+  }
+
+  .dr__artifact-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+
+  .dr__artifact-link {
+    display: inline-block;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-meta);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-accent);
+    text-decoration-line: underline;
+    text-underline-offset: 2px;
+  }
+
+  .dr__artifact-link:hover {
+    color: var(--color-accent-hover);
+  }
+
+  .dr__artifact-link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  .dr__artifact-open {
+    display: inline-block;
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-meta);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-ink-ghost);
+  }
+
+  .dr__nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  .dr__nav-btn {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    font-weight: var(--font-weight-meta);
+    letter-spacing: var(--letter-spacing-meta);
+    text-transform: uppercase;
+    color: var(--color-ink-primary);
+    background: none;
+    border: 1px solid var(--color-border-hairline);
+    border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-4);
+    cursor: pointer;
+  }
+
+  .dr__nav-btn:disabled {
+    color: var(--color-ink-meta-min);
+    cursor: not-allowed;
+  }
+
+  .dr__nav-btn:not(:disabled):hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .dr__nav-btn:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .dr__step-dots {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .dr__dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-border-hairline);
+  }
+
+  .dr__dot--active {
+    background: var(--color-accent);
+  }
+
+  .dr__intro-hint {
+    margin-top: var(--space-4);
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-meta);
+    color: var(--color-ink-meta-min);
+    max-width: var(--measure-reading);
+  }
+</style>

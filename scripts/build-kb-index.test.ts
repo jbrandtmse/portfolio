@@ -437,6 +437,29 @@ describe('credibility floor — no invented BMAD acronym expansion (AC1)', () =>
     expect(offenders).toEqual([]);
   });
 
+  it('no unflagged line claims a GHOST artifact (epics / retrospective / shipping) is readable/published in the Glass Box', () => {
+    // QA hardening (Story 9.1): the architecture-doc guard above is line-scoped to
+    // "architecture document" only — so it MISSED the same fabrication class for the
+    // other ghost nodes (the demonstrator.md KB draft asserted "the epics document
+    // will be published" and "the retrospective documents will be published" as flat
+    // unflagged fact). Only 6 Glass Box readers are published; epics, retrospective,
+    // and shipping are ghost nodes with NO reader. A LINE asserting any of them is
+    // "readable"/"published"/"documented" without an [OPEN]/[ASSUMPTION] flag ON THAT
+    // LINE is a false claim (Rule 9, the Epic-4 "narrow test misses the next instance"
+    // lesson). Mutation-verified: re-inserting an unflagged "epics document will be
+    // published" line reds this.
+    const lines = buildKbCorpus(realKbDir).flatMap((c) => c.text.split(/\r?\n/));
+    const offenders = lines.filter(
+      (line) =>
+        /\b(epics?|retrospectives?|shipping)\s+(document|doc|documents)\b/i.test(line) &&
+        /\b(readable|publish(?:es|ed)?|documented)\b/i.test(line) &&
+        // Exempt the deliberate credibility flags: [ASSUMPTION], [OPEN], and the
+        // reasoned [OPEN: <reason>] form (Rule 15 exempts these honest markers).
+        !/\[OPEN(:|\])|\[ASSUMPTION\]/.test(line),
+    );
+    expect(offenders).toEqual([]);
+  });
+
   it('specific search-engine / framework stack names only ship on a flagged line (not on the Mirror)', () => {
     // Orama, Hono, Vitest, Playwright are repo-internal implementation detail that
     // appear on NO crawlable Mirror route. If a LINE names them, that line MUST
