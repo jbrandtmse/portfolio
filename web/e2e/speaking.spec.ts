@@ -150,6 +150,59 @@ test.describe('/speaking/ — Speaker Surface', () => {
     await expect(page.locator('h1')).toHaveCount(1);
   });
 
+  // ─── Story 9.3 — Speaker EPK download (AC1) ──────────────────────────────────
+  // Real-runtime evidence (Rule 3): the EPK download link is a static <a> that is
+  // JS-off-followable, and the generated PDF resolves 200 from the served dist.
+
+  test('the EPK download link is present with the correct href, download attr, and accessible label (AC1)', async ({
+    page,
+  }) => {
+    await page.goto('/speaking/');
+    const epkLink = page.locator('a[href="/epk/joshua-brandt-speaker-epk.pdf"]');
+    await expect(epkLink).toBeVisible();
+    // download attribute (JS-off browsers honor it; static asset link).
+    await expect(epkLink).toHaveAttribute('download', 'joshua-brandt-speaker-epk.pdf');
+    // Accessible label.
+    await expect(epkLink).toHaveAttribute('aria-label', 'Download the speaker one-sheet (PDF)');
+    // It is in a section labeled "Speaker one-sheet".
+    await expect(page.locator('#speaking-epk-heading')).toHaveText('Speaker one-sheet');
+  });
+
+  test('the EPK PDF resolves 200 as a valid PDF (AC1 — served static asset)', async ({
+    page,
+    request,
+  }) => {
+    await page.goto('/speaking/');
+    const href = await page
+      .locator('a[href="/epk/joshua-brandt-speaker-epk.pdf"]')
+      .getAttribute('href');
+    expect(href).toBe('/epk/joshua-brandt-speaker-epk.pdf');
+    // Fetch the asset against the real served runtime (resolves relative to baseURL).
+    const res = await request.get(href!);
+    expect(res.status(), 'EPK PDF must resolve 200').toBe(200);
+    const contentType = res.headers()['content-type'] ?? '';
+    expect(contentType.toLowerCase(), `unexpected content-type: ${contentType}`).toContain('pdf');
+    // The body begins with the %PDF magic bytes — a genuine PDF, not an HTML 404.
+    const body = await res.body();
+    expect(body.subarray(0, 5).toString('ascii')).toBe('%PDF-');
+    // 1–2 page constraint: count /Type /Page markers in the (uncompressed xref) PDF.
+    const pageMarkers = body.toString('latin1').match(/\/Type\s*\/Page\b/g) ?? [];
+    expect(pageMarkers.length).toBeGreaterThanOrEqual(1);
+    expect(pageMarkers.length).toBeLessThanOrEqual(2);
+  });
+
+  test('the EPK download link is JS-off-followable — navigating to it serves the PDF (AC1)', async ({
+    page,
+  }) => {
+    await page.goto('/speaking/');
+    const href = await page
+      .locator('a[href="/epk/joshua-brandt-speaker-epk.pdf"]')
+      .getAttribute('href');
+    // Direct navigation (the JS-off path a download click resolves to) returns 200.
+    const response = await page.goto(href!);
+    expect(response?.status()).toBe(200);
+  });
+
   test('/speaking/ ships exactly 3 executable scripts — Guide pill (2) + copy enhancement (1) (NFR-1, Story 3.2 + 4.4)', async ({
     page,
   }) => {

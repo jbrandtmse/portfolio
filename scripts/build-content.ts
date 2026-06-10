@@ -45,6 +45,7 @@
  */
 import { fileURLToPath } from 'node:url';
 
+import { buildEpkGenerator } from './build-epk.ts';
 import { buildKbIndexGenerator } from './build-kb-index.ts';
 import { harvestTimelineGenerator } from './harvest-timeline.ts';
 import { renderGlassboxGenerator } from './render-glassbox.ts';
@@ -90,6 +91,10 @@ export const CONTENT_GENERATORS: readonly Generator[] = [
   // Reads content/kb/*.md (default-deny, sorted) → chunks at heading boundaries →
   // writes api/data/kb-index.json (gitignored, deterministic chunk corpus).
   buildKbIndexGenerator,
+  // Story 9.3: EPK PDF generator (web/src/data/speaking.ts → web/public/epk/...pdf).
+  // Reads PERSON, BIOS, SIGNATURE_TALKS, REEL from speaking.ts → emits a 1–2 page
+  // deterministic EPK PDF (pinned CreationDate/ID; no new Date()).
+  buildEpkGenerator,
 ];
 
 /** Options for {@link runPipeline} (a logger seam keeps it unit-testable). */

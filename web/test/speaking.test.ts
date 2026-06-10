@@ -671,4 +671,39 @@ describe('Build output — /speaking/ and /speaking/reel/', () => {
       .replace(/<!--[\s\S]*?-->/g, '');
     expect(copyOnly).not.toContain('!');
   });
+
+  // ── Story 9.3 — EPK download link + PDF file (AC1, AC4) ─────────────────
+
+  it('EPK PDF exists in dist at /epk/joshua-brandt-speaker-epk.pdf (AC1, AC4)', () => {
+    // Verifies the EPK generator wrote the file AND astro build copied it.
+    const epkPath = join(distDir, 'epk', 'joshua-brandt-speaker-epk.pdf');
+    expect(existsSync(epkPath), `EPK PDF must exist at ${epkPath}`).toBe(true);
+  });
+
+  it('/speaking contains the EPK download link pointing to /epk/...pdf (AC1, JS-off)', () => {
+    // Scoped assertion: the <a> must link to the static asset path (Rule 8 — not whole-doc).
+    if (!speakingHtml) return;
+    // The link href must be the correct static asset path.
+    expect(
+      speakingHtml,
+      '/speaking must contain an <a href="/epk/joshua-brandt-speaker-epk.pdf">',
+    ).toMatch(/<a\b[^>]*href="\/epk\/joshua-brandt-speaker-epk\.pdf"[^>]*>/);
+  });
+
+  it('/speaking EPK link carries aria-label "Download the speaker one-sheet (PDF)" (AC1, accessibility)', () => {
+    if (!speakingHtml) return;
+    // Scoped to the EPK <a> element — not the whole document.
+    expect(speakingHtml).toMatch(
+      /<a\b[^>]*aria-label="Download the speaker one-sheet \(PDF\)"[^>]*>/,
+    );
+  });
+
+  it('/speaking EPK link is in a section labeled "Speaker one-sheet" (AC1)', () => {
+    if (!speakingHtml) return;
+    // The EPK section heading must be present (h2 with the correct text).
+    expect(speakingHtml).toContain('Speaker one-sheet');
+    // The download link must be followable JS-off (it is a static <a href>, not a JS handler).
+    // Verify by ensuring the href is a plain static path (no JavaScript: prefix).
+    expect(speakingHtml).not.toMatch(/href="javascript:/i);
+  });
 });
