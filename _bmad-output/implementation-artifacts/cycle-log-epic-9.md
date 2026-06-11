@@ -33,3 +33,4 @@
 2026-06-10T10:56:00Z	Story 9.3	smoke_complete	method=browser+pdf result=pass iterations=1 defects_caught=0 model=claude-opus-4-8 epk_link=present_download_aria pdf=200_application/pdf_1page assumption_flags_preserved=all3talks honest_framing=not_yet_confirmed_bookings no_fabricated_contact=book_via_invite bio_byte_equal=true
 2026-06-10T10:57:00Z	Story 9.3	committed	sha=7d66f53 submodules=
 2026-06-11T00:10:00Z	Epic 9	retrospective_complete	source=epic-9-retro-2026-06-11.md rules_codified=18 model=claude-opus-4-8
+2026-06-11T02:40:00Z	Epic 9	deployed_live	host=joshuabrandt.abacusai.cloud build_from=feature@a1c105e demonstrator=200_8watch+8learn_replay+toggle_work_live epk_pdf=200 speaking_epk_link=present api_guide=200_answers_2908ms_nofallback model=claude-opus-4-8
