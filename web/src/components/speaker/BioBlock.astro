@@ -22,6 +22,7 @@
  * "Copied ✓" announced via aria-live="polite"/role="status" (AC4). Metric
  * and testimonial AA-contrast (navy on cream ≥ 4.5:1).
  */
+import { bioWordCount } from '../../data/speaking';
 import type { Bio } from '../../data/speaking';
 
 export interface BioBlockProps {
@@ -36,13 +37,16 @@ const { bio, bioId } = Astro.props;
 
 const textId = `bio-text-${bioId}`;
 const statusId = `bio-status-${bioId}`;
+
+/** Derived at build time — NEVER a hard-coded literal (Story 9.0 AC1). */
+const wordCount = bioWordCount(bio.text);
 ---
 
 <div class="bio-block">
   <div class="bio-block__head">
     <span class="bio-block__label">
       {bio.label}
-      <span class="bio-block__wordcount">{bio.wordCount}</span>
+      <span class="bio-block__wordcount">{wordCount}</span>
     </span>
     <button
       type="button"
@@ -50,6 +54,7 @@ const statusId = `bio-status-${bioId}`;
       data-bio-copy
       data-target={textId}
       data-status={statusId}
+      data-bio-label={bio.label}
       aria-label={`Copy ${bio.label}`}
     >
       <span class="bio-block__copy-icon" aria-hidden="true"></span>
@@ -61,7 +66,7 @@ const statusId = `bio-status-${bioId}`;
   <p class="bio-block__text" id={textId}>{bio.text}</p>
 
   {/* Word count + one-tap note */}
-  <p class="bio-block__wc">{bio.wordCount} &middot; one tap copies plain text</p>
+  <p class="bio-block__wc">{wordCount} &middot; one tap copies plain text</p>
 
   {/* Fallback note — always visible; states manual selection works (AC1/AC3). */}
   <p class="bio-block__fallnote">If the copy button fails, the text above is fully selectable.</p>
@@ -257,6 +262,7 @@ const statusId = `bio-status-${bioId}`;
     document.querySelectorAll<HTMLButtonElement>('button[data-bio-copy]').forEach((btn) => {
       const targetId = btn.dataset.target;
       const statusId = btn.dataset.status;
+      const bioLabel = btn.dataset.bioLabel ?? '';
       if (!targetId || !statusId) return;
 
       const textEl = document.getElementById(targetId);
@@ -274,6 +280,9 @@ const statusId = `bio-status-${bioId}`;
         navigator.clipboard.writeText(bioText).then(() => {
           // Show "Copied ✓" state on the button and announce to screen readers.
           btn.setAttribute('data-copied', '');
+          // Update aria-label to reflect the copied state (AC2 — accessible name
+          // tracks the visible state; the role="status" announcement is preserved).
+          btn.setAttribute('aria-label', `${COPIED_LABEL} — ${bioLabel}`);
           btn.textContent = '';
           const icon = document.createElement('span');
           icon.className = 'bio-block__copy-icon';
@@ -285,6 +294,8 @@ const statusId = `bio-status-${bioId}`;
           // Revert after a beat.
           setTimeout(() => {
             btn.removeAttribute('data-copied');
+            // Restore aria-label to the copy-action name (mirrors initial SSR value).
+            btn.setAttribute('aria-label', `Copy ${bioLabel}`);
             btn.textContent = '';
             const icon2 = document.createElement('span');
             icon2.className = 'bio-block__copy-icon';

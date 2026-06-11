@@ -208,8 +208,9 @@ export const SIGNATURE_TALKS: SignatureTalk[] = [
 /* ──────────────────────────────────────────────────────────────────────────
  * Bios — copy-paste ready (Story 3.2, AC1, Decision 1).
  *
- * SHORT: mirrors PERSON.description exactly (the 50-word canonical bio already
- * in the Person JSON-LD on / and /about). LONG: extends the short form with the
+ * SHORT: mirrors PERSON.description exactly (47 words at baseline; count is
+ * derived at build time via bioWordCount — not a hard-coded label; Story 9.0
+ * AC1). In the Person JSON-LD on / and /about. LONG: extends the short form with the
  * same facts, no new claims — [ASSUMPTION] until Josh confirms.
  *
  * Both bios end the running-sentence tail "seasoned, building at the frontier."
@@ -218,15 +219,27 @@ export const SIGNATURE_TALKS: SignatureTalk[] = [
  * ────────────────────────────────────────────────────────────────────────── */
 
 export interface Bio {
-  /** Display label — e.g. "Short bio · 50 words". */
+  /** Display label — e.g. "Short bio". */
   label: string;
-  /** Approximate word count for the word-count sub-label. */
-  wordCount: string;
   /**
    * The bio prose verbatim. Always rendered as selectable plain text in the DOM
    * (the JS-off copy path). [ASSUMPTION] flags remain until Josh confirms.
    */
   text: string;
+}
+
+/**
+ * Derive the word count from bio prose text.
+ *
+ * Splits on whitespace, filters empties — identical to the derivation used in
+ * BioBlock.astro so the displayed label can NEVER drift from the actual prose.
+ * Exported for testing (Rule 8: test exercises the REAL module function).
+ *
+ * @example bioWordCount('Hello world') // → '2 words'
+ */
+export function bioWordCount(text: string): string {
+  const n = text.split(/\s+/).filter(Boolean).length;
+  return `${n} words`;
 }
 
 /**
@@ -240,13 +253,11 @@ export const BIOS: readonly Bio[] = [
   {
     // [ASSUMPTION: short bio text] — mirrors PERSON.description verbatim.
     label: 'Short bio',
-    wordCount: '50 words',
     text: 'Joshua R. Brandt, MSE is a software engineer with 30 years of shipping experience, now building at the frontier of agentic engineering. He speaks on the patterns that outlast hype cycles and on running real software through disciplined, auditable agent workflows — seasoned, building at the frontier.',
   },
   {
     // [ASSUMPTION: long bio text] — extends the short form; same facts, no new claims.
     label: 'Long bio',
-    wordCount: '126 words',
     text: 'Joshua R. Brandt, MSE is a software engineer with three decades of shipping experience who has gone deep on agentic engineering — seasoned, building at the frontier. Having engineered through every “this changes everything” wave from distributed objects to Kubernetes, he now focuses on what experienced ICs actually need: how to tell durable architecture from fashion, and how to make AI agents dependable teammates rather than party tricks. He works in the open, publishing the real, disciplined process behind his projects so the method is auditable, not asserted — including a portfolio built entirely as a public agentic-engineering project, documented as it ships. His talks pair a veteran’s skepticism with hands-on practice, and aim to leave senior audiences with patterns they can use the next morning.',
   },
 ] as const;

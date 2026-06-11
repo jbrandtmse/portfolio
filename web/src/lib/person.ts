@@ -5,7 +5,7 @@
  * stays EXACTLY "Joshua R. Brandt, MSE" everywhere (DESIGN locks the casing).
  *
  * The `description` is the approved short bio (mirrors /about's BIO_SHORT; the
- * canonical 50-word form, [ASSUMPTION] until Josh confirms). The `sameAs`
+ * canonical 47-word form, [ASSUMPTION] until Josh confirms). The `sameAs`
  * channels and `image` are `[OPEN]` placeholders that mirror the same /about
  * channels (Story 1.5) — when the real channel URLs + headshot land, update them
  * HERE and both routes follow. No exclamation marks (positive-assertion voice).
@@ -47,7 +47,7 @@ export const HEADSHOT_URL = `${SITE_ORIGIN}/headshot.jpg`;
 export const PERSON: PersonInput = {
   name: 'Joshua R. Brandt, MSE',
   jobTitle: 'Software Engineer',
-  // Mirrors /about BIO_SHORT (the approved 50-word short bio; [ASSUMPTION]).
+  // Mirrors /about BIO_SHORT (the approved 47-word short bio; [ASSUMPTION]).
   description:
     'Joshua R. Brandt, MSE is a software engineer with 30 years of shipping experience, now building at the frontier of agentic engineering. He speaks on the patterns that outlast hype cycles and on running real software through disciplined, auditable agent workflows — seasoned, building at the frontier.',
   url: `${SITE_ORIGIN}/`,

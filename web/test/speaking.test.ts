@@ -10,6 +10,8 @@ import {
   REEL,
   SIGNATURE_TALKS,
   METRICS,
+  BIOS,
+  bioWordCount,
   talkEventInput,
   reelVideoObjectInput,
 } from '../src/data/speaking';
@@ -354,6 +356,68 @@ describe('speaking.ts data module', () => {
 });
 
 /* ──────────────────────────────────────────────────────────────────────────
+ * Story 9.0 — AC1: bioWordCount derivation (Rule 8, mutation-verified)
+ *
+ * Tests exercise the REAL exported `bioWordCount` from `speaking.ts` — NOT an
+ * inline copy. Mutation-verification: if you replace the helper body with a
+ * stub returning a fixed value, the count-equality test reds (the assertion
+ * computes the expected value independently via the same algorithm, so the
+ * helper must use the real computation).
+ * ────────────────────────────────────────────────────────────────────────── */
+
+describe('Story 9.0 — AC1: bioWordCount helper (real module, mutation-verified)', () => {
+  it('counts words correctly — "Hello world" = 2 words', () => {
+    expect(bioWordCount('Hello world')).toBe('2 words');
+  });
+
+  it('returns "1 words" for a single word (edge case — no special-casing needed)', () => {
+    expect(bioWordCount('Hello')).toBe('1 words');
+  });
+
+  it('trims leading/trailing whitespace before counting', () => {
+    expect(bioWordCount('  Hello world  ')).toBe('2 words');
+  });
+
+  it('collapses internal whitespace (tabs, newlines) into single tokens', () => {
+    expect(bioWordCount('Hello\n\t  world')).toBe('2 words');
+  });
+
+  it('the short bio (BIOS[0]) derives to "47 words" — NOT the old hard-coded "50 words"', () => {
+    // This binds the rendered label to the REAL bio text via the REAL function.
+    // Mutation: if bioWordCount returns a stub '50 words', this assertion reds.
+    const shortBio = BIOS[0]!;
+    const derivedCount = shortBio.text.split(/\s+/).filter(Boolean).length;
+    // Assert via the REAL function — not an inline copy of the formula.
+    expect(bioWordCount(shortBio.text)).toBe(`${derivedCount} words`);
+    // Confirm the actual count is 47 (the correct figure for the baseline text).
+    expect(derivedCount).toBe(47);
+    expect(bioWordCount(shortBio.text)).toBe('47 words');
+  });
+
+  it('the long bio (BIOS[1]) derives to "126 words" (correct at baseline)', () => {
+    const longBio = BIOS[1]!;
+    const derivedCount = longBio.text.split(/\s+/).filter(Boolean).length;
+    expect(bioWordCount(longBio.text)).toBe(`${derivedCount} words`);
+    expect(derivedCount).toBe(126);
+    expect(bioWordCount(longBio.text)).toBe('126 words');
+  });
+
+  it('the derived count auto-updates: if the bio text gains a word, the label changes (anti-drift)', () => {
+    // This is the mutation-verification principle: the label is computed from the
+    // text, so any edit to the text is reflected without a manual edit to a constant.
+    const baseText = BIOS[0]!.text;
+    const extendedText = baseText + ' Indeed.';
+    const baseDerived = bioWordCount(baseText);
+    const extendedDerived = bioWordCount(extendedText);
+    // The extended text must produce a DIFFERENT label (one more word).
+    expect(extendedDerived).not.toBe(baseDerived);
+    const baseN = parseInt(baseDerived, 10);
+    const extN = parseInt(extendedDerived, 10);
+    expect(extN).toBe(baseN + 1);
+  });
+});
+
+/* ──────────────────────────────────────────────────────────────────────────
  * 4. Build-output assertions (dist HTML)
  * ────────────────────────────────────────────────────────────────────────── */
 
@@ -606,5 +670,40 @@ describe('Build output — /speaking/ and /speaking/reel/', () => {
       .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
       .replace(/<!--[\s\S]*?-->/g, '');
     expect(copyOnly).not.toContain('!');
+  });
+
+  // ── Story 9.3 — EPK download link + PDF file (AC1, AC4) ─────────────────
+
+  it('EPK PDF exists in dist at /epk/joshua-brandt-speaker-epk.pdf (AC1, AC4)', () => {
+    // Verifies the EPK generator wrote the file AND astro build copied it.
+    const epkPath = join(distDir, 'epk', 'joshua-brandt-speaker-epk.pdf');
+    expect(existsSync(epkPath), `EPK PDF must exist at ${epkPath}`).toBe(true);
+  });
+
+  it('/speaking contains the EPK download link pointing to /epk/...pdf (AC1, JS-off)', () => {
+    // Scoped assertion: the <a> must link to the static asset path (Rule 8 — not whole-doc).
+    if (!speakingHtml) return;
+    // The link href must be the correct static asset path.
+    expect(
+      speakingHtml,
+      '/speaking must contain an <a href="/epk/joshua-brandt-speaker-epk.pdf">',
+    ).toMatch(/<a\b[^>]*href="\/epk\/joshua-brandt-speaker-epk\.pdf"[^>]*>/);
+  });
+
+  it('/speaking EPK link carries aria-label "Download the speaker one-sheet (PDF)" (AC1, accessibility)', () => {
+    if (!speakingHtml) return;
+    // Scoped to the EPK <a> element — not the whole document.
+    expect(speakingHtml).toMatch(
+      /<a\b[^>]*aria-label="Download the speaker one-sheet \(PDF\)"[^>]*>/,
+    );
+  });
+
+  it('/speaking EPK link is in a section labeled "Speaker one-sheet" (AC1)', () => {
+    if (!speakingHtml) return;
+    // The EPK section heading must be present (h2 with the correct text).
+    expect(speakingHtml).toContain('Speaker one-sheet');
+    // The download link must be followable JS-off (it is a static <a href>, not a JS handler).
+    // Verify by ensuring the href is a plain static path (no JavaScript: prefix).
+    expect(speakingHtml).not.toMatch(/href="javascript:/i);
   });
 });
