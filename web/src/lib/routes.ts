@@ -145,6 +145,13 @@ export const NAV_ROUTES: RouteEntry[] = [
     description: 'This index: every page on the site, reachable without JavaScript.',
     sourceFile: 'web/src/pages/browse.astro',
   },
+  {
+    path: '/demonstrator',
+    label: 'The Demonstrator',
+    description:
+      'A curated, replayable step-through of how this portfolio was built via the BMAD Method — from intent to working software.',
+    sourceFile: 'web/src/pages/demonstrator.astro',
+  },
 ];
 
 /**

@@ -1,14 +1,17 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    // Build-time scripts run via `tsx` (never compiled to dist), so NodeNext
-    // resolution matches the runtime and `noEmit` stays on (like `shared`).
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    // Build-time scripts run via `tsx` (never compiled to dist). tsx uses
+    // bundler-style resolution (allowImportingTsExtensions: true, no .js
+    // extension required on relative imports) — NOT strict NodeNext semantics.
+    // Using moduleResolution:bundler here matches tsx's actual runtime behavior
+    // and allows scripts to import cross-package files (e.g. web/src/data/*.ts)
+    // that use extension-less relative imports. noEmit stays on (scripts are
+    // executed directly by tsx, never compiled to dist).
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "lib": ["ES2022"],
     "types": ["node"],
-    // tsx executes the .ts directly, so importing .ts extensions is fine, but we
-    // don't rely on it — keep the base default (allowImportingTsExtensions: true).
     "noEmit": true
   },
   "include": ["**/*.ts"],

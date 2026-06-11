@@ -57,3 +57,17 @@ export const $timelineFocus = atom<string | null>(null);
  * are gated behind CSS `@media (prefers-reduced-motion: no-preference)`.
  */
 export const $tourStep = atom<number | null>(null);
+
+/**
+ * The active step index for the Demonstrator replay (Story 9.1).
+ *
+ *   null    — replay is closed (default); the static <ol> is the sole experience
+ *   number  — 0-based index into the lifecycle stages; the replay is open and
+ *             showing that step
+ *
+ * The DemonstratorReplay island writes/reads this atom. The replay is an
+ * INFORMATION feature (not decorative motion), so it mounts for all JS-on users
+ * under both no-preference and reduced-motion. Animated transitions are gated
+ * behind CSS `@media (prefers-reduced-motion: no-preference)`.
+ */
+export const $demoStep = atom<number | null>(null);

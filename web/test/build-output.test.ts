@@ -6,8 +6,9 @@ import { fileURLToPath } from 'node:url';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { BIOS } from '../src/data/speaking';
+import { BIOS, bioWordCount } from '../src/data/speaking';
 import { PERSON } from '../src/lib/person';
+import { DEMONSTRATOR_STAGES } from '../../content/demonstrator';
 
 /**
  * Build-output assertions for the design-system foundation (Story 1.2), the
@@ -150,6 +151,7 @@ const ALL_MIRROR_ROUTES = [
   '/creative/',
   '/agentic/',
   '/browse/',
+  '/demonstrator/',
 ] as const;
 
 /** Extract the global footer block (<footer class="…site-footer…">…</footer>). */
@@ -927,6 +929,7 @@ const MIRROR_ROUTES = [
   '/creative',
   '/agentic',
   '/browse',
+  '/demonstrator',
 ] as const;
 // Note: MIRROR_ROUTES values are kept slashless here because routeHtmlPath() uses
 // them to derive the filesystem path (about/index.html etc.) — the slash form is
@@ -1037,6 +1040,7 @@ describe('Story 1.5 — every Mirror route is a real, answer-first, self-canonic
       //    /invite: 3 (pill + InviteForm island)
       //    /timeline: 3 (pill + deferred ZoomableTimeline mount shim — Story 6.2)
       //    /glass-box: 3 (pill + deferred GlassBoxTour mount shim — Story 6.3)
+      //    /demonstrator: 3 (pill + deferred DemonstratorReplay mount shim — Story 9.1)
       //    /work/vector-wars, /work/christmas-elves:
       //      3 (pill + click-to-play loader script — Story 7.3 NFR-1 carve-out;
       //         the game JS lives in the iframe, this tiny loader is the only
@@ -1047,6 +1051,7 @@ describe('Story 1.5 — every Mirror route is a real, answer-first, self-canonic
         route === '/invite' ||
         route === '/timeline' ||
         route === '/glass-box' ||
+        route === '/demonstrator' ||
         route === '/work/vector-wars' ||
         route === '/work/voyager' || // external embed: 3 scripts (pill + click-to-play loader)
         route === '/work/christmas-elves'
@@ -1240,6 +1245,60 @@ describe('Story 3.2 — AC5 short-bio anti-drift: the VISIBLE bio === PERSON.des
     // The long bio extends the short — both end on the lowercase running tail.
     expect(firstBioText.endsWith('seasoned, building at the frontier.')).toBe(true);
     expect(secondBioText).toContain('seasoned, building at the frontier.');
+  });
+});
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Story 9.0 — AC1: rendered word-count label derives from real bio text
+ *
+ * Scoped to the `.bio-block__wordcount` spans in the served HTML — NOT a
+ * whole-document `toContain` (Rule 8). The expected label is computed by
+ * bioWordCount(BIOS[n].text) — the REAL module function — so any drift
+ * between the rendered text and the derivation function reds here.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+describe('Story 9.0 — AC1: word-count label in served HTML derived from bio text (Rule 8)', () => {
+  let speakingHtml9 = '';
+  beforeAll(() => {
+    speakingHtml9 = readFileSync(routeHtmlPath('/speaking'), 'utf8');
+  });
+
+  /** Extract the text content of `.bio-block__wordcount` spans from the HTML. */
+  function extractWordCountSpans(html: string): string[] {
+    return [...html.matchAll(/<span class="bio-block__wordcount"[^>]*>([\s\S]*?)<\/span>/g)].map(
+      (m) => m[1]!.replace(/<[^>]+>/g, '').trim(),
+    );
+  }
+
+  it('renders exactly 2 bio-block__wordcount spans (one per BioBlock)', () => {
+    const spans = extractWordCountSpans(speakingHtml9);
+    expect(spans.length, 'should have one wordcount span per BioBlock').toBe(2);
+  });
+
+  it('the first wordcount span equals bioWordCount(BIOS[0].text) — 47 words, not 50', () => {
+    // Scoped assertion: only the FIRST span, not the whole document (Rule 8).
+    const spans = extractWordCountSpans(speakingHtml9);
+    const expected = bioWordCount(BIOS[0]!.text);
+    expect(spans[0]).toBe(expected);
+    // Concrete baseline guard: the label is '47 words', not '50 words'.
+    expect(spans[0]).toBe('47 words');
+    expect(spans[0]).not.toBe('50 words');
+  });
+
+  it('the second wordcount span equals bioWordCount(BIOS[1].text) — 126 words', () => {
+    const spans = extractWordCountSpans(speakingHtml9);
+    const expected = bioWordCount(BIOS[1]!.text);
+    expect(spans[1]).toBe(expected);
+    expect(spans[1]).toBe('126 words');
+  });
+
+  it('the word-count label does not contain hard-coded "50 words" anywhere on /speaking', () => {
+    // Mutation guard: if bioWordCount is replaced with a stub returning '50 words',
+    // the above assertions also red; this provides an extra visible signal.
+    const spans = extractWordCountSpans(speakingHtml9);
+    for (const span of spans) {
+      expect(span).not.toBe('50 words');
+    }
   });
 });
 
@@ -1534,6 +1593,151 @@ describe('Story 1.6 — JSON-LD is valid, parseable, and DATA (not executable JS
   });
 });
 
+describe('Story 9.1 — /demonstrator/ NFR-1 carve-out + credibility (AC2 / AC3)', () => {
+  let demonstratorHtml = '';
+  beforeAll(() => {
+    demonstratorHtml = readFileSync(routeHtmlPath('/demonstrator'), 'utf8');
+  });
+
+  it('/demonstrator ships exactly THREE executable scripts — Guide pill (2) + deferred bootstrap (1) (NFR-1 carve-out, Story 9.1)', () => {
+    // Story 9.1: /demonstrator ships ONE deferred bootstrap shim (DemonstratorReplay).
+    // ALL routes ship the site-wide Guide pill (2 init scripts).
+    // Total: 3 executable scripts (2 pill + 1 bootstrap). This is the carve-out.
+    const execCount = countExecutableScripts(demonstratorHtml);
+    expect(
+      execCount,
+      `/demonstrator must ship exactly 3 executable scripts (2 Guide pill + 1 deferred DemonstratorReplay bootstrap); found ${execCount}`,
+    ).toBe(3);
+  });
+
+  it('/demonstrator emits exactly 1 ld+json block (the CreativeWork schema.org node)', () => {
+    // The Demonstrator emits a CreativeWork JSON-LD node via jsonld.ts (AC4).
+    const ldCount = countLdJsonScripts(demonstratorHtml);
+    expect(ldCount, `/demonstrator must emit exactly 1 ld+json block; found ${ldCount}`).toBe(1);
+    const cwNode = findNodeByType(demonstratorHtml, 'CreativeWork');
+    expect(cwNode, '/demonstrator must emit a CreativeWork JSON-LD node').toBeDefined();
+  });
+
+  it('/demonstrator contains no fabrication sentinels — no "\\[OPEN:" outside data islands (Rule 15 / Rule 9)', () => {
+    // Rule 15 guard: internal "not-yet" sentinels must not leak into user-visible prose.
+    // The deliberate honest markers (stage labels "— coming in the Glass Box") are
+    // NOT [OPEN:...] bracketed sentinels — they are clean prose. Only [OPEN:...] style
+    // is the internal sentinel class (Rule 9 / Rule 15).
+    // Strip data islands (application/json) before checking.
+    const htmlWithoutDataIslands = demonstratorHtml.replace(
+      /<script\b[^>]*type\s*=\s*["']application\/json["'][^>]*>[\s\S]*?<\/script>/gi,
+      '',
+    );
+    expect(
+      htmlWithoutDataIslands,
+      '/demonstrator visible HTML must not contain "[OPEN:" sentinel string (Rule 15 / Rule 9)',
+    ).not.toMatch(/\[OPEN:/);
+  });
+
+  it('/demonstrator contains no exclamation marks in copy (positive-assertion)', () => {
+    const copyOnly = demonstratorHtml
+      .replace(/<!doctype html>/i, '')
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<!--[\s\S]*?-->/g, '');
+    expect(copyOnly, '/demonstrator copy must not contain "!"').not.toContain('!');
+  });
+
+  it('/demonstrator is self-canonical to /demonstrator/ (trailing-slash form, Rule 2)', () => {
+    const canonicalMatch = demonstratorHtml.match(/<link\b[^>]*\brel="canonical"[^>]*>/);
+    expect(canonicalMatch, '/demonstrator must have a canonical link').not.toBeNull();
+    const hrefMatch = canonicalMatch![0].match(/\bhref="([^"]+)"/);
+    expect(hrefMatch).not.toBeNull();
+    expect(hrefMatch![1], '/demonstrator canonical must be the trailing-slash form').toBe(
+      `${SITE_ORIGIN}/demonstrator/`,
+    );
+  });
+
+  it('/demonstrator spine has 8 items (one per lifecycle stage, FR-8 crawlable baseline)', () => {
+    // AC2: all 8 stages present in the static <ol> — readable with JS off.
+    const spineItems = demonstratorHtml.match(/<li\b[^>]*data-demo-stage="[^"]*"[^>]*>/g) ?? [];
+    expect(
+      spineItems.length,
+      `/demonstrator spine must have 8 items (one per stage); found ${spineItems.length}`,
+    ).toBe(8);
+  });
+
+  it('/demonstrator has the replay data island (application/json for DemonstratorReplay bootstrap)', () => {
+    // The deferred bootstrap reads this island to mount the React island.
+    expect(
+      demonstratorHtml,
+      '/demonstrator must have a <script type="application/json" id="demonstrator-replay-data">',
+    ).toMatch(
+      /<script\b[^>]*type\s*=\s*["']application\/json["'][^>]*id\s*=\s*["']demonstrator-replay-data["'][^>]*>/i,
+    );
+  });
+
+  // ── QA hardening (Story 9.1): AC3 credibility — every LIVE href resolves on
+  //    the real build; no ghost reader is linked as live; no stale count-claim. ──
+
+  it('AC3 — every LIVE artifact href in the manifest resolves to a real built file (no dead link)', () => {
+    // AC3 (explicit): "a served-output test asserts ... that every stage's artifact
+    // link resolves." We resolve every status:'live' href in the manifest against
+    // the actual built dist/ (internal routes) — a 404'd live link is a fabrication.
+    // The live-site absolute URL (stage 8) is verified separately (it is the
+    // deployed origin, not a built file). Mutation-verified: pointing a live href
+    // at /glass-box/architecture/ (a ghost) reds this test (no built file there).
+    const offenders: string[] = [];
+    for (const stage of DEMONSTRATOR_STAGES) {
+      for (const a of stage.artifacts) {
+        if (a.status !== 'live') continue;
+        if (a.href.startsWith('http')) continue; // absolute live-site URL (stage 8)
+        const built = routeHtmlPath(a.href);
+        if (!existsSync(built)) {
+          offenders.push(`stage ${stage.id} "${a.label}" → ${a.href} (no built file at ${built})`);
+        }
+      }
+    }
+    expect(
+      offenders,
+      `live artifact links must resolve on the real build:\n${offenders.join('\n')}`,
+    ).toEqual([]);
+  });
+
+  it('AC3 — no ghost Glass Box reader is linked as a live <a> in the served spine (Rule 9)', () => {
+    // The architecture/epics/retrospective/shipping readers are ghost nodes (no
+    // published reader). A live <a href> to any of them in the rendered HTML would
+    // 404 — a fabrication. They must render as honest non-link "open" spans instead.
+    // Mutation-verified: flipping a ghost artifact to status:'live' reds this.
+    const GHOST_READER_RE =
+      /<a\b[^>]*href="\/glass-box\/(architecture|epics|retrospective|shipping)\/"/i;
+    expect(
+      demonstratorHtml,
+      '/demonstrator must not render a live <a> to a ghost Glass Box reader',
+    ).not.toMatch(GHOST_READER_RE);
+  });
+
+  it('AC3 — served visible prose makes no stale hardcoded epic/rule count claim (Rule 9 fabrication class)', () => {
+    // Rule 9 (Epic 4 retro): a narrow per-incident test misses the NEXT instance of
+    // the same class. This QA stage caught "Fourteen project rules" (actual: 17) and
+    // "nine epics" (actual: 10) — stale hardcoded counts that drift as the project
+    // grows. Guard the CLASS: visible Demonstrator prose must not assert a fixed
+    // numeric count of epics or project rules (those numbers go stale on every new
+    // epic/retro). Qualitative framing ("a sequence of epics", "a growing set of
+    // rules") stays true. Strip data islands + scripts; scan visible copy only.
+    // Mutation-verified: re-inserting "nine epics" or "Fourteen ... rules" reds this.
+    const visible = demonstratorHtml
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<!--[\s\S]*?-->/g, '');
+    const COUNT_NUMBER =
+      '(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|\\d+)';
+    const STALE_EPIC_COUNT = new RegExp(`\\b${COUNT_NUMBER}\\s+epics?\\b`, 'i');
+    const STALE_RULE_COUNT = new RegExp(`\\b${COUNT_NUMBER}\\s+(project\\s+)?rules?\\b`, 'i');
+    expect(
+      STALE_EPIC_COUNT.test(visible),
+      '/demonstrator must not assert a fixed epic count (it drifts — use qualitative framing)',
+    ).toBe(false);
+    expect(
+      STALE_RULE_COUNT.test(visible),
+      '/demonstrator must not assert a fixed project-rule count (it drifts — use qualitative framing)',
+    ).toBe(false);
+  });
+});
+
 describe('Story 1.6 — generated sitemap.xml (AC3 / IAC-2)', () => {
   const sitemapPath = join(distDir, 'sitemap.xml');
   let sitemap = '';
@@ -1740,6 +1944,7 @@ describe('Story 1.10 — env-gated Umami is OFF by default (AC2 / IAC-2; NFR-1)'
       if (route === '/invite') continue; // carve-out — 3 exec scripts (pill + InviteForm island)
       if (route === '/timeline') continue; // carve-out — 3 exec scripts (pill + deferred ZoomableTimeline mount shim, Story 6.2)
       if (route === '/glass-box') continue; // carve-out — 3 exec scripts (pill + deferred GlassBoxTour mount shim, Story 6.3)
+      if (route === '/demonstrator') continue; // carve-out — 3 exec scripts (pill + deferred DemonstratorReplay mount shim, Story 9.1)
       if (route === '/work/vector-wars') continue; // carve-out — 3 exec scripts (pill + click-to-play loader, Story 7.3)
       if (route === '/work/voyager') continue; // carve-out — 3 exec scripts (pill + click-to-play loader, external embed)
       if (route === '/work/christmas-elves') continue; // carve-out — 3 exec scripts (pill + click-to-play loader, Story 7.3)

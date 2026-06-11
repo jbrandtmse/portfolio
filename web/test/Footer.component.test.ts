@@ -63,6 +63,7 @@ const ALL_MIRROR_ROUTES = [
   '/creative/',
   '/agentic/',
   '/browse/',
+  '/demonstrator/',
 ] as const;
 
 const ORIGIN = 'https://joshuabrandt.abacusai.cloud';

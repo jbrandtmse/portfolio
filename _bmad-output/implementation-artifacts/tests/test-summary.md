@@ -1,62 +1,49 @@
-# Test Automation Summary — Story 7.0 (Epic 6 Deferred Cleanup)
+# Test Automation Summary — Story 9.2 (BMAD Build Walkthrough teaching layer), QA stage
 
-QA stage of `/epic-cycle`. Verified FRESH per Rule 10 (dev self-report treated as
-unreliable). Story 7.0 is a config/spec-reconciliation + regression-test-lock cleanup
-(server-side constant + planning-doc prose + one vitest test). **No new user-facing browser
-surface** → a Playwright browser e2e is NOT applicable. QA value = mutation-verifying the
-dev's regression test is non-vacuous, confirming AC1 spec reconciliation is complete, AC2
-discoverability, and AC3 no-regression.
+Date: 2026-06-10 · Stage: `qa-generate-e2e-tests` (epic-cycle) · Verified fresh (Rule 10).
 
-## Verified Tests (existing dev deliverable — NOT vacuous)
+## Gate exit codes (Rule 14/16)
+- `pnpm test:all` → exit **0** (typecheck `Result (125 files): 0 errors`; scripts 185, api 233, web 968 unit; e2e 464 passed / 0 skipped / 0 failed; Lighthouse pass).
+- `pnpm run check-deterministic` → exit **0** (web/dist byte-identical across two clean builds).
 
-### Regression test (Rule 8) — `api/src/routes/guide.config.test.ts` (2 tests)
-- [x] `LLM_CEILING_MS equals 15_000` — binds the **REAL** `export const LLM_CEILING_MS`
-      via direct named import from `guide.ts` (not an inline copy of `15000`).
-- [x] `default GUIDE_LLM_MODEL is claude-haiku-4-5-20251001` — reads the **REAL** parsed
-      env-schema default via child-process execution of the real `env.ts` (mirrors
-      `env.realmodule.test.ts`), explicitly UNSETting `GUIDE_LLM_MODEL` so the schema
-      default is exercised (NOT the `api/.env` value, which happens to equal the default).
+## Defect found + fixed (AC4, HIGH — axe AA contrast)
+- `.dr__mode-btn--active` (the active Watch/Learn toggle, NEW in 9.2) used `color: var(--color-bg)`.
+  `--color-bg` is undefined in `tokens.css`, so the foreground resolved to inherited dark ink
+  (`#211b14`) on the dark navy accent (`#1e3a5f`) → **1.48:1 contrast, an AA failure** (need 4.5:1).
+  The active toggle text was effectively invisible. AC4 explicitly requires "axe AA 0 on
+  `/demonstrator/`", but the dedicated `axe.spec.ts` only audits `/` and `/about/` — so this
+  surface had no axe AA coverage and the defect shipped past dev.
+  Fixed to `var(--color-surface-base)` (the established on-accent light-cream pattern used by
+  GuidePill / InviteForm / GuidePanel). Sibling `.dr__start-btn:hover` and the `.dr__panel`
+  background carried the same undefined-token anti-pattern; fixed to defined tokens.
 
-### Mutation verification (QA-performed; all reverted byte-clean)
-- [x] **Mutation A** — `LLM_CEILING_MS` 15_000 → 10_000 in `guide.ts` ⇒ test 1 RED
-      (`expected 10000 to be 15000`). Reverted; `guide.ts` diff vs HEAD = dev's two
-      intended changes only.
-- [x] **Mutation B** — `GUIDE_LLM_MODEL` default → `'gpt-5-mini'` in `env.ts` ⇒ test 2 RED
-      (`expected 'gpt-5-mini' to be 'claude-haiku-4-5-20251001'`). Reverted; `env.ts` diff
-      vs HEAD = EMPTY (dev correctly did not modify env.ts).
-- [x] **Vacuity guard (implicit in Mutation B)** — Mutation B proved the child returned the
-      *schema* default (`gpt-5-mini`), NOT the `.env` value (`claude-haiku-4-5-20251001`),
-      confirming the `GUIDE_LLM_MODEL: undefined` override genuinely isolates the schema
-      default. Without the override the test would pass for the WRONG reason.
+## Tests hardened / added (`web/e2e/demonstrator.spec.ts`, `demonstrator` project — Rule 7)
+- [x] AC4 — `/demonstrator/` zero axe wcag2a/wcag2aa violations (default Watch) — NEW, closes the gap.
+- [x] AC4 — `/demonstrator/` zero axe wcag2a/wcag2aa violations (Learn mode, replay open) — NEW.
+- Demonstrator e2e project now 33 tests, all run (0 skipped).
 
-## AC verification
+## Mutation verification (all reverted clean)
+1. Inject "Build Measure Adapt Deploy" into a teaching field → both unit acronym guards RED. ✓
+2. Break the panel mode consumer (always-narration) → Rule 13 visible-teaching e2e RED. ✓
+3. Remove the `data-active-mode` spine effect → Rule 13 static-spine hide/show e2e RED. ✓
+4. Revert the AC4 contrast fix → new axe AA test RED (color-contrast serious, 1.48:1). ✓
 
-- **AC1 (spec↔code reconciled, Rule 5):** the 4 named references read "~15s" —
-  `epics.md:99`, `epics.md:795`, `architecture.md:77`, `architecture.md:282` (line shifted
-  281→282 from the edit). Value agrees with `LLM_CEILING_MS = 15_000`. TTFT (<~1.5s) +
-  retrieval (<~200ms) unchanged. The two remaining "~10s" hits
-  (`prd-portfolio-2026-06-02/prd.md:422`, `implementation-readiness-report-2026-06-05.md:94`)
-  are **dated frozen snapshot artifacts** (git: only their original creation commit; dated
-  dir names) — correctly preserving the value as-of-date; out of the story's live-spec scope.
-  COMPLETE.
-- **AC2 (discoverable, runs, not skipped):** matches the api package's default
-  `include: ['src/**/*.test.ts']`; appears in `vitest list`; ran (2/2 passed); no `.skip`.
-- **AC3 (no regression; NFR-5):** `GUIDE_LLM_MODEL` default unchanged; `guide.test.ts:467`
-  ceiling-branch test still passes (api suite 13 files / 221 tests, 0 skipped);
-  `check-deterministic` PASS (web/dist byte-identical, two builds same tree hash) → no
-  bundle/key/model leak.
+## Rule 9 credibility audit (BROAD) — CLEAN
+Every `teaching` field + `content/kb/demonstrator.md` audited against `content/kb/bmad-method.md`
+and the real pipeline/rules: no invented BMAD acronym expansion, no fabricated methodology
+step/role/guarantee, no "every artifact published", no ADRs (no `docs/adr/` exists). BDD-shape
+(Given/When/Then), the four-pass dev→QA→code-review→smoke pipeline, and the
+codification-to-numbered-rules claim all trace to real artifacts.
 
-## Canonical gate (Rule 14 — captured exit codes)
+## Rule 12 / Rule 13 / AC2
+- Rule 12: `react-hooks/exhaustive-deps` is a hard ESLint error; `DemonstratorReplay.tsx` lints
+  clean — `mode` is in both `useEffect` deps (no stale closure).
+- Rule 13: the visible per-stage content change (panel) AND the static-spine hide/show are both
+  asserted on observable outcomes, mutation-verified (see above).
+- AC2 / NFR-1: build-output test confirms `/demonstrator/` ships exactly 3 executable scripts
+  (2 Guide pill + 1 deferred bootstrap) — the toggle added NO second island; both modes' content
+  present in the static `<ol>`, labeled per mode.
 
-- `pnpm run check-deterministic` → **exit 0** (PASS, byte-identical; tree hash
-  `1a39ff34…` both builds).
-- `pnpm run test:all` → run 1 **exit 1** — single failure `guide-panel.spec.ts:402`
-  ("focus is NOT trapped") `toBeFocused` 5s timeout under parallel load. Confirmed a
-  **pre-existing FLAKY focus-timing race, unrelated to Story 7.0** (zero `web/` changes in
-  the diff; `web/dist` byte-identical): isolated re-run PASSED (919ms). Full-gate **re-run →
-  exit 0** (340 e2e passed, flake did not recur; typecheck 0 errors; unit scripts 184 / api
-  221 / web 754; lh "All results processed"). Clean green attestation obtained.
-
-## No new tests authored
-The dev's `guide.config.test.ts` already covered both load-bearing assertions correctly and
-non-vacuously (mutation-verified). No hardening was required.
+## No-regression
+9.1 Watch replay green; `GlassBoxTour` untouched (no glassbox files modified, no glassbox e2e
+failures).

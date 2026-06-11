@@ -40,6 +40,14 @@ import {
   talkRecordingVideoObjectInput,
 } from '../data/speaking';
 
+/**
+ * EPK_HREF — static asset path for the generated Speaker EPK PDF.
+ * Generated at build time by scripts/build-epk.ts (Story 9.3).
+ * The file lives in web/public/epk/ → copied into web/dist/epk/ by astro build.
+ * Rule 2 / routeHref is for Astro routes; this is a static asset — link directly.
+ */
+const EPK_HREF = '/epk/joshua-brandt-speaker-epk.pdf';
+
 const LEDE =
   'Joshua R. Brandt, MSE is a software engineer and speaker with thirty years of shipping experience. This page lists his signature talks, the READY 2026 reel, and how to book him.';
 
@@ -77,6 +85,24 @@ const speakingJsonLd = serializeJsonLd([...talkEventNodes, ...talkRecordingNodes
     <div class="speaking__talks-list">
       {SIGNATURE_TALKS.map((talk) => <TalkCard talk={talk} expanded={talk.expanded} />)}
     </div>
+  </section>
+
+  {/* ── Speaker EPK download (Story 9.3, AC1) ───────────────────────────── */}
+  {/* Static asset link — JS-off followable; generated at build time from speaking.ts. */}
+  <section class="speaking__epk" aria-labelledby="speaking-epk-heading">
+    <h2 class="speaking__section-heading" id="speaking-epk-heading">Speaker one-sheet</h2>
+    <p class="speaking__epk-note">
+      A one-page PDF summary of Joshua R. Brandt, MSE: bio, signature talks, formats, and how to
+      book. Generated from the current speaking data — always in sync with this page.
+    </p>
+    <a
+      href={EPK_HREF}
+      class="speaking__epk-link"
+      download="joshua-brandt-speaker-epk.pdf"
+      aria-label="Download the speaker one-sheet (PDF)"
+    >
+      Download the speaker one-sheet (PDF)
+    </a>
   </section>
 
   {/* ── Copy-paste bios (Story 3.2, AC1) ────────────────────────────────── */}
@@ -146,6 +172,49 @@ const speakingJsonLd = serializeJsonLd([...talkEventNodes, ...talkRecordingNodes
     display: flex;
     flex-direction: column;
     gap: var(--space-6, 24px);
+  }
+
+  /* ─── EPK section ──────────────────────────────────────────────────────── */
+  .speaking__epk {
+    margin-top: var(--space-10, 48px);
+  }
+
+  .speaking__epk-note {
+    margin-top: calc(var(--space-3, 8px) * -1);
+    margin-bottom: var(--space-5, 16px);
+    font-family: var(--font-family-base);
+    font-size: 14px;
+    color: var(--color-ink-secondary);
+    line-height: 1.6;
+    max-width: 52ch;
+  }
+
+  .speaking__epk-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2, 6px);
+    padding: 10px var(--space-5, 16px);
+    background-color: var(--color-surface-raised);
+    border: 1px solid var(--color-border-hairline);
+    border-radius: 6px;
+    font-family: var(--font-family-base);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--color-ink-primary);
+    text-decoration: none;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  .speaking__epk-link:hover {
+    background-color: var(--color-surface-hover, var(--color-surface-raised));
+    border-color: var(--color-ink-secondary);
+  }
+
+  .speaking__epk-link:focus-visible {
+    outline: 2px solid var(--color-accent, #1a4db0);
+    outline-offset: 2px;
   }
 
   /* ─── Bios section ─────────────────────────────────────────────────────── */

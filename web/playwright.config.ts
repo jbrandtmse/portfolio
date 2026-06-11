@@ -337,6 +337,18 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
       testMatch: /featured-work\.spec\.ts/,
     },
+    // (Story 9.1) The Demonstrator — curated, replayable BMAD lifecycle step-through.
+    // Desktop, JS on (JS-off cases run inline in the spec via static DOM assertions).
+    // Rule 7: proven to EXECUTE (registered here — an unregistered spec runs 0 times).
+    //   AC1: start/next/prev changes visible narration + artifact links (Rule 13, mutation-verified)
+    //   AC2: all 8 spine items crawlable JS-off; all stage labels visible; live links present
+    //   AC3: no fabrication sentinel in served HTML (Rule 15 / Rule 9)
+    //   AC4: /demonstrator/ in footer; self-canonical trailing-slash (Rule 2)
+    {
+      name: 'demonstrator',
+      use: { ...devices['Desktop Chrome'], launchOptions: chromeLaunch },
+      testMatch: /demonstrator\.spec\.ts/,
+    },
     // (Story 7.3) Playable project embeds — /work/vector-wars/ + /work/christmas-elves/.
     // Desktop, JS on (JS-off cases run inline via browser.newContext()).
     // Rule 7: proven to EXECUTE (registered here — the 7.2 lesson: an unregistered
